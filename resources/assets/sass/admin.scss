@@ -1,0 +1,15 @@
+@charset "UTF-8";
+
+@import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
+
+@import '~bootstrap';
+
+.invoice tr.total {
+  border-top: 2px solid black;
+  font-weight: bold;
+}
+
+.transactionFee {
+  color: gray;
+  font-size: 90%;
+}

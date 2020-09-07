@@ -1,0 +1,53 @@
+@import "bootstrap.min.css";
+@import "style.css";
+@import "responsive.css";
+@import "font-awesome.min.css";
+@import "animate.css";
+@import "colorbox.css";
+
+.lastTickets {
+  color: white;
+  background: red;
+  font-variant: small-caps;
+  border: 1px solid red;
+  border-radius: 5px;
+  font-size: 90%;
+  padding: 3px 5px;
+  margin-left: 10px;
+  font-weight: bold;
+  animation: rotate 10s infinite;
+  display: inline-block;
+  animation-delay: 2s;
+}
+
+@keyframes rotate {
+  5% {
+    transform: rotateX(180deg);
+  }
+
+  10% {
+    transform: rotateX(0deg);
+  }
+}
+
+.banner-content .lastTickets {
+  font-size: 200%;
+}
+
+.price {
+  margin-top: 10px;
+
+}
+
+.price .details {
+  font-size: 80%;
+}
+
+a.plain {
+  color: white;
+}
+
+a.plain:hover {
+  color: white;
+  text-decoration: underline;
+}
