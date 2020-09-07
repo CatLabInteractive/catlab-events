@@ -17,6 +17,9 @@ class ValidDomain
     public function handle($request, Closure $next)
     {
         $validDomains = config('app.valid_domains');
+        if (count($validDomains) > 0) {
+            return $next($request);
+        }
 
         if (isset($_SERVER['HTTP_HOST'])) {
             $rootUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
