@@ -66,9 +66,8 @@ return [
 
     ],
 
-    'valid_domains' => [
-        // Todo
-    ],
+    'valid_domains' => trim(env('VALID_DOMAINS')) !== '' ?
+        array_map('trim', explode(',', env('VALID_DOMAINS'))) : null,
 
     /*
     |--------------------------------------------------------------------------

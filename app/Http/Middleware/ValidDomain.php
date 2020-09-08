@@ -17,7 +17,7 @@ class ValidDomain
     public function handle($request, Closure $next)
     {
         $validDomains = config('app.valid_domains');
-        if (count($validDomains) > 0) {
+        if ($validDomains === null || count($validDomains) === 0) {
             return $next($request);
         }
 
