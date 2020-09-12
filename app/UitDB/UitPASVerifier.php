@@ -1,9 +1,9 @@
 <?php
 
-namespace App\UitPAS;
+namespace App\UitDB;
 
 use App\Models\Event;
-use App\UitPAS\Exceptions\InvalidCardException;
+use App\UitDB\Exceptions\InvalidCardException;
 
 /**
  * Class UitPASVerifier
@@ -11,6 +11,9 @@ use App\UitPAS\Exceptions\InvalidCardException;
  */
 class UitPASVerifier
 {
+    /**
+     * UitPASVerifier constructor.
+     */
     public function __construct()
     {
 

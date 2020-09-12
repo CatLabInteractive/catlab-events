@@ -69,6 +69,10 @@ Route::group([
 
             Route::get('assets', 'Admin\AssetController@index');
             Route::post('assets', 'Admin\AssetController@upload');
+
+            Route::get('uitdb', 'Admin\UitDbController@index');
+            Route::get('uitdb/connect', 'Admin\UitDbController@link');
+            Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
         }
     );
 

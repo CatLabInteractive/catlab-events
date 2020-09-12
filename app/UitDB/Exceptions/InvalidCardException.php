@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UitPAS\Exceptions;
+namespace App\UitDB\Exceptions;
 
 use App\Exceptions\Exception;
 

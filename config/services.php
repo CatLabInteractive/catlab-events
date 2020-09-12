@@ -53,6 +53,11 @@ return [
         'apiToken' => env('PAY_APITOKEN'),
         'serviceId' => env('PAY_SERVICEID')
 
+    ],
+
+    'uitdb' => [
+        'key' => env('UITDB_KEY'),
+        'env' => env('UITDB_ENV')
     ]
 
 

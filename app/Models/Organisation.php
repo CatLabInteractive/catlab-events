@@ -345,6 +345,7 @@ class Organisation extends Model
      */
     public function getContactOptionsText()
     {
+        $options = [];
         if ($this->support_email) {
             $options[] = '<a href="mailto:' . $this->support_email . '" target="_blank">' . $this->support_email . '</a>';
         }
