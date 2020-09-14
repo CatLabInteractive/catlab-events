@@ -638,10 +638,6 @@ class EventController extends Controller
         // Check if an uitpas card id was provided.
         $uitPas = $request->input('uitpas');
         if ($uitPas) {
-
-
-
-
             try {
                 $uitPasService = \UitDb::getUitPasService();
                 if ($uitPasService) {

@@ -3,6 +3,7 @@
 namespace App\UitDB;
 
 use App\Models\Event;
+use App\Models\Order;
 use App\UitDB\Exceptions\InvalidCardException;
 use GuzzleHttp\Exception\RequestException;
 
@@ -42,5 +43,11 @@ class UitPASVerifier
         die((string)$response->getBody());
     }
 
-
+    /**
+     * @param Order $order
+     */
+    public function registerOrderCancel(Order $order)
+    {
+        
+    }
 }
