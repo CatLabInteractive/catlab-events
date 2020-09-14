@@ -55,6 +55,10 @@ class LiveStreamController extends Controller
             );
         }
 
+        if ($stream->redirect_uri) {
+            return redirect($stream->redirect_uri);
+        }
+
         return view('livestream.view', [
             'livestream' => $stream,
             'organisation' => $stream->organisation,

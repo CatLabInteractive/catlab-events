@@ -33,6 +33,16 @@ class LiveStreamResourceDefinition extends ResourceDefinition
             ->visible()
             ->writeable();
 
+        $this->field('youtube_video')
+            ->string()
+            ->visible()
+            ->writeable();
+
+        $this->field('redirect_uri')
+            ->string()
+            ->visible()
+            ->writeable();
+
         /*
         $this->field('mixer_key')
             ->display('mixer_channel')
