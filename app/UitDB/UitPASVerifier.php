@@ -13,6 +13,9 @@ use GuzzleHttp\Exception\RequestException;
  */
 class UitPASVerifier
 {
+    /**
+     * @var UitDatabankService
+     */
     private $uitDatabank;
 
     /**
@@ -25,12 +28,15 @@ class UitPASVerifier
     }
 
     /**
-     * @param Event $event
+     * @param Order $order
      * @param $cardNumber
      * @throws InvalidCardException
      */
-    public function registerTicketSale(Event $event, $cardNumber)
+    public function registerTicketSale(Order $order, $cardNumber)
     {
+        /** @var Event $event */
+        $event = $order->event;
+
         $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient('uitpas');
 
         try {
@@ -39,7 +45,7 @@ class UitPASVerifier
             throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend. Geef het nummer opnieuw in.');
         }
 
-        throw new InvalidCardException('De UitPAS dienst is tijdelijk niet bereikbaar. Contacteer hallo@quizfabriek.be');
+        throw new InvalidCardException('De UitPAS dienst is tijdelijk niet bereikbaar. Contacteer hallo@quizfabriek.be om manueel in te schrijven.');
         die((string)$response->getBody());
     }
 
@@ -48,6 +54,6 @@ class UitPASVerifier
      */
     public function registerOrderCancel(Order $order)
     {
-        
+
     }
 }
