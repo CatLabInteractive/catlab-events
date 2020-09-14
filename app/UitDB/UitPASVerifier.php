@@ -4,6 +4,7 @@ namespace App\UitDB;
 
 use App\Models\Event;
 use App\UitDB\Exceptions\InvalidCardException;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class UitPASVerifier
@@ -11,12 +12,15 @@ use App\UitDB\Exceptions\InvalidCardException;
  */
 class UitPASVerifier
 {
+    private $uitDatabank;
+
     /**
      * UitPASVerifier constructor.
+     * @param UitDatabankService $uitDatabank
      */
-    public function __construct()
+    public function __construct(UitDatabankService $uitDatabank)
     {
-
+        $this->uitDatabank = $uitDatabank;
     }
 
     /**
@@ -26,7 +30,16 @@ class UitPASVerifier
      */
     public function registerTicketSale(Event $event, $cardNumber)
     {
-        throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend. Geef het nummer opnieuw in.');
+        $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient('uitpas');
+
+        try {
+            $response = $client->get('uitpas/cultureevent/search?cdbid=' . $event->getUitDBId() . '&uitpasNumber=' . $cardNumber);
+        } catch (RequestException $e) {
+            throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend. Geef het nummer opnieuw in.');
+        }
+
+        throw new InvalidCardException('De UitPAS dienst is tijdelijk niet bereikbaar. Contacteer hallo@quizfabriek.be');
+        die((string)$response->getBody());
     }
 
 

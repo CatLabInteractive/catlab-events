@@ -56,8 +56,12 @@ return [
     ],
 
     'uitdb' => [
-        'key' => env('UITDB_KEY'),
-        'env' => env('UITDB_ENV')
+        'env' => env('UITDB_ENV'),
+
+        'oauth_consumer' => env('UITDB_OAUTH_CONSUMER'),
+        'oauth_secret' => env('UITDB_OAUTH_SECRET'),
+
+        'connect_key' => env('UITDB_CONNECT_KEY')
     ]
 
 

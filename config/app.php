@@ -207,7 +207,9 @@ return [
         CentralStorageServiceProvider::class,
         Roumen\Sitemap\SitemapServiceProvider::class,
 
-        willvincent\Feeds\FeedsServiceProvider::class
+        willvincent\Feeds\FeedsServiceProvider::class,
+
+        \App\UitDB\UitDbServiceProvider::class
 
 
     ],
@@ -267,7 +269,9 @@ return [
         'Eukles' => CatLab\Eukles\Client\EuklesClientFacade::class,
         'CentralStorage' => CatLab\CentralStorage\Client\CentralStorageClientFacade::class,
 
-        'Feeds'    => willvincent\Feeds\Facades\FeedsFacade::class
+        'Feeds'    => willvincent\Feeds\Facades\FeedsFacade::class,
+
+        'UitDb' => \App\UitDB\Contracts\UitDBFacade::class
 
     ],
 

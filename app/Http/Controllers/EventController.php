@@ -638,10 +638,15 @@ class EventController extends Controller
         // Check if an uitpas card id was provided.
         $uitPas = $request->input('uitpas');
         if ($uitPas) {
-            $uitPasVerifier = new UitPASVerifier();
+
+
+
 
             try {
-                $uitPasOrderReference = $uitPasVerifier->registerTicketSale($event, $uitPas);
+                $uitPasService = \UitDb::getUitPasService();
+                if ($uitPasService) {
+                    $uitPasOrderReference = $uitPasService->registerTicketSale($event, $uitPas);
+                }
             } catch (UitPASException $e) {
                 return redirect(
                     action('EventController@confirmRegister', [ $event->id, $ticketCategory->id, 'groupId' => $group->id ]))

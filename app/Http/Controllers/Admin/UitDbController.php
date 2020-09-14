@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\UitDB\UitDatabank;
+use App\UitDB\UitDatabankService;
 use Illuminate\Http\Request;
 
 /**
@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 class UitDbController extends Controller
 {
     /**
-     * @var UitDatabank
+     * @var UitDatabankService
      */
     private $client;
 
@@ -22,12 +22,7 @@ class UitDbController extends Controller
      */
     public function __construct()
     {
-        if (config('services.uitdb.key')) {
-            $this->client = new UitDatabank(
-                config('services.uitdb.key'),
-                config('services.uitdb.env')
-            );
-        }
+        $this->client = UitDatabankService::fromConfig();
     }
 
     /**
@@ -44,10 +39,9 @@ class UitDbController extends Controller
 
         $user = null;
         if ($organisation->uitdb_jwt) {
-            $this->client->setAuthentication($organisation->uitdb_jwt, $organisation->uitdb_refresh);
-            $user = $this->client->getUser();
+            $this->client->setConnectAuthentication($organisation->uitdb_jwt, $organisation->uitdb_refresh);
+            //$user = $this->client->getUser();
         }
-
 
         return view('admin.uitdb', [
             'user' => $user
