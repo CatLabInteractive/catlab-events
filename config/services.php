@@ -45,7 +45,7 @@ return [
     ],
 
     'quizwitz' => [
-        'reportClient' => 'catlab-events-wololo'
+        'reportClient' => env('QUIZWITZ_REPORT_CLIENT_KEY'),
     ],
 
     'pay' => [
