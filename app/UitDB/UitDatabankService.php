@@ -3,11 +3,14 @@
 
 namespace App\UitDB;
 
+use App\Models\Organisation;
 use App\UitDB\Contracts\UitDBFacade;
 use App\UitDB\Contracts\UitDBService;
+use App\UitDB\OAuth1\UitDbServer;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
+use SimpleXMLElement;
 
 /**
  * Class UitDatabank
@@ -51,6 +54,11 @@ class UitDatabankService implements UitDBService
     private $oauthSecret;
 
     /**
+     * @var Organisation
+     */
+    private $organisation;
+
+    /**
      * @return UitDatabankService|null
      */
     public static function fromConfig()
@@ -61,6 +69,14 @@ class UitDatabankService implements UitDBService
             config('services.uitdb.oauth_consumer'),
             config('services.uitdb.oauth_secret')
         );
+    }
+
+    /**
+     * @param Organisation $organisation
+     */
+    public function setOrganisation(Organisation $organisation)
+    {
+        $this->organisation = $organisation;
     }
 
     /**
@@ -111,8 +127,11 @@ class UitDatabankService implements UitDBService
         switch ($this->env) {
             case 'test':
                 return [
+                    'uitid' => 'https://test.uitid.be/uitid/rest/',
+
+
                     'io' => 'https://io-test.uitdatabank.be',
-                    'uitpas' => 'https://test.uitid.be/uitid/rest/',
+
                     'ui' => 'https://test.uitdatabank.be',
                     'jwt' => 'https://jwt-test.uitdatabank.be',
                     'legacy' => 'https://test.uitid.be/uitid/rest/'
@@ -121,7 +140,7 @@ class UitDatabankService implements UitDBService
             default:
                 return [
                     'io' => 'https://io.uitdatabank.be',
-                    'uitpas' => 'https://uitpas.uitdatabank.be',
+                    'rest' => 'https://www.uitid.be/uitid/rest/',
                     'ui' => 'https://www.uitdatabank.be',
                     'jwt' => 'https://jwt.uitdatabank.be'
                 ];
@@ -139,12 +158,22 @@ class UitDatabankService implements UitDBService
     }
 
     /**
-     * @return \Psr\Http\Message\StreamInterface
+     * @return SimpleXMLElement|null
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function getUser()
     {
-        return $this->authenticatedRequest('GET', '/user');
+        if (!$this->organisation) {
+            return null;
+        }
+
+        $oauthClient = $this->getOauth1ConsumerGuzzleClient($this->organisation);
+        $xml = (string)$oauthClient->get('user')->getBody();
+
+        $simpleXml = new SimpleXMLElement($xml);
+
+        $namespaces = $simpleXml->getNamespaces();
+        return $simpleXml->children($namespaces['foaf']);
     }
 
     /**
@@ -178,19 +207,22 @@ class UitDatabankService implements UitDBService
     }
 
     /**
+     * @param Organisation|null $organisation
      * @param string $namespace
      * @return Client
      */
-    public function getOauth1ConsumerGuzzleClient($namespace = 'ui')
-    {
+    public function getOauth1ConsumerGuzzleClient(
+        Organisation $organisation = null,
+        $namespace = 'uitid'
+    ) {
         $url = $this->getEnvironment();
 
         $stack = HandlerStack::create();
         $middleware = new Oauth1([
             'consumer_key'    => $this->oauthConsumer,
             'consumer_secret' => $this->oauthSecret,
-            'token'           => '',
-            'token_secret'    => ''
+            'token'           => $organisation ? $organisation->uitdb_identifier : null,
+            'token_secret'    => $organisation ? $organisation->uitdb_secret : null
         ]);
         $stack->push($middleware);
 
@@ -201,5 +233,20 @@ class UitDatabankService implements UitDBService
         ]);
 
         return $client;
+    }
+
+    /**
+     * @return UitDbServer
+     */
+    public function getOAuth1Authenticator($redirectUrl)
+    {
+        $server = new UitDbServer([
+            'base_url' => $this->getEnvironment()['uitid'],
+            'identifier' => $this->oauthConsumer,
+            'secret' => $this->oauthSecret,
+            'callback_uri' => $redirectUrl
+        ]);
+
+        return $server;
     }
 }

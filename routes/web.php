@@ -72,6 +72,7 @@ Route::group([
 
             Route::get('uitdb', 'Admin\UitDbController@index');
             Route::get('uitdb/connect', 'Admin\UitDbController@link');
+            Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
             Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
         }
     );

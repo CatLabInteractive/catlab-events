@@ -37,13 +37,18 @@ class UitPASVerifier
         /** @var Event $event */
         $event = $order->event;
 
-        $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient('uitpas');
+        $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient($order->organisation);
+        if (!$client) {
+            throw new InvalidCardException('De UitPAS dienst is niet correct ingesteld voor dit account. Contacteer een administrator.');
+        }
 
         try {
             $response = $client->get('uitpas/cultureevent/search?cdbid=' . $event->getUitDBId() . '&uitpasNumber=' . $cardNumber);
         } catch (RequestException $e) {
             throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend. Geef het nummer opnieuw in.');
         }
+
+        //dd((string)$response->getBody());
 
         throw new InvalidCardException('De UitPAS dienst is tijdelijk niet bereikbaar. Contacteer hallo@quizfabriek.be om manueel in te schrijven.');
         die((string)$response->getBody());
