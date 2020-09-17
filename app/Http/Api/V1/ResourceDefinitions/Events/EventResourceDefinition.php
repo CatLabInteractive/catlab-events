@@ -130,6 +130,11 @@ class EventResourceDefinition extends ResourceDefinition
             ->writeable(true, true)
             ->string();
 
+        $this->field('uitdb_event_id')
+            ->visible()
+            ->writeable(true, true)
+            ->string();
+
         $this->field('max_points')
             ->visible()
             ->writeable(true, true)

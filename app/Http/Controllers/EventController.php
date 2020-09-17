@@ -635,13 +635,19 @@ class EventController extends Controller
             ]);
         }
 
+        $client = new ApiClient($user);
+
+        // create a default order
+        $order = $ticketCategory->createOrder($group);
+
         // Check if an uitpas card id was provided.
         $uitPas = $request->input('uitpas');
         if ($uitPas) {
-            $uitPasVerifier = new UitPASVerifier();
-
             try {
-                $uitPasOrderReference = $uitPasVerifier->registerTicketSale($event, $uitPas);
+                $uitPasService = \UitDb::getUitPasService();
+                if ($uitPasService) {
+                    $uitPasService->registerTicketSale($order, $uitPas);
+                }
             } catch (UitPASException $e) {
                 return redirect(
                     action('EventController@confirmRegister', [ $event->id, $ticketCategory->id, 'groupId' => $group->id ]))
@@ -652,10 +658,6 @@ class EventController extends Controller
             }
         }
 
-        $client = new ApiClient($user);
-
-        // create a default order
-        $order = $ticketCategory->createOrder($group);
         $order->save();
 
         try {

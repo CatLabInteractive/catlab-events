@@ -209,6 +209,12 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function onCancellation()
     {
+        // Cancel the sale in uitdb (if available)
+        $uitPasService = \UitDb::getUitPasService();
+        if ($uitPasService) {
+            $uitPasService->registerOrderCancel($this);
+        }
+
         // Send email
         foreach ($this->group->members as $member) {
             $this->sendCancellationEmail($member);

@@ -868,6 +868,14 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @return string
+     */
+    public function getUitDBId()
+    {
+        return $this->uitdb_event_id;
+    }
+
+    /**
      * @return string|null
      */
     public function getUrgencyMessage()
