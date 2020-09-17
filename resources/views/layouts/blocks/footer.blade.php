@@ -152,4 +152,6 @@
 
 @endif
 
-<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key=AIzaSyDril7UCS0iQFnCACg-fU4tgvrrTJG2C2Y"></script>
+@if(config('services.google.maps_api_key'))
+    <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key={{config('services.google.maps_api_key')}}"></script>
+@endif
