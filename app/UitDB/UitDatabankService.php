@@ -21,7 +21,7 @@ class UitDatabankService implements UitDBService
     /**
      * @var string
      */
-    private $connectKey;
+    private $entryApiKey;
 
     /**
      * @var string
@@ -65,7 +65,7 @@ class UitDatabankService implements UitDBService
     {
         return new self(
             config('services.uitdb.env'),
-            config('services.uitdb.connect_key'),
+            config('services.uitdb.entry_api_key'),
             config('services.uitdb.oauth_consumer'),
             config('services.uitdb.oauth_secret')
         );
@@ -88,11 +88,11 @@ class UitDatabankService implements UitDBService
      */
     public function __construct(
         $env,
-        $key,
+        $entryApiKey,
         $oauthConsumer,
         $oauthSecret
     ) {
-        $this->connectKey = $key;
+        $this->entryApiKey = $entryApiKey;
         $this->env = $env;
 
         $this->oauthConsumer = $oauthConsumer;
@@ -104,9 +104,9 @@ class UitDatabankService implements UitDBService
     /**
      * @return string
      */
-    public function getApplicationKey()
+    public function getEntryApiKey()
     {
-        return $this->connectKey;
+        return $this->entryApiKey;
     }
 
     /**
@@ -116,7 +116,7 @@ class UitDatabankService implements UitDBService
     public function getConnectUrl($redirectUrl)
     {
         $environment = $this->getEnvironment();
-        return $environment['jwt'] . '/connect?apiKey=' . urlencode($this->connectKey) . '&destination=' . urlencode($redirectUrl);
+        return $environment['jwt'] . '/connect?apiKey=' . urlencode($this->entryApiKey) . '&destination=' . urlencode($redirectUrl);
     }
 
     /**
@@ -188,7 +188,7 @@ class UitDatabankService implements UitDBService
 
         $headers = [
             'Authorization' => 'Bearer ' . $this->jwt,
-            'X-Api-Key' => $this->connectKey
+            'X-Api-Key' => $this->entryApiKey
         ];
 
         $response = $this->guzzle->request($method, $url, [
@@ -230,6 +230,29 @@ class UitDatabankService implements UitDBService
             'base_uri' => $url[$namespace],
             'handler' => $stack,
             'auth' => 'oauth'
+        ]);
+
+        return $client;
+    }
+
+    /**
+     * @param Organisation|null $organisation
+     * @param string $namespace
+     * @return Client
+     */
+    public function getEntrySearchGuzzleClient(
+        Organisation $organisation = null,
+        $namespace = 'uitid'
+    ) {
+        $url = $this->getEnvironment();
+
+        $headers = [
+            'X-Api-Key' => $this->getEntryApiKey()
+        ];
+
+        $client = new \GuzzleHttp\Client([
+            'base_uri' => $url[$namespace],
+            'headers' => $headers
         ]);
 
         return $client;
