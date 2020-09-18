@@ -82,6 +82,7 @@ class UitPASVerifier
         try {
             $query = [
                 'cdbid' => 'e2402c1a-006c-46fb-801c-a9a92fb1f64d' // @TODO temporary using a different event for testing
+                // 'cdbid' => $event->getUitDBId()
             ];
 
             if ($cardNumber) {
