@@ -30,5 +30,5 @@ use App\UitDB\UitPASVerifier;
  */
 interface UitDBService
 {
-    public function getUitPasService(): UitPASVerifier;
+    public function getUitPasService(): ?UitPASVerifier;
 }

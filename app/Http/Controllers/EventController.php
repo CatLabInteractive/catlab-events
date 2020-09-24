@@ -31,7 +31,6 @@ use App\Models\TicketCategory;
 use App\Models\User;
 use App\Models\Venue;
 use App\UitDB\Exceptions\UitPASException;
-use App\UitDB\UitPASVerifier;
 use Auth;
 use CatLab\Accounts\Client\ApiClient;
 use Illuminate\Http\Request;
@@ -713,7 +712,7 @@ class EventController extends Controller
         } catch (\Exception $e) {
             $uitPasService = \UitDb::getUitPasService();
             if ($uitPasService) {
-                $uitPasService->registerOrderCancel($order, $uitPas);
+                $uitPasService->registerOrderCancel($order);
             }
         }
 

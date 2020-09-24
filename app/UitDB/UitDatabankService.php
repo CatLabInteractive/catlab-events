@@ -220,8 +220,11 @@ class UitDatabankService implements UitDBService
     /**
      * @return UitPASVerifier
      */
-    public function getUitPasService(): UitPASVerifier
+    public function getUitPasService(): ?UitPASVerifier
     {
+        if (!$this->oauthConsumer) {
+            return null;
+        }
         return new UitPASVerifier($this);
     }
 
