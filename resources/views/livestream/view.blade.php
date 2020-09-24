@@ -6,7 +6,9 @@
 
 @section('content')
 
-    <h1>{{ $livestream->title }}</h1>
+    @if(!$embed)
+        <h1>{{ $livestream->title }}</h1>
+    @endif
 
     <div class="twitch">
         <div class="twitch-video">

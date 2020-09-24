@@ -34,6 +34,12 @@
             font-family: 'SharpGroteskBook20-Regular';
         }
 
+        body.embed {
+            margin: 0px;
+            padding: 0px;
+            padding-bottom: 20px;
+        }
+
         h1 {
             font-family: 'SharpGroteskSmBold25-Regular';
         }
@@ -46,6 +52,18 @@
             width: 80%;
             box-sizing: border-box;
             margin: 20px auto;
+        }
+
+        body.embed #container {
+            width: 100%;
+            margin: 0;
+        }
+
+        body.embed p,
+        body.embed h1,
+        body.embed h2,
+        body.embed h3 {
+            padding: 5px 20px;
         }
 
         .twitch .twitch-video {
@@ -89,9 +107,10 @@
                 bottom: 0;
             }
         }
+
     </style>
 </head>
-<body>
+<body @if($embed)class="embed"@endif>
 
 @if($organisation->chatwoot_url)
 <script>
