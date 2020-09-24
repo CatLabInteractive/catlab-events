@@ -31,6 +31,8 @@ use App\UitDB\Exceptions\InvalidEventException;
 use App\UitDB\Exceptions\PriceClassNotFound;
 use App\UitDB\Exceptions\UitPASAlreadyUsed;
 use App\UitDB\Exceptions\UitPASException;
+use App\UitDB\Exceptions\UiTPasGenericCardError;
+use App\UitDB\Exceptions\UitPASInvalidCardStatus;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 use SimpleXMLElement;
@@ -288,11 +290,17 @@ class UitPASVerifier
         // No discount possible?
         $buyConstraint = (string)$event->ticketSales->ticketSale->buyConstraintReason;
         switch ($buyConstraint) {
-            case 'INVALID_CARD_STATUS':
+            case null: // no error? No problem!
+                break;
+
+            case 'INVALID_CARD_STATUS': // no discount? No problem. (but no discount either)
                 return null;
 
             case 'MAXIMUM_REACHED':
                 throw UitPASAlreadyUsed::make($ticketCategory);
+
+            default:
+                throw UiTPasGenericCardError::make($ticketCategory, $buyConstraint);
         }
 
         if ($buyConstraint === 'INVALID_CARD_STATUS') {

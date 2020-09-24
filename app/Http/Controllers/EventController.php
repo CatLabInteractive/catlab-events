@@ -707,7 +707,14 @@ class EventController extends Controller
             }
         }
 
-        $order->save();
+        try {
+            $order->save();
+        } catch (\Exception $e) {
+            $uitPasService = \UitDb::getUitPasService();
+            if ($uitPasService) {
+                $uitPasService->registerOrderCancel($order, $uitPas);
+            }
+        }
 
         $ticketPriceCalculator = $order->getTicketPriceCalculator();
 
