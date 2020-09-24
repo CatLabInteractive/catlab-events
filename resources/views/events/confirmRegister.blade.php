@@ -62,7 +62,7 @@
             </p>
 
             <div class="form-group">
-                {{ Form::text('uitpas', $uitpas, [ 'class' => 'form-control', 'placeholder' => 'Schrijf hier je UitPAS nummer' ]) }}
+                {{ Form::text('uitpas', $uitpas, [ 'class' => 'form-control', 'placeholder' => 'Schrijf hier je UiTPAS kaartnummer' ]) }}
             </div>
 
             <p>{{ Form::submit('UiTPAS tarief toepassen', array('class' => 'btn btn-info')) }}</p>

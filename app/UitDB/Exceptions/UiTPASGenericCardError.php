@@ -8,7 +8,7 @@ use App\Models\TicketCategory;
  * Class UitPASAlreadyUsed
  * @package App\UitDB\Exceptions
  */
-class UiTPasGenericCardError extends UitPASException
+class UiTPASGenericCardError extends UitPASException
 {
     /**
      * @param TicketCategory $ticketCategory

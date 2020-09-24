@@ -218,14 +218,14 @@ class UitDatabankService implements UitDBService
     }
 
     /**
-     * @return UitPASVerifier
+     * @return UiTPASVerifier
      */
-    public function getUitPasService(): ?UitPASVerifier
+    public function getUitPasService(): ?UiTPASVerifier
     {
         if (!$this->oauthConsumer) {
             return null;
         }
-        return new UitPASVerifier($this);
+        return new UiTPASVerifier($this);
     }
 
     /**

@@ -31,17 +31,16 @@ use App\UitDB\Exceptions\InvalidEventException;
 use App\UitDB\Exceptions\PriceClassNotFound;
 use App\UitDB\Exceptions\UitPASAlreadyUsed;
 use App\UitDB\Exceptions\UitPASException;
-use App\UitDB\Exceptions\UiTPasGenericCardError;
-use App\UitDB\Exceptions\UitPASInvalidCardStatus;
+use App\UitDB\Exceptions\UiTPASGenericCardError;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 use SimpleXMLElement;
 
 /**
- * Class UitPASVerifier
+ * Class UiTPASVerifier
  * @package App\Tools
  */
-class UitPASVerifier
+class UiTPASVerifier
 {
     /**
      * @var UitDatabankService
@@ -300,7 +299,7 @@ class UitPASVerifier
                 throw UitPASAlreadyUsed::make($ticketCategory);
 
             default:
-                throw UiTPasGenericCardError::make($ticketCategory, $buyConstraint);
+                throw UiTPASGenericCardError::make($ticketCategory, $buyConstraint);
         }
 
         if ($buyConstraint === 'INVALID_CARD_STATUS') {

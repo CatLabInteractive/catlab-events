@@ -54,7 +54,7 @@ class EventController extends Controller
         $events = Event::upcoming()->orderBy('startDate')->get();
         $pastEvents = Event::finished()->orderBy('startDate', 'desc')->limit(5)->get();
 
-        return view('events/publisher', [
+        return view('events.publisher', [
             'events' => $events,
             'pastEvents' => $pastEvents,
             'nextEvent' => $this->getNextEvent($events),
@@ -138,7 +138,7 @@ class EventController extends Controller
         $events = $organisation->events()->upcoming()->published()->orderBy('startDate')->get();
         $pastEvents = $organisation->events()->finished()->published()->orderBy('startDate', 'desc')->get();
 
-        return view('events/archive', [
+        return view('events.archive', [
             'events' => $events,
             'pastEvents' => $pastEvents,
             'nextEvent' => $this->getNextEvent($events),
@@ -156,7 +156,7 @@ class EventController extends Controller
         $organisation = $this->getOrganisation();
 
         $events = $organisation->events()->upcoming()->published()->orderBy('startDate')->get();
-        return view('events/registerIndex', [
+        return view('events.registerIndex', [
             'events' => $events,
             'nextEvent' => $this->getNextEvent($events),
             'countdownEvent' => $events->first(),
@@ -173,7 +173,7 @@ class EventController extends Controller
         $events = $organisation->events()->published()->upcoming()->orderBy('startDate')->get();
         $pastEvents = $organisation->events()->published()->finished()->orderBy('startDate', 'desc')->get();
 
-        return view('events/publisher', [
+        return view('events.publisher', [
             'events' => $events,
             'pastEvents' => $pastEvents,
             'nextEvent' => $this->getNextEvent($events),
@@ -204,7 +204,7 @@ class EventController extends Controller
         $events = $venue->events()->published()->upcoming()->orderBy('startDate')->get();
         $previousEvents = $venue->events()->published()->finished()->orderBy('startDate', 'desc')->get();
 
-        return view('events/venue', [
+        return view('events.venue', [
             'venue' => $venue,
             'events' => $events,
             'pastEvents' => $previousEvents,
@@ -285,7 +285,7 @@ class EventController extends Controller
             return $a->price - $b->price;
         });
 
-        return view('events/view', [
+        return view('events.view', [
             'event' => $event,
             'nextEvent' => $event,
             'attendees' => $attendees,
@@ -377,7 +377,7 @@ class EventController extends Controller
             return redirect(action('EventController@register', [ $event->id, $availableTickets[0]->id ]));
         }
 
-        return view('events/selectTicketCategory', [
+        return view('events.selectTicketCategory', [
             'event' => $event,
             'categories' => $categories,
             'showAvailableTickets' => $showAvailableTickets,
@@ -490,8 +490,7 @@ class EventController extends Controller
             $groupValues[$group->id] = $group->name;
         }
 
-        return view('events/register', [
-            'showUiTPAS' => $event->organisation->uitpas && \UitDb::getUitPasService(),
+        return view('events.register', [
             'action' => \Request::url(),
             'event' => $event,
             'groups' => $groupValues,
@@ -621,7 +620,8 @@ class EventController extends Controller
         $input['uitpas'] = $validUitpas;
         $request->session()->put('uitpas_card_number', $validUitpas);
 
-        $view = view('events/confirmRegister', [
+        $view = view('events.confirmRegister', [
+            'showUiTPAS' => $event->organisation->uitpas && \UitDb::getUitPasService(),
             'action' => action('EventController@processRegister', [ $eventId, $ticketCategoryId ]),
             'uitpasAction' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
             'group' => $group,
@@ -857,7 +857,7 @@ class EventController extends Controller
             abort(404, 'No scores found');
         }
 
-        return view('events/scores', [
+        return view('events.scores', [
             'event' => $event,
             'scores' => $scores
         ]);
@@ -883,7 +883,7 @@ class EventController extends Controller
 
         if (count($pendingOrders) > 0) {
             $pendingOrder = $pendingOrders[0];
-            return view('events/pendingOrder', [
+            return view('events.pendingOrder', [
                 'event' => $event,
                 'cancelUrl' => \Request::url() . '?cancelPendingOrders=1',
                 'pendingOrder' => $pendingOrder
