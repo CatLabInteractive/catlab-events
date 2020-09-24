@@ -51,7 +51,10 @@
             @foreach($orderData['items'] as $item)
                 <tr>
                     <td>{{ $item['name'] }}</td>
-                    <td>{{ toMoney($item['price']) }}</td>
+                    <td>
+                        {{ toMoney($item['price']) }}
+                        <span class="small">(incl. {{ toMoney($item['vat']) }} btw)</span>
+                    </td>
                 </tr>
             @endforeach
 
