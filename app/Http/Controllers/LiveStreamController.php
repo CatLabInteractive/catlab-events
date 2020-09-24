@@ -53,12 +53,15 @@ class LiveStreamController extends Controller
             $domain = null;
         }
 
+        $embed = $request->query('embed') == 1;
+
         $stream = LiveStream::where('token', '=', $identifier)->first();
         if (!$stream) {
             return view(
                 'livestream.notfound',
                 [
-                    'organisation' => $this->getOrganisation()
+                    'organisation' => $this->getOrganisation(),
+                    'embed' => $embed
                 ]
             );
         }
@@ -70,7 +73,8 @@ class LiveStreamController extends Controller
                 [
                     'livestream' => $stream,
                     'organisation' => $stream->organisation,
-                    'poll' => action('LiveStreamController@poll', [ $stream->token ])
+                    'poll' => action('LiveStreamController@poll', [ $stream->token ]),
+                    'embed' => $embed
                 ]
             );
         }
@@ -82,6 +86,7 @@ class LiveStreamController extends Controller
         return view('livestream.view', [
             'livestream' => $stream,
             'organisation' => $stream->organisation,
+            'embed' => $embed
         ]);
     }
 

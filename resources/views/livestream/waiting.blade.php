@@ -6,7 +6,10 @@
 
 @section('content')
 
-    <h1>{{ $livestream->title }}</h1>
+    @if(!$embed)
+        <h1>{{ $livestream->title }}</h1>
+    @endif
+
     <p>Dit evenement is nog niet begonnen.</p>
 
     @include('livestream.footer')
