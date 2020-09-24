@@ -112,12 +112,18 @@
 
             <tr>
                 <td>Inschrijving</td>
-                <td>{{ $ticketPriceCalculator->getFormattedPrice() }}</td>
+                <td>
+                    {{ $ticketPriceCalculator->getFormattedPrice() }}
+                    <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)
+                </td>
             </tr>
 
             <tr>
                 <td>Transactiekosten</td>
-                <td>{{ $ticketPriceCalculator->getFormattedTransactionFee() }}</td>
+                <td>
+                    {{ $ticketPriceCalculator->getFormattedTransactionFee() }}
+                    <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedTransactionFeeVat() }} btw)</span>
+                </td>
             </tr>
 
             <tr class="total">

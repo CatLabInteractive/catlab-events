@@ -167,9 +167,25 @@ class TicketPriceCalculator
     /**
      * @return string
      */
+    public function getFormattedPriceVat()
+    {
+        return $this->toMoney($this->getTicketPriceVat());
+    }
+
+    /**
+     * @return string
+     */
     public function getFormattedTransactionFee()
     {
         return $this->toMoney($this->calculateTransactionFee(true));
+    }
+
+    /**
+     * @return string
+     */
+    public function getFormattedTransactionFeeVat()
+    {
+        return $this->toMoney($this->calculateTransactionFeeVat());
     }
 
     /**
