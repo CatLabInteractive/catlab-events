@@ -25,7 +25,8 @@
         "paynl/sdk": "^1.5",
         "roumen/sitemap": "2.6.*",
         "spatie/laravel-referer": "^1.4",
-        "willvincent/feeds": "^1.1"
+        "willvincent/feeds": "^1.1",
+        "ext-simplexml": "*"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

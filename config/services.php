@@ -61,12 +61,11 @@ return [
         'oauth_consumer' => env('UITDB_OAUTH_CONSUMER'),
         'oauth_secret' => env('UITDB_OAUTH_SECRET'),
 
-        'connect_key' => env('UITDB_CONNECT_KEY')
+        'entry_api_key' => env('UITDB_ENTRY_API_KEY')
     ],
 
     'google' => [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY')
     ]
-
 
 ];
