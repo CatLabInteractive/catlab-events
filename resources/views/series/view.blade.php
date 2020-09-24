@@ -54,9 +54,9 @@
 
                                 @if($nextEvent->event_url)
                                     <a href="{{ $nextEvent->event_url }}" class="btn btn-primary">Meer informatie</a>
-                                @else
-                                    <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Meer informatie</a>
                                 @endif
+
+                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Praktisch</a>
 
                                 @if($nextEvent->isSelling())
                                     <a href="{{ action('EventController@selectTicketCategory', [ $nextEvent->id ] ) }}" class="btn btn-primary"><i class="fa fa-ticket"></i> Inschrijven</a>
