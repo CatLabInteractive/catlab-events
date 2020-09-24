@@ -112,7 +112,7 @@
 </head>
 <body @if($embed)class="embed"@endif>
 
-@include('blocks.chatwoot')
+@include('blocks.chatwoot', [ 'livestream' => true ])
 
 <div>
 

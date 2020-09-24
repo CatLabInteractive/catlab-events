@@ -7,7 +7,7 @@
             s.parentNode.insertBefore(g,s);
             g.onload=function(){
                 window.chatwootSDK.run({
-                    websiteToken: '{{organisation()->chatwoot_token}}',
+                    websiteToken: @if(isset($livestream) && $livestream && organisation()->chatwoot_livestream_token)'{{organisation()->chatwoot_token}}'@else'{{organisation()->chatwoot_token}}'@endif,
                     baseUrl: BASE_URL
                 })
             }
