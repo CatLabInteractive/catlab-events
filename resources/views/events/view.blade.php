@@ -78,7 +78,7 @@
                     <div>
                         <p>
                             @if($event->event_url)
-                                <a href="{{ $event->event_url }}" class="btn btn-default">Meer informatie</a>
+                                <a href="{{ $event->event_url }}" class="btn btn-default"><i class="fa fa-external-link"></i>  Meer informatie</a>
                             @endif
 
                             @if($event->getLiveStreamUrl() && !$event->hasTickets())
@@ -309,10 +309,9 @@
 
                             <p>
                                 @if($v->event_url)
-                                    <a href="{{ $v->event_url }}">Meer informatie</a>
-                                @else
-                                    <a href="{{ $v->getUrl() }}">Meer informatie</a>
+                                    <a href="{{ $v->event_url }}"><i class="fa fa-external-link"></i> Meer informatie</a>,
                                 @endif
+                                <a href="{{ $v->getUrl() }}">Praktisch</a>
                             </p>
 
                             </div>

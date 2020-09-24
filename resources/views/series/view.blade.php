@@ -53,10 +53,10 @@
                             <p class="banner-btn">
 
                                 @if($nextEvent->event_url)
-                                    <a href="{{ $nextEvent->event_url }}" class="btn btn-default">Meer informatie</a>
+                                    <a href="{{ $nextEvent->event_url }}" class="btn btn-default"><i class="fa fa-external-link"></i> Meer informatie</a>
                                 @endif
 
-                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default">Praktisch</a>
+                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default"><i class="fa fa-check"></i> Praktisch</a>
 
                                 @if($nextEvent->getLiveStreamUrl() && $nextEvent->hasTickets())
                                     <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-default"><i class="fa fa-play"></i> Livestream</a>
