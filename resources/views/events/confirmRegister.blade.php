@@ -47,7 +47,7 @@
         </div>
     @endif
 
-    @if($event->organisation->uitpas)
+    @if($showUiTPAS)
         <div class="alert alert-info">
             <h4>UiTPAS</h4>
 

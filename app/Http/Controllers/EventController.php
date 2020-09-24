@@ -492,6 +492,7 @@ class EventController extends Controller
         }
 
         return view('events/register', [
+            'showUiTPAS' => $event->organisation->uitpas && \UitDb::getUitPasService(),
             'action' => \Request::url(),
             'event' => $event,
             'groups' => $groupValues,
