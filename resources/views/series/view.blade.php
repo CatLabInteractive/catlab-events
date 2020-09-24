@@ -53,10 +53,14 @@
                             <p class="banner-btn">
 
                                 @if($nextEvent->event_url)
-                                    <a href="{{ $nextEvent->event_url }}" class="btn btn-primary">Meer informatie</a>
+                                    <a href="{{ $nextEvent->event_url }}" class="btn btn-default">Meer informatie</a>
                                 @endif
 
-                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Praktisch</a>
+                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default">Praktisch</a>
+
+                                @if($nextEvent->getLiveStreamUrl() && $nextEvent->hasTickets())
+                                    <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-default"><i class="fa fa-play"></i> Livestream</a>
+                                @endif
 
                                 @if($nextEvent->isSelling())
                                     <a href="{{ action('EventController@selectTicketCategory', [ $nextEvent->id ] ) }}" class="btn btn-primary"><i class="fa fa-ticket"></i> Inschrijven</a>
@@ -66,10 +70,6 @@
                                     <a href="{{ action('WaitingListController@waitingList', [ $nextEvent->id ]) }}" class="btn btn-success"><i class="fa fa-ticket"></i> Pre-registratie</a>
                                 @elseif($nextEvent->hasTickets())
                                     <a class="btn btn-danger"><i class="fa fa-ticket"></i> {{ $nextEvent->getNotSellingReason() }}</a>
-                                @endif
-
-                                @if($nextEvent->getLiveStreamUrl() && $nextEvent->hasTickets())
-                                    <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-primary"><i class="fa fa-play"></i> Livestream</a>
                                 @endif
 
                                 @if($nextEvent->getFacebookEventUrl())
