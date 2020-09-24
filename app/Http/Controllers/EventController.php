@@ -601,14 +601,43 @@ class EventController extends Controller
         $input = [];
         $input['group'] = $group->id;
 
-        return view('events/confirmRegister', [
+        $priceCalculator = $ticketCategory->getTicketPriceCalculator();
+
+        // Do we have uitpas id?
+        $errors = [];
+        $validUitpas = null;
+        if ($request->query('uitpas')) {
+            $uitPasService = \UitDb::getUitPasService();
+            if ($uitPasService) {
+                try {
+                    $uitPasService->applyUitPasTariff($ticketCategory, $priceCalculator, $request->query('uitpas'));
+                    $validUitpas = $request->query('uitpas');
+                } catch (UitPASException $e) {
+                    $errors[] = $e->getMessage();
+                }
+            }
+        }
+
+        $input['uitpas'] = $validUitpas;
+        $request->session()->put('uitpas_card_number', $validUitpas);
+
+        $view = view('events/confirmRegister', [
             'action' => action('EventController@processRegister', [ $eventId, $ticketCategoryId ]),
+            'uitpasAction' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
             'group' => $group,
             'input' => $input,
             'event' => $event,
             'ticketCategory' => $ticketCategory,
-            'canonicalUrl' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ])
+            'ticketPriceCalculator' => $priceCalculator,
+            'canonicalUrl' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
+            'uitpas' => $validUitpas
         ]);
+
+        if ($errors) {
+            $view->withErrors($errors);
+        }
+
+        return $view;
     }
 
     /**
@@ -670,7 +699,7 @@ class EventController extends Controller
                 }
             } catch (UitPASException $e) {
                 return redirect(
-                    action('EventController@confirmRegister', [ $event->id, $ticketCategory->id, 'groupId' => $group->id ]))
+                    action('EventController@confirmRegister', [ $event->id, $ticketCategory->id, 'groupId' => $group->id, 'uitpas' => $uitPas ]))
                     ->withErrors([
                             $e->getMessage()
                         ]
@@ -680,27 +709,29 @@ class EventController extends Controller
 
         $order->save();
 
+        $ticketPriceCalculator = $order->getTicketPriceCalculator();
+
         try {
             $orderData = $client->createOrder([
 
-                'callback' => action('OrderController@sync', [$order->id]),
+                'callback' => action('OrderController@sync', [ $order->id ]),
                 'items' => [
                     [
                         'name' => $event->name,
                         'description' => 'Inschrijving ' . $group->name,
                         'amount' => 1,
-                        'price' => $ticketCategory->getTicketPrice(),
-                        'vat' => 0
+                        'price' => $ticketPriceCalculator->getTicketPrice(false),
+                        'vat' => $ticketPriceCalculator->getTicketPriceVat()
                     ],
 
                     [
                         'name' => 'Transactiekosten',
                         'amount' => 1,
-                        'price' => $ticketCategory->calculateTransactionFee(),
-                        'vat' => $ticketCategory->calculateTransactionVeeVat()
+                        'price' => $ticketPriceCalculator->calculateTransactionFee(),
+                        'vat' => $ticketPriceCalculator->calculateTransactionFeeVat()
                     ]
                 ],
-                'maxTransactionFee' => $ticketCategory->calculateTransactionFee(false)
+                'maxTransactionFee' => $ticketPriceCalculator->calculateTransactionFee(false)
 
             ]);
 

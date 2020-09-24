@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Tools\TicketPriceCalculator;
 use CatLab\Charon\Laravel\Database\Model;
 use DateTime;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -53,6 +54,11 @@ class TicketCategory extends Model
      * @var
      */
     protected $availableError = null;
+
+    /**
+     * @var TicketPriceCalculator
+     */
+    private $ticketPriceCalculator;
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -87,88 +93,14 @@ class TicketCategory extends Model
     }
 
     /**
-     * Calculate the transaction fee to be paid on this ticket type.
-     * @param bool $includeVat
-     * @return float
+     * @return TicketPriceCalculator
      */
-    public function calculateTransactionFee($includeVat = false)
+    public function getTicketPriceCalculator()
     {
-        /** @var Organisation $organisation */
-        $organisation = $this->event->organisation;
-        $percentage = $organisation->getTransactionFeeFactor();
-
-        $fixed = $organisation->getTransactionFeeFixed();
-
-        if ($this->event->include_ticket_fee) {
-            $base = ($this->price / (1 + $percentage)) - $fixed;
-            $variable = $base * $percentage;
-        } else {
-            $variable = $this->price * $percentage;
+        if (!isset($this->ticketPriceCalculator)) {
+            $this->ticketPriceCalculator = new TicketPriceCalculator($this);
         }
-
-        $fee = round(($fixed + $variable), 2);
-        $fee = max($organisation->getTransactionFeeMinimum(), $fee);
-
-        if ($includeVat) {
-            $fee += $this->calculateTransactionVeeVat();
-        }
-
-        // transaction fee should always be smaller than price.
-        $fee = min($this->price, $fee);
-
-        return round($fee, 2);
-    }
-
-    /**
-     * @return float
-     */
-    public function calculateTransactionVeeVat()
-    {
-        $fee = $this->calculateTransactionFee(false);
-
-        /** @var Organisation $organisation */
-        $organisation = $this->event->organisation;
-
-        $vat = $fee * $organisation->getFeeVatFactor();
-        $vat = round($vat, 2);
-
-        return $vat;
-    }
-
-    /**
-     * Get the actual price of the ticket.
-     */
-    public function getTicketPrice()
-    {
-        if ($this->event->include_ticket_fee) {
-            return round($this->price - $this->calculateTransactionFee(true), 2);
-        }
-        return round($this->price, 2);
-    }
-
-    /**
-     * @return float
-     */
-    public function getTotalPrice()
-    {
-        $total =  $this->getTicketPrice() + $this->calculateTransactionFee(true);
-        return round($total, 2);
-    }
-
-    /**
-     * @return string
-     */
-    public function getFormattedPrice()
-    {
-        return $this->toMoney($this->getTicketPrice());
-    }
-
-    /**
-     * @return string
-     */
-    public function getFormattedTransactionFee()
-    {
-        return $this->toMoney($this->calculateTransactionFee(true));
+        return $this->ticketPriceCalculator;
     }
 
     /**
@@ -176,15 +108,15 @@ class TicketCategory extends Model
      */
     public function getFormattedTotalPrice()
     {
-        return $this->toMoney($this->getTotalPrice());
+        return $this->getTicketPriceCalculator()->getFormattedTotalPrice();
     }
 
     /**
-     * @return string
+     * @return float
      */
-    public function getFormattedTotalCost()
+    public function getTotalPrice()
     {
-        return $this->toMoney($this->price + $this->calculateTransactionFee(true));
+        return $this->getTicketPriceCalculator()->getTotalPrice();
     }
 
     /**
@@ -355,14 +287,5 @@ class TicketCategory extends Model
         }
 
         return $out;
-    }
-
-    /**
-     * @param $amount
-     * @return string
-     */
-    protected function toMoney($amount)
-    {
-        return '€ ' . number_format($amount, 2, ',', '');
     }
 }

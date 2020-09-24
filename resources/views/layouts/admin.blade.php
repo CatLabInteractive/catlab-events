@@ -44,9 +44,7 @@
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\SeriesController@index') }}">Series</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\PeopleController@index') }}">People</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\LiveStreamController@index') }}">Livestreams</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\UitDbController@index') }}">UitDB</a></li>
-
-
+                <!--<li class="nav-item"><a class="nav-link" href="{{ action('Admin\UitDbController@index') }}">UitDB</a></li>-->
             </ul>
 
             <!-- Right Side Of Navbar -->

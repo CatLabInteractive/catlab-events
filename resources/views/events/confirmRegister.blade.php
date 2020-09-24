@@ -21,11 +21,6 @@
         </div>
     @endif
 
-    {{ Form::open(array('url' => $action)) }}
-    @foreach($input as $k => $v)
-        {{ Form::hidden($k, $v) }}
-    @endforeach
-
     <p>Leuk dat jullie erbij willen zijn, {{ $group->name }}!</p>
     <!--
     <div class="alert alert-warning">
@@ -52,8 +47,45 @@
         </div>
     @endif
 
+    @if($event->organisation->uitpas)
+        <div class="alert alert-info">
+            <h4>UiTPAS</h4>
+
+            {{ Form::open(array('url' => $uitpasAction, 'method' => 'get')) }}
+            {{ Form::hidden('groupId', $group->id) }}
+
+            <p>
+                Heb je een UitPAS met kansentarief? Geef dan hieronder je UitPAS nummer in. Wij passen dan het juiste tarief toe.
+                @if(organisation()->getContactOptionsText())
+                    <br />Ondervind je problemen? {!! organisation()->getContactOptionsText() !!}
+                @endif
+            </p>
+
+            <div class="form-group">
+                {{ Form::text('uitpas', $uitpas, [ 'class' => 'form-control', 'placeholder' => 'Schrijf hier je UitPAS nummer' ]) }}
+            </div>
+
+            <p>{{ Form::submit('UiTPAS tarief toepassen', array('class' => 'btn btn-info')) }}</p>
+            {{ Form::close()}}
+
+        </div>
+    @endif
+
+
+    {{ Form::open(array('url' => $action)) }}
+    @foreach($input as $k => $v)
+        {{ Form::hidden($k, $v) }}
+    @endforeach
+
     <div class="invoice">
         <h3>Overzicht</h3>
+
+        @if($uitpas)
+            <div class="alert alert-info">
+                <p>Tarief voor UiTPAS {{ $uitpas }} wordt toegepast.</p>
+            </div>
+        @endif
+
         <table class="table">
 
             <tr>
@@ -80,35 +112,21 @@
 
             <tr>
                 <td>Inschrijving</td>
-                <td>{{ $ticketCategory->getFormattedPrice() }}</td>
+                <td>{{ $ticketPriceCalculator->getFormattedPrice() }}</td>
             </tr>
 
             <tr>
                 <td>Transactiekosten</td>
-                <td>{{ $ticketCategory->getFormattedTransactionFee() }}</td>
+                <td>{{ $ticketPriceCalculator->getFormattedTransactionFee() }}</td>
             </tr>
 
             <tr class="total">
                 <td>Totaal</td>
-                <td>{{ $ticketCategory->getFormattedTotalPrice() }}</td>
+                <td>{{ $ticketPriceCalculator->getFormattedTotalPrice() }}</td>
             </tr>
         </table>
 
     </div>
-
-    @if($event->organisation->uitpas)
-        <h3>UitPAS</h3>
-        <p>
-            Heb je een UitPAS? Geef dan hieronder je UitPAS nummer in. Wij passen dan het juiste tarief toe.
-            @if(organisation()->getContactOptionsText())
-                <br />Ondervind je problemen? {!! organisation()->getContactOptionsText() !!}
-            @endif
-        </p>
-
-        <div class="form-group">
-            {{ Form::text('uitpas', null, [ 'class' => 'form-control', 'placeholder' => 'Schrijf hier je UitPAS nummer' ]) }}
-        </div>
-    @endif
 
     <p>{{ Form::submit('Betalen', array('class' => 'btn btn-primary')) }}</p>
 

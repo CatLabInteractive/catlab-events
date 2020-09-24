@@ -23,7 +23,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use CatLab\Accounts\Client\ApiClient;
 
 /**
  * Class OrderController
@@ -100,6 +99,10 @@ class OrderController extends Controller
         $retryFormInput = [
             'group' => $order->group->id
         ];
+
+        if (\Request::session()->get('uitpas_card_number')) {
+            $retryFormInput['uitpas'] = \Request::session()->get('uitpas_card_number');
+        }
 
         return view(
             'orders/thanks',

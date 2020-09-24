@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Tools\TicketPriceCalculator;
 use CatLab\Accounts\Client\ApiClient;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use Illuminate\Database\Eloquent\Builder;
@@ -103,13 +104,10 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         if ($state === self::STATE_ACCEPTED) {
             $this->onConfirmation();
         } elseif (
-            $oldState === self::STATE_ACCEPTED &&
-            (
-                $state === self::STATE_CANCELLED ||
-                $state === self::STATE_REFUNDED
-            )
+            $state === self::STATE_CANCELLED ||
+            $state === self::STATE_REFUNDED
         ) {
-            $this->onCancellation();
+            $this->onCancellation($oldState === self::STATE_ACCEPTED);
         }
     }
 
@@ -225,40 +223,45 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
-     *
+     * @param boolean $wasAccepted
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function onCancellation()
+    public function onCancellation($wasAccepted = false)
     {
         // Cancel the sale in uitdb (if available)
+        // Always do this, even if the order was never confirmed.
         $uitPasService = \UitDb::getUitPasService();
         if ($uitPasService) {
             $uitPasService->registerOrderCancel($this);
         }
 
-        // Send email
-        foreach ($this->group->members as $member) {
-            $this->sendCancellationEmail($member);
-        }
-
-        // Track on ze eukles.
-        $euklesEvent =
-            \Eukles::createEvent(
-                'event.order.cancel',
-                [
-                    'group' => $this->group,
-                    'event' => $this->event,
-                    'order' => $this
-                ]
-            )
-                ->unlink($this->group, 'attends', $this->event);
-
-        foreach ($this->group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
+        // If the order WAS accepted (= paid), we need to send some notifications.
+        if ($wasAccepted) {
+            // Send email
+            foreach ($this->group->members as $member) {
+                $this->sendCancellationEmail($member);
             }
-        }
 
-        \Eukles::trackEvent($euklesEvent);
+            // Track on ze eukles.
+            $euklesEvent =
+                \Eukles::createEvent(
+                    'event.order.cancel',
+                    [
+                        'group' => $this->group,
+                        'event' => $this->event,
+                        'order' => $this
+                    ]
+                )
+                    ->unlink($this->group, 'attends', $this->event);
+
+            foreach ($this->group->members as $member) {
+                if ($member->user) {
+                    $euklesEvent->setObject('member', $member->user);
+                }
+            }
+
+            \Eukles::trackEvent($euklesEvent);
+        }
     }
 
     /**
@@ -379,5 +382,27 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     public function getEuklesType()
     {
         return 'order';
+    }
+
+    /**
+     * @param float $tariff
+     * @param string $saleId
+     */
+    public function setUiTPASTariff(float $tariff, string $saleId)
+    {
+        $this->subsidised_tariff = $tariff;
+        $this->uitpas_sale_id = $saleId;
+    }
+
+    /**
+     * @return TicketPriceCalculator
+     */
+    public function getTicketPriceCalculator()
+    {
+        $priceCalculator = new TicketPriceCalculator($this->ticketCategory);
+        if ($this->subsidised_tariff) {
+            $priceCalculator->applySubsidisedTariff($this->subsidised_tariff);
+        }
+        return $priceCalculator;
     }
 }
