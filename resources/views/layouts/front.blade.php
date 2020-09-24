@@ -7,6 +7,8 @@
     @include('layouts.blocks.gtag')
 </head>
 <body>
+    @include('blocks.chatwoot')
+
     <div id="fb-root"></div>
     <script>(function(d, s, id) {
             var js, fjs = d.getElementsByTagName(s)[0];
