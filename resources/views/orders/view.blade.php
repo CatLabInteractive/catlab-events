@@ -52,7 +52,7 @@
                 <tr>
                     <td>{{ $item['name'] }}</td>
                     <td>
-                        {{ toMoney($item['price']) }}
+                        {{ toMoney($item['price'] + $item['vat']) }}
                         <span class="small">(incl. {{ toMoney($item['vat']) }} btw)</span>
                     </td>
                 </tr>
