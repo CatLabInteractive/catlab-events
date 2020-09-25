@@ -7,7 +7,7 @@
     @include('layouts.blocks.gtag')
 </head>
 <body>
-    @include('blocks.chatwoot')
+    @include('blocks.chatwoot', [ 'organisation' => organisation() ])
 
     <div id="fb-root"></div>
     <script>(function(d, s, id) {

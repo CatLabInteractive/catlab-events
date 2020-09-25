@@ -7,7 +7,7 @@
     @include('layouts.blocks.gtag')
 </head>
 <body>
-@include('blocks.chatwoot')
+@include('blocks.chatwoot', [ 'organisation' => organisation() ])
 
 <div class="body-inner compact">
 
