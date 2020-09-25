@@ -1,5 +1,7 @@
 # Catlab Events
-CatLab Events is a ticketing system aimed towards quizzes. 
+CatLab Events is a ticketing system currently aimed towards quizzes, but adaptable to 
+any kind of event that requires tickets to be sold. It includes integration with a centralized 
+payment gateway and UiTPAS integration (in Belgium).
 
 ## Setup
 The project relies on some external projects so hosting it is not a straight forward business. You'll have 
