@@ -1,8 +1,10 @@
-Catlab Events
-=============
+# Catlab Events
+CatLab Events is a ticketing system aimed towards quizzes. 
 
-Setup
------
+## Setup
+The project relies on some external projects so hosting it is not a straight forward business. You'll have 
+to either implement an SSO and payment gateway, or contact us to create accounts on our systems.
+
 Run ```composer install``` to download all required php libraries. Copy ```.env.example``` to ```.env``` and fill in the database
 credentials. Finally, run ```php artisan migrate``` to initialize the database.
 
@@ -10,15 +12,13 @@ Run ```npm install``` to install all dependencies and then run ```npm run produc
 
 You should now be able to register an account on the website.
 
-Deploy scripts
---------------
+### Deploy scripts
 There are two buildscripts in /build that you might want to use to deploy on production servers.
 
 We run ```prepare.sh``` on our buildserver, then push the whole project over sftp and finally run ```upgrade.sh``` on 
 the production server. There are cleaner ways to handle deploys, so feel free to use your own system.
 
-UiTDatabank
------------
+## UiTDatabank
 This project integrates with the [UiTPAS API](https://documentatie.uitdatabank.be/) to sell 
 discounted/subsidised tickets for verified organisations. The integration does not include synchronizing 
 events with the uitdatabank just yet, so uitdatabank ids must be manually set in the event admin panel.
