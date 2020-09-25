@@ -6,8 +6,13 @@
             g.src= BASE_URL + "/packs/js/sdk.js";
             s.parentNode.insertBefore(g,s);
             g.onload=function(){
+                @if(isset($livestream) && $livestream && organisation()->chatwoot_livestream_token)
+                    var websiteToken = '{{organisation()->chatwoot_livestream_token}}';
+                @else
+                    var websiteToken = '{{organisation()->chatwoot_token}}';
+                @endif
                 window.chatwootSDK.run({
-                    websiteToken: @if(isset($livestream) && $livestream && organisation()->chatwoot_livestream_token)'{{organisation()->chatwoot_token}}'@else'{{organisation()->chatwoot_token}}'@endif,
+                    websiteToken: websiteToken,
                     baseUrl: BASE_URL
                 })
             }
