@@ -25,11 +25,11 @@ This project integrates with the [UiTPAS API](https://documentatie.uitdatabank.b
 discounted/subsidised tickets for verified organisations. The integration does not include synchronizing 
 events with the uitdatabank just yet, so uitdatabank ids must be manually set in the event admin panel.
 
-A sale of an UiTPAS subsidised ticket follows a 3 step process:
-1. Before the sale, a client is requested to enter their UiTPAS id in a text field. Once submitted, a call to 
+A sale of an UiTPAS subsidised ticket follows a few steps:
+1. Before the sale, a client is requested to enter their UiTPAS id in a text field. Once submitted, a call is made to 
 [`uitpas/cultureevent/search`](https://documentatie.uitdatabank.be/content/uitpas_api/latest/events/uitpas-aanbod-doorzoeken.html) 
 to fetch the applicable tariff for this specific user. This call happens in [UiTPASVerifier](app/UitDB/UiTPASVerifier.php).
-2. Once the appropriate tariff is fetched, it is entered in the [TicketPriceCalculator](app/Tools/TicketPriceCalculator.php) 
+Once the appropriate tariff is fetched, it is entered in the [TicketPriceCalculator](app/Tools/TicketPriceCalculator.php) 
 where the tariff is split into ticket sale, transaction costs and VAT, depending on the settings of the event 
 (include / exclude ticket fee from the tariff).
 3. The user then has a chance to validate their purchase.
