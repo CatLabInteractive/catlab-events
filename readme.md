@@ -14,6 +14,15 @@ Run ```npm install``` to install all dependencies and then run ```npm run produc
 
 You should now be able to register an account on the website.
 
+### Admin account & organisations
+Only admin users can log in into the admin dashboard (at `/admin`). The first user that registers at the fresly installed 
+platform will get admin rights assigned automatically.
+
+The platform can host multiple organisations. When an admin user logs in into the admin panel, an organisation is created 
+for them, but an admin user can be assigned to multiple organisations.
+
+The admin state of a user is stored in the `admin` property of the `users` table.
+
 ### Deploy scripts
 There are two buildscripts in /build that you might want to use to deploy on production servers.
 
