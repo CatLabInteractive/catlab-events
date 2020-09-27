@@ -150,20 +150,24 @@ class EventResourceDefinition extends ResourceDefinition
             ->writeable(true, true)
             ->string();
 
-        $this->field('uitdb_event_id')
-            ->visible()
-            ->writeable(true, true)
-            ->string();
+        if (config('services.uitdb.oauth_consumer')) {
+            $this->field('uitdb_event_id')
+                ->visible()
+                ->writeable(true, true)
+                ->string();
+        }
 
         $this->field('max_points')
             ->visible()
             ->writeable(true, true)
             ->number();
 
-        $this->field('quizwitz_report_id')
-            ->visible()
-            ->writeable(true, true)
-            ->number();
+        if (config('services.quizwitz.reportClient')) {
+            $this->field('quizwitz_report_id')
+                ->visible()
+                ->writeable(true, true)
+                ->number();
+        }
 
         $this->field('include_ticket_fee')
             ->visible()
