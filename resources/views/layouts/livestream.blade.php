@@ -2,8 +2,6 @@
 <html lang="{{ mb_substr(app()->getLocale(), 0, 2) }}">
 <head>
 
-    @include('layouts.blocks.gtag')
-
     @if(isset($livestream))
         <title>{{ $organisation->name }} - {{ $livestream->title }}</title>
     @else

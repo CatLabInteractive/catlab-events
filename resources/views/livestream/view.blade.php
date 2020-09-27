@@ -35,6 +35,7 @@
                             return;
                         }
 
+                        /*
                         try {
                             dataLayer.push({
                                 event: 'livestream.measure',
@@ -43,12 +44,14 @@
                         } catch (e) {
                             console.log(e)
                         }
+                         */
 
                         if (latency > {{ config('livestream.maxHlsLatencyBroadcaster', 10) }}) {
                             player.pause();
                             player.play();
 
                             console.log('Player is drifting too far from the livestream; soft refresh.');
+                            /*
                             try {
                                 dataLayer.push({
                                     event: 'livestream.resync',
@@ -56,7 +59,7 @@
                                 });
                             } catch (e) {
                                 console.log(e)
-                            }
+                            }*/
                         }
 
                     }, 30000);
