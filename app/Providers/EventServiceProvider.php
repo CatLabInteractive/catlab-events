@@ -22,6 +22,10 @@
 
 namespace App\Providers;
 
+use App\Events\OrderCancelled;
+use App\Events\OrderConfirmed;
+use App\Listeners\SendCancelConfirmation;
+use App\Listeners\SendConfirmationEmail;
 use CatLab\Accounts\Client\SocialiteProvider\CatLabExtendSocialite;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -39,6 +43,14 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         \SocialiteProviders\Manager\SocialiteWasCalled::class => [
             CatLabExtendSocialite::class
+        ],
+
+        OrderConfirmed::class => [
+            SendConfirmationEmail::class
+        ],
+
+        OrderCancelled::class => [
+            SendCancelConfirmation::class
         ]
     ];
 
