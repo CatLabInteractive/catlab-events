@@ -43,9 +43,30 @@ class User extends Model implements
     use Notifiable;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name', 'email', 'password',
+    ];
+
+    /**
      * @var Organisation
      */
     private $activeOrganisation;
+
+    public static function boot()
+    {
+        parent::boot();
+
+        // The first user who registers gets to be an admin.
+        self::creating(function(User $user) {
+            if (User::count() === 0) {
+                $user->admin = 1;
+            }
+        });
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -109,7 +130,7 @@ class User extends Model implements
     protected function createFirstOrganisation()
     {
         $organisation = new Organisation([
-            'name' => $this->username
+            'name' => $this->name
         ]);
 
         $organisation->save();

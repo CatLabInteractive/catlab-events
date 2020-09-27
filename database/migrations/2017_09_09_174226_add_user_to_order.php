@@ -36,6 +36,7 @@ class AddUserToOrder extends Migration
     public function down()
     {
         Schema::table('orders', function(Blueprint $table) {
+            $table->dropForeign('orders_user_id_foreign');
             $table->dropColumn('user_id');
         });
     }

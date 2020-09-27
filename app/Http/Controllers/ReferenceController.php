@@ -47,8 +47,12 @@ class ReferenceController
      */
     public static function getReferences()
     {
+        if (!\Schema::hasTable('series')) {
+            return [];
+        }
+
         return [
-            'palaver' => Series::find(1)->getUrl()
+            //'palaver' => Series::find(1)->getUrl()
         ];
     }
 

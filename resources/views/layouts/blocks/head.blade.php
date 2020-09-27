@@ -15,15 +15,18 @@
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@if (array_key_exists('title', View::getSections()))
-    <title>@yield('title') – {{organisation()->name}}</title>
-@elseif(isset($nextEvent))
-    <title>{{ $nextEvent->getPageTitle() }} – {{organisation()->name}}</title>
-@else
-    <title>{{organisation()->name}}</title>
-@endif
+@if(organisation())
+    @if (array_key_exists('title', View::getSections()))
+        <title>@yield('title') – {{organisation()->name}}</title>
+    @elseif(isset($nextEvent))
+        <title>{{ $nextEvent->getPageTitle() }} – {{organisation()->name}}</title>
+    @else
+        <title>{{organisation()->name}}</title>
+    @endif
 
-<link rel="sitemap" type="application/xml" title="{{organisation()->name}} Sitemap" href="/sitemap.xml" />
+    <link rel="sitemap" type="application/xml" title="{{organisation()->name}} Sitemap" href="/sitemap.xml" />
+    <meta property="og:title" content="{{ organisation()->name }}" />
+@endif
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
@@ -34,6 +37,5 @@
 <meta name="theme-color" content="#000000">
 
 <meta property="fb:app_id" content="1124345767614916" />
-<meta property="og:title" content="{{ organisation()->name }}" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="{{ \Request::url() }}" />

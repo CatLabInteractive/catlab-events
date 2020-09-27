@@ -39,6 +39,6 @@ class CreateScoreTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('score');
+        Schema::dropIfExists('scores');
     }
 }

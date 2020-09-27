@@ -64,6 +64,9 @@ class EventController extends Controller
         */
 
         $organisation = $this->getOrganisation();
+        if (!$organisation) {
+            return redirect('admin');
+        }
 
         $nextEvent = null;
         $nextEventIndex = 0;

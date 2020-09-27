@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\NoOrganisationsFoundException;
 use App\Tools\StringHelper;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;

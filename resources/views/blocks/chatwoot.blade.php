@@ -1,4 +1,4 @@
-@if($organisation->chatwoot_url)
+@if($organisation && $organisation->chatwoot_url)
     <script>
         (function(d,t) {
             var BASE_URL = "{{$organisation->chatwoot_url}}";

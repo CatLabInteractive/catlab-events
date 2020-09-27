@@ -14,7 +14,14 @@
 use App\Tools\SlackNotifier;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
 
-\CatLab\Accounts\Client\Controllers\LoginController::setRoutes();
+
+// Do we have catlab client id? (my own personal single sign on service)
+if (config('services.catlab.client_id')) {
+    \CatLab\Accounts\Client\Controllers\LoginController::setRoutes();
+} else {
+    // Not set? Use default laravel authentication.
+    Auth::routes();
+}
 
 //Route::resource('organisations', 'OrganisationController');
 
@@ -147,12 +154,3 @@ Route::get('sitemap.xml', 'SitemapController@sitemap');
 
 // routes
 \App\Http\Controllers\ReferenceController::routes();
-
-
-/*
-Route::get('slack/test', function() {
-
-    SlackNotifier::instance()->notify('Testery test test.');
-
-});
-*/

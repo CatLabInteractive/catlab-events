@@ -1,5 +1,5 @@
 <div class="navbar-header">
-    @if(organisation()->logo)
+    @if(organisation() && organisation()->logo)
     <div class="logo">
         <a href="/">
             <img src="{{ organisation()->logo->getUrl(['width' => 80 ]) }}" alt="{{ organisation()->name }}" title="{{ organisation()->website_url }}" />
@@ -24,7 +24,9 @@
 
     <nav class="collapse navbar-collapse navbar-responsive-collapse pull-right">
 
+        @if(organisation())
         <ul class="nav navbar-nav">
+
 
             @foreach(organisation()->series()->active()->get() as $navSeries)
                 <li
@@ -35,6 +37,7 @@
                     >{{ $navSeries->name }}</a>
                 </li>
             @endforeach
+
 
             <!--
             <li class="dropdown active">
@@ -93,6 +96,7 @@
             @endif
 
         </ul><!--/ Nav ul end -->
+        @endif
 
     </nav><!--/ Collapse end -->
 
