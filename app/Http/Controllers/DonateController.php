@@ -22,6 +22,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DonationCancelled;
+use App\Events\DonationReceived;
 use Paynl\Result\Transaction\Transaction;
 
 /**
@@ -64,23 +66,9 @@ class DonateController
         $transaction = \Paynl\Transaction::getForExchange();
 
         if ($transaction->isPaid() || $transaction->isAuthorized()) {
-            // process the payment
-            // Track on ze eukles.
-            \Eukles::trackEvent(
-                \Eukles::createEvent(
-                    'donation.success',
-                    $this->getEuklesTransactionData($transaction)
-                )
-            );
-
+            event(new DonationReceived($this->getEuklesTransactionData($transaction)));
         } elseif ($transaction->isCanceled()) {
-            // payment canceled, restock items
-            \Eukles::trackEvent(
-                \Eukles::createEvent(
-                    'donation.canceled',
-                    $this->getEuklesTransactionData($transaction)
-                )
-            );
+            event(new DonationCancelled($this->getEuklesTransactionData($transaction)));
         }
 
         // always start your response with TRUE|

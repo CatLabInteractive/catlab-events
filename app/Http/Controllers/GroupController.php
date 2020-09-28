@@ -22,6 +22,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\GroupMemberJoined;
 use App\Exceptions\Groups\GroupMergeEventOverlapException;
 use App\Http\Api\V1\ResourceDefinitions\Groups\GroupMemberResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\ScoreResourceDefinition;
@@ -137,30 +138,7 @@ class GroupController extends Controller implements FrontCrudControllerContract
         $invitation->token = null;
         $invitation->save();
 
-        // Also send an email about upcoming events
-
-        /** @var Order[] $orders */
-        $orders = $group->orders()
-            ->leftJoin('events', 'events.id', '=', 'orders.event_id')
-            ->where('orders.state', '=', Order::STATE_ACCEPTED)
-            ->where('events.endDate', '>', new \DateTime())
-            ->get();
-
-        foreach ($orders as $order) {
-            $order->sendConfirmationEmail($invitation);
-        }
-
-        // Track on ze eukles.
-        \Eukles::trackEvent(
-            \Eukles::createEvent(
-                'group.member.join',
-                [
-                    'group' => $group,
-                    'user' => $user
-                ]
-            )
-                ->link($user, 'ismemberof', $group)
-        );
+        event(new GroupMemberJoined($group, $invitation));
 
         return redirect(action('GroupController@show', [ $invitation->group->id ]));
     }

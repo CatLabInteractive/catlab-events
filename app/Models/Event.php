@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Events\SubscribedToWaitingList;
 use App\Tools\StringHelper;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
@@ -823,17 +824,7 @@ class Event extends Model implements EuklesModel
     {
         $this->waitingList()->save($user);
 
-        // Track on ze eukles.
-        \Eukles::trackEvent(
-            \Eukles::createEvent(
-                'event.waitinglist.subscribe',
-                [
-                    'user' => $user,
-                    'event' => $this
-                ]
-            )
-                ->link($user, 'waitinglist', $this)
-        );
+        event(new SubscribedToWaitingList($this, $user));
     }
 
     public function people()

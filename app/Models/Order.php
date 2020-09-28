@@ -22,12 +22,13 @@
 
 namespace App\Models;
 
+use App\Events\OrderCancelled;
+use App\Events\OrderConfirmed;
 use App\Tools\TicketPriceCalculator;
 use CatLab\Accounts\Client\ApiClient;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use LogicException;
 
 /**
  * Class Order
@@ -192,34 +193,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function onConfirmation()
     {
-        // Send email
-        try {
-            foreach ($this->group->members as $member) {
-                $this->sendConfirmationEmail($member);
-            }
-        } catch (LogicException $e) {
-            \Log::error($e->getMessage());
-        }
-
-        // Track on ze eukles.
-        $euklesEvent = \Eukles::createEvent(
-            'event.order.confirmed',
-            [
-                'group' => $this->group,
-                'event' => $this->event,
-                'order' => $this
-            ]
-        )
-            ->link($this->group, 'attends', $this->event)
-            ->unlink($this->user, 'registering', $this->event);
-
-        foreach ($this->group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
-            }
-        }
-
-        \Eukles::trackEvent($euklesEvent);
+        event(new OrderConfirmed($this));
     }
 
     /**
@@ -235,103 +209,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             $uitPasService->registerOrderCancel($this);
         }
 
-        // If the order WAS accepted (= paid), we need to send some notifications.
-        if ($wasAccepted) {
-            // Send email
-            foreach ($this->group->members as $member) {
-                $this->sendCancellationEmail($member);
-            }
-
-            // Track on ze eukles.
-            $euklesEvent =
-                \Eukles::createEvent(
-                    'event.order.cancel',
-                    [
-                        'group' => $this->group,
-                        'event' => $this->event,
-                        'order' => $this
-                    ]
-                )
-                    ->unlink($this->group, 'attends', $this->event);
-
-            foreach ($this->group->members as $member) {
-                if ($member->user) {
-                    $euklesEvent->setObject('member', $member->user);
-                }
-            }
-
-            \Eukles::trackEvent($euklesEvent);
-        }
-    }
-
-    /**
-     * @param $member
-     */
-    public function sendConfirmationEmail($member)
-    {
-        /** @var Group $group */
-        $group = $this->group;
-
-        if (!$member->user) {
-            return;
-        }
-
-        if (empty($member->user->email)) {
-            return;
-        }
-
-        $attributes = [
-            'from' => \Auth::getUser(),
-            'event' => $this->event,
-            'group' => $group
-        ];
-
-        $view = \View::make('emails/tickets/confirmation', $attributes);
-
-        /** @var User $user */
-        $user = $this->user;
-        $apiClient = new ApiClient($user);
-
-        $apiClient->sendEmail(
-            $this->event->name . ': We zijn er bij!',
-            $view->render(),
-            $member->user->email
-        );
-    }
-
-    /**
-     * @param $member
-     */
-    public function sendCancellationEmail($member)
-    {
-        /** @var Group $group */
-        $group = $this->group;
-
-        if (!$member->user) {
-            return;
-        }
-
-        if (empty($member->user->email)) {
-            return;
-        }
-
-        $attributes = [
-            'from' => \Auth::getUser(),
-            'event' => $this->event,
-            'group' => $group
-        ];
-
-        $view = \View::make('emails/tickets/cancellation', $attributes);
-
-        /** @var User $user */
-        $user = $this->user;
-        $apiClient = new ApiClient($user);
-
-        $apiClient->sendEmail(
-            $this->event->name . ': We zijn er niet bij :(',
-            $view->render(),
-            $member->user->email
-        );
+        event(new OrderCancelled($this, $wasAccepted));
     }
 
     /**

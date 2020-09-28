@@ -20,37 +20,47 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Events;
+namespace App\Listeners;
 
+use App\Events\GroupMemberJoined;
 use App\Models\Order;
-use Illuminate\Queue\SerializesModels;
 
 /**
- * Class OrderCancelled
- * @package App\Events
+ * Class SendConfirmationEmailAfterGroupJoin
+ * @package App\Listeners
  */
-class OrderCancelled
+class SendConfirmationEmailAfterGroupJoin extends SendEmail
 {
-    use SerializesModels;
-
     /**
-     * @var Order
+     * Create the event listener.
+     *
+     * @return void
      */
-    public $order;
-
-    /**
-     * @var bool
-     */
-    public $wasConfirmed;
-
-    /**
-     * OrderCancelled constructor.
-     * @param Order $order
-     * @param $wasConfirmed
-     */
-    public function __construct(Order $order, $wasConfirmed)
+    public function __construct()
     {
-        $this->order = $order;
-        $this->wasConfirmed = $wasConfirmed;
+        //
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param GroupMemberJoined $e
+     * @return void
+     */
+    public function handle(GroupMemberJoined $e)
+    {
+        $group = $e->group;
+        $member = $e->member;
+
+        /** @var Order[] $orders */
+        $orders = $group->orders()
+            ->leftJoin('events', 'events.id', '=', 'orders.event_id')
+            ->where('orders.state', '=', Order::STATE_ACCEPTED)
+            ->where('events.endDate', '>', new \DateTime())
+            ->get();
+
+        foreach ($orders as $order) {
+            $this->sendConfirmationEmail($order->event, $member);
+        }
     }
 }

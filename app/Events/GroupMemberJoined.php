@@ -22,6 +22,8 @@
 
 namespace App\Events;
 
+use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\Order;
 use Illuminate\Queue\SerializesModels;
 
@@ -29,28 +31,28 @@ use Illuminate\Queue\SerializesModels;
  * Class OrderCancelled
  * @package App\Events
  */
-class OrderCancelled
+class GroupMemberJoined
 {
     use SerializesModels;
 
     /**
-     * @var Order
+     * @var Group
      */
-    public $order;
+    public $group;
 
     /**
-     * @var bool
+     * @var GroupMember
      */
-    public $wasConfirmed;
+    public $member;
 
     /**
-     * OrderCancelled constructor.
-     * @param Order $order
-     * @param $wasConfirmed
+     * GroupMemberJoined constructor.
+     * @param Group $group
+     * @param GroupMember $member
      */
-    public function __construct(Order $order, $wasConfirmed)
+    public function __construct(Group $group, GroupMember $member)
     {
-        $this->order = $order;
-        $this->wasConfirmed = $wasConfirmed;
+        $this->group = $group;
+        $this->member = $member;
     }
 }

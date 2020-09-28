@@ -22,6 +22,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PreparingOrder;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -581,24 +582,7 @@ class EventController extends Controller
                 ]);
         }
 
-        $euklesEvent = \Eukles::createEvent(
-            'event.order.initialize',
-            [
-                'actor' => $user,
-                'group' => $group,
-                'event' => $event,
-                'session' => $this->getEuklesOriginWebsite()
-            ]
-        )->link($user, 'registering', $event);
-
-        foreach ($group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
-            }
-        }
-
-        // Track on ze eukles.
-        \Eukles::trackEvent($euklesEvent);
+        event(new PreparingOrder($user, $group, $event, $this->getEuklesOriginWebsite()));
 
         $input = [];
         $input['group'] = $group->id;

@@ -29,28 +29,18 @@ use Illuminate\Queue\SerializesModels;
  * Class OrderCancelled
  * @package App\Events
  */
-class OrderCancelled
+class DonationReceived
 {
     use SerializesModels;
 
-    /**
-     * @var Order
-     */
-    public $order;
+    public $transaction;
 
     /**
-     * @var bool
+     * DonationReceived constructor.
+     * @param $transaction
      */
-    public $wasConfirmed;
-
-    /**
-     * OrderCancelled constructor.
-     * @param Order $order
-     * @param $wasConfirmed
-     */
-    public function __construct(Order $order, $wasConfirmed)
+    public function __construct($transaction)
     {
-        $this->order = $order;
-        $this->wasConfirmed = $wasConfirmed;
+        $this->transaction = $transaction;
     }
 }

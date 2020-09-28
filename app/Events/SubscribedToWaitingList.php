@@ -22,35 +22,36 @@
 
 namespace App\Events;
 
-use App\Models\Order;
+use App\Models\Event;
+use App\Models\User;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Class OrderCancelled
+ * Class OrderConfirmed
  * @package App\Events
  */
-class OrderCancelled
+class SubscribedToWaitingList
 {
     use SerializesModels;
 
     /**
-     * @var Order
+     * @var Event
      */
-    public $order;
+    public $event;
 
     /**
-     * @var bool
+     * @var User
      */
-    public $wasConfirmed;
+    public $user;
 
     /**
-     * OrderCancelled constructor.
-     * @param Order $order
-     * @param $wasConfirmed
+     * SubscribedToWaitingList constructor.
+     * @param Event $event
+     * @param User $user
      */
-    public function __construct(Order $order, $wasConfirmed)
+    public function __construct(Event $event, User $user)
     {
-        $this->order = $order;
-        $this->wasConfirmed = $wasConfirmed;
+        $this->event = $event;
+        $this->user = $user;
     }
 }

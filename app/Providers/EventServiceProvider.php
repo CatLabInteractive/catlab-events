@@ -22,10 +22,14 @@
 
 namespace App\Providers;
 
+use App\Events\GroupMemberJoined;
 use App\Events\OrderCancelled;
 use App\Events\OrderConfirmed;
+use App\Events\PreparingOrder;
+use App\Listeners\EuklesEventSubscriber;
 use App\Listeners\SendCancelConfirmation;
 use App\Listeners\SendConfirmationEmail;
+use App\Listeners\SendConfirmationEmailAfterGroupJoin;
 use CatLab\Accounts\Client\SocialiteProvider\CatLabExtendSocialite;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -51,7 +55,24 @@ class EventServiceProvider extends ServiceProvider
 
         OrderCancelled::class => [
             SendCancelConfirmation::class
+        ],
+
+        GroupMemberJoined::class => [
+            SendConfirmationEmailAfterGroupJoin::class
+        ],
+
+        PreparingOrder::class => [
+
         ]
+    ];
+
+    /**
+     * The subscriber classes to register.
+     *
+     * @var array
+     */
+    protected $subscribe = [
+        EuklesEventSubscriber::class
     ];
 
     /**
