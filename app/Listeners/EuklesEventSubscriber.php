@@ -87,7 +87,7 @@ class EuklesEventSubscriber
             [
                 'group' => $order->group,
                 'event' => $order->event,
-                'order' => $this
+                'order' => $order
             ]
         )
             ->link($order->group, 'attends', $order->event)
@@ -118,7 +118,7 @@ class EuklesEventSubscriber
                 [
                     'group' => $order->group,
                     'event' => $order->event,
-                    'order' => $this
+                    'order' => $order
                 ]
             )
                 ->unlink($order->group, 'attends', $order->event);
