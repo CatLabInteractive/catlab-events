@@ -32,16 +32,20 @@ use Illuminate\Http\Request;
 class LiveStreamController extends Controller
 {
     /**
-     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
+        $embed = $request->query('embed') == 1;
         return view('livestream/notfound', [
-            'organisation' => $this->getOrganisation()
+            'organisation' => $this->getOrganisation(),
+            'embed' => $embed
         ]);
     }
 
     /**
+     * @param Request $request
      * @param $domain
      * @param null $identifier
      * @return \Illuminate\View\View
