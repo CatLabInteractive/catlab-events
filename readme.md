@@ -34,6 +34,10 @@ This project integrates with the [UiTPAS API](https://documentatie.uitdatabank.b
 discounted/subsidised tickets for verified organisations. The integration does not include synchronizing 
 events with the uitdatabank just yet, so uitdatabank ids must be manually set in the event admin panel.
 
+![UiTPAS - step 1](docs/screenshots/uitpas-step1.png)
+
+![UiTPAS - step 2](docs/screenshots/uitpas-step2.png)
+
 A sale of an UiTPAS subsidised ticket follows a few steps:
 1. Before the sale, a client is requested to enter their UiTPAS id in a text field. Once submitted, a call is made to 
 [`uitpas/cultureevent/search`](https://documentatie.uitdatabank.be/content/uitpas_api/latest/events/uitpas-aanbod-doorzoeken.html) 
