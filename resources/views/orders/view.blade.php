@@ -38,10 +38,12 @@
                 <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
             </tr>
 
-            <tr>
-                <td>Locatie</td>
-                <td>{{ $order->event->venue->getAddressFull() }}</td>
-            </tr>
+            @if($order->event)
+                <tr>
+                    <td>Locatie</td>
+                    <td>{{ $order->event->venue->getAddressFull() }}</td>
+                </tr>
+            @endif
 
             <tr>
                 <td>Categorie</td>
