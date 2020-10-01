@@ -38,7 +38,7 @@
                 <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
             </tr>
 
-            @if($order->event)
+            @if($order->event->venue)
                 <tr>
                     <td>Locatie</td>
                     <td>{{ $order->event->venue->getAddressFull() }}</td>
