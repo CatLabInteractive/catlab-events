@@ -34,7 +34,7 @@ abstract class SendEmail
 
         $attributes = [
             'from' => \Auth::getUser(),
-            'event' => $event->event,
+            'event' => $event,
             'group' => $group
         ];
 
@@ -45,7 +45,7 @@ abstract class SendEmail
         $apiClient = new ApiClient($user);
 
         $apiClient->sendEmail(
-            $event->event->name . ': We zijn er bij!',
+            $event->name . ': We zijn er bij!',
             $view->render(),
             $member->user->email
         );
