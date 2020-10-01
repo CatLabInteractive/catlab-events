@@ -147,10 +147,7 @@ class UitDatabankService implements UitDBService
             case 'test':
                 return [
                     'uitid' => 'https://test.uitid.be/uitid/rest/',
-
-
                     'io' => 'https://io-test.uitdatabank.be',
-
                     'ui' => 'https://test.uitdatabank.be',
                     'jwt' => 'https://jwt-test.uitdatabank.be',
                     'legacy' => 'https://test.uitid.be/uitid/rest/'
@@ -158,17 +155,18 @@ class UitDatabankService implements UitDBService
 
             default:
                 return [
+                    'uitid' => 'https://www.uitid.be/uitid/rest/',
                     'io' => 'https://io.uitdatabank.be',
-                    'rest' => 'https://www.uitid.be/uitid/rest/',
                     'ui' => 'https://www.uitdatabank.be',
-                    'jwt' => 'https://jwt.uitdatabank.be'
+                    'jwt' => 'https://jwt.uitdatabank.be',
+                    'legacy' => 'https://www.uitid.be/uitid/rest/',
                 ];
         }
     }
 
     /**
-     * @param string $jwt
-     * @param string $refreshTokens
+     * @param $jwt
+     * @param null $refreshToken
      */
     public function setConnectAuthentication($jwt, $refreshToken = null)
     {
