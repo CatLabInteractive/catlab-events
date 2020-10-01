@@ -22,7 +22,7 @@ abstract class SendEmail
     public function sendConfirmationEmail(Event $event, GroupMember $member)
     {
         /** @var Group $group */
-        $group = $event->group;
+        $group = $member->group;
 
         if (!$member->user) {
             return;
