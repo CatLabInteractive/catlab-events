@@ -41,7 +41,7 @@ abstract class SendEmail
         $view = \View::make('emails/tickets/confirmation', $attributes);
 
         /** @var User $user */
-        $user = $event->user;
+        $user = $member->user;
         $apiClient = new ApiClient($user);
 
         $apiClient->sendEmail(
