@@ -924,11 +924,11 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function livestream()
     {
-        return $this->belongsTo(LiveStream::class);
+        return $this->hasOne(LiveStream::class);
     }
 
     /**

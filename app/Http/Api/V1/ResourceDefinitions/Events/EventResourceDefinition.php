@@ -188,9 +188,9 @@ class EventResourceDefinition extends ResourceDefinition
             ->number();
 
         $this->relationship('livestream', LiveStreamResourceDefinition::class)
+            ->one()
             ->visible()
-            ->expanded()
-            ->linkable();
+            ->expanded();
 
         $this->relationship('authors', PersonResourceDefinition::class)
             ->many()
