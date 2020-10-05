@@ -37,7 +37,7 @@
         <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav mr-auto">
 
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\OrganisationController@edit', [ organisation()->id ]) }}">Organisation</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\OrganisationController@edit', [ Auth::user()->getActiveOrganisation()->id ]) }}">Organisation</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\EventController@index') }}">Events</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\VenueController@index') }}">Venues</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\CompetitionController@index') }}">Competitions</a></li>
