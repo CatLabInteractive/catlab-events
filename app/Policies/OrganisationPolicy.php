@@ -22,7 +22,7 @@
 
 namespace App\Policies;
 
-use App\Models\Story;
+use App\Models\Organisation;
 use App\Models\User;
 
 /**
@@ -51,26 +51,31 @@ class OrganisationPolicy
 
     /**
      * @param User $user
-     * @param Story $story
-     * @return bool
+     * @param Organisation $organisation
+     * @return false
      */
-    public function view(User $user, Story $story)
+    public function view(User $user, Organisation $organisation)
+    {
+        return $organisation->isAdmin($user);
+    }
+
+    /**
+     * @param User $user
+     * @param Organisation $organisation
+     * @return false
+     */
+    public function destroy(User $user, Organisation $organisation)
     {
         return false;
     }
 
     /**
      * @param User $user
-     * @param Story $story
-     * @return bool
+     * @param Organisation $organisation
+     * @return false
      */
-    public function destroy(User $user, Story $story)
+    public function edit(User $user, Organisation $organisation)
     {
-        return false;
-    }
-
-    public function edit(User $user, Story $story)
-    {
-        return false;
+        return $organisation->isAdmin($user);
     }
 }

@@ -12,34 +12,25 @@
         <link rel="shortcut icon" type="image/png" href="{{ $organisation->favicon->getUrl() }}"/>
     @endif
 
-    <style>
-
-        @font-face {
-            font-family: 'SharpGroteskSmBold25-Regular';
-            src: url('/fonts/SharpGroteskSmBold25-Regular.ttf');
-        }
-
-        @font-face {
-            font-family: 'SharpGroteskBook20-Regular';
-            src: url('/fonts/SharpGroteskBook20-Regular.ttf');
-        }
+    <style type="text/css">
 
         body {
-            background: #004e66;
             color: white;
+            background: #303030;
             margin: 0;
             padding: 0;
-            font-family: 'SharpGroteskBook20-Regular';
+
+            font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         }
 
         body.embed {
-            margin: 0px;
-            padding: 0px;
+            margin: 0;
+            padding: 0;
             padding-bottom: 20px;
         }
 
         h1 {
-            font-family: 'SharpGroteskSmBold25-Regular';
+            font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         }
 
         body a {
@@ -106,6 +97,10 @@
             }
         }
 
+    </style>
+
+    <style type="text/css">
+        {!! $organisation->livestream_css !!}
     </style>
 </head>
 <body @if($embed)class="embed"@endif>

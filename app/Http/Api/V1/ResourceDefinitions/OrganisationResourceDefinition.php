@@ -51,6 +51,104 @@ class OrganisationResourceDefinition extends ResourceDefinition
             ->min(3)
         ;
 
+        $this->field('legal_name')
+            ->visible()
+            ->writeable();
 
+        $this->field('address')
+            ->visible()
+            ->writeable();
+
+        $this->field('national_id')
+            ->visible()
+            ->writeable();
+
+        $this->field('bank_iban')
+            ->visible()
+            ->writeable();
+
+        $this->field('bank_bic')
+            ->visible()
+            ->writeable();
+
+        $this->field('vat_footer')
+            ->visible()
+            ->writeable();
+
+        $this->relationship('logo', AssetResourceDefinition::class)
+            ->one()
+            ->visible()
+            ->expanded()
+            ->linkable();
+
+        $this->relationship('favicon', AssetResourceDefinition::class)
+            ->one()
+            ->visible()
+            ->expanded()
+            ->linkable();
+
+        $this->field('support_email')
+            ->visible()
+            ->writeable();
+
+        $this->field('blog_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('blog_rss_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('website_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('facebook_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('instagram_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('googleplus_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('linkedin_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('twitter_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('helpdesk_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('footer_html')
+            ->visible()
+            ->writeable();
+
+        $this->field('chatwoot_url')
+            ->visible()
+            ->writeable();
+
+        $this->field('chatwoot_token')
+            ->visible()
+            ->writeable();
+
+        $this->field('chatwoot_livestream_token')
+            ->visible()
+            ->writeable();
+
+        $this->field('livestream_css')
+            ->visible()
+            ->writeable();
+
+        $this->field('uitpas')
+            ->bool()
+            ->writeable();
     }
 }

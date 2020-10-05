@@ -22,6 +22,7 @@
 
 namespace App\Http\Api\V1\ResourceDefinitions;
 
+use App\Http\Api\V1\ResourceDefinitions\Events\EventResourceDefinition;
 use App\Models\LiveStream;
 use CatLab\Charon\Models\ResourceDefinition;
 
@@ -46,6 +47,12 @@ class LiveStreamResourceDefinition extends ResourceDefinition
             ->visible(true)
             ->writeable()
             ->required();
+
+        $this->relationship('event', EventResourceDefinition::class)
+            ->one()
+            ->visible()
+            ->linkable(true, true)
+            ->expanded();
 
         $this->field('twitch_key')
             ->display('twitch_channel')

@@ -37,14 +37,15 @@
         <div class="collapse navbar-collapse" id="adminNavbar">
             <ul class="navbar-nav mr-auto">
 
+                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\OrganisationController@edit', [ organisation()->id ]) }}">Organisation</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\EventController@index') }}">Events</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\VenueController@index') }}">Venues</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\CompetitionController@index') }}">Competitions</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\AssetController@index') }}">Assets</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\SeriesController@index') }}">Series</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\PeopleController@index') }}">People</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ action('Admin\LiveStreamController@index') }}">Livestreams</a></li>
-                <!--<li class="nav-item"><a class="nav-link" href="{{ action('Admin\UitDbController@index') }}">UitDB</a></li>-->
+                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\UitDbController@index') }}">UitDB</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\AssetController@index') }}">Assets</a></li>
             </ul>
 
             <!-- Right Side Of Navbar -->
