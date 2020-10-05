@@ -24,6 +24,7 @@ namespace App\Http\Api\V1\ResourceDefinitions\Events;
 
 use App\Http\Api\V1\ResourceDefinitions\AssetResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\CompetitionResourceDefinition;
+use App\Http\Api\V1\ResourceDefinitions\LiveStreamResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\PersonResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\SeriesResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\VenueResourceDefinition;
@@ -186,10 +187,10 @@ class EventResourceDefinition extends ResourceDefinition
             ->writeable(true, true)
             ->number();
 
-        $this->field('livestream_url')
+        $this->relationship('livestream', LiveStreamResourceDefinition::class)
             ->visible()
-            ->writeable(true, true)
-            ->string();
+            ->expanded()
+            ->linkable();
 
         $this->relationship('authors', PersonResourceDefinition::class)
             ->many()

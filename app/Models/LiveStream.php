@@ -90,4 +90,16 @@ class LiveStream extends Model
 
         return (\Request::secure() ? 'https' : 'http' ) . '://live.' . $domain . '/' . $this->token;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getAttribute($key)
+    {
+        if ($key === 'name') {
+            return $this->title;
+        }
+
+        return parent::getAttribute($key);
+    }
 }

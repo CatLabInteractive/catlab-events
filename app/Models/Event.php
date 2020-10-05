@@ -667,11 +667,11 @@ class Event extends Model implements EuklesModel
         $output['eventStatus'] = 'EventScheduled';
 
         // attendance
-        if ($this->livestream_url && $this->venue) {
+        if ($this->getLiveStreamUrl() && $this->venue) {
             $output['eventAttendanceMode'] = 'MixedEventAttendanceMode';
         } elseif ($this->venue) {
             $output['eventAttendanceMode'] = 'OfflineEventAttendanceMode';
-        } elseif ($this->livestream_url) {
+        } elseif ($this->getLiveStreamUrl()) {
             $output['eventAttendanceMode'] = 'OnlineEventAttendanceMode';
         }
 
@@ -924,10 +924,21 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function livestream()
+    {
+        return $this->belongsTo(LiveStream::class);
+    }
+
+    /**
      * @return string|null
      */
     public function getLiveStreamUrl()
     {
-        return $this->livestream_url;
+        if (!$this->livestream) {
+            return null;
+        }
+        return $this->livestream->getLivestreamUrl();
     }
 }
