@@ -34,7 +34,7 @@
         }
 
         body a {
-            color: #ff8c57;
+            color: #ff0763;
         }
 
         #container {
