@@ -149,6 +149,7 @@ class OrganisationResourceDefinition extends ResourceDefinition
 
         $this->field('uitpas')
             ->bool()
+            ->visible()
             ->writeable();
     }
 }
