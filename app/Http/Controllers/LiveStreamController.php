@@ -22,7 +22,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\LivestreamNotFoundException;
 use App\Models\LiveStream;
+use App\UitDB\Exceptions\UitPASException;
 use Illuminate\Http\Request;
 
 /**
@@ -48,27 +50,13 @@ class LiveStreamController extends Controller
      * @param Request $request
      * @param $domain
      * @param null $identifier
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @throws LivestreamNotFoundException
      */
     public function view(Request $request, $domain, $identifier = null)
     {
-        if (empty($identifier)) {
-            $identifier = $domain;
-            $domain = null;
-        }
-
+        $stream = $this->getStream($domain, $identifier);
         $embed = $request->query('embed') == 1;
-
-        $stream = LiveStream::where('token', '=', $identifier)->first();
-        if (!$stream) {
-            return view(
-                'livestream.notfound',
-                [
-                    'organisation' => $this->getOrganisation(),
-                    'embed' => $embed
-                ]
-            );
-        }
 
         $secretPreview = $request->query('secretPreviewThijs');
         if (!$stream->streaming && !$secretPreview) {
@@ -115,4 +103,88 @@ class LiveStreamController extends Controller
         }
     }
 
+    /**
+     * @param Request $request
+     * @param $domain
+     * @param null $identifier
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws LivestreamNotFoundException
+     */
+    public function uitPASCheckin(Request $request, $domain, $identifier = null)
+    {
+        $stream = $this->getStream($domain, $identifier);
+
+        $event = $stream->event;
+        if (!$event) {
+            throw new LivestreamNotFoundException();
+        }
+
+        $uitpas = \UitDb::getUitPasService()->canCheckIn($event);
+        if (!$uitpas) {
+            throw new LivestreamNotFoundException();
+        }
+
+        return view(
+            'livestream.uitpasCheckin',
+            [
+                'organisation' => $stream->organisation,
+                'livestream' => $stream,
+                'embed' => false,
+                'success' => null,
+                'error' => null
+            ]
+        );
+    }
+
+    public function processUitPASCheckin(Request $request, $domain, $identifier = null)
+    {
+        $stream = $this->getStream($domain, $identifier);
+
+        $event = $stream->event;
+        if (!$event) {
+            throw new LivestreamNotFoundException();
+        }
+
+        $success = null;
+        $error = null;
+        try {
+            $result = \UitDb::getUitPasService()->uitPASCheckin($stream->event, $request->input('uitpasNumber'));
+            if ($result) {
+                $success = 'UiTPAS code aanvaard.';
+            }
+        } catch (UitPASException $e) {
+            $error = $e->getMessage();
+        }
+
+        return view(
+            'livestream.uitpasCheckin',
+            [
+                'organisation' => $stream->organisation,
+                'livestream' => $stream,
+                'embed' => false,
+                'success' => $success,
+                'error' => $error
+            ]
+        );
+    }
+
+    /**
+     * @param $domain
+     * @param null $identifier
+     * @return mixed
+     * @throws LivestreamNotFoundException
+     */
+    protected function getStream($domain, $identifier = null)
+    {
+        if (empty($identifier)) {
+            $identifier = $domain;
+            $domain = null;
+        }
+
+        $stream = LiveStream::where('token', '=', $identifier)->first();
+        if (!$stream) {
+            throw new LivestreamNotFoundException();
+        }
+        return $stream;
+    }
 }

@@ -262,7 +262,7 @@ class UiTPASVerifier
                 throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend: ' . $message);
 
             default:
-                throw new UitPASException($simpleXml->code);
+                throw new UitPASException($simpleXml->code . ' ' . $simpleXml->message);
         }
     }
 
@@ -325,5 +325,59 @@ class UiTPASVerifier
         }
 
         throw PriceClassNotFound::make($ticketCategory);
+    }
+
+    /**
+     * @param $event
+     * @return bool
+     */
+    public function canCheckIn(Event $event)
+    {
+        $organisation = $event->organisation;
+        if (!$organisation->uitdb_identifier) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Event $event
+     * @param $uitpas
+     * @return bool
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function uitPASCheckin(Event $event, $uitpas)
+    {
+        $organisation = $event->organisation;
+        if (!$organisation->uitdb_identifier) {
+            throw new UitPASException('Organisation is not authenticated.');
+        }
+
+        if (!$event->getUitDBId()) {
+            throw InvalidEventException::make();
+        }
+
+        try {
+            $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient($organisation, 'uitid');
+            $response = $client->post(
+                'uitpas/passholder/checkin',
+                [
+                    'form_params' => [
+                        'cdbid' => $event->getUitDBId(),
+                        'uitpasNumber' => $uitpas
+                    ]
+                ]
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $this->handleApiError($e->getResponse());
+            } else {
+                throw $e;
+            }
+        }
+
+        return true;
     }
 }

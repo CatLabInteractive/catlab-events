@@ -29,6 +29,8 @@ if (config('services.catlab.client_id')) {
 Route::get('/livestreams', 'LiveStreamController@index');
 Route::get('/livestreams/{identifier}', 'LiveStreamController@view')->name('livestream_view');
 Route::get('/livestreams/{identifier}/poll', 'LiveStreamController@poll');
+Route::get('/livestreams/{identifier}/uitpas', 'LiveStreamController@uitPASCheckin');
+Route::post('/livestreams/{identifier}/uitpas', 'LiveStreamController@processUitPASCheckin');
 
 Route::domain('live.{domain}')->group(function() {
     Route::get('/', 'LiveStreamController@index')->where('domain', '.*');

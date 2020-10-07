@@ -22,6 +22,7 @@
 
 namespace App\Exceptions;
 
+use App\Models\Organisation;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
@@ -44,6 +45,7 @@ class Handler extends ExceptionHandler
         \Illuminate\Database\Eloquent\ModelNotFoundException::class,
         \Illuminate\Session\TokenMismatchException::class,
         \Illuminate\Validation\ValidationException::class,
+        LivestreamNotFoundException::class
     ];
 
     /**
@@ -68,6 +70,17 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($exception instanceof LivestreamNotFoundException) {
+            $embed = $request->query('embed') == 1;
+            return \Response::view(
+                'livestream.notfound',
+                [
+                    'embed' => $embed,
+                    'organisation' => Organisation::getRepresentedOrganisation()
+                ]
+            );
+        }
+
         return parent::render($request, $exception);
     }
 
