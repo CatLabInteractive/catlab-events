@@ -130,5 +130,7 @@ class GroupMemberController extends ResourceController
             );
 
         }
+
+        return $entity;
     }
 }
