@@ -32,9 +32,11 @@
                     </td>
 
                     <td>
-                        <a href="{{ action('EventController@fromVenue', $order->event->venue->id) }}">
-                            {{ $order->event->venue->name }}
-                        </a>
+                        @if($order->event->venue)
+                            <a href="{{ action('EventController@fromVenue', $order->event->venue->id) }}">
+                                {{ $order->event->venue->name }}
+                            </a>
+                        @endif
                     </td>
 
                     <td>
