@@ -894,6 +894,7 @@ class EventController extends Controller
             'Reference',
             'Date',
             'Groupname',
+            'Ticket Category',
             'Total paid'
         ];
 
@@ -912,6 +913,7 @@ class EventController extends Controller
                 'Id' => $order->id,
                 'Reference' => $data['reference'],
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
+                'Ticket Category' => $order->ticketCategory->name,
                 'Groupname' => $order->group->name,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];
