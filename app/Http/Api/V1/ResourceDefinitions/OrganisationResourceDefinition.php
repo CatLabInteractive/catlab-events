@@ -157,12 +157,12 @@ class OrganisationResourceDefinition extends ResourceDefinition
             ->visible()
             ->writeable();
 
-        $this->field('rocketchat_oauth_client')
+        $this->field('rocketchat_admin_username')
             ->string()
             ->visible()
             ->writeable();
 
-        $this->field('rocketchat_oauth_secret')
+        $this->field('rocketchat_admin_password')
             ->string()
             ->visible()
             ->writeable();

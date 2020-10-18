@@ -26,6 +26,7 @@
         "roumen/sitemap": "2.6.*",
         "spatie/laravel-referer": "^1.4",
         "willvincent/feeds": "^1.1",
+        "fab1en/rocket-chat-rest-client": "dev-master",
         "ext-simplexml": "*"
     },
     "require-dev": {

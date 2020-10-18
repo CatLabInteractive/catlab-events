@@ -91,12 +91,32 @@
 
                 @if($rocketChatUrl)
                     <iframe
-                            frameborder="0"
-                            scrolling="no"
-                            src="{{$rocketChatUrl}}"
-                            height="100%"
-                            width="100%">
+                        frameborder="0"
+                        scrolling="no"
+                        src="{{$rocketChatUrl}}"
+                        height="100%"
+                        width="100%"
+                        id="rocketChatIframe"
+                    >
                     </iframe>
+
+                    @if($rocketChatToken)
+                        <script>
+                            setTimeout(function() {
+                                var frame = document.getElementById('rocketChatIframe');
+                                console.log(frame);
+
+                                var data = {
+                                    externalCommand: 'login-with-token',
+                                    token: '{{$rocketChatToken}}'
+                                };
+
+                                console.log(data);
+
+                                frame.contentWindow.postMessage(data, '*');
+                            }, 5000);
+                        </script>
+                    @endif
                 @endif
             </div>
         @endif

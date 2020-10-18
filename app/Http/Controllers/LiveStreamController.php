@@ -24,6 +24,8 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\LivestreamNotFoundException;
 use App\Models\LiveStream;
+use App\Models\User;
+use App\Tools\RocketChatClient;
 use App\UitDB\Exceptions\UitPASException;
 use Illuminate\Http\Request;
 
@@ -75,7 +77,9 @@ class LiveStreamController extends Controller
 
         // Do we have rocket chat?
         $rocketChatUrl = false;
+        $rocketChatToken = null;
         $hasChat = false;
+
         if (
             $stream->rocketchat_channel &&
             $stream->organisation->rocketchat_url
@@ -85,6 +89,7 @@ class LiveStreamController extends Controller
             // only show chat when user has logged in
             if ($user) {
                 $rocketChatUrl = $stream->organisation->rocketchat_url . '/channel/' . $stream->rocketchat_channel;
+                $rocketChatToken = $this->getRocketChatLoginToken($request, $stream);
             }
         }
 
@@ -99,6 +104,7 @@ class LiveStreamController extends Controller
             'rocketChatUrl' => $rocketChatUrl,
             'hasChat' => $hasChat,
             'user' => $user,
+            'rocketChatToken' => $rocketChatToken,
             'loginUrl' => action('LiveStreamController@viewLogin', [
                 'identifier' => $stream->token
             ])
@@ -221,5 +227,53 @@ class LiveStreamController extends Controller
             throw new LivestreamNotFoundException();
         }
         return $stream;
+    }
+
+    /**
+     * @param Request $request
+     * @param LiveStream $stream
+     * @return string|null
+     */
+    protected function getRocketChatLoginToken(Request $request, LiveStream $stream)
+    {
+        $user = $request->user();
+        if(!$user) {
+            return null;
+        }
+
+        $sessionName = 'rocket_token_' . $user->id;
+        if ($request->session()->has($sessionName)) {
+            return $request->session()->get($sessionName);
+        }
+
+        $rocketUsername = 'qw' . $user->id;
+        $rocketPassword = md5(implode(',', [ $rocketUsername, $user->email, $user->created_at, config('app.key') ]));
+
+        $nickname = $this->getRocketNickname($user, $stream);
+
+        $client = new RocketChatClient(
+            $stream->organisation->rocketchat_url,
+            $stream->organisation->rocketchat_admin_username,
+            $stream->organisation->rocketchat_admin_password
+        );
+        $accessToken = $client->getAuthToken(
+            $rocketUsername,
+            $rocketPassword,
+            'qw' . $user->id . '@events.catlab.eu',
+            $nickname,
+            $stream->rocketchat_channel
+        );
+
+        return $accessToken;
+    }
+
+    /**
+     * @param User $user
+     * @param LiveStream $stream
+     * @return string
+     */
+    protected function getRocketNickname(User $user, LiveStream $stream)
+    {
+        return $user->name;
     }
 }
