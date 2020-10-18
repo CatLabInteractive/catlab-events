@@ -78,9 +78,10 @@ class RocketChatClient
             $login = $newuser->login(true);
         }
 
+        /*
         if ($channel) {
             $newuser->joinChannel($channel);
-        }
+        }*/
 
         $newuser->updateNickname($nickname);
         return $login->authToken;
