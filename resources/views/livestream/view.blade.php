@@ -11,7 +11,7 @@
     @endif
 
     <div class="twitch">
-        <div class="twitch-video">
+        <div class="twitch-video @if($hasChat) with-chat @endif ">
 
             @if($livestream->twitch_key)
                 <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
@@ -66,23 +66,9 @@
                 </script>
 
             @endif
-
-            @if($livestream->mixer_key)
-
-                    <iframe
-                        title="Quizfabriek"
-                        allowfullscreen="true"
-                        frameborder="0"
-                        scrolling="no"
-                        src="https://mixer.com/embed/player/{{$livestream->mixer_key}}?disableLowLatency=0&disableCostream=1&disableLinks=1&hideChannel=1&muted=false"
-                        width="100%"
-                        height="100%"
-                    ></iframe>
-
-            @endif
         </div>
 
-        <!--
+        @if(false)
         <div class="twitch-chat">
             <iframe
                     frameborder="0"
@@ -92,7 +78,28 @@
                     width="100%">
             </iframe>
         </div>
-        -->
+        @endif
+
+        @if($hasChat)
+            <div class="twitch-chat">
+
+                @if(!$user)
+                    <p class="login-prompt">
+                        <a href="{{ $loginUrl }}">Log in</a> om aan de chat deel te nemen.
+                    </p>
+                @endif
+
+                @if($rocketChatUrl)
+                    <iframe
+                            frameborder="0"
+                            scrolling="no"
+                            src="{{$rocketChatUrl}}"
+                            height="100%"
+                            width="100%">
+                    </iframe>
+                @endif
+            </div>
+        @endif
 
     </div>
 

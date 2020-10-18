@@ -38,7 +38,7 @@
         }
 
         #container {
-            width: 80%;
+            width: 95%;
             box-sizing: border-box;
             margin: 20px auto;
         }
@@ -77,12 +77,16 @@
             height: 100%;
         }
 
+        p.login-prompt {
+            padding: 0 15px;
+        }
+
         @media  screen and (min-width: 850px) {
             .twitch {
                 position: relative;
             }
 
-            .twitch .twitch-chat + .twitch-video {
+            .twitch .twitch-video.with-chat {
                 width: 75%;
                 padding-top: 42.1875%;
             }

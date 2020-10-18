@@ -86,5 +86,10 @@ class LiveStreamResourceDefinition extends ResourceDefinition
         $this->field('livestreamUrl')
             ->string()
             ->visible(true, true);
+
+        $this->field('rocketchat_channel')
+            ->string()
+            ->visible()
+            ->writeable();
     }
 }

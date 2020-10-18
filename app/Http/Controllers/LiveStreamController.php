@@ -71,6 +71,23 @@ class LiveStreamController extends Controller
             );
         }
 
+        $user = \Auth::user();
+
+        // Do we have rocket chat?
+        $rocketChatUrl = false;
+        $hasChat = false;
+        if (
+            $stream->rocketchat_channel &&
+            $stream->organisation->rocketchat_url
+        ) {
+            $hasChat = true;
+
+            // only show chat when user has logged in
+            if ($user) {
+                $rocketChatUrl = $stream->organisation->rocketchat_url . '/channel/' . $stream->rocketchat_channel;
+            }
+        }
+
         if ($stream->redirect_uri) {
             return redirect($stream->redirect_uri);
         }
@@ -78,8 +95,26 @@ class LiveStreamController extends Controller
         return view('livestream.view', [
             'livestream' => $stream,
             'organisation' => $stream->organisation,
-            'embed' => $embed
+            'embed' => $embed,
+            'rocketChatUrl' => $rocketChatUrl,
+            'hasChat' => $hasChat,
+            'user' => $user,
+            'loginUrl' => action('LiveStreamController@viewLogin', [
+                'identifier' => $stream->token
+            ])
         ]);
+    }
+
+    /**
+     * @param Request $request
+     * @param $domain
+     * @param null $identifier
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
+     * @throws LivestreamNotFoundException
+     */
+    public function viewLogin(Request $request, $domain, $identifier = null)
+    {
+        return $this->view($request, $domain, $identifier);
     }
 
     /**
