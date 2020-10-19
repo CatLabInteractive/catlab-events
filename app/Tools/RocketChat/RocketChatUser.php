@@ -44,7 +44,6 @@ class RocketChatUser extends User
             $this->id = $response->body->data->userId;
             return $response->body->data;
         } else {
-            echo( $response->body->message . "\n" );
             return false;
         }
     }

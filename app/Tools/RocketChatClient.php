@@ -49,7 +49,8 @@ class RocketChatClient
      * @param string $email
      * @param string $nickname
      * @param string|null $channel
-     * @return string
+     * @return mixed
+     * @throws \Httpful\Exception\ConnectionErrorException
      */
     public function getAuthToken(
         string $rocketUsername,
@@ -58,6 +59,8 @@ class RocketChatClient
         string $nickname,
         string $channel = null
     ) {
+        ob_start();
+
         $admin = new RocketChatUser($this->adminUsername, $this->adminPassword);
         $admin->login();
 
@@ -68,14 +71,11 @@ class RocketChatClient
         ));
 
         // stupid library outputs content.
-        ob_start();
-
         $login = $newuser->login(false);
 
         if( !$login ) {
             // actually create the user if it does not exist yet
             $newuser->create();
-
             $login = $newuser->login(true);
         } else {
             $login = $newuser->login(true);
@@ -89,7 +89,6 @@ class RocketChatClient
         $newuser->updateNickname($nickname);
 
         ob_end_clean();
-
         return $login->authToken;
     }
 }
