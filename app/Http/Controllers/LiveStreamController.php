@@ -28,6 +28,7 @@ use App\Models\User;
 use App\Tools\RocketChatClient;
 use App\UitDB\Exceptions\UitPASException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * Class LiveStreamController
@@ -269,7 +270,7 @@ class LiveStreamController extends Controller
             return $request->session()->get($sessionName);
         }
 
-        $rocketUsername = 'qw' . $user->id;
+        $rocketUsername = Str::slug($user->name);
         $rocketPassword = md5(implode(',', [ $rocketUsername, $user->email, $user->created_at, config('app.key') ]));
 
         $nickname = $this->getRocketNickname($user, $stream);
@@ -297,6 +298,17 @@ class LiveStreamController extends Controller
      */
     protected function getRocketNickname(User $user, LiveStream $stream)
     {
+        if (!$stream->event) {
+            return $user->name;
+        }
+
+        $groups = $user->groups;
+        foreach ($groups as $group) {
+            if ($stream->event->isRegistered($group)) {
+                return $group->name;
+            }
+        }
+
         return $user->name;
     }
 }
