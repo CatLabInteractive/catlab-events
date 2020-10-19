@@ -19,17 +19,20 @@ function fetchRocketChatAuthToken(url) {
 
     setTimeout(function() {
         $.ajax(url).then(function (response) {
-            var token = response.authToken;
+            setTimeout(function() {
 
-            frame.style.visibility = 'visible';
+                var token = response.authToken;
 
-            var data = {
-                externalCommand: 'login-with-token',
-                token: token
-            };
+                frame.style.visibility = 'visible';
 
-            console.log(data);
-            frame.contentWindow.postMessage(data, '*');
+                var data = {
+                    externalCommand: 'login-with-token',
+                    token: token
+                };
+
+                frame.contentWindow.postMessage(data, '*');
+
+            }, 2000);
         });
-    }, 5000);
+    }, 2000);
 }

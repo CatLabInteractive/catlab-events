@@ -67,6 +67,9 @@ class RocketChatClient
             'email' => $email
         ));
 
+        // stupid library outputs content.
+        ob_start();
+
         $login = $newuser->login(false);
 
         if( !$login ) {
@@ -84,6 +87,9 @@ class RocketChatClient
         }*/
 
         $newuser->updateNickname($nickname);
+
+        ob_end_clean();
+
         return $login->authToken;
     }
 }
