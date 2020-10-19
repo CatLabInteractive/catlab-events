@@ -21,8 +21,11 @@ function fetchRocketChatAuthToken(url) {
         $.ajax(url).then(function (response) {
             setTimeout(function() {
 
-                var token = response.authToken;
+                if (!response.authToken) {
+                    return;
+                }
 
+                var token = response.authToken;
                 frame.style.visibility = 'visible';
 
                 var data = {
