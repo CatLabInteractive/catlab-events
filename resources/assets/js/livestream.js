@@ -11,3 +11,25 @@ function startLiveStreamPoller(url) {
         }
     });
 }
+
+function fetchRocketChatAuthToken(url) {
+
+    var frame = document.getElementById('rocketChatIframe');
+    frame.style.visibility = 'hidden';
+
+    setTimeout(function() {
+        $.ajax(url).then(function (response) {
+            var token = response.authToken;
+
+            frame.style.visibility = 'visible';
+
+            var data = {
+                externalCommand: 'login-with-token',
+                token: token
+            };
+
+            console.log(data);
+            frame.contentWindow.postMessage(data, '*');
+        });
+    }, 5000);
+}

@@ -80,6 +80,8 @@ class LiveStreamController extends Controller
         $rocketChatToken = null;
         $hasChat = false;
 
+        $rocketChatAuthUrl = null;
+
         if (
             $stream->rocketchat_channel &&
             $stream->organisation->rocketchat_url
@@ -89,7 +91,10 @@ class LiveStreamController extends Controller
             // only show chat when user has logged in
             if ($user) {
                 $rocketChatUrl = $stream->organisation->rocketchat_url . '/channel/' . $stream->rocketchat_channel;
-                $rocketChatToken = $this->getRocketChatLoginToken($request, $stream);
+
+                $rocketChatAuthUrl = action('LiveStreamController@getRocketAuthToken', [
+                    'identifier' => $stream->token
+                ]);
             }
         }
 
@@ -104,10 +109,10 @@ class LiveStreamController extends Controller
             'rocketChatUrl' => $rocketChatUrl,
             'hasChat' => $hasChat,
             'user' => $user,
-            'rocketChatToken' => $rocketChatToken,
             'loginUrl' => action('LiveStreamController@viewLogin', [
                 'identifier' => $stream->token
-            ])
+            ]),
+            'rocketChatAuthUrl' => $rocketChatAuthUrl
         ]);
     }
 
@@ -207,6 +212,24 @@ class LiveStreamController extends Controller
                 'error' => $error
             ]
         );
+    }
+
+    /**
+     * @param Request $request
+     * @param $domain
+     * @param null $identifier
+     * @return \Illuminate\Http\JsonResponse
+     * @throws LivestreamNotFoundException
+     */
+    public function getRocketAuthToken(Request $request, $domain, $identifier = null)
+    {
+        $stream = $this->getStream($domain, $identifier);
+
+        $user = \Auth::user();
+
+        return \Response::json([
+            'authToken' => $this->getRocketChatLoginToken($request, $stream)
+        ]);
     }
 
     /**

@@ -100,23 +100,7 @@
                     >
                     </iframe>
 
-                    @if($rocketChatToken)
-                        <script>
-                            setTimeout(function() {
-                                var frame = document.getElementById('rocketChatIframe');
-                                console.log(frame);
 
-                                var data = {
-                                    externalCommand: 'login-with-token',
-                                    token: '{{$rocketChatToken}}'
-                                };
-
-                                console.log(data);
-
-                                frame.contentWindow.postMessage(data, '*');
-                            }, 5000);
-                        </script>
-                    @endif
                 @endif
             </div>
         @endif
@@ -125,4 +109,12 @@
 
     @include('livestream.footer')
 
+@endsection
+
+@section('script')
+    @if($rocketChatAuthUrl)
+        <script type="text/javascript">
+            fetchRocketChatAuthToken('{{$rocketChatAuthUrl}}');
+        </script>
+    @endif
 @endsection
