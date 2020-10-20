@@ -61,6 +61,13 @@ class RocketChatClient
     ) {
         ob_start();
 
+        if (\App::environment([ 'local', 'staging' ])) {
+            $rocketUsername = 'qwtest_' . $rocketUsername;
+            $email = 'qwtest_' . $email;
+        } else {
+            $rocketUsername = 'qw_' . $rocketUsername;
+        }
+
         $admin = new RocketChatUser($this->adminUsername, $this->adminPassword);
         $admin->login();
 
@@ -89,6 +96,11 @@ class RocketChatClient
         $newuser->updateNickname($nickname);
 
         ob_end_clean();
-        return $login->authToken;
+
+        if (is_object($login) && $login->authToken) {
+            return $login->authToken;
+        }
+
+        return false;
     }
 }

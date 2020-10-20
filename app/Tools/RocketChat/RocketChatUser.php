@@ -69,4 +69,25 @@ class RocketChatUser extends User
             ->body([ 'data' => [ 'name' => $nickname ]])
             ->send();
     }
+
+    /**
+     * Create a new user.
+     */
+    public function create() {
+        $response = Request::post( $this->api . 'users.create' )
+            ->body(array(
+                'name' => $this->nickname,
+                'email' => $this->email,
+                'username' => $this->username,
+                'password' => $this->password,
+            ))
+            ->send();
+
+        if( $response->code == 200 && isset($response->body->success) && $response->body->success == true ) {
+            $this->id = $response->body->user->_id;
+            return $response->body->user;
+        } else {
+            return false;
+        }
+    }
 }
