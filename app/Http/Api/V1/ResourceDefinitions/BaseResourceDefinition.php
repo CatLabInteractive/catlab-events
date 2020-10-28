@@ -20,48 +20,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Http\Api\V1\ResourceDefinitions\Groups;
+namespace App\Http\Api\V1\ResourceDefinitions;
 
-use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
-use App\Models\GroupMember;
 use CatLab\Charon\Models\ResourceDefinition;
 
 /**
- * Class GroupMemberResourceDefinition
+ * Class BaseResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class GroupMemberResourceDefinition extends BaseResourceDefinition
+class BaseResourceDefinition extends ResourceDefinition
 {
     /**
-     * StoryResourceDefinition constructor.
+     *
      */
-    public function __construct()
+    protected function addLanguageField()
     {
-        parent::__construct(GroupMember::class);
-
-        // Identifier
-        $this->identifier('id');
-
-        // Name
-        $this->field('name')
-            ->visible(true)
-            ->filterable()
-            ->writeable(true, false)
-            ->required()
-            ->string()
-            ->min(3);
-
-        // Email address
-        $this->field('email')
-            ->writeable(true, false)
-            ->required()
-            ->string();
-
-        // Role
-        $this->field('roleName')
-            ->display('role')
-            ->visible(true)
+        $this->field('language')
             ->writeable(true, true)
-            ->enum([ 'member', 'admin' ]);
+            ->visible(false, true)
+            ->enum([
+                'nl',
+                'fr',
+                'en'
+            ]);
     }
 }

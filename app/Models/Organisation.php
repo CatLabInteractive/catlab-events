@@ -340,9 +340,9 @@ class Organisation extends Model
      */
     public function getSocialLinksText()
     {
-        $text = 'Volg ons op ';
-
         $links = $this->getSocialLinks();
+
+        $text = '';
 
         $index = 0;
         foreach ($links as $k => $v) {
@@ -351,14 +351,15 @@ class Organisation extends Model
             if ($index < count($links) - 2) {
                 $text .= ', ';
             } else {
-                $text .= ' en ';
+                $text .= ' ' . __('organisation.and') . ' ';
             }
 
             $index ++;
         }
 
-        $text = Str::substr($text, 0, -4) . '.';
-        return $text;
+        $text = Str::substr($text, 0, -4);
+
+        return __('organisation.followUs', [ 'links' => $text ]);
     }
 
     /**

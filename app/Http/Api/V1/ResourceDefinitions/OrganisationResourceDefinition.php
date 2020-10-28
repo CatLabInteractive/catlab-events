@@ -29,7 +29,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class OrganisationResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class OrganisationResourceDefinition extends ResourceDefinition
+class OrganisationResourceDefinition extends BaseResourceDefinition
 {
     /**
      * StoryResourceDefinition constructor.
@@ -166,5 +166,7 @@ class OrganisationResourceDefinition extends ResourceDefinition
             ->string()
             ->visible()
             ->writeable();
+
+        $this->addLanguageField();
     }
 }

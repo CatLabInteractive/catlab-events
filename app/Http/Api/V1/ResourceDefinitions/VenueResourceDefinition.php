@@ -29,7 +29,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class VenueResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class VenueResourceDefinition extends ResourceDefinition
+class VenueResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

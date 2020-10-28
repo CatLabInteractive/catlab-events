@@ -30,7 +30,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class PeopleResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class PersonResourceDefinition extends ResourceDefinition
+class PersonResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

@@ -30,7 +30,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class SeriesResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class LiveStreamResourceDefinition extends ResourceDefinition
+class LiveStreamResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {
@@ -91,5 +91,7 @@ class LiveStreamResourceDefinition extends ResourceDefinition
             ->string()
             ->visible()
             ->writeable();
+
+        $this->addLanguageField();
     }
 }

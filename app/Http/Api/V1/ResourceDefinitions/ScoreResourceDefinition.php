@@ -30,7 +30,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class ScoreResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class ScoreResourceDefinition extends ResourceDefinition
+class ScoreResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

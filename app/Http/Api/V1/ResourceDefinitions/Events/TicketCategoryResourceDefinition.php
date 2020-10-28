@@ -22,6 +22,7 @@
 
 namespace App\Http\Api\V1\ResourceDefinitions\Events;
 
+use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
 use App\Models\TicketCategory;
 use CatLab\Charon\Models\ResourceDefinition;
 
@@ -29,7 +30,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class TicketCategoryResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class TicketCategoryResourceDefinition extends ResourceDefinition
+class TicketCategoryResourceDefinition extends BaseResourceDefinition
 {
     /**
      * TicketCategoryResourceDefinition constructor.

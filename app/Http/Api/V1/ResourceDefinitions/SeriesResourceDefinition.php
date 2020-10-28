@@ -29,7 +29,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class SeriesResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class SeriesResourceDefinition extends ResourceDefinition
+class SeriesResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

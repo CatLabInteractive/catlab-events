@@ -23,19 +23,19 @@
 namespace App\Http\Api\V1\ResourceDefinitions\Events;
 
 use App\Http\Api\V1\ResourceDefinitions\AssetResourceDefinition;
+use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\CompetitionResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\LiveStreamResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\PersonResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\SeriesResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\VenueResourceDefinition;
 use App\Models\Event;
-use CatLab\Charon\Models\ResourceDefinition;
 
 /**
  * Class EventResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class EventResourceDefinition extends ResourceDefinition
+class EventResourceDefinition extends BaseResourceDefinition
 {
     /**
      * StoryResourceDefinition constructor.
@@ -214,5 +214,7 @@ class EventResourceDefinition extends ResourceDefinition
             ->visible(true, true)
             ->writeable(true, true)
             ->bool();
+
+        $this->addLanguageField();
     }
 }

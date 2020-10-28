@@ -85,7 +85,7 @@
 
                 @if(!$user)
                     <p class="login-prompt">
-                        <a href="{{ $loginUrl }}">Log in</a> om aan de chat deel te nemen.
+                        {!! __('livestreams.loginToChat', [ 'action' => '<a href="'.$loginUrl.'">' . __('livestreams.loginAction') . '</a>' ]) !!}
                     </p>
                 @endif
 

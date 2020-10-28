@@ -29,7 +29,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class CompetitionResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class CompetitionResourceDefinition extends ResourceDefinition
+class CompetitionResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

@@ -22,6 +22,7 @@
 
 namespace App\Http\Api\V1\ResourceDefinitions\Groups;
 
+use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\ScoreResourceDefinition;
 use App\Http\Api\V1\Validators\GroupValidator;
 use App\Models\Group;
@@ -31,7 +32,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class GroupResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class GroupResourceDefinition extends ResourceDefinition
+class GroupResourceDefinition extends BaseResourceDefinition
 {
     /**
      * StoryResourceDefinition constructor.

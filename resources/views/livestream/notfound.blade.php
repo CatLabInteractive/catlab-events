@@ -7,8 +7,8 @@
 @section('content')
 
 
-    <p>Deze livestream bestaat niet (meer).</p>
-    <p>Klik op de link in uw email om de livestream te openen.</p>
+    <p>{{ __('livestreams.notFound') }}</p>
+    <p>{{ __('livestreams.clickEmailLink') }}</p>
 
     @include('livestream.footer')
 

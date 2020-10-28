@@ -250,6 +250,12 @@ class LiveStreamController extends Controller
         if (!$stream) {
             throw new LivestreamNotFoundException();
         }
+
+        // set app locale to language.
+        if ($stream->language) {
+            \App::setLocale($stream->language);
+        }
+
         return $stream;
     }
 

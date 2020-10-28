@@ -29,7 +29,7 @@ use CatLab\Charon\Models\ResourceDefinition;
  * Class AssetResourceDefinition
  * @package App\Http\Api\V1\ResourceDefinitions
  */
-class AssetResourceDefinition extends ResourceDefinition
+class AssetResourceDefinition extends BaseResourceDefinition
 {
     public function __construct()
     {

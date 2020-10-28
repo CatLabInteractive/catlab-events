@@ -1,10 +1,10 @@
 @if(\Auth::user())
     <p>
-        Ingelogd als {{ \Auth::user()->name }}.
+        {{ __('livestreams.loggedIn', [ \Auth::user()->name ]) }}
         <a class="dropdown-item" href="{{ route('logout') }}"
            onclick="event.preventDefault();
             document.getElementById('logout-form').submit();">
-            Logout
+            {{ __('livestreams.logout') }}
         </a>
     </p>
 @endif
@@ -16,7 +16,7 @@
 @if(!isset($hideSupport) || !$hideSupport)
     <p>
     @if($organisation->helpdesk_url)
-        Heb je vragen of problemen? Surf naar <a href="{{$organisation->helpdesk_url}}" target="_blank">{{ parse_url($organisation->helpdesk_url)['host'] }}</a>.<br />
+        {!! __('livestreams.helpdesk', [ 'url' => '<a href="' . $organisation->helpdesk_url . '" target="_blank">' . parse_url($organisation->helpdesk_url)['host'] . '</a>']) !!}<br />
     @endif
 
     @if(count($organisation->getSocialLinks()) > 0)

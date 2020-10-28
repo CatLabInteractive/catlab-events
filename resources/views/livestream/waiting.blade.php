@@ -10,7 +10,7 @@
         <h1>{{ $livestream->title }}</h1>
     @endif
 
-    <p>Dit evenement is nog niet begonnen.</p>
+    <p>{{ __('livestreams.notStarted') }}</p>
 
     @include('livestream.footer')
 
