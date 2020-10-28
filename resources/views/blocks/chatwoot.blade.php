@@ -11,6 +11,11 @@
                 @else
                     var websiteToken = '{{$organisation->chatwoot_token}}';
                 @endif
+
+                window.chatwootSettings = {
+                    locale: '{{ \App::getLocale() }}'
+                };
+
                 window.chatwootSDK.run({
                     websiteToken: websiteToken,
                     baseUrl: BASE_URL
