@@ -907,7 +907,7 @@ class EventController extends Controller
             /** @var Order $order */
 
             $data = $order->getOrderData(true);
-            $total = $data['price'] + $data['vat'];
+            $total = $data['price'];
 
             $tmp = [
                 'Id' => $order->id,

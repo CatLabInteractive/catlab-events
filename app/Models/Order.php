@@ -245,7 +245,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     {
         $data = $this->getOrderData(true);
 
-        $price = $data['price'] + $data['vat'];
+        $price = $data['price'];
 
         return [
             'reference' => $data['reference'],
