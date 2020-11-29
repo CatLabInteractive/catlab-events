@@ -109,7 +109,11 @@ class EuklesEventSubscriber
     public function onOrderCancelled(OrderCancelled $e)
     {
         $order = $e->order;
-        $wasConfirmed = $e->wasConfirmed;
+
+        // Only trigger event when the order was previously 'confirmed'.
+        if (!$e->wasConfirmed) {
+            return;
+        }
 
         // Track on ze eukles.
         $euklesEvent =
