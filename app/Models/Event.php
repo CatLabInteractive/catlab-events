@@ -617,12 +617,11 @@ class Event extends Model implements EuklesModel
         if ($this->venue) {
             $output['location'] = $this->venue->getJsonLD();
         } elseif ($this->getLiveStreamUrl()) {
-            /*
             $output['location'] = [
                 "@type" => "VirtualLocation",
                 "name" => $this->getLiveStreamUrl(),
                 "url" => $this->getLiveStreamUrl()
-            ];*/
+            ];
         }
 
         if ($this->poster) {
