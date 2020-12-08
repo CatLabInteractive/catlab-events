@@ -38,7 +38,11 @@ abstract class SendEmail
             'group' => $group
         ];
 
-        $view = \View::make('emails/tickets/confirmation', $attributes);
+        if ($event->confirmation_email ** view()->exists('emails.tickets.' . $event->confirmation_email)) {
+            $view = \View::make('emails.tickets.' . $event->confirmation_email, $attributes);
+        } else {
+            $view = \View::make('emails.tickets.confirmation', $attributes);
+        }
 
         /** @var User $user */
         $user = $member->user;

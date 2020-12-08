@@ -215,6 +215,18 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true)
             ->bool();
 
+        // Scan the emails folder for email templates
+        $emailTemplates = [];
+        $emailTemplates[] = '';
+        foreach (\Storage::disk('views')->files('emails/tickets') as $file) {
+            $emailTemplates[] = $file;
+        }
+
+        $this->field('confirmation_email')
+            ->visible(false, true)
+            ->writeable(true, true)
+            ->enum($emailTemplates);
+
         $this->addLanguageField();
     }
 }
