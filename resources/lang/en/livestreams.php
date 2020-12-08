@@ -6,7 +6,7 @@
 
     'notStarted' => 'This event has not started yet',
 
-    'loggedIn' => 'You are logged in as %s.',
+    'loggedIn' => 'You are logged in as :name.',
     'logout' => 'Logout',
 
     'loginToChat' => ':action to join the chat channel.',

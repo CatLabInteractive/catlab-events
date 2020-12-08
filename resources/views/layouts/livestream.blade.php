@@ -86,6 +86,10 @@
                 position: relative;
             }
 
+            .twitch .waiting.with-chat {
+                width: 25%;
+            }
+
             .twitch .twitch-video.with-chat {
                 width: 75%;
                 padding-top: 42.1875%;

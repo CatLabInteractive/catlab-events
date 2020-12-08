@@ -61,19 +61,6 @@ class LiveStreamController extends Controller
         $stream = $this->getStream($domain, $identifier);
         $embed = $request->query('embed') == 1;
 
-        $secretPreview = $request->query('secretPreviewThijs');
-        if (!$stream->streaming && !$secretPreview) {
-            return view(
-                'livestream.waiting',
-                [
-                    'livestream' => $stream,
-                    'organisation' => $stream->organisation,
-                    'poll' => action('LiveStreamController@poll', [ $stream->token ]),
-                    'embed' => $embed
-                ]
-            );
-        }
-
         $user = \Auth::user();
 
         // Do we have rocket chat?
@@ -103,9 +90,21 @@ class LiveStreamController extends Controller
             return redirect($stream->redirect_uri);
         }
 
-        return view('livestream.view', [
+        // Are we live?
+        $viewToLoad = 'livestream.waiting';
+
+        $secretPreview = $request->query('secretPreviewThijs');
+        if ($stream->streaming || $secretPreview) {
+            if ($stream->redirect_uri) {
+                return redirect($stream->redirect_uri);
+            }
+            $viewToLoad = 'livestream.view';
+        }
+
+        return view($viewToLoad, [
             'livestream' => $stream,
             'organisation' => $stream->organisation,
+            'poll' => action('LiveStreamController@poll', [ $stream->token ]),
             'embed' => $embed,
             'rocketChatUrl' => $rocketChatUrl,
             'hasChat' => $hasChat,

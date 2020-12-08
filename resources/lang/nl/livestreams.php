@@ -6,7 +6,7 @@
 
     'notStarted' => 'Dit evenement is nog niet begonnen.',
 
-    'loggedIn' => 'Ingelogd als %s.',
+    'loggedIn' => 'Ingelogd als :name.',
     'logout' => 'Logout',
 
     'loginToChat' => ':action om aan de chat deel te nemen.',

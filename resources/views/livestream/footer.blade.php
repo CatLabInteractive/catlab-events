@@ -1,6 +1,6 @@
 @if(\Auth::user())
     <p>
-        {{ __('livestreams.loggedIn', [ \Auth::user()->name ]) }}
+        {{ __('livestreams.loggedIn', [ 'name' => \Auth::user()->name ]) }}
         <a class="dropdown-item" href="{{ route('logout') }}"
            onclick="event.preventDefault();
             document.getElementById('logout-form').submit();">

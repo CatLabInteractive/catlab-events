@@ -6,7 +6,7 @@
 
     'notStarted' => 'Cet événement n\'a pas encore commencé.',
 
-    'loggedIn' => 'Connecté en tant que %s.',
+    'loggedIn' => 'Connecté en tant que :name.',
     'logout' => 'Se déconnecter',
 
     'loginToChat' => ':action pour participer au chat.',
