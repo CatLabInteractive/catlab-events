@@ -48,4 +48,10 @@
     <script type="text/javascript">
         startLiveStreamPoller('{{ $poll }}');
     </script>
+
+    @if($rocketChatAuthUrl)
+        <script type="text/javascript">
+            fetchRocketChatAuthToken('{{$rocketChatAuthUrl}}');
+        </script>
+    @endif
 @endsection
