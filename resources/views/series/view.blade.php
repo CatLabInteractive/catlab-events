@@ -58,7 +58,7 @@
 
                                 <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default"><i class="fa fa-check"></i> Praktisch</a>
 
-                                @if($nextEvent->getLiveStreamUrl() && $nextEvent->hasTickets())
+                                @if($nextEvent->getLiveStreamUrl() && !$nextEvent->hasTickets())
                                     <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-default"><i class="fa fa-play"></i> Livestream</a>
                                 @endif
 
