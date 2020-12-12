@@ -59,12 +59,21 @@ class Organisation extends Model
     }
 
     /**
-     * @param $domain
+     * @param string $domain
      * @return Organisation
      */
-    public static function getFromDomainOrFirst($domain)
+    public static function getFromDomainOrFirst($domainName)
     {
-        $domain = OrganisationDomain::where('domain', '=', $domain)->first();
+        // Strip subdomain in some specific cases
+        $parts = explode('.', $domainName);
+        switch (Str::lower($parts[0])) {
+            case 'live':
+                array_shift($parts);
+                $domainName = implode('.', $parts);
+                break;
+        }
+
+        $domain = OrganisationDomain::where('domain', '=', $domainName)->first();
         if ($domain) {
             return $domain->organisation;
         }
