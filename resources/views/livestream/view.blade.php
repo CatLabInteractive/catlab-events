@@ -82,26 +82,7 @@
 
         @if($hasChat)
             <div class="twitch-chat">
-
-                @if(!$user)
-                    <p class="login-prompt">
-                        {!! __('livestreams.loginToChat', [ 'action' => '<a href="'.$loginUrl.'">' . __('livestreams.loginAction') . '</a>' ]) !!}
-                    </p>
-                @endif
-
-                @if($rocketChatUrl)
-                    <iframe
-                        frameborder="0"
-                        scrolling="no"
-                        src="{{$rocketChatUrl}}"
-                        height="100%"
-                        width="100%"
-                        id="rocketChatIframe"
-                    >
-                    </iframe>
-
-
-                @endif
+                @include('livestream.blocks.chat')
             </div>
         @endif
 
@@ -112,9 +93,5 @@
 @endsection
 
 @section('script')
-    @if($rocketChatAuthUrl)
-        <script type="text/javascript">
-            fetchRocketChatAuthToken('{{$rocketChatAuthUrl}}');
-        </script>
-    @endif
+
 @endsection

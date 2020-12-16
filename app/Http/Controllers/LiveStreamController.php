@@ -84,6 +84,8 @@ class LiveStreamController extends Controller
                     'identifier' => $stream->token
                 ]);
             }
+        } elseif ($stream->deadsimple_chat_url) {
+            $hasChat = true;
         }
 
         if ($stream->redirect_uri) {
@@ -112,7 +114,8 @@ class LiveStreamController extends Controller
             'loginUrl' => action('LiveStreamController@viewLogin', [
                 'identifier' => $stream->token
             ]),
-            'rocketChatAuthUrl' => $rocketChatAuthUrl
+            'rocketChatAuthUrl' => $rocketChatAuthUrl,
+            'deadSimpleChat' => $stream->deadsimple_chat_url
         ]);
     }
 

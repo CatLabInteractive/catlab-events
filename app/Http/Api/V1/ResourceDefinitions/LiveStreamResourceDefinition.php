@@ -92,6 +92,11 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        $this->field('deadsimple_chat_url')
+            ->string()
+            ->visible()
+            ->writeable();
+
         $this->addLanguageField();
     }
 }
