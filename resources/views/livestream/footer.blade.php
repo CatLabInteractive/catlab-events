@@ -13,7 +13,10 @@
     {{ csrf_field() }}
 </form>
 
-@if(!isset($hideSupport) || !$hideSupport)
+@if(
+    (!isset($livestream) || $livestream->show_footer) &&
+    (!isset($hideSupport) || !$hideSupport)
+)
     <p>
     @if($organisation->helpdesk_url)
         {!! __('livestreams.helpdesk', [ 'url' => '<a href="' . $organisation->helpdesk_url . '" target="_blank">' . parse_url($organisation->helpdesk_url)['host'] . '</a>']) !!}<br />

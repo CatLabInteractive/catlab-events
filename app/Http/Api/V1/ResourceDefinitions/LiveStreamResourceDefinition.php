@@ -97,6 +97,11 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        $this->field('show_footer')
+            ->bool()
+            ->visible()
+            ->writeable();
+
         $this->addLanguageField();
     }
 }
