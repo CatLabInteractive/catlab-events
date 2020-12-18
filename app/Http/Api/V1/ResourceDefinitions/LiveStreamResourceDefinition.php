@@ -23,8 +23,8 @@
 namespace App\Http\Api\V1\ResourceDefinitions;
 
 use App\Http\Api\V1\ResourceDefinitions\Events\EventResourceDefinition;
+use App\Http\Api\V1\Validators\LiveStreamValidator;
 use App\Models\LiveStream;
-use CatLab\Charon\Models\ResourceDefinition;
 
 /**
  * Class SeriesResourceDefinition
@@ -103,5 +103,7 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->writeable(false, true);
 
         $this->addLanguageField();
+
+        $this->validator(new LiveStreamValidator());
     }
 }
