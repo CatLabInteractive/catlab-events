@@ -14,7 +14,7 @@ class AddShowFooterToLivestreams extends Migration
     public function up()
     {
         Schema::table('livestreams', function (Blueprint $table) {
-            $table->boolean('show_footer')->after('rocketchat_channel')->default(1);
+            $table->boolean('show_footer')->after('rocketchat_channel')->default(false);
         });
     }
 
