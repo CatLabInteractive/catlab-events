@@ -180,7 +180,7 @@
                             <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Inschrijven</a>
                         @endif
 
-                        @if($nextEvent->getLiveStreamUrl() && $nextEvent->hasTickets())
+                        @if($nextEvent->getLiveStreamUrl() && !$nextEvent->hasTickets())
                             <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-primary"><i class="fa fa-play"></i> Livestream</a>
                         @endif
 
