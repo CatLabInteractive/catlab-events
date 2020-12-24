@@ -232,5 +232,10 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->enum($emailTemplates);
 
         $this->addLanguageField();
+
+        $this->field('livestream_url')
+            ->visible(true, true)
+            ->writeable(true, true)
+            ->string();
     }
 }

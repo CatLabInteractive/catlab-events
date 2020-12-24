@@ -20,6 +20,8 @@
     </div>
     @endif
 
+    @include('blocks.livestream-order-link', [ 'order' => $order ])
+
     <div class="invoice">
         <h3>Overzicht</h3>
         <table class="table">

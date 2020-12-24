@@ -83,6 +83,6 @@
         </tr>
     </table>
 
-
+    @include('blocks.livestream-order-link', [ 'order' => $order ])
 
 @endsection

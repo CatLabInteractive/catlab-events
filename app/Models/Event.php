@@ -936,9 +936,43 @@ class Event extends Model implements EuklesModel
      */
     public function getLiveStreamUrl()
     {
+        if ($this->livestream_url) {
+            return $this->livestream_url;
+        }
+
         if (!$this->livestream) {
             return null;
         }
         return $this->livestream->getLivestreamUrl();
+    }
+
+    /**
+     * @param Group|null $group
+     * @return string|null
+     */
+    public function getIdentifiedLiveStreamUrl(Group $group = null)
+    {
+        $url = $this->getLiveStreamUrl();
+        if (!$url) {
+            return null;
+        }
+
+        $additionalParameters = [];
+        if ($group) {
+            $additionalParameters['g'] = $group->id;
+            $additionalParameters['n'] = $group->name;
+        }
+
+        if (count($additionalParameters) === 0) {
+            return $url;
+        }
+
+        if (strpos($url, '?') !== false) {
+            $url .= '&';
+        } else {
+            $url .= '?';
+        }
+
+        return $url . http_build_query($additionalParameters);
     }
 }
