@@ -828,7 +828,7 @@ class EventController extends Controller
 
         $pdf = PDF
             ::loadView('pdf.clearing', $data)
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
 
         return $pdf->download('catlab-clearing-' . $event->id . '-' . Str::slug($event->name) . '.pdf');
     }
