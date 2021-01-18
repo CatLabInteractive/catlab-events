@@ -8,6 +8,12 @@
     <h1>Reservation</h1>
     <table class="table">
 
+        <tr>
+            <th>Name</th>
+            <th>Connect code</th>
+            <th>Livestream URL</th>
+        </tr>
+
         @foreach($players as $player)
             <tr>
                 <td>{{ $player['name'] }}</td>
