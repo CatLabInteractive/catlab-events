@@ -103,6 +103,12 @@ class LiveStreamController extends Controller
             $viewToLoad = 'livestream.view';
         }
 
+        $deadSimpleChatUrl = $stream->deadsimple_chat_url;
+        $username = $request->query('n');
+        if ($username) {
+            $deadSimpleChatUrl .= '?username=' . urlencode($username);
+        }
+
         return view($viewToLoad, [
             'livestream' => $stream,
             'organisation' => $stream->organisation,
@@ -115,7 +121,8 @@ class LiveStreamController extends Controller
                 'identifier' => $stream->token
             ]),
             'rocketChatAuthUrl' => $rocketChatAuthUrl,
-            'deadSimpleChat' => $stream->deadsimple_chat_url
+            'deadSimpleChat' => $deadSimpleChatUrl,
+            'username' => $username
         ]);
     }
 
