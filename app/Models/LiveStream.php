@@ -43,7 +43,7 @@ class LiveStream extends Model
             while ($tries > 0) {
                 $tries --;
 
-                $model->token = Str::lower(Str::random(16));
+                $model->token = Str::lower(Str::random(8));
 
                 // check for duplicate
                 if (!LiveStream::where('token', '=', $model->token)->exists()) {
@@ -73,9 +73,10 @@ class LiveStream extends Model
     }
 
     /**
+     * @param array $additionalParameters
      * @return string
      */
-    public function getLivestreamUrl()
+    public function getLivestreamUrl($additionalParameters = [])
     {
         $organisation = $this->organisation;
 
@@ -88,7 +89,13 @@ class LiveStream extends Model
             }
         }
 
-        return (\Request::secure() ? 'https' : 'http' ) . '://live.' . $domain . '/' . $this->token;
+        $baseUrl = (\Request::secure() ? 'https' : 'http' ) . '://live.' . $domain . '/' . $this->token;
+
+        if (count($additionalParameters) > 0) {
+            $baseUrl .= '?' . http_build_query($additionalParameters);
+        }
+
+        return $baseUrl;
     }
 
     /**

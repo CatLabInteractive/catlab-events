@@ -78,6 +78,9 @@ Route::group([
             FrontCrudController::routes('livestreams', 'Admin\LiveStreamController', 'livestream');
             FrontCrudController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
 
+            Route::get('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@generateUrlsForm');
+            Route::post('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@processGenerateUrls');
+
             Route::get('assets', 'Admin\AssetController@index');
             Route::post('assets', 'Admin\AssetController@upload');
 

@@ -22,11 +22,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\LivestreamNotFoundException;
 use App\Http\Api\V1\Controllers\Base\ResourceController;
 use App\Http\Controllers\Controller;
+use App\Models\LiveStream;
+use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
+use CatLab\Laravel\Table\Table;
 use Illuminate\Http\Request;
 
 /**
@@ -89,5 +96,92 @@ class LiveStreamController extends Controller implements FrontCrudControllerCont
 
                 break;
         }
+    }
+
+    /**
+     * @param Request $request
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
+     */
+    public function getTableForResourceCollection (
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        $table = $this->traitGetTableForResourceCollection($request, $collection, $resourceDefinition, $context);
+
+        $table->modelAction(
+            (new ResourceAction('Admin\LiveStreamController@generateUrlsForm', 'Generated named routes'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+
+        );
+
+        return $table;
+    }
+
+    /**
+     * @param Request $request
+     * @param $streamId
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function generateUrlsForm(Request $request, $streamId)
+    {
+        /** @var LiveStream $stream */
+        $stream = LiveStream::findOrFail($streamId);
+        return view('admin.generateUrls', [
+            'livestream' => $stream,
+            'organisation' => $stream->organisation,
+            'embed' => false,
+            'action' => action('Admin\LiveStreamController@processGenerateUrls', [ $stream->id ])
+        ]);
+    }
+
+    /**
+     * @param Request $request
+     * @param $streamId
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function processGenerateUrls(Request $request, $streamId)
+    {
+        /** @var LiveStream $stream */
+        $stream = LiveStream::findOrFail($streamId);
+        $body = $request->post('reservation');
+
+        $players = [];
+        $isProcessingPlayers = false;
+
+        $rows = explode(PHP_EOL, $body);
+        foreach ($rows as $row) {
+            if (!$isProcessingPlayers) {
+                if (trim($row) === 'Players:') {
+                    $isProcessingPlayers = true;
+                }
+                continue;
+            }
+
+            $parts = explode(':', $row);
+
+            $token = trim($parts[0]);
+            $name = trim($parts[1]);
+
+            $players[] = [
+                'name' => $name,
+                'token' => $token,
+                'url' => $stream->getLivestreamUrl([
+                    'n' => $name
+                ])
+            ];
+        }
+
+        return view('admin.generatedUrls', [
+            'livestream' => $stream,
+            'organisation' => $stream->organisation,
+            'embed' => false,
+            'players' => $players
+        ]);
     }
 }
