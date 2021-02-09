@@ -1,4 +1,4 @@
-@if(!$user && $rocketChatUrl)
+@if(!$user && $mustLoginToChat)
     <p class="login-prompt">
         {!! __('livestreams.loginToChat', [ 'action' => '<a href="'.$loginUrl.'">' . __('livestreams.loginAction') . '</a>' ]) !!}
     </p>

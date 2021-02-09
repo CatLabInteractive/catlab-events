@@ -103,10 +103,19 @@ class LiveStreamController extends Controller
             $viewToLoad = 'livestream.view';
         }
 
+        $mustLoginToCheck = true;
+
         $deadSimpleChatUrl = $stream->deadsimple_chat_url;
-        $username = $request->query('n');
-        if ($username) {
-            $deadSimpleChatUrl .= '?username=' . urlencode($username);
+        if ($deadSimpleChatUrl) {
+            $username = $request->query('n');
+            if ($username) {
+                $deadSimpleChatUrl .= '?username=' . urlencode($username);
+                $mustLoginToCheck = false;
+            } elseif ($user) {
+                $deadSimpleChatUrl .= '?username=' . urlencode($this->getChatNickname($user, $stream));
+            } else {
+                $deadSimpleChatUrl = null;
+            }
         }
 
         return view($viewToLoad, [
@@ -122,7 +131,8 @@ class LiveStreamController extends Controller
             ]),
             'rocketChatAuthUrl' => $rocketChatAuthUrl,
             'deadSimpleChat' => $deadSimpleChatUrl,
-            'username' => $username
+            'username' => $username,
+            'mustLoginToChat' => $mustLoginToCheck
         ]);
     }
 
@@ -288,7 +298,7 @@ class LiveStreamController extends Controller
         $rocketUsername = Str::slug($user->name);
         $rocketPassword = md5(implode(',', [ $rocketUsername, $user->email, $user->created_at, config('app.key') ]));
 
-        $nickname = $this->getRocketNickname($user, $stream);
+        $nickname = $this->getChatNickname($user, $stream);
 
         $client = new RocketChatClient(
             $stream->organisation->rocketchat_url,
@@ -311,7 +321,7 @@ class LiveStreamController extends Controller
      * @param LiveStream $stream
      * @return string
      */
-    protected function getRocketNickname(User $user, LiveStream $stream)
+    protected function getChatNickname(User $user, LiveStream $stream)
     {
         if (!$stream->event) {
             return $user->name;
