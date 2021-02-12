@@ -105,9 +105,10 @@ class LiveStreamController extends Controller
 
         $mustLoginToCheck = true;
 
+        $username = $request->query('n');
+
         $deadSimpleChatUrl = $stream->deadsimple_chat_url;
         if ($deadSimpleChatUrl) {
-            $username = $request->query('n');
             if ($username) {
                 $deadSimpleChatUrl .= '?username=' . urlencode($username);
                 $mustLoginToCheck = false;
