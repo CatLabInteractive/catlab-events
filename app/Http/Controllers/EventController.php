@@ -709,6 +709,7 @@ class EventController extends Controller
             $orderData = $client->createOrder([
 
                 'callback' => action('OrderController@sync', [ $order->id ]),
+                'partner' => $event->organisation->catlab_partner_id,
                 'items' => [
                     [
                         'name' => $event->name,
