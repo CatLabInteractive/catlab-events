@@ -90,6 +90,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      * Change the state of an order.
      * @param $state
      * @param bool $forceTrigger
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function changeState($state, $forceTrigger = false)
     {
@@ -156,6 +157,12 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function synchronize($forceTrigger = false)
     {
+        // No catlab id? Order was not registered succesfully, so cancel it now.
+        if (!$this->catlab_order_id) {
+            $this->changeState(self::STATE_CANCELLED);
+            return;
+        }
+
         $catlabOrder = $this->getOrderData();
         $status = $catlabOrder['status'];
 
