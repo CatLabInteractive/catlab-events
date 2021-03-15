@@ -70,11 +70,15 @@ class LiveStreamController extends Controller
 
         $rocketChatAuthUrl = null;
 
+        // Are used required to login in order to chat?
+        $mustLoginToChat = $stream->chat_require_login;
+
         if (
             $stream->rocketchat_channel &&
             $stream->organisation->rocketchat_url
         ) {
             $hasChat = true;
+            $mustLoginToChat = true;
 
             // only show chat when user has logged in
             if ($user) {
@@ -103,15 +107,13 @@ class LiveStreamController extends Controller
             $viewToLoad = 'livestream.view';
         }
 
-        $mustLoginToCheck = true;
-
         $username = $request->query('n');
 
         $deadSimpleChatUrl = $stream->deadsimple_chat_url;
         if ($deadSimpleChatUrl) {
             if ($username) {
                 $deadSimpleChatUrl .= '?username=' . urlencode($username);
-                $mustLoginToCheck = false;
+                $mustLoginToChat = false;
             } elseif ($user) {
                 $deadSimpleChatUrl .= '?username=' . urlencode($this->getChatNickname($user, $stream));
             } else {
@@ -133,7 +135,7 @@ class LiveStreamController extends Controller
             'rocketChatAuthUrl' => $rocketChatAuthUrl,
             'deadSimpleChat' => $deadSimpleChatUrl,
             'username' => $username,
-            'mustLoginToChat' => $mustLoginToCheck
+            'mustLoginToChat' => $mustLoginToChat
         ]);
     }
 

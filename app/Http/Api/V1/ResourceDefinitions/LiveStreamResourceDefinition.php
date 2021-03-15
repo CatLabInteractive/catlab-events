@@ -87,6 +87,12 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->string()
             ->visible(true, true);
 
+        $this->field('chat_require_login')
+            ->display('require_login_to_chat')
+            ->bool()
+            ->visible(true, true)
+            ->writeable(false, true);
+
         $this->field('rocketchat_channel')
             ->string()
             ->visible()
