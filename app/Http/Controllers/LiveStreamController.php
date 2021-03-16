@@ -116,7 +116,7 @@ class LiveStreamController extends Controller
                 $mustLoginToChat = false;
             } elseif ($user) {
                 $deadSimpleChatUrl .= '?username=' . urlencode($this->getChatNickname($user, $stream));
-            } else {
+            } elseif ($mustLoginToChat) {
                 $deadSimpleChatUrl = null;
             }
         }
@@ -148,7 +148,15 @@ class LiveStreamController extends Controller
      */
     public function viewLogin(Request $request, $domain, $identifier = null)
     {
-        return $this->view($request, $domain, $identifier);
+        $stream = $this->getStream($domain, $identifier);
+        //return redirect(route('livestream_view', [ $stream->token ]));
+        $path = '/' . $request->path();
+
+        // Get rid of the 'login' postfix
+
+        // http://live.events.catlab.local.com/livestreams/5kf92tr6ZzLTGO2f/login
+        $path = Str::substr($path, 0, -6);
+        return redirect($path);
     }
 
     /**
@@ -258,7 +266,7 @@ class LiveStreamController extends Controller
     /**
      * @param $domain
      * @param null $identifier
-     * @return mixed
+     * @return LiveStream
      * @throws LivestreamNotFoundException
      */
     protected function getStream($domain, $identifier = null)
