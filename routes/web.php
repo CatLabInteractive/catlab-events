@@ -88,6 +88,11 @@ Route::group([
             Route::get('uitdb/connect', 'Admin\UitDbController@link');
             Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
             Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
+
+            Route::get('events/{event}/export/members', 'Admin\EventController@exportMembers');
+            Route::get('events/{event}/export/sales', 'Admin\EventController@exportSales');
+            Route::get('events/{event}/export/clearing', 'Admin\EventController@exportClearing');
+            Route::get('events/{event}/export/salesovertime', 'Admin\EventController@exportSalesTimeline');
         }
     );
 
@@ -135,10 +140,6 @@ Route::group([
     Route::post('events/{event}/register/{ticketCategoryId}', 'EventController@confirmRegister');
     Route::post('events/{event}/register/{ticketCategoryId}/process', 'EventController@processRegister');
 
-    Route::get('events/{event}/export/members', 'EventController@exportMembers')->middleware([ 'admin' ]);
-    Route::get('events/{event}/export/sales', 'EventController@exportSales')->middleware([ 'admin' ]);
-    Route::get('events/{event}/export/clearing', 'EventController@exportClearing')->middleware([ 'admin' ]);
-    Route::get('events/{event}/export/salesovertime', 'EventController@exportSalesTimeline')->middleware([ 'admin' ]);
     Route::get('events/{event}/waitinglist/view', 'WaitingListController@viewList')->middleware([ 'admin' ]);
     Route::get('events/{event}/waitinglist/generate/{user}', 'WaitingListController@generateAccessToken')->middleware([ 'admin' ]);
 

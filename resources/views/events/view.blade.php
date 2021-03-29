@@ -222,12 +222,12 @@
                     <div class="col-md-12">
                         <h3>Deelnemers</h3>
                         @if($isAdmin)
-                            <a href="{{ action('EventController@exportMembers', [ $event->id ]) }}" class="btn btn-default">Email
+                            <a href="{{ action('Admin\EventController@exportMembers', [ $event->id ]) }}" class="btn btn-default">Email
                                 csv</a>
-                            <a href="{{ action('EventController@exportSales', [ $event->id ]) }}" class="btn btn-default">Deelnemers
+                            <a href="{{ action('Admin\EventController@exportSales', [ $event->id ]) }}" class="btn btn-default">Deelnemers
                                 csv</a>
-                            <a href="{{ action('EventController@exportSalesTimeline', [ $event->id ]) }}" class="btn btn-default">Historiek registraties</a>
-                            <a href="{{ action('EventController@exportClearing', [ $event->id ]) }}" class="btn btn-default">Clearing
+                            <a href="{{ action('Admin\EventController@exportSalesTimeline', [ $event->id ]) }}" class="btn btn-default">Historiek registraties</a>
+                            <a href="{{ action('Admin\EventController@exportClearing', [ $event->id ]) }}" class="btn btn-default">Clearing
                                 pdf</a>
                             <br><br>
                         @endif
