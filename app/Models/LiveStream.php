@@ -109,4 +109,31 @@ class LiveStream extends Model
 
         return parent::getAttribute($key);
     }
+
+    /**
+     * @return mixed|string|null
+     */
+    public function getYouTubeUrl()
+    {
+        if (!$this->youtube_video) {
+            return null;
+        }
+
+        if (Str::startsWith($this->youtube_video, 'http')) {
+            $url = $this->youtube_video;
+        } else {
+            $url = 'https://www.youtube.com/embed/' . $this->youtube_video;
+        }
+
+        $url .= '?' . http_build_query([
+
+            'autoplay' => 1,
+            'modestbranding' => 1,
+            'iv_load_policy' => 0,
+            'rel' => 0
+
+        ]);
+
+        return $url;
+    }
 }

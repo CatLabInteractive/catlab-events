@@ -65,6 +65,15 @@
                     }, 30000);
                 </script>
 
+            @elseif ($livestream->getYouTubeUrl())
+                <iframe
+                        width="100%" height="100%"
+                        src="<?php echo $livestream->getYouTubeUrl(); ?>"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                ></iframe>
             @endif
         </div>
 
