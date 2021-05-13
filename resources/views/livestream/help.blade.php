@@ -60,7 +60,8 @@
     <h4>Help, ik kan niet antwoorden!</h4>
     <ul class="list">
         <li>
-            Antwoorden doorsturen gebeurt op een tweede toestel, lees het stappenplan hierboven.
+            Antwoorden doorsturen gebeurt op een tweede toestel en dus niet op deze pagina. Volg de instructies
+            in de email om je antwoordscherm te verbinden.
         </li>
 
         <li>
