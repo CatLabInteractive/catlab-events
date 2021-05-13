@@ -44,6 +44,11 @@
             Sommige bedrijfsnetwerken blokkeren de livestream dienst die we gebruiken. Daar kunnen we helaas niets
             aan doen. Verbreek de verbinding met je VPN netwerk of gebruik een ander toestel.
         </li>
+
+        <li>
+            Blijft de video vaak hangen? Probeer naar een plek te gaan waar je betere WiFi ontvangst hebt, of gebruik
+            je mobiele netwerk.
+        </li>
     </ul>
 
     <h4>Help, ik heb geen geluid!</h4>
@@ -59,8 +64,8 @@
         </li>
 
         <li>
-            Verschijnen de vragen te vroeg op je tweede toestel?
-            <a href="{{ url()->current() }}">Herlaad event de pagina</a> om terug helemaal mee te zijn.
+            Verschijnen de vragen te vroeg op je antwoord toestel? Dan loopt de livestream voor jou vast achter.
+            Klik even op 'pauze' en 'starten' of <a href="{{ url()->current() }}">herlaad deze pagina</a> om terug helemaal mee te zijn.
             Gebruik liever geen Chromecast of Apple TV want dat kan extra vertragingen veroorzaken.
         </li>
 
