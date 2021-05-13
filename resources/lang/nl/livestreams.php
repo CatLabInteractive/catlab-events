@@ -38,7 +38,7 @@
     'answersTooSoon' => 'Verschijnen de vragen te vroeg op je antwoord toestel? Dan loopt de livestream voor jou vast achter. Klik even op \'pauze\' en \'starten\' of :refreshThePage om terug helemaal mee te zijn. Gebruik liever geen Chromecast of Apple TV want dat kan extra vertragingen veroorzaken.',
     'refreshThisPage' => 'herlaad deze pagina',
     'connectionLostStandby' => 'Krijg je vaak \'connection lost\' op het antwoordscherm? Mogelijk komt het door dat je toestel uit standby komt. Houdt je scherm opgelicht door tussen de vragen in af en toe te tikken, of schakel de screensaver event uit. Blijf je proberen ondervinden? Mogelijk heb je geen stabiele wifi verbinding, schakel over op je mobiele netwerk.',
-    'connectionLostRefresh' => 'Blijft \'Connection lost\' staan of kan je niet antwoorden? Ververs dan even de pagina op je toestel.',
+    'connectionLostRefresh' => 'Blijft \'Connection lost\' staan of kan je niet antwoorden? Herlaad dan even de pagina op je toestel.',
     'solutionsToEverything' => 'Onze oplossing voor alles?',
-    'refreshThePage' => 'Refresh the page!'
+    'refreshThePage' => 'Herlaad de pagina!'
 ];
