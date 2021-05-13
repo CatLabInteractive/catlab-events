@@ -82,6 +82,6 @@
     </ul>
 
     <p>
-        Onze oplossing voor alles? <a href="{{ url()->current() }}">Ververs de pagina</a>
+        Onze oplossing voor alles? <a href="{{ url()->current() }}">Herlaad de pagina</a>!
     </p>
 </div>
