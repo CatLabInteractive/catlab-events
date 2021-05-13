@@ -38,7 +38,7 @@
         }
 
         #container {
-            width: 95%;
+            width: 85%;
             box-sizing: border-box;
             margin: 20px auto;
         }
