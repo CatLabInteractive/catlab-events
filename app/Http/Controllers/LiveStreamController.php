@@ -283,7 +283,13 @@ class LiveStreamController extends Controller
         }
 
         // set app locale to language.
-        if ($stream->language) {
+        $language = \Request::query('lang');
+        if ($language && file_exists(resource_path("lang/$language"))) {
+            \Session::put('language', $language);
+            \App::setLocale($language);
+        } elseif (($language = \Session::get('language')) && file_exists(resource_path("lang/$language"))) {
+            \App::setLocale($language);
+        } elseif ($stream->language) {
             \App::setLocale($stream->language);
         }
 
@@ -294,6 +300,7 @@ class LiveStreamController extends Controller
      * @param Request $request
      * @param LiveStream $stream
      * @return string|null
+     * @throws \Httpful\Exception\ConnectionErrorException
      */
     protected function getRocketChatLoginToken(Request $request, LiveStream $stream)
     {

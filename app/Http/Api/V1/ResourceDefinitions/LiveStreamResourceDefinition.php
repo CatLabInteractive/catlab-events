@@ -108,6 +108,11 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable(false, true);
 
+        $this->field('show_instructions')
+            ->bool()
+            ->visible()
+            ->writeable(false, true);
+
         $this->addLanguageField();
 
         $this->validator(new LiveStreamValidator());
