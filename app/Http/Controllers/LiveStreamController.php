@@ -135,7 +135,8 @@ class LiveStreamController extends Controller
             'rocketChatAuthUrl' => $rocketChatAuthUrl,
             'deadSimpleChat' => $deadSimpleChatUrl,
             'username' => $username,
-            'mustLoginToChat' => $mustLoginToChat
+            'mustLoginToChat' => $mustLoginToChat,
+            'code' => $request->input('code')
         ]);
     }
 

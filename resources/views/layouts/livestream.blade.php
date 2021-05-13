@@ -106,6 +106,15 @@
             }
         }
 
+        ul.list li,
+        ol.list li {
+            margin-bottom: 10px;
+        }
+
+        code {
+            font-size: 125%;
+        }
+
     </style>
 
     <style type="text/css">
