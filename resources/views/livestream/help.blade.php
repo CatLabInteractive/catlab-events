@@ -30,7 +30,7 @@
         <ul class="list">
             <li>
                 {{ __('livestreams.noVideo1') }}
-                <a href="{{ url()->current() }}">{{ __('livestreams.firstTryRefreshPage') }}</a>
+                <a href="{{ url()->full() }}">{{ __('livestreams.firstTryRefreshPage') }}</a>
             </li>
 
             <li>
@@ -61,7 +61,7 @@
 
             <li>
                 {!! __('livestreams.answersTooSoon', [
-                    'refreshThePage' => '<a href="' . url()->current() . '">'.__('livestreams.refreshThisPage').'</a>'
+                    'refreshThePage' => '<a href="' . url()->full() . '">'.__('livestreams.refreshThisPage').'</a>'
                 ]) !!}
             </li>
 
@@ -76,7 +76,7 @@
 
         <p>
             {{ __('livestreams.solutionsToEverything') }}
-            <a href="{{ url()->current() }}">{{ __('livestreams.refreshThePage') }}</a>
+            <a href="{{ url()->full() }}">{{ __('livestreams.refreshThePage') }}</a>
         </p>
     </div>
 @endif
