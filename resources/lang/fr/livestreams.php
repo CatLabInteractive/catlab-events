@@ -10,7 +10,7 @@
     'logout' => 'Se déconnecter',
 
     'loginToChat' => ':action pour participer au chat.',
-    'loginAction' => 'S\'identifier'
+    'loginAction' => 'S\'identifier',
 
     
     // Instructions
@@ -35,9 +35,9 @@
 
     'answerProblems' => 'Au secours, je ne peux pas répondre !',
     'answersSecondDevice' => 'L’envoi des réponses s’effectue sur un second appareil et donc pas via cette page. Suivez les instructions contenues dans l’e-mail pour vous connecter à l’écran de réponse.',
-    'answersTooSoon' => 'Les questions apparaissent trop tôt sur l’appareil avec lequel vous répondez ? Alors, la diffusion en direct enregistre probablement un certain retard chez vous. Cliquez donc sur « pause » et « démarrer » ou :refreshThePage pour resynchroniser le tout. N’utilisez pas de Chromecast ou Apple TV car cela peut entraîner des retards supplémentaires.'
+    'answersTooSoon' => 'Les questions apparaissent trop tôt sur l’appareil avec lequel vous répondez ? Alors, la diffusion en direct enregistre probablement un certain retard chez vous. Cliquez donc sur « pause » et « démarrer » ou :refreshThePage pour resynchroniser le tout. N’utilisez pas de Chromecast ou Apple TV car cela peut entraîner des retards supplémentaires.',
     'refreshThisPage' => 'rechargez cette page',
-    'connectionLostStandby' =>'Vous voyez souvent apparaître le message « Connection lost » dans l’écran de réponse ? Cela vient peut-être du fait que votre appareil sort du mode veille. Gardez votre écran allumé en appuyant occasionnellement sur une touche entre les questions, ou désactivez provisoirement l’économiseur d’écran. Les problèmes persistent ? Il se peut que vous ne disposiez pas d’une connexion WiFi stable. Dans ce cas, veuillez passer sur votre réseau mobile.'
+    'connectionLostStandby' =>'Vous voyez souvent apparaître le message « Connection lost » dans l’écran de réponse ? Cela vient peut-être du fait que votre appareil sort du mode veille. Gardez votre écran allumé en appuyant occasionnellement sur une touche entre les questions, ou désactivez provisoirement l’économiseur d’écran. Les problèmes persistent ? Il se peut que vous ne disposiez pas d’une connexion WiFi stable. Dans ce cas, veuillez passer sur votre réseau mobile.',
     'connectionLostRefresh' => 'Le message « Connection lost » reste affiché et vous ne pouvez pas répondre ? Dans ce cas, rechargez la page sur votre appareil.',
     'solutionsToEverything' => 'Notre solution à tous les problèmes ?',
     'refreshThePage' => 'Rechargez la page !'
