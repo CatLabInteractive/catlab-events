@@ -41,5 +41,4 @@
     'connectionLostRefresh' => 'Le message « Connection lost » reste affiché et vous ne pouvez pas répondre ? Dans ce cas, rechargez la page sur votre appareil.',
     'solutionsToEverything' => 'Notre solution à tous les problèmes ?',
     'refreshThePage' => 'Rechargez la page !'
-
 ];
