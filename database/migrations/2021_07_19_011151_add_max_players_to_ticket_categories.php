@@ -15,19 +15,22 @@ class AddMaxPlayersToTicketCategories extends Migration
     {
         Schema::table('events', function (Blueprint $table) {
 
-            $table->unsignedInteger('campaign_id')->after('quizwitz_report_id');
+            $table->unsignedInteger('campaign_id')->after('quizwitz_report_id')
+                ->nullable();
 
         });
 
         Schema::table('event_ticket_categories', function (Blueprint $table) {
 
-            $table->unsignedInteger('max_players')->after('max_tickets');
+            $table->unsignedInteger('max_players')->after('max_tickets')
+                ->nullable();
 
         });
 
         Schema::table('orders', function (Blueprint $table) {
 
-            $table->string('play_link')->after('pay_url')->nullable();
+            $table->string('play_link')->after('pay_url')->nullable()
+                ->nullable();
 
         });
     }
