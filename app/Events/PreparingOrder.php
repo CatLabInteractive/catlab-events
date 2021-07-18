@@ -56,7 +56,7 @@ class PreparingOrder
      */
     public $session;
 
-    public function __construct(User $actor, Group $group, Event $event, $session)
+    public function __construct(User $actor, Event $event, $session, Group $group = null)
     {
         $this->actor = $actor;
         $this->group = $group;

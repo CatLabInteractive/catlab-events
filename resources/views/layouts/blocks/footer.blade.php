@@ -122,39 +122,6 @@
         });
     </script>
 
-    @if(!\Auth::user())
-
-        <style scoped>@import url("//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css");</style>
-        <script async src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js"></script>
-
-        <script>
-            window.addEventListener("load", function() {
-                setTimeout(
-                    function() {
-                        window.cookieconsent.initialise({
-                            "palette": {
-                                "popup": {
-                                    "background": "#3937a3"
-                                },
-                                "button": {
-                                    "background": "#e62576"
-                                }
-                            },
-                            "content": {
-                                "message": "Deze website gebruikt cookies om je een optimale ervaring te kunnen bieden.",
-                                "dismiss": "Snap ik!",
-                                "link": "Lees privacybeleid",
-                                "href": "http://events.catlab.eu/documents/nl/privacy"
-                            }
-                        });
-                    },
-                    5000
-                )
-            });
-        </script>
-
-    @endif
-
     @if(config('services.google.maps_api_key'))
         <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key={{config('services.google.maps_api_key')}}"></script>
     @endif

@@ -145,10 +145,18 @@ class User extends Model implements
         return $organisation;
     }
 
+    /**
+     * @return Order[]
+     */
     public function orders()
     {
-        $groups = $this->groups()->pluck('group_id');
-        return Order::whereIn('group_id', $groups);
+        return Order
+            ::where(function($queryBuilder) {
+                $groups = $this->groups()->pluck('group_id');
+
+                $queryBuilder->whereIn('group_id', $groups)
+                    ->orWhere('user_id', '=', $this->id);
+            });
     }
 
     /**

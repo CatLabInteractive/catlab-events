@@ -27,7 +27,8 @@
         "spatie/laravel-referer": "^1.4",
         "willvincent/feeds": "^1.1",
         "fab1en/rocket-chat-rest-client": "dev-master",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-json": "*"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

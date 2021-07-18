@@ -93,13 +93,11 @@ class EventResourceDefinition extends BaseResourceDefinition
         $this->field('startDate')
             ->visible(true)
             ->writeable(true, true)
-            ->required()
             ->datetime();
 
         $this->field('endDate')
             ->visible(true)
             ->writeable(true, true)
-            ->required()
             ->datetime();
 
         $this->field('doorsDate')
@@ -164,26 +162,25 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true)
             ->number();
 
-        if (config('services.quizwitz.reportClient')) {
+        if (config('services.quizwitz.apiClient')) {
             $this->field('quizwitz_report_id')
                 ->visible()
                 ->writeable(true, true)
                 ->number();
         }
 
-        $this->field('include_ticket_fee')
-            ->visible()
-            ->writeable(true, true)
-            ->required()
-            ->bool();
-
         $this->field('vat_percentage')
             ->visible()
             ->writeable(true, true)
-            ->required()
             ->number();
 
         $this->field('team_size')
+            ->visible()
+            ->writeable(true, true)
+            ->number();
+
+        $this->field('campaign_id')
+            ->display('quizwitz_campaign_id')
             ->visible()
             ->writeable(true, true)
             ->number();
@@ -213,7 +210,19 @@ class EventResourceDefinition extends BaseResourceDefinition
 
         $this->field('is_published')
             ->visible(true, true)
-            ->writeable(true, true)
+            ->writeable(false, true)
+            ->bool();
+
+        $this->field('requires_team')
+            ->visible()
+            ->writeable(false, true)
+            ->required()
+            ->bool();
+
+        $this->field('include_ticket_fee')
+            ->visible()
+            ->writeable(false, true)
+            ->required()
             ->bool();
 
         // Scan the emails folder for email templates

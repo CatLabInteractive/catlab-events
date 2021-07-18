@@ -62,6 +62,11 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true)
             ->number();
 
+        $this->field('max_players')
+            ->visible()
+            ->writeable(true, true)
+            ->number();
+
         $this->field('start_date')
             ->visible(true)
             ->writeable(true, true)

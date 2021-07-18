@@ -45,7 +45,8 @@ return [
     ],
 
     'quizwitz' => [
-        'reportClient' => env('QUIZWITZ_REPORT_CLIENT_KEY'),
+        'url' => 'https://api.quizwitz.com/report',
+        'apiClient' => env('QUIZWITZ_REPORT_CLIENT_KEY'),
     ],
 
     'pay' => [

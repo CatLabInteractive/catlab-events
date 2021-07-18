@@ -27,6 +27,7 @@ use App\Events\OrderConfirmed;
 use App\Tools\TicketPriceCalculator;
 use CatLab\Accounts\Client\ApiClient;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
+use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -200,6 +201,9 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function onConfirmation()
     {
+        // Fetch anything that we might need.
+        $this->fetchPlayUrl();
+
         event(new OrderConfirmed($this));
     }
 
@@ -289,5 +293,39 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             $priceCalculator->applySubsidisedTariff($this->subsidised_tariff);
         }
         return $priceCalculator;
+    }
+
+    /**
+     * @param TicketCategory $ticketCategory
+     * @return mixed|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function fetchPlayUrl()
+    {
+        /** @var TicketCategory $ticketCategory */
+        $ticketCategory = $this->ticketCategory;
+
+        /** @var Event $event */
+        $event = $ticketCategory->event;
+
+        if (!$event->campaign_id) {
+            return null;
+        }
+
+        if (!$ticketCategory->max_players) {
+            return null;
+        }
+
+        $url = config('services.quizwitz.url');
+        $url .= '/campaigns/' . $this->campaign_id . '/campaign-links';
+        $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
+
+        $client = new Client();
+        $response = $client->post($url);
+
+        $data = json_decode($response->getBody(), true);
+        $this->play_url = $data['campaignLink']['url'];
+
+        $this->save();
     }
 }

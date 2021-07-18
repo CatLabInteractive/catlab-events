@@ -73,14 +73,23 @@
     <table class="table">
 
         <tr>
-            <td>Team</td>
-            <td>{{ $order->group->name }}</td>
+            <td>Evenement</td>
+            <td>{{ $order->event->name }}</td>
         </tr>
 
-        <tr>
-            <td>Datum</td>
-            <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
-        </tr>
+        @if($order->group)
+            <tr>
+                <td>Team</td>
+                <td>{{ $order->group->name }}</td>
+            </tr>
+        @endif
+
+        @if($order->event->startDate)
+            <tr>
+                <td>Datum</td>
+                <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
+            </tr>
+        @endif
     </table>
 
     @include('blocks.livestream-order-link', [ 'order' => $order ])

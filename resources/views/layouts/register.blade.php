@@ -11,18 +11,27 @@
         <div class="row">
 
             <div class="col-md-12">
-                <div class="col-md-3 hero-small-date text-center">
-                    <h3>{{ $event->startDate->format('d') }}</h3>
-                    <h4>{{ $event->startDate->formatLocalized('%B %Y') }}</h4>
-                </div>
-                <div class="col-md-9 hero-small-date-content">
+                @if($event->startDate)
+                    <div class="col-md-3 hero-small-date text-center">
+                        <h3>{{ $event->startDate->format('d') }}</h3>
+                        <h4>{{ $event->startDate->formatLocalized('%B %Y') }}</h4>
+                    </div>
+
+                    <div class="col-md-9 hero-small-date-content">
+                @else
+                    <div class="col-md-12 hero-small-date-content">
+                @endif
+
                     <h1 class="banner-title">
                         <a href="{{ $event->getUrl() }}">{{ $event->name }}</a>
                     </h1>
                     <h2 class="banner-subtitle">
                         @if($event->venue)
 
-                            {{ $event->startDate->format('H:i') }} -
+                            @if($event->startDate)
+                                {{ $event->startDate->format('H:i') }} -
+                            @endif
+
                             {{ $event->venue->getShortLocation() }}
 
                         @endif

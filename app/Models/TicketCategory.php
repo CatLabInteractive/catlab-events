@@ -80,12 +80,16 @@ class TicketCategory extends Model
      * @param Group $group
      * @return Order
      */
-    public function createOrder(Group $group)
+    public function createOrder(Group $group = null)
     {
         $order = new Order();
 
         $order->event()->associate($this->event);
-        $order->group()->associate($group);
+
+        if ($group) {
+            $order->group()->associate($group);
+        }
+
         $order->ticketCategory()->associate($this);
         $order->user()->associate(\Auth::getUser());
 
@@ -219,7 +223,7 @@ class TicketCategory extends Model
             }
             return vsprintf($error[0], $arguments);
         } else {
-            return $error[0];
+            return $error;
         }
     }
 

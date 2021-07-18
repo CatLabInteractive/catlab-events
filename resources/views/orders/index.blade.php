@@ -18,21 +18,27 @@
 
                 <tr>
                     <td>
-                        {{ $order->event->startDate->format('d/m/Y H:i') }}
+                        @if($order->event && $order->event->startDate)
+                            {{ $order->event->startDate->format('d/m/Y H:i') }}
+                        @endif
                     </td>
 
                     <td>
-                        <a href="{{ $order->event->getUrl() }}">
-                            {{ $order->event->name }}
-                        </a>
+                        @if($order->event)
+                            <a href="{{ $order->event->getUrl() }}">
+                                {{ $order->event->name }}
+                            </a>
+                        @endif
                     </td>
 
                     <td>
-                        {{ $order->group->name }}
+                        @if($order->group)
+                            {{ $order->group->name }}
+                        @endif
                     </td>
 
                     <td>
-                        @if($order->event->venue)
+                        @if($order->event && $order->event->venue)
                             <a href="{{ action('EventController@fromVenue', $order->event->venue->id) }}">
                                 {{ $order->event->venue->name }}
                             </a>

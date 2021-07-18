@@ -39,3 +39,16 @@
 <meta property="fb:app_id" content="1124345767614916" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="{{ \Request::url() }}" />
+
+<link rel="stylesheet" href="https://cookies.catlab.eu/cookie-consent.css"/>
+<script src="https://cookies.catlab.eu/cookie-consent.js"></script>
+
+<script>
+    var cookieConsent = new CookieConsent({
+        privacyPolicyUrl: '/docs/en/privacy'
+    });
+    cookieConsent.enableCrossDomain([
+        'catlab.eu',
+        'quizfabriek.be'
+    ]);
+</script>

@@ -19,7 +19,7 @@ abstract class SendEmail
      * @param Event $event
      * @param GroupMember $member
      */
-    public function sendConfirmationEmail(Event $event, GroupMember $member)
+    public function sendConfirmationEmail(Order $order, Event $event, GroupMember $member)
     {
         /** @var Group $group */
         $group = $member->group;
@@ -33,6 +33,7 @@ abstract class SendEmail
         }
 
         $attributes = [
+            'order' => $order,
             'from' => \Auth::getUser(),
             'event' => $event,
             'group' => $group
@@ -40,6 +41,8 @@ abstract class SendEmail
 
         if ($event->confirmation_email && view()->exists($event->confirmation_email)) {
             $view = \View::make($event->confirmation_email, $attributes);
+        } elseif ($order->play_link) {
+            $view = \View::make('emails.tickets.confirmationPlayLink', $attributes);
         } else {
             $view = \View::make('emails.tickets.confirmation', $attributes);
         }

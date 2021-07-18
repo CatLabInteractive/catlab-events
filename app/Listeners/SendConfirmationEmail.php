@@ -59,7 +59,7 @@ class SendConfirmationEmail extends SendEmail
         // Send email
         try {
             foreach ($order->group->members as $member) {
-                $this->sendConfirmationEmail($order->event, $member);
+                $this->sendConfirmationEmail($order, $order->event, $member);
             }
         } catch (LogicException $e) {
             \Log::error($e->getMessage());

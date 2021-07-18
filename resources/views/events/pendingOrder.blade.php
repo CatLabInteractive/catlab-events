@@ -17,10 +17,17 @@
 
     <div class="alert alert-danger">
 
-        <p>
-            Je hebt nog een onbetaalde registratie van <strong>{{ $pendingOrder->group->name }}</strong> voor <strong>{{ $pendingOrder->event->name }}</strong>.<br />
-            Om een nieuwe bestelling te plaatsen moet je deze eerst betalen of annuleren.
-        </p>
+        @if($pendingOrder->group)
+            <p>
+                Je hebt nog een onbetaalde registratie van <strong>{{ $pendingOrder->group->name }}</strong> voor <strong>{{ $pendingOrder->event->name }}</strong>.<br />
+                Om een nieuwe bestelling te plaatsen moet je deze eerst betalen of annuleren.
+            </p>
+        @else
+            <p>
+                Je hebt nog een onbetaalde registratie voor <strong>{{ $pendingOrder->event->name }}</strong>.<br />
+                Om een nieuwe bestelling te plaatsen moet je deze eerst betalen of annuleren.
+            </p>
+        @endif
 
         <p>
             <a href="{{ $pendingOrder->getPayUrl() }}" class="btn btn-success">Betaal nu</a>

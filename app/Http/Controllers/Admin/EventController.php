@@ -124,6 +124,7 @@ class EventController extends Controller
      * @param Request $request
      * @param $eventId
      * @return \Illuminate\Http\RedirectResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function fetchScore(Request $request, $eventId)
     {
@@ -132,9 +133,9 @@ class EventController extends Controller
 
         $reportId = $event->quizwitz_report_id;
 
-        $url = 'https://api.quizwitz.com/report/';
-        $url .= $reportId;
-        $url .= '?output=json&client=' . urlencode(config('services.quizwitz.reportClient'));
+        $url = config('services.quizwitz.url');
+        $url .= '/' . $reportId;
+        $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
 
         $client = new Client();
         $response = $client->get($url);

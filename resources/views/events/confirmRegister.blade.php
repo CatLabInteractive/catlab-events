@@ -21,7 +21,11 @@
         </div>
     @endif
 
-    <p>Leuk dat jullie erbij willen zijn, {{ $group->name }}!</p>
+    @if($group)
+        <p>Leuk dat jullie erbij willen zijn, {{ $group->name }}!</p>
+    @else
+        <p>Leuk dat jullie erbij willen zijn!</p>
+    @endif
     <!--
     <div class="alert alert-warning">
         <p>
@@ -52,7 +56,10 @@
             <h4>UiTPAS</h4>
 
             {{ Form::open(array('url' => $uitpasAction, 'method' => 'get')) }}
-            {{ Form::hidden('groupId', $group->id) }}
+
+            @if($group)
+                {{ Form::hidden('groupId', $group->id) }}
+            @endif
 
             <p>
                 Heb je een UitPAS met kansentarief? Geef dan hieronder je UitPAS nummer in. Wij passen dan het juiste tarief toe.
@@ -88,26 +95,30 @@
 
         <table class="table">
 
-            <tr>
-                <td>Team</td>
-                <td>{{ $group->name }}</td>
-            </tr>
+            @if($group)
+                <tr>
+                    <td>Team</td>
+                    <td>{{ $group->name }}</td>
+                </tr>
+            @endif
 
             <tr>
                 <td>Evenement</td>
                 <td>{{ $event->name }}</td>
             </tr>
 
-            <tr>
-                <td>Datum</td>
-                <td>{{ $event->startDate->format('d/m/Y H:i') }}</td>
-            </tr>
+            @if($event->startDate)
+                <tr>
+                    <td>Datum</td>
+                    <td>{{ $event->startDate->format('d/m/Y H:i') }}</td>
+                </tr>
+            @endif
 
             @if($event->venue)
-            <tr>
-                <td>Locatie</td>
-                <td>{{ $event->venue->getAddressFull() }}</td>
-            </tr>
+                <tr>
+                    <td>Locatie</td>
+                    <td>{{ $event->venue->getAddressFull() }}</td>
+                </tr>
             @endif
 
             <tr>

@@ -472,6 +472,11 @@ class EventController extends Controller
             return redirect(action('EventController@selectTicketCategory', [ $eventId ]));
         }
 
+        // No team required? Then go straight to the confirmation.
+        if (!$event->doesRequireTeam()) {
+            return $this->confirmRegister($request, $eventId, $ticketCategoryId, null);
+        }
+
         // Do we have a groupId?
         if ($groupId = \Request::get('groupId')) {
             return $this->confirmRegister($request, $eventId, $ticketCategoryId, $groupId);
@@ -536,13 +541,6 @@ class EventController extends Controller
     {
         $user = Auth::getUser();
 
-        if (!isset($groupId)) {
-            $groupId = $request->input('group');
-        }
-
-        /** @var Group $group */
-        $group = $user->groups()->findOrFail($groupId);
-
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
         if (!$event->canRegister()) {
@@ -552,25 +550,36 @@ class EventController extends Controller
         /** @var TicketCategory $ticketCategory */
         $ticketCategory = $event->ticketCategories()->findOrFail($ticketCategoryId);
 
-        // Look for existing orders
-        if ($event->isRegistered($group)) {
-            return redirect()->back()->withErrors([
-                'Dit team is al ingeschreven.'
-            ]);
-        }
+        // Do we require a group?
+        $group = null;
+        if ($event->doesRequireTeam()) {
+            if (!isset($groupId)) {
+                $groupId = $request->input('group');
+            }
 
-        // Cancel all pending orders
-        $group
-            ->orders()
-            ->where('state', '=', Order::STATE_PENDING)
-            ->each(function(Order $order) {
-                /*
-                $order->state = Order::STATE_CANCELLED;
-                $order->save();
-                */
-                // if i understand correctly, this should never happen.
-                $order->changeState(Order::STATE_CANCELLED);
-            });
+            /** @var Group $group */
+            $group = $user->groups()->findOrFail($groupId);
+
+            // Look for existing orders
+            if ($event->isRegistered($group)) {
+                return redirect()->back()->withErrors([
+                    'Dit team is al ingeschreven.'
+                ]);
+            }
+
+            // Cancel all pending orders
+            $group
+                ->orders()
+                ->where('state', '=', Order::STATE_PENDING)
+                ->each(function(Order $order) {
+                    /*
+                    $order->state = Order::STATE_CANCELLED;
+                    $order->save();
+                    */
+                    // if i understand correctly, this should never happen.
+                    $order->changeState(Order::STATE_CANCELLED);
+                });
+        }
 
         if ($this->isSoldOut($event) || !$ticketCategory->isAvailable()) {
             return redirect(action('EventController@selectTicketCategory', [ $eventId ]))
@@ -579,10 +588,13 @@ class EventController extends Controller
                 ]);
         }
 
-        event(new PreparingOrder($user, $group, $event, $this->getEuklesOriginWebsite()));
+        event(new PreparingOrder($user, $event, $this->getEuklesOriginWebsite(), $group));
 
         $input = [];
-        $input['group'] = $group->id;
+
+        if ($event->doesRequireTeam()) {
+            $input['group'] = $group->id;
+        }
 
         $priceCalculator = $ticketCategory->getTicketPriceCalculator();
 
@@ -635,30 +647,33 @@ class EventController extends Controller
     {
         $user = Auth::getUser();
 
-        /** @var Group $group */
-        $group = $user->groups()->findOrFail($request->input('group'));
-
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
 
-        // Look for existing orders
-        if ($event->isRegistered($group)) {
-            return redirect()->back()->withErrors([
-                'Dit team is al ingeschreven.'
-            ]);
-        }
+        $group = null;
+        if ($event->doesRequireTeam()) {
+            /** @var Group $group */
+            $group = $user->groups()->findOrFail($request->input('group'));
 
-        // Cancel all pending orders
-        $group
-            ->orders()
-            ->where('state', '=', Order::STATE_PENDING)
-            ->each(function(Order $order) {
-                /*
-                $order->state = Order::STATE_CANCELLED;
-                $order->save();
-                */
-                $order->changeState(Order::STATE_CANCELLED);
-            });
+            // Look for existing orders
+            if ($event->isRegistered($group)) {
+                return redirect()->back()->withErrors([
+                    'Dit team is al ingeschreven.'
+                ]);
+            }
+
+            // Cancel all pending orders
+            $group
+                ->orders()
+                ->where('state', '=', Order::STATE_PENDING)
+                ->each(function (Order $order) {
+                    /*
+                    $order->state = Order::STATE_CANCELLED;
+                    $order->save();
+                    */
+                    $order->changeState(Order::STATE_CANCELLED);
+                });
+        }
 
         /** @var TicketCategory $ticketCategory */
         $ticketCategory = $event->ticketCategories()->findOrFail($ticketCategoryId);
@@ -710,7 +725,7 @@ class EventController extends Controller
                 'items' => [
                     [
                         'name' => $event->name,
-                        'description' => 'Inschrijving ' . $group->name,
+                        'description' => $group ? 'Inschrijving ' . $group->name : 'Inschrijving',
                         'amount' => 1,
                         'price' => $ticketPriceCalculator->getTicketPrice(false),
                         'vat' => $ticketPriceCalculator->getTicketPriceVat()

@@ -28,6 +28,7 @@ use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use DateTime;
+use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use PhpParser\Builder;
@@ -65,7 +66,8 @@ class Event extends Model implements EuklesModel
         'vat_percentage',
         'include_ticket_fee',
         'max_tickets',
-        'registration'
+        'registration',
+        'requires_team'
     ];
 
     /**
@@ -166,9 +168,9 @@ class Event extends Model implements EuklesModel
     {
         $orderGroupIds = $this->orders()
             ->accepted()
+            ->whereNotNull('group_id')
             ->pluck('group_id')
-            ->toArray()
-        ;
+            ->toArray();
 
         if (count($orderGroupIds) > 0) {
             return Group
@@ -266,7 +268,12 @@ class Event extends Model implements EuklesModel
         }
 
         if (!$includePendingTickets) {
-            if ($this->countAvailableTickets($includePendingTickets) <= 0) {
+            $availableTickets = $this->countAvailableTickets($includePendingTickets);
+            if ($availableTickets === null) {
+                return false;
+            }
+
+            if ($availableTickets && $availableTickets <= 0) {
                 $this->registration = self::REGISTRATION_FULL;
                 $this->save();
                 return true;
@@ -276,7 +283,12 @@ class Event extends Model implements EuklesModel
         }
 
         // if pending tickets should be included, we should look at the raw method.
-        return $this->countAvailableTickets($includePendingTickets) <= 0;
+        $availableTickets = $this->countAvailableTickets($includePendingTickets);
+        if ($availableTickets === null) {
+            return false;
+        }
+
+        return $availableTickets <= 0;
     }
 
     /**
@@ -473,7 +485,7 @@ class Event extends Model implements EuklesModel
             return true;
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -591,6 +603,10 @@ class Event extends Model implements EuklesModel
      */
     public function getJsonLD()
     {
+        if (!$this->startDate) {
+            return [];
+        }
+
         $output = [
             "@context" => "http://www.schema.org",
             "@type" => "Event",
@@ -773,8 +789,8 @@ class Event extends Model implements EuklesModel
             'uid' => $this->id,
             'name' => $this->name,
             'url' => $this->getUrl(),
-            'start' => $this->startDate->format('c'),
-            'end' => $this->endDate->format('c'),
+            'start' => $this->startDate ? $this->startDate->format('c') : null,
+            'end' => $this->endDate ? $this->endDate->format('c') : null,
             'facebookEventUrl' => $this->getFacebookEventUrl(),
             'ticketsSold' => $soldTickets,
             'ticketsTotal' => $availableTickets + $soldTickets,
@@ -974,5 +990,13 @@ class Event extends Model implements EuklesModel
         }
 
         return $url . http_build_query($additionalParameters);
+    }
+
+    /**
+     * @return bool
+     */
+    public function doesRequireTeam()
+    {
+        return $this->requires_team;
     }
 }

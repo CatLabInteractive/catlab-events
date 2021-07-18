@@ -97,7 +97,7 @@ class OrderController extends Controller
 
         $retryFormAction = action('EventController@processRegister', [ $order->event->id, $order->ticketCategory->id ] );
         $retryFormInput = [
-            'group' => $order->group->id
+            'group' => $order->group ? $order->group->id : null
         ];
 
         if (\Request::session()->get('uitpas_card_number')) {

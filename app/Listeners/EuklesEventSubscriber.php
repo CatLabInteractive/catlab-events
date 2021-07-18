@@ -53,19 +53,26 @@ class EuklesEventSubscriber
      */
     public function onPreparingOrder(PreparingOrder $e)
     {
+        $euklesProperties = [
+            'actor' => $e->actor,
+            'event' => $e->event,
+            'session' => $e->session
+        ];
+
+        if ($e->group) {
+            $euklesProperties['group'] = $e->group;
+        }
+
         $euklesEvent = \Eukles::createEvent(
             'event.order.initialize',
-            [
-                'actor' => $e->actor,
-                'group' => $e->group,
-                'event' => $e->event,
-                'session' => $e->session
-            ]
+            $euklesProperties
         )->link($e->actor, 'registering', $e->event);
 
-        foreach ($e->group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
+        if ($e->group) {
+            foreach ($e->group->members as $member) {
+                if ($member->user) {
+                    $euklesEvent->setObject('member', $member->user);
+                }
             }
         }
 

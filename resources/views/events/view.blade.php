@@ -33,10 +33,14 @@
                 @endif
 
                     <p class="date">
-                        {{ ucfirst($event->startDate->formatLocalized('%A')) }} {{ $event->startDate->formatLocalized('%-d %B %Y') }}, {{ $event->startDate->format('H:i') }}
+                        @if($event->startDate)
+                            {{ ucfirst($event->startDate->formatLocalized('%A')) }} {{ $event->startDate->formatLocalized('%-d %B %Y') }}, {{ $event->startDate->format('H:i') }}
+                        @endif
+
                         @if($event->doorsDate)
                             (deuren open: {{ $event->doorsDate->format('H:i') }})
                         @endif
+
                         @if($event->venue)
                         - {{ $event->venue->city }}
                         @endif
@@ -155,7 +159,9 @@
                         <div class="col-md-12">
 
                             <p class="intro-title">
-                                {{ $event->startDate->formatLocalized('%-d %B %Y') }}, {{ $event->startDate->format('H:i') }}
+                                @if($event->startDate)
+                                    {{ $event->startDate->formatLocalized('%-d %B %Y') }}, {{ $event->startDate->format('H:i') }}
+                                @endif
                             </p>
                             <h3 class="intro-sub-title">Tickets</h3>
 
@@ -297,7 +303,9 @@
                                 @endif
 
                                 @if($v->venue)
-                                    {{ $v->startDate->format('d M H:i') }} -
+                                    @if($v->startDate)
+                                        {{ $v->startDate->format('d M H:i') }} -
+                                    @endif
                                     {{ $v->venue->getShortLocation() }}
                                 @endif
                                 </strong>
