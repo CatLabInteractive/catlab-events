@@ -138,8 +138,7 @@
 
                     @else
 
-                        <h2 class="intro-title">{{ $series->name }}</h2>
-                        <h3 class="intro-sub-title">Video!</h3>
+                        <h3 class="intro-sub-title">{{ $series->name }}</h3>
 
                     @endif
                 </div>
