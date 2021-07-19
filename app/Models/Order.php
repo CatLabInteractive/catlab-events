@@ -30,6 +30,7 @@ use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * Class Order
@@ -150,7 +151,11 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         // Set return url to the view component.
         $return = action('OrderController@thanks', [ $this->id ]);
 
-        return \Config::get('services.catlab.url') . $this->pay_url . '?return=' . urlencode($return);
+        if (Str::startsWith(Str::lower($this->pay_url), 'http')) {
+            return $this->pay_url . '?return=' . urlencode($return);
+        } else {
+            return \Config::get('services.catlab.url') . $this->pay_url . '?return=' . urlencode($return);
+        }
     }
 
     /**
