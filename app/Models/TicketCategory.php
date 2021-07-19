@@ -223,7 +223,7 @@ class TicketCategory extends Model
             }
             return vsprintf($error[0], $arguments);
         } else {
-            return $error;
+            return implode(', ', $error);
         }
     }
 

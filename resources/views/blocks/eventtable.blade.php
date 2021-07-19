@@ -25,7 +25,7 @@
                     {{ $v->name }}
                 </a>
 
-                @if($v->canRegister())
+                @if(!$v->isFinished() && $v->canRegister())
                     @if($v->isSoldOut())
                         <span class="lastTickets">Uitverkocht!</span>
                     @elseif($v->isLastTicketsWarning())
