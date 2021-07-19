@@ -3,9 +3,15 @@
 @section('content')
 
     <h2>Inschrijving geannuleerd</h2>
+    @if($group)
     <p>
         Beste leden van {{ $group->name }},
     </p>
+    @else
+        <p>
+            Hallo!
+        </p>
+    @endif
 
     <p>
         Je inschrijving voor <strong>{{ $event->name }}</strong> is geannuleerd en je inschrijvingsgeld

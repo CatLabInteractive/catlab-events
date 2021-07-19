@@ -58,8 +58,12 @@ class SendConfirmationEmail extends SendEmail
 
         // Send email
         try {
-            foreach ($order->group->members as $member) {
-                $this->sendConfirmationEmail($order, $order->event, $member);
+            if ($order->group) {
+                foreach ($order->group->members as $member) {
+                    $this->sendConfirmationEmail($order, $order->event, $member->user);
+                }
+            } else {
+                $this->sendConfirmationEmail($order, $order->event, $order->user);
             }
         } catch (LogicException $e) {
             \Log::error($e->getMessage());

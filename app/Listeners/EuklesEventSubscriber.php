@@ -88,21 +88,26 @@ class EuklesEventSubscriber
     {
         $order = $e->order;
 
-        // Track on ze eukles.
-        $euklesEvent = \Eukles::createEvent(
-            'event.order.confirmed',
-            [
-                'group' => $order->group,
-                'event' => $order->event,
-                'order' => $order
-            ]
-        )
-            ->link($order->group, 'attends', $order->event)
-            ->unlink($order->user, 'registering', $order->event);
+        $attributes = [
+            'event' => $order->event,
+            'order' => $order
+        ];
 
-        foreach ($order->group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
+        if ($order->group) {
+            $attributes['group'] = $order->group;
+        }
+
+        // Track on ze eukles.
+        $euklesEvent = \Eukles::createEvent('event.order.confirmed', $attributes);
+
+        $euklesEvent->unlink($order->user, 'registering', $order->event);
+
+        if ($order->group) {
+            $euklesEvent->link($order->group, 'attends', $order->event);
+            foreach ($order->group->members as $member) {
+                if ($member->user) {
+                    $euklesEvent->setObject('member', $member->user);
+                }
             }
         }
 
@@ -122,21 +127,25 @@ class EuklesEventSubscriber
             return;
         }
 
-        // Track on ze eukles.
-        $euklesEvent =
-            \Eukles::createEvent(
-                'event.order.cancel',
-                [
-                    'group' => $order->group,
-                    'event' => $order->event,
-                    'order' => $order
-                ]
-            )
-                ->unlink($order->group, 'attends', $order->event);
+        $attributes = [
+            'event' => $order->event,
+            'order' => $order
+        ];
 
-        foreach ($order->group->members as $member) {
-            if ($member->user) {
-                $euklesEvent->setObject('member', $member->user);
+        if ($order->group) {
+            $attributes['group'] = $order->group;
+        }
+
+        // Track on ze eukles.
+        $euklesEvent = \Eukles::createEvent('event.order.cancel', $attributes);
+
+        if ($order->group) {
+            $euklesEvent->unlink($order->group, 'attends', $order->event);
+
+            foreach ($order->group->members as $member) {
+                if ($member->user) {
+                    $euklesEvent->setObject('member', $member->user);
+                }
             }
         }
 

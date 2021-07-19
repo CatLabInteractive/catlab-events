@@ -7,7 +7,7 @@
 
     @if($order->play_link)
         <p>
-            Klik op de link hieronder om de quiz op te starten:<br />\
+            Klik op de link hieronder om de quiz op te starten:<br />
             {{ $order->play_link }}
         </p>
     @endif

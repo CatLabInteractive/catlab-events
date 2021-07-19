@@ -3,9 +3,11 @@
 @section('content')
 
     <h2>Dank voor je aankoop!</h2>
-    <p>
-        Beste leden van {{ $group->name }},
-    </p>
+    @if($group)
+        <p>
+            Beste leden van {{ $group->name }},
+        </p>
+    @endif
 
     <p>
         Super tof dat jullie ons thuispakket {{ $event->name }} gekocht hebben!

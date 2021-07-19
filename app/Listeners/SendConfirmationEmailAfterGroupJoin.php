@@ -60,7 +60,7 @@ class SendConfirmationEmailAfterGroupJoin extends SendEmail
             ->get();
 
         foreach ($orders as $order) {
-            $this->sendConfirmationEmail($order, $order->event, $member);
+            $this->sendConfirmationEmail($order, $order->event, $member->user);
         }
     }
 }

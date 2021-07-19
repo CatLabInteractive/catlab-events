@@ -133,7 +133,7 @@ class EventController extends Controller
 
         $reportId = $event->quizwitz_report_id;
 
-        $url = config('services.quizwitz.url');
+        $url = config('services.quizwitz.url') . 'report';
         $url .= '/' . $reportId;
         $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
 

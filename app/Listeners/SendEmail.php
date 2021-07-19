@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Models\Event;
 use App\Models\Group;
-use App\Models\GroupMember;
 use App\Models\Order;
 use App\Models\User;
 use CatLab\Accounts\Client\ApiClient;
@@ -16,21 +15,14 @@ use CatLab\Accounts\Client\ApiClient;
 abstract class SendEmail
 {
     /**
+     * @param Order $order
      * @param Event $event
-     * @param GroupMember $member
+     * @param User $user
      */
-    public function sendConfirmationEmail(Order $order, Event $event, GroupMember $member)
+    public function sendConfirmationEmail(Order $order, Event $event, User $user)
     {
         /** @var Group $group */
-        $group = $member->group;
-
-        if (!$member->user) {
-            return;
-        }
-
-        if (empty($member->user->email)) {
-            return;
-        }
+        $group = $order->group;
 
         $attributes = [
             'order' => $order,
@@ -48,30 +40,25 @@ abstract class SendEmail
         }
 
         /** @var User $user */
-        $user = $member->user;
         $apiClient = new ApiClient($user);
 
         $apiClient->sendEmail(
             $event->name . ': We zijn er bij!',
             $view->render(),
-            $member->user->email
+            $user->email
         );
     }
 
     /**
      * @param Order $order
-     * @param GroupMember $member
+     * @param User $user
      */
-    public function sendCancellationEmail(Order $order, GroupMember $member)
+    public function sendCancellationEmail(Order $order, User $user)
     {
         /** @var Group $group */
         $group = $order->group;
 
-        if (!$member->user) {
-            return;
-        }
-
-        if (empty($member->user->email)) {
+        if (empty($user->email)) {
             return;
         }
 
@@ -90,7 +77,7 @@ abstract class SendEmail
         $apiClient->sendEmail(
             $order->event->name . ': We zijn er niet bij :(',
             $view->render(),
-            $member->user->email
+            $user->email
         );
     }
 }

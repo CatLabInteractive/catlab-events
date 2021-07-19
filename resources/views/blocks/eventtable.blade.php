@@ -11,10 +11,12 @@
 
         <tr>
             <td>
-                @if(!$v->isFinished() && $v->series)
-                    <a href="{{ $v->series->getUrl($v) }}">{{ $v->startDate->format('d/m/Y H:i') }}</a>
-                @else
-                    <a href="{{ $v->getUrl() }}">{{ $v->startDate->format('d/m/Y H:i') }}</a>
+                @if($v->startDate)
+                    @if(!$v->isFinished() && $v->series)
+                        <a href="{{ $v->series->getUrl($v) }}">{{ $v->startDate->format('d/m/Y H:i') }}</a>
+                    @else
+                        <a href="{{ $v->getUrl() }}">{{ $v->startDate->format('d/m/Y H:i') }}</a>
+                    @endif
                 @endif
             </td>
 

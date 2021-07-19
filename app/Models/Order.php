@@ -317,19 +317,20 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             return null;
         }
 
-        if (!$ticketCategory->max_players) {
-            return null;
+        $maxPlayers = null;
+        if ($ticketCategory->max_players) {
+            $maxPlayers = $ticketCategory->max_players;
         }
 
         $url = config('services.quizwitz.url');
-        $url .= '/campaigns/' . $this->campaign_id . '/campaign-links';
+        $url .= '/campaigns/' . $event->campaign_id . '/campaign-links';
         $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
 
         $client = new Client();
-        $response = $client->post($url);
+        $response = $client->post($url, [ 'form_params' => [ 'maxPlayers'  => $maxPlayers ] ]);
 
         $data = json_decode($response->getBody(), true);
-        $this->play_url = $data['campaignLink']['url'];
+        $this->play_link = $data['campaignLink']['url'];
 
         $this->save();
     }

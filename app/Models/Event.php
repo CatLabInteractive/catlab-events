@@ -331,6 +331,10 @@ class Event extends Model implements EuklesModel
      */
     public function isLastTicketsWarning()
     {
+        if (!$this->max_tickets) {
+            return false;
+        }
+
         if (!$this->hasTickets()) {
             return false;
         }

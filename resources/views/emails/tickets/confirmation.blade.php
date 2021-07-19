@@ -3,9 +3,13 @@
 @section('content')
 
     <h2>We zijn er bij!</h2>
-    <p>
-        Beste leden van {{ $group->name }},
-    </p>
+    @if ($group)
+        <p>
+            Beste leden van {{ $group->name }},
+        </p>
+    @else
+        <p>Hallo!</p>
+    @endif
 
     <p>
         We zijn er bij!
@@ -35,9 +39,11 @@
 
     <h3>Voorbereiding</h3>
     <ul>
-        <li>
-            Stel de leden van je team in op de <a href="{{ action('GroupController@show', [ $group->id ]) }}">{{ $group->name }} team pagina</a>.
-        </li>
+        @if($group)
+            <li>
+                Stel de leden van je team in op de <a href="{{ action('GroupController@show', [ $group->id ]) }}">{{ $group->name }} team pagina</a>.
+            </li>
+        @endif
 
         <li>
             Like onze <a href="https://www.facebook.com/quizfabriek/">facebook pagina</a> voor de laatste nieuwtjes.
