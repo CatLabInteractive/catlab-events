@@ -617,7 +617,7 @@ class EventController extends Controller
         $request->session()->put('uitpas_card_number', $validUitpas);
 
         $view = view('events.confirmRegister', [
-            'showUiTPAS' => $event->organisation->uitpas && \UitDb::getUitPasService(),
+            'showUiTPAS' => $event->hasUitPas(),
             'action' => action('EventController@processRegister', [ $eventId, $ticketCategoryId ]),
             'uitpasAction' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
             'group' => $group,

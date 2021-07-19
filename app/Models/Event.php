@@ -1006,4 +1006,14 @@ class Event extends Model implements EuklesModel
     {
         return $this->requires_team;
     }
+
+    /**
+     * @return bool
+     */
+    public function hasUitPas()
+    {
+        return $this->organisation->uitpas &&
+            $this->uitdb_event_id &&
+            \UitDb::getUitPasService();
+    }
 }
