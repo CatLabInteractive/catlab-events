@@ -590,8 +590,8 @@ class Event extends Model implements EuklesModel
             }
         }
 
-        if ($this->organisation->uitpas) {
-            $out .= "UiTPAS kansentarief beschikbaar in regio Gent. ";
+        if ($this->hasUitPas()) {
+            $out .= "UiTPAS kansentarief beschikbaar. ";
         }
 
         return $out;
