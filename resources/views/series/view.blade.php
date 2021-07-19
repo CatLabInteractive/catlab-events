@@ -13,34 +13,41 @@
                  @endif
             >
 
-                <script>NEXT_EVENT_DATE = '<?php echo $nextEvent->startDate->format('D, d M Y H:i:s O'); ?>';</script>
-                <?php $countdown = \App\Tools\CountdownHelper::getCountdown($nextEvent->startDate); ?>
+                @if($nextEvent->startDate)
+                    <script>NEXT_EVENT_DATE = '<?php echo $nextEvent->startDate->format('D, d M Y H:i:s O'); ?>';</script>
+                    <?php $countdown = \App\Tools\CountdownHelper::getCountdown($nextEvent->startDate); ?>
+                @endif
+
                 <div class="container">
                     <div class="banner-content">
                         <div class="banner-content-left">
-                            <div class="countdown">
-                                <div class="counter-day">
-                                    <span class="days">{{ $countdown['days'] }}</span>
-                                    <div class="smalltext">Dagen</div>
-                                </div>
-                                <div class="counter-hour">
-                                    <span class="hours">{{ $countdown['hours'] }}</span>
-                                    <div class="smalltext">Uren</div>
-                                </div>
-                                <div class="counter-minute">
-                                    <span class="minutes">{{ $countdown['minutes'] }}</span>
-                                    <div class="smalltext">Minuten</div>
-                                </div>
-                                <div class="counter-second">
-                                    <span class="seconds">{{ $countdown['seconds'] }}</span>
-                                    <div class="smalltext">Seconden</div>
-                                </div>
-                            </div><!-- Countdown end -->
+                            @if(isset($countdown))
+                                <div class="countdown">
+                                    <div class="counter-day">
+                                        <span class="days">{{ $countdown['days'] }}</span>
+                                        <div class="smalltext">Dagen</div>
+                                    </div>
+                                    <div class="counter-hour">
+                                        <span class="hours">{{ $countdown['hours'] }}</span>
+                                        <div class="smalltext">Uren</div>
+                                    </div>
+                                    <div class="counter-minute">
+                                        <span class="minutes">{{ $countdown['minutes'] }}</span>
+                                        <div class="smalltext">Minuten</div>
+                                    </div>
+                                    <div class="counter-second">
+                                        <span class="seconds">{{ $countdown['seconds'] }}</span>
+                                        <div class="smalltext">Seconden</div>
+                                    </div>
+                                </div><!-- Countdown end -->
+                            @endif
 
                             <h1 class="banner-title">{{ $nextEvent->name }}</h1>
                             <h2 class="banner-subtitle">
                                 {{ $series->name }}
-                                <br />{{ $nextEvent->startDate->formatLocalized('%A %-d %B %Y, %k:%M') }}
+                                @if($nextEvent->startDate)
+                                    <br />{{ $nextEvent->startDate->formatLocalized('%A %-d %B %Y, %k:%M') }}
+                                @endif
                                 @if($nextEvent->venue)
                                     <br />{{ $nextEvent->venue->getShortLocation() }}
                                 @endif
@@ -214,26 +221,48 @@
                 {{-- @component('blocks.newsletterbutton', [ 'text' => 'Hou me op de hoogte' ])@endcomponent --}}
 
                 @foreach($events as $v)
-                    <div class="row">
-                        <div class="col-md-3 hero-small-date text-center">
-                            <h3>{{ $v->startDate->format('d') }}</h3>
-                            <h4>{{ $v->startDate->formatLocalized('%B %Y') }}</h4>
-                        </div>
-                        <div class="col-md-9 hero-small-date-content">
-                            <h2 class="banner-title">
-                                <a href="{{ $v->getUrl() }}">{{ $v->name }}</a>
-                                @if($v->isSoldOut(true))
-                                    <span class="lastTickets">Uitverkocht!</span>
-                                @endif
-                            </h2>
-                            <p class="banner-subtitle">
-                                {{ $v->startDate->format('H:i') }}
-                                @if($v->venue) - {{ $v->venue->getShortLocation() }}@endif
-                            </p>
-                        </div>
-                    </div>
 
-                    <br />
+                    @if( $v->startDate)
+                        <div class="row">
+                            <div class="col-md-3 hero-small-date text-center">
+                                <h3>{{ $v->startDate->format('d') }}</h3>
+                                <h4>{{ $v->startDate->formatLocalized('%B %Y') }}</h4>
+                            </div>
+                            <div class="col-md-9 hero-small-date-content">
+                                <h2 class="banner-title">
+                                    <a href="{{ $v->getUrl() }}">{{ $v->name }}</a>
+                                    @if($v->isSoldOut(true))
+                                        <span class="lastTickets">Uitverkocht!</span>
+                                    @endif
+                                </h2>
+                                <p class="banner-subtitle">
+                                    {{ $v->startDate->format('H:i') }}
+                                    @if($v->venue) - {{ $v->venue->getShortLocation() }}@endif
+                                </p>
+                            </div>
+                        </div>
+
+                        <br />
+                    @else
+
+                        <div class="row">
+                            <div class="col-md-3 hero-small-date text-center">
+                                <h3>Pakket</h3>
+                                <h4>Wanneer je wilt</h4>
+                            </div>
+                            <div class="col-md-9 hero-small-date-content">
+                                <h2 class="banner-title">
+                                    <a href="{{ $v->getUrl() }}">{{ $v->name }}</a>
+                                    @if($v->isSoldOut(true))
+                                        <span class="lastTickets">Uitverkocht!</span>
+                                    @endif
+                                </h2>
+                            </div>
+                        </div>
+
+                        <br />
+
+                    @endif
                 @endforeach
 
                 @if(count($pastEvents) > 0)

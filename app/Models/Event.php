@@ -190,7 +190,10 @@ class Event extends Model implements EuklesModel
      */
     public function scopeUpcoming($builder)
     {
-        return $builder->where('endDate', '>', new \DateTime());
+        $builder->where(function($scope) {
+            $scope->where('endDate', '>', new \DateTime())
+                ->orWhereNull('endDate');
+        });
     }
 
     /**
