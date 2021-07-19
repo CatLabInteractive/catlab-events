@@ -331,7 +331,7 @@ class Event extends Model implements EuklesModel
      */
     public function isLastTicketsWarning()
     {
-        if (!$this->max_tickets) {
+        if (!$this->hasFiniteTickets()) {
             return false;
         }
 
@@ -1019,5 +1019,13 @@ class Event extends Model implements EuklesModel
         return $this->organisation->uitpas &&
             $this->uitdb_event_id &&
             \UitDb::getUitPasService();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasFiniteTickets()
+    {
+        return $this->max_tickets > 0;
     }
 }
