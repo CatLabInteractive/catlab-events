@@ -301,8 +301,6 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
-     * @param TicketCategory $ticketCategory
-     * @return mixed|null
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function fetchPlayUrl()
@@ -314,7 +312,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         $event = $ticketCategory->event;
 
         if (!$event->campaign_id) {
-            return null;
+            return;
         }
 
         $maxPlayers = null;
@@ -330,8 +328,21 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         $response = $client->post($url, [ 'form_params' => [ 'maxPlayers'  => $maxPlayers ] ]);
 
         $data = json_decode($response->getBody(), true);
-        $this->play_link = $data['campaignLink']['url'];
+        $playLink = $data['campaignLink']['url'];
 
+        $additionalParameter = [
+            'lang' => 'nl'
+        ];
+
+        if (Str::contains($playLink, '?')) {
+            $playLink .= '&';
+        } else {
+            $playLink .= '?';
+        }
+
+        $playLink .= http_build_query($additionalParameter);
+
+        $this->play_link = $playLink;
         $this->save();
     }
 }

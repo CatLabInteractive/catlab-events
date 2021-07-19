@@ -2,7 +2,7 @@
 
 @section('content')
 
-    <h2>Leuk dat jullie willen meepspelen!</h2>
+    <h2>Leuk dat jullie willen meespelen!</h2>
     <p>Hallo!</p>
 
     @if($order->play_link)
@@ -11,6 +11,10 @@
             {{ $order->play_link }}
         </p>
     @endif
+
+    <p>
+        Eens je de link volgt en de quiz activeert, heb je 72 uur de tijd om de quiz spelen. Daarna vervalt de link.
+    </p>
 
     <p>
         Veel quizplezier!<br />
