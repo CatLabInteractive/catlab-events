@@ -550,7 +550,11 @@ class Event extends Model implements EuklesModel
             $cheapest = $prices->first();
             $expensivest = $prices->last();
 
-            if ($cheapest->price === $expensivest->price) {
+            // Does 'cheapest' have an end date or are the prices the same?
+            if (
+                !isset($cheapest->end_date) ||
+                $cheapest->price === $expensivest->price
+            ) {
                 return $cheapest->getFormattedTotalPrice();
             }
 
