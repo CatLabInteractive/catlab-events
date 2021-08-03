@@ -95,6 +95,9 @@ class EuklesEventSubscriber
 
         if ($order->group) {
             $attributes['group'] = $order->group;
+            $attributes['subject'] = $order->group;
+        } else {
+            $attributes['subject'] = $order->user;
         }
 
         // Track on ze eukles.
@@ -134,6 +137,9 @@ class EuklesEventSubscriber
 
         if ($order->group) {
             $attributes['group'] = $order->group;
+            $attributes['subject'] = $order->group;
+        } else {
+            $attributes['subject'] = $order->user;
         }
 
         // Track on ze eukles.

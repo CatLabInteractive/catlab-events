@@ -181,7 +181,35 @@ class User extends Model implements
      */
     public function getEuklesId()
     {
-        return $this->catlab_id;
+        if ($this->catlab_id) {
+            return $this->catlab_id;
+        } else {
+            return $this->id;
+        }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUrl()
+    {
+        if ($accountsUrl = config('services.catlab.url')) {
+            return $accountsUrl . 'admin/users/' . $this->id;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getDisplayName()
+    {
+        if ($this->username) {
+            return $this->username;
+        } else {
+            return 'User ' . $this->id;
+        }
     }
 
     /**
@@ -190,9 +218,11 @@ class User extends Model implements
     public function getEuklesAttributes()
     {
         return [
-            'username' => $this->username,
+            'name' => $this->getDisplayName(),
+            'username' => $this->getDisplayName(),
             'email' => $this->email,
-            'event_id' => $this->id
+            'event_id' => $this->id,
+            'url' => $this->getUrl()
         ];
     }
 
