@@ -930,7 +930,7 @@ class Event extends Model implements EuklesModel
     public function getOrderLabel()
     {
         if ($this->isQuizWitzCampaign()) {
-            return 'Kopen';
+            return 'Bestellen';
         } else {
             return 'Inschrijven';
         }
