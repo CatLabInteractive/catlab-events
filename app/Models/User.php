@@ -194,7 +194,7 @@ class User extends Model implements
     public function getUrl()
     {
         if ($accountsUrl = config('services.catlab.url')) {
-            return $accountsUrl . 'admin/users/' . $this->id;
+            return $accountsUrl . '/admin/users/' . $this->id;
         } else {
             return null;
         }
