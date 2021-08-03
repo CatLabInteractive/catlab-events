@@ -95,7 +95,7 @@
 
                             @if($event->canRegister())
                                 <a href="{{ action('EventController@selectTicketCategory', [ $event->id ]) }}"
-                                   class="btn btn-primary">Registreren</a>
+                                   class="btn btn-primary">{{ $event->getOrderLabel() }}</a>
                             @endif
 
                             @if($event->getFacebookEventUrl())

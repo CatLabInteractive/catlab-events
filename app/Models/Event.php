@@ -30,6 +30,7 @@ use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use DateTime;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use PhpParser\Builder;
 
@@ -39,6 +40,8 @@ use PhpParser\Builder;
  */
 class Event extends Model implements EuklesModel
 {
+    use SoftDeletes;
+
     /**
      * When should we start showing the last tickets warning?
      */
@@ -52,8 +55,6 @@ class Event extends Model implements EuklesModel
     const REGISTRATION_OPEN = 'open';
     const REGISTRATION_CLOSED = 'closed';
     const REGISTRATION_FULL = 'full';
-
-    use SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -517,7 +518,7 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * @return int
+     * @return Collection
      */
     public function getPublishedPrices()
     {
@@ -563,38 +564,6 @@ class Event extends Model implements EuklesModel
             return '<strike>' . $expensivest->getFormattedTotalPrice() . '</strike> ' .
                 '<strong title="' . $title . '">' . $cheapest->getFormattedTotalPrice() . ' (' . $cheapest->name . '*)</strong>';
         }
-    }
-
-    /**
-     * @param bool $showDiscount
-     * @return string|null
-     */
-    public function getPublishedPriceDetails($showDiscount = true)
-    {
-        $prices = $this->getPublishedPrices();
-
-        if ($prices->count() === 0) {
-            return null;
-        }
-
-        if (!$showDiscount) {
-            return null;
-        }
-
-        $out = '';
-        if ($prices->count() > 1) {
-            $cheapest = $prices->first();
-
-            if ($cheapest->end_date) {
-                $out = 'Bestel voor ' . $cheapest->end_date->formatLocalized('%A %d %B %Y, %H:%M') . '. ';
-            }
-        }
-
-        if ($this->hasUitPas()) {
-            $out .= "UiTPAS kansentarief beschikbaar. ";
-        }
-
-        return $out;
     }
 
     /**
@@ -781,55 +750,6 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * @return array[]
-     */
-    public function getEuklesId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return array[]
-     */
-    public function getEuklesAttributes()
-    {
-        $availableTickets = $this->countAvailableTickets(false);
-        $soldTickets = $this->countSoldTickets(false);
-
-        $out = [
-            'uid' => $this->id,
-            'name' => $this->name,
-            'url' => $this->getUrl(),
-            'start' => $this->startDate ? $this->startDate->format('c') : null,
-            'end' => $this->endDate ? $this->endDate->format('c') : null,
-            'facebookEventUrl' => $this->getFacebookEventUrl(),
-            'ticketsSold' => $soldTickets,
-            'ticketsTotal' => $availableTickets === null ? '∞' : $availableTickets + $soldTickets,
-            'ticketsAvailable' => $availableTickets === null ? '∞' : $availableTickets
-        ];
-
-        if ($this->venue) {
-            $out = array_merge($out, [
-                'venue' => $this->venue->name,
-                'address' => $this->venue->address,
-                'postalCode' => $this->venue->postalCode,
-                'city' => $this->venue->city,
-                'country' => $this->venue->country,
-            ]);
-        }
-
-        return $out;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEuklesType()
-    {
-        return 'event';
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function waitingList()
@@ -918,39 +838,6 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * @return string|null
-     */
-    public function getUrgencyMessage()
-    {
-        if (!$this->isSelling() || $this->isSoldOut()) {
-            return null;
-        }
-
-        if ($this->isLastTicketsWarning()) {
-            $availableTickets = $this->countAvailableTickets();
-            return "Laatste $availableTickets tickets!";
-        }
-
-        $nextTicketCategory = $this->getRelevantTicketCategory();
-        if (
-            $nextTicketCategory &&
-            $nextTicketCategory->end_date
-        ) {
-            if ($nextTicketCategory->end_date->getTimestamp() < (time() + (60 * 60))) {
-                return 'Laatste uur "' . $nextTicketCategory->name . '"!';
-            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (12 * 60 * 60))) {
-                return 'Laatste uren "' . $nextTicketCategory->name . '"!';
-            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (24 * 60 * 60))) {
-                return 'Laatste dag "' . $nextTicketCategory->name . '"!';
-            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (3 * 24 * 60 * 60))) {
-                return 'Laatste dagen "' . $nextTicketCategory->name . '"!';
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function livestream()
@@ -1027,5 +914,139 @@ class Event extends Model implements EuklesModel
     public function hasFiniteTickets()
     {
         return $this->max_tickets > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isQuizWitzCampaign()
+    {
+        return $this->campaign_id;
+    }
+
+    /**
+     * Return the name of the 'action' that is taken when users are subscribing/buying (in dutch)
+     */
+    public function getOrderLabel()
+    {
+        if ($this->isQuizWitzCampaign()) {
+            return 'Kopen';
+        } else {
+            return 'Inschrijven';
+        }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUrgencyMessage()
+    {
+        if (!$this->isSelling() || $this->isSoldOut()) {
+            return null;
+        }
+
+        if ($this->isLastTicketsWarning()) {
+            $availableTickets = $this->countAvailableTickets();
+            return "Laatste $availableTickets tickets!";
+        }
+
+        $nextTicketCategory = $this->getRelevantTicketCategory();
+        if (
+            $nextTicketCategory &&
+            $nextTicketCategory->end_date
+        ) {
+            if ($nextTicketCategory->end_date->getTimestamp() < (time() + (60 * 60))) {
+                return 'Laatste uur "' . $nextTicketCategory->name . '"!';
+            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (12 * 60 * 60))) {
+                return 'Laatste uren "' . $nextTicketCategory->name . '"!';
+            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (24 * 60 * 60))) {
+                return 'Laatste dag "' . $nextTicketCategory->name . '"!';
+            } elseif ($nextTicketCategory->end_date->getTimestamp() < (time() + (3 * 24 * 60 * 60))) {
+                return 'Laatste dagen "' . $nextTicketCategory->name . '"!';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param bool $showDiscount
+     * @return string|null
+     */
+    public function getPublishedPriceDetails($showDiscount = true)
+    {
+        $prices = $this->getPublishedPrices();
+
+        if ($prices->count() === 0) {
+            return null;
+        }
+
+        if (!$showDiscount) {
+            return null;
+        }
+
+        $out = '';
+        if ($prices->count() > 1) {
+            $cheapest = $prices->first();
+
+            if ($cheapest->end_date) {
+                $out = 'Bestel voor ' . $cheapest->end_date->formatLocalized('%A %d %B %Y, %H:%M') . '. ';
+            }
+        }
+
+        if ($this->hasUitPas()) {
+            $out .= "UiTPAS kansentarief beschikbaar. ";
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array[]
+     */
+    public function getEuklesId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return array[]
+     */
+    public function getEuklesAttributes()
+    {
+        $availableTickets = $this->countAvailableTickets(false);
+        $soldTickets = $this->countSoldTickets(false);
+
+        $out = [
+            'uid' => $this->id,
+            'name' => $this->name,
+            'url' => $this->getUrl(),
+            'start' => $this->startDate ? $this->startDate->format('c') : null,
+            'end' => $this->endDate ? $this->endDate->format('c') : null,
+            'facebookEventUrl' => $this->getFacebookEventUrl(),
+            'ticketsSold' => $soldTickets,
+            'ticketsTotal' => $this->hasFiniteTickets() ? $availableTickets + $soldTickets : '∞',
+            'ticketsAvailable' => $this->hasFiniteTickets() ? $availableTickets : '∞'
+        ];
+
+        if ($this->venue) {
+            $out = array_merge($out, [
+                'venue' => $this->venue->name,
+                'address' => $this->venue->address,
+                'postalCode' => $this->venue->postalCode,
+                'city' => $this->venue->city,
+                'country' => $this->venue->country,
+            ]);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEuklesType()
+    {
+        return 'event';
     }
 }

@@ -90,7 +90,7 @@
         <div class="row">
             <div class="col-sm-12">
                 @if($nextEvent)
-                    <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Inschrijven</a>
+                    <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">{{ $nextEvent->getOrderLabel() }}</a>
                 @endif
                 <a href="mailto:hallo@quizfabriek.be" class="btn btn-primary">Vragen? Contacteer ons</a>
                 <a href="https://www.facebook.com/quizfabriek" class="btn btn-primary" target="_blank"><i class="fa fa-facebook"></i></a>

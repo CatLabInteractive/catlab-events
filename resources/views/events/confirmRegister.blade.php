@@ -13,7 +13,7 @@
     ?>
 
     <h2 class="intro-title">{{ $event->name }}</h2>
-    <h3 class="intro-sub-title">Registreren</h3>
+    <h3 class="intro-sub-title">{{ $event->getOrderLabel() }}</h3>
 
     @if(!$errors->isEmpty())
         <div class="alert alert-warning">
@@ -21,10 +21,12 @@
         </div>
     @endif
 
-    @if($group)
-        <p>Leuk dat jullie erbij willen zijn, {{ $group->name }}!</p>
-    @else
-        <p>Leuk dat jullie erbij willen zijn!</p>
+    @if(!$event->isQuizWitzCampaign())
+        @if($group)
+            <p>Leuk dat jullie erbij willen zijn, {{ $group->name }}!</p>
+        @else
+            <p>Leuk dat jullie erbij willen zijn!</p>
+        @endif
     @endif
     <!--
     <div class="alert alert-warning">
@@ -122,7 +124,7 @@
             @endif
 
             <tr>
-                <td>Inschrijving</td>
+                <td>Kostprijs</td>
                 <td>
                     {{ $ticketPriceCalculator->getFormattedPrice() }}
                     <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)

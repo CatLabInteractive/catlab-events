@@ -70,7 +70,7 @@
                                 @endif
 
                                 @if($nextEvent->isSelling())
-                                    <a href="{{ action('EventController@selectTicketCategory', [ $nextEvent->id ] ) }}" class="btn btn-primary"><i class="fa fa-ticket"></i> Inschrijven</a>
+                                    <a href="{{ action('EventController@selectTicketCategory', [ $nextEvent->id ] ) }}" class="btn btn-primary"><i class="fa fa-ticket"></i> {{ $nextEvent->getOrderLabel() }}</a>
                                 @elseif($nextEvent->isSoldOut())
                                     <a href="{{ action('WaitingListController@waitingList', [ $nextEvent->id ]) }}" class="btn btn-danger"><i class="fa fa-ticket"></i> {{ $nextEvent->getNotSellingReason() }} / Wachtlijst</a>
                                 @elseif($nextEvent->willSell())
@@ -183,7 +183,7 @@
                         <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Meer informatie</a>
 
                         @if($nextEvent->hasTickets())
-                            <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">Inschrijven</a>
+                            <a href="{{ $nextEvent->getUrl() }}" class="btn btn-primary">{{ $nextEvent->getOrderLabel() }}</a>
                         @endif
 
                         @if($nextEvent->getLiveStreamUrl() && !$nextEvent->hasTickets())

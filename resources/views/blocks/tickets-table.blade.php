@@ -62,7 +62,7 @@
 
             <td >
                 @if($ticketCategory->isAvailable())
-                    <a href="{{ action('EventController@register', [ $event->id, $ticketCategory->id] ) }}" class="btn btn-default">Registreren</a>
+                    <a href="{{ action('EventController@register', [ $event->id, $ticketCategory->id] ) }}" class="btn btn-default">{{ $event->getOrderLabel() }}</a>
                 @else
                     {{ $ticketCategory->errorToString($ticketCategory->getAvailableError()) }}
                 @endif

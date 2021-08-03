@@ -13,7 +13,7 @@
     ?>
 
     <h2 class="intro-title">{{ $event->name }}</h2>
-    <h3 class="intro-sub-title">Registreren</h3>
+    <h3 class="intro-sub-title">{{ $event->getOrderLabel() }}</h3>
 
     @include('events/teamsizeWarning', [ 'event' => $event ])
 

@@ -6,7 +6,7 @@
 
 @section('content')
 
-    <h2>Registreren</h2>
+    <h2>Inschrijven</h2>
     <p>Voor welke editie wilt u registreren?</p>
     @if (count($events) === 0)
         <p>Er zijn nog geen evenementen gepland.
@@ -42,7 +42,7 @@
 
                     <td>
                         @if($v->isSelling())
-                            <a href="{{ action('EventController@selectTicketCategory', [ $v->id ] ) }}" class="btn btn-default">Registreren</a>
+                            <a href="{{ action('EventController@selectTicketCategory', [ $v->id ] ) }}" class="btn btn-default">{{ $v->getOrderLabel() }}</a>
                         @elseif($v->isSoldOut())
                             Uitverkocht
                         @else
