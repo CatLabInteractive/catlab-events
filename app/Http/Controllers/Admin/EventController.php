@@ -329,7 +329,7 @@ class EventController extends Controller
                 'Reference' => $data['reference'],
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
                 'Ticket Category' => $order->ticketCategory->name,
-                'Groupname' => $order->group->name,
+                'Groupname' => $order->group ? $order->group->name : null,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];
 

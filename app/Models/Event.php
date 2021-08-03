@@ -804,8 +804,8 @@ class Event extends Model implements EuklesModel
             'end' => $this->endDate ? $this->endDate->format('c') : null,
             'facebookEventUrl' => $this->getFacebookEventUrl(),
             'ticketsSold' => $soldTickets,
-            'ticketsTotal' => $availableTickets + $soldTickets,
-            'ticketsAvailable' => $availableTickets
+            'ticketsTotal' => $availableTickets === null ? '∞' : $availableTickets + $soldTickets,
+            'ticketsAvailable' => $availableTickets === null ? '∞' : $availableTickets
         ];
 
         if ($this->venue) {
