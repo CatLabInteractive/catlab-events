@@ -11,10 +11,9 @@
 
     <h3>Tickets</h3>
     <p>
-        Kies het type ticket dat u wilt bestellen.
+        Kies het type ticket dat u wilt kopen.
     </p>
 
-    <h3>Tickets</h3>
     @include('blocks.tickets-table')
 
 @endsection
