@@ -23,7 +23,3 @@
         @endcomponent
     @endif
 @endif
-
-@section('critical-css')
-    <style>{!! file_get_contents(resource_path('criticalcss/calendar_critical.min.css')) !!}</style>
-@endsection

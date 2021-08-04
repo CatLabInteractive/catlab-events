@@ -348,7 +348,3 @@
         ?>
     </script>
 @endsection
-
-@section('critical-css')
-    <style>{!! file_get_contents(resource_path('criticalcss/series-view_critical.min.css')) !!}</style>
-@endsection

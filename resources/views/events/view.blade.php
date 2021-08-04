@@ -337,7 +337,3 @@
 @section('jsonld-content')
     <script type="application/ld+json">{!! json_encode($event->getJsonLD(), JSON_PRETTY_PRINT) !!}</script>
 @endsection
-
-@section('critical-css')
-    <style>{!! file_get_contents(resource_path('criticalcss/events-view_critical.min.css')) !!}</style>
-@endsection

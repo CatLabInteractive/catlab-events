@@ -1,8 +1,6 @@
 let mix = require('laravel-mix');
 let ImageminPlugin = require( 'imagemin-webpack-plugin' ).default;
 
-require('laravel-mix-criticalcss');
-
 
 /*
  |--------------------------------------------------------------------------
@@ -61,24 +59,5 @@ mix
     .js([
         'resources/assets/js/admin.js'
     ], 'public/js/admin.js')
-    .criticalCss({
-        enabled: mix.inProduction(),
-        paths: {
-            base: 'https://events.catlab.eu/',
-            templates: './resources/criticalcss/'
-        },
-        urls: [
-            { url: 's/1/ludieke-triviaquiz?noasynccss=1', template: 'series-view' },
-            { url: 'e/30/alors-on-quiz?noasynccss=1', template: 'events-view' },
-            { url: 'calendar?noasynccss=1', template: 'calendar' },
-            { url: 'competitions?noasynccss=1', template: 'competitions' },
-            { url: 'events/register?noasynccss=1', template: 'register' },
-        ],
-        options: {
-            width: 1200,
-            height: 1000,
-            timeout: 30000
-        }
-    })
     .version()
 ;
