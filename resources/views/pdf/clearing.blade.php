@@ -140,9 +140,12 @@
 <div class="slide">
     <h2>Evenement</h2>
     <p>
-        ID: {{$event->id}}<br>
-        Naam: {{$event->name}}<br>
-        Datum: {{$event->startDate->format('d/m/Y')}}
+        ID: {{$event->id}}
+        <br>Naam: {{$event->name}}
+
+        @if($event->startDate)
+        <br>Datum: {{$event->startDate->format('d/m/Y')}}
+        @endif
     </p>
 </div>
 
