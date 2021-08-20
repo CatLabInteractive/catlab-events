@@ -44,6 +44,7 @@ $routes->group(
         \App\Http\Api\V1\Controllers\SeriesController::setRoutes($routes);
 
         \App\Http\Api\V1\Controllers\Events\TicketCategoryController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\Events\EventDateController::setRoutes($routes);
 
         \App\Http\Api\V1\Controllers\Groups\GroupController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\Groups\GroupMemberController::setRoutes($routes);

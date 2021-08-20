@@ -24,6 +24,7 @@ namespace App\Models;
 
 use App\Exceptions\NoOrganisationsFoundException;
 use App\Tools\StringHelper;
+use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
 use DB;
@@ -389,6 +390,20 @@ class Organisation extends Model
             return 'Neem contact met ons op via ' . implode(' of ', $options) . '.';
         }
         return null;
+    }
+
+    public function getFirstEventDate()
+    {
+        $firstEventDate = $this->events()
+            ->leftJoin('event_dates', 'events.id', '=', 'event_dates.event_id')
+            ->min('event_dates.startDate');
+
+        if (!$firstEventDate) {
+            return null;
+        }
+
+        // @todo fix proper.
+        return new Carbon($firstEventDate);
     }
 
     /**

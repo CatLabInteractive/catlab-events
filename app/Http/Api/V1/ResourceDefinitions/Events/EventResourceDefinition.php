@@ -92,18 +92,16 @@ class EventResourceDefinition extends BaseResourceDefinition
         // Start date
         $this->field('startDate')
             ->visible(true)
-            ->writeable(true, true)
             ->datetime();
 
         $this->field('endDate')
             ->visible(true)
-            ->writeable(true, true)
             ->datetime();
 
-        $this->field('doorsDate')
-            ->visible(true)
+        $this->relationship('eventDates', EventDateResourceDefinition::class)
+            ->visible()
             ->writeable(true, true)
-            ->datetime();
+            ->expanded();
 
         $this->relationship('ticketCategories', TicketCategoryResourceDefinition::class)
             ->visible()

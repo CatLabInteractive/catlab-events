@@ -5,7 +5,7 @@
             <h2 class="intro-title">Dit is {{organisation()->name}}</h2><br>
             <div class="row facts-wrapper">
 
-                <?php $firstQuizDate = new DateTime(organisation()->events()->min('startDate')); ?>
+                <?php $firstQuizDate = organisation()->getFirstEventDate(); ?>
                 @if($firstQuizDate && (new DateTime())->diff($firstQuizDate)->y > 0)
                     <div class="col-sm-3 col-xs-6">
 

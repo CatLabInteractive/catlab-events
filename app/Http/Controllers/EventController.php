@@ -71,7 +71,7 @@ class EventController extends Controller
         while ($nextEvent === null) {
             $nextEvent = $organisation->events()->upcoming()
                 ->published()
-                ->orderBy('startDate')
+                ->orderByStartDate()
                 ->skip($nextEventIndex)
                 ->first();
 
@@ -93,7 +93,7 @@ class EventController extends Controller
         // take the next upcoming event, even if it is sold out.
         $nextEvent = $organisation->events()->upcoming()
             ->published()
-            ->orderBy('startDate')
+            ->orderByStartDate()
             ->first();
 
         if ($nextEvent && $nextEvent->series) {

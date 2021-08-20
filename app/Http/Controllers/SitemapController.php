@@ -46,7 +46,7 @@ class SitemapController
 
 
             // Events
-            foreach (App\Models\Event::orderBy('startDate', 'desc')->get() as $event) {
+            foreach (App\Models\Event::orderByStartDateDesc()->get() as $event) {
 
                 $timeDiff = (time() - $event->startDate->getTimestamp());
                 if ($timeDiff < 0) {

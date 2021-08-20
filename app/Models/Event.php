@@ -24,6 +24,7 @@ namespace App\Models;
 
 use App\Events\SubscribedToWaitingList;
 use App\Tools\StringHelper;
+use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
@@ -61,9 +62,6 @@ class Event extends Model implements EuklesModel
         'work_title',
         'description',
         'is_published',
-        'startDate',
-        'endDate',
-        'doorsDate',
         'vat_percentage',
         'include_ticket_fee',
         'max_tickets',
@@ -79,10 +77,7 @@ class Event extends Model implements EuklesModel
     protected $dates = [
         'created_at',
         'updated_at',
-        'deleted_at',
-        'startDate',
-        'endDate',
-        'doorsDate'
+        'deleted_at'
     ];
 
     public function getUrl()
@@ -96,6 +91,14 @@ class Event extends Model implements EuklesModel
     public function organisation()
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function eventDates()
+    {
+        return $this->hasMany(EventDate::class);
     }
 
     /**
@@ -163,6 +166,30 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @return mixed
+     */
+    public function getStartDateAttribute()
+    {
+        $out = $this->eventDates()->min('startDate');
+        if ($out) {
+            $out = new Carbon($out);
+        }
+        return $out;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEndDateAttribute()
+    {
+        $out = $this->eventDates()->max('endDate');
+        if ($out) {
+            $out = new Carbon($out);
+        }
+        return $out;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function attendees()
@@ -191,9 +218,12 @@ class Event extends Model implements EuklesModel
      */
     public function scopeUpcoming($builder)
     {
-        $builder->where(function($scope) {
-            $scope->where('endDate', '>', new \DateTime())
-                ->orWhereNull('endDate');
+        $builder->whereIn('events.id', function($query) {
+            $query->select('event_id')
+                ->from('event_dates as upcoming_event_dates')
+                ->whereRaw('upcoming_event_dates.event_id = events.id')
+                ->where('upcoming_event_dates.endDate', '>', new \DateTime())
+                ->orWhereNull('upcoming_event_dates.endDate');
         });
     }
 
@@ -205,7 +235,9 @@ class Event extends Model implements EuklesModel
      */
     public function scopeFinished($builder)
     {
-        return $builder->where('endDate', '<', new \DateTime());
+        $builder->select('events.*');
+        $builder->leftJoin('event_dates', 'events.id', '=', 'event_dates.event_id');
+        $builder->where('event_dates.endDate', '<', new \DateTime());
     }
 
     /**
@@ -215,6 +247,25 @@ class Event extends Model implements EuklesModel
     public function scopePublished($builder)
     {
         return $builder->where('is_published', '=', true);
+    }
+
+    /**
+     * @param $builder
+     * @param string $direction
+     */
+    public function scopeOrderByStartDate($builder, $direction = 'asc')
+    {
+        $builder->select('events.*');
+        $builder->leftJoin('event_dates as edo', 'events.id', '=', 'edo.event_id');
+        $builder->orderBy('edo.startDate', $direction);
+    }
+
+    /**
+     * @param $builder
+     */
+    public function scopeOrderByStartDateDesc($builder)
+    {
+        $this->scopeOrderByStartDate($builder, 'desc');
     }
 
     /**

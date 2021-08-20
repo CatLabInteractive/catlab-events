@@ -66,7 +66,7 @@ class CompetitionController
         $events = $competition
             ->events()
             ->published()
-            ->orderBy('startDate', 'asc')
+            ->orderByStartDate()
             ->get()
             ->filter(function(Event $event) {
                 return $event->scores->count() > 0;

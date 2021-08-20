@@ -104,7 +104,7 @@ class Person extends Model
     {
         return $this->events()
             ->upcoming()
-            ->orderBy('startDate', 'asc')
+            ->orderByStartDate()
             ->first();
     }
 

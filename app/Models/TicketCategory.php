@@ -69,6 +69,14 @@ class TicketCategory extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function eventDate()
+    {
+        return $this->belongsTo(EventDate::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function orders()

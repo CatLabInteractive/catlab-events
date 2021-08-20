@@ -1,7 +1,7 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
- * Copyright (C) 2017 Thijs Van der Schaeghe
+ * Copyright (C) 2021 Thijs Van der Schaeghe
  * CatLab Interactive bvba, Gent, Belgium
  * http://www.catlab.eu/
  *
@@ -24,9 +24,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Models\EventDate;
 use CatLab\Charon\Enums\Action;
-use CatLab\Charon\Models\Properties\RelationshipField;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use Illuminate\Http\Request;
@@ -35,7 +33,7 @@ use Illuminate\Http\Request;
  * Class TicketCategoryController
  * @package App\Http\Controllers\Admin
  */
-class TicketCategoryController extends Controller implements FrontCrudControllerContract
+class EventDateController extends Controller implements FrontCrudControllerContract
 {
     use FrontCrudController;
 
@@ -48,11 +46,11 @@ class TicketCategoryController extends Controller implements FrontCrudController
     }
 
     /**
-     * @return \App\Http\Api\V1\Controllers\Events\TicketCategoryController
+     * @return \App\Http\Api\V1\Controllers\Events\EventDateController
      */
     public function createApiController()
     {
-        return new \App\Http\Api\V1\Controllers\Events\TicketCategoryController();
+        return new \App\Http\Api\V1\Controllers\Events\EventDateController();
     }
 
     /**
@@ -104,37 +102,5 @@ class TicketCategoryController extends Controller implements FrontCrudController
 
                 break;
         }
-    }
-
-    /**
-     * @param RelationshipField $field
-     * @return array
-     * @throws \CatLab\Charon\Exceptions\InvalidResourceDefinition
-     */
-    protected function resolveValues(RelationshipField $field)
-    {
-        $childResource = $field->getChildResource();
-        $entity = $childResource->getEntityClassName();
-
-        $entities = [];
-        switch ($entity) {
-            case EventDate::class:
-                /** @var Event $parent */
-                $parent = Event::find(\Request::instance()->route('event'));
-                if ($parent) {
-                    $entities = $parent->eventDates()->get();
-                }
-                break;
-
-            default:
-                $entities = call_user_func([ $entity, 'all' ]);
-                break;
-        }
-
-        $out = [];
-        foreach ($entities as $entity) {
-            $out[$entity->id] = $entity->name;
-        }
-        return $out;
     }
 }

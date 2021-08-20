@@ -88,7 +88,7 @@ class Series extends Model
         return $this->events()
             ->upcoming()
             ->published()
-            ->orderBy('startDate', 'asc')
+            ->orderByStartDate()
             ->first();
     }
 
@@ -100,7 +100,7 @@ class Series extends Model
         $upcomingEvents = $this->events()
             ->upcoming()
             ->published()
-            ->orderBy('startDate', 'asc')
+            ->orderByStartDate()
             ->get();
 
         foreach ($upcomingEvents as $upcomingEvent) {

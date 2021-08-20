@@ -24,6 +24,7 @@ namespace App\Providers;
 
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\EventDate;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\LiveStream;
@@ -33,6 +34,7 @@ use App\Models\Series;
 use App\Models\TicketCategory;
 use App\Models\Venue;
 use App\Policies\CompetitionPolicy;
+use App\Policies\EventDatePolicy;
 use App\Policies\EventPolicy;
 use App\Policies\GroupMemberPolicy;
 use App\Policies\GroupPolicy;
@@ -66,7 +68,8 @@ class AuthServiceProvider extends ServiceProvider
         Competition::class      => CompetitionPolicy::class,
         Series::class           => SeriesPolicy::class,
         Person::class           => PersonPolicy::class,
-        LiveStream::class       => LiveStreamPolicy::class
+        LiveStream::class       => LiveStreamPolicy::class,
+        EventDate::class        => EventDatePolicy::class,
 
     ];
 

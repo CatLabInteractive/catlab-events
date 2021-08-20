@@ -1,7 +1,7 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
- * Copyright (C) 2017 Thijs Van der Schaeghe
+ * Copyright (C) 2021 Thijs Van der Schaeghe
  * CatLab Interactive bvba, Gent, Belgium
  * http://www.catlab.eu/
  *
@@ -23,6 +23,7 @@
 namespace App\Http\Api\V1\Controllers\Events;
 
 use App\Http\Api\V1\Controllers\Base\ResourceController;
+use App\Http\Api\V1\ResourceDefinitions\Events\EventDateResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
 use App\Models\Event;
 use App\Models\EventDate;
@@ -33,27 +34,28 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 
 /**
- * Class TicketCategoryController
+ * Class EventDateController
  * @package App\Http\Api\V1\Controllers
  */
-class TicketCategoryController extends ResourceController
+class EventDateController extends ResourceController
 {
-    const RESOURCE_DEFINITION = TicketCategoryResourceDefinition::class;
-    const RESOURCE_ID = 'ticketCategory';
+    const RESOURCE_DEFINITION = EventDateResourceDefinition::class;
+    const RESOURCE_ID = 'eventDate';
     const PARENT_RESOURCE_ID = 'event';
 
     use \CatLab\Charon\Laravel\Controllers\ChildCrudController;
 
     /**
      * @param RouteCollection $routes
+     * @throws \CatLab\Charon\Exceptions\InvalidContextAction
      */
     public static function setRoutes(RouteCollection $routes)
     {
         $routes->childResource(
             static::RESOURCE_DEFINITION,
-            'events/{' . self::PARENT_RESOURCE_ID . '}/ticketCategories',
-            'ticketCategories',
-            'Events\TicketCategoryController',
+            'events/{' . self::PARENT_RESOURCE_ID . '}/dates',
+            'eventDates',
+            'Events\EventDateController',
             [
                 'id' => self::RESOURCE_ID,
                 'parentId' => self::PARENT_RESOURCE_ID
@@ -69,7 +71,7 @@ class TicketCategoryController extends ResourceController
     {
         /** @var Event $event */
         $event = $this->getParent($request);
-        return $event->ticketCategories();
+        return $event->eventDates();
     }
 
     /**

@@ -76,5 +76,12 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->visible(true)
             ->writeable(true, true)
             ->datetime();
+
+        $this->relationship('eventDate', EventDateResourceDefinition::class)
+            ->one()
+            ->linkable(true, true)
+            ->visible()
+            ->expanded()
+            ->required();
     }
 }

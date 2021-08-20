@@ -90,7 +90,7 @@ class SeriesController
                 'series' => $series,
                 'nextEvent' => $nextEvent,
                 'events' => $series->events()->upcoming()->published()->get(),
-                'pastEvents' => $series->events()->published()->finished()->limit(10)->orderBy('startDate', 'desc')->get(),
+                'pastEvents' => $series->events()->published()->finished()->limit(10)->orderByStartDateDesc()->get(),
                 'canonicalUrl' => action('SeriesController@view', [ $seriesId ])
             ]
         );

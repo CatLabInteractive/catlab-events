@@ -22,6 +22,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Api\V1\ResourceDefinitions\Events\EventDateResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
@@ -67,6 +68,7 @@ class EventController extends Controller
     {
         $this->setLayout('layouts.admin');
         $this->setChildController(TicketCategoryResourceDefinition::class, TicketCategoryController::class);
+        $this->setChildController(EventDateResourceDefinition::class, EventDateController::class);
     }
 
     /**
