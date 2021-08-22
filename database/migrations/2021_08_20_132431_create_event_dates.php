@@ -24,6 +24,8 @@ class CreateEventDates extends Migration
             $table->dateTime('endDate');
             $table->dateTime('doorsDate')->nullable();
 
+            $table->integer('max_tickets')->nullable()->unsigned();
+
             $table->timestamps();
             $table->softDeletes();
 
@@ -31,12 +33,13 @@ class CreateEventDates extends Migration
 
         DB::statement("
             INSERT INTO event_dates 
-                (event_id, startDate, endDate, doorsDate, created_at, updated_at)
+                (event_id, startDate, endDate, doorsDate, max_tickets, created_at, updated_at)
             SELECT
                 id,
                 startDate,
                 endDate,
                 doorsDate,
+                max_tickets,
                 now(),
                 now()
             FROM
@@ -54,18 +57,32 @@ class CreateEventDates extends Migration
 
         });
 
-        Schema::table('event_ticket_categories', function (Blueprint $table) {
+        Schema::create('event_ticket_categories_dates', function (Blueprint $table) {
 
-            $table->unsignedInteger('event_date_id')->nullable()->after('event_id');
+            $table->increments('id');
+
+            $table->unsignedInteger('event_ticket_category_id');
+            $table->foreign('event_ticket_category_id')->references('id')->on('event_ticket_categories');
+
+            $table->unsignedInteger('event_date_id');
             $table->foreign('event_date_id')->references('id')->on('event_dates');
+
+            $table->timestamps();
 
         });
 
         DB::statement("
-            UPDATE event_ticket_categories
+            INSERT INTO event_ticket_categories_dates 
+                (event_ticket_category_id, event_date_id, created_at, updated_at)
+            SELECT
+                event_ticket_categories.id,
+                event_dates.id,
+                NOW(),
+                NOW()
+            FROM
+                event_ticket_categories
             LEFT JOIN event_dates ON event_ticket_categories.event_id = event_dates.event_id
-            SET 
-                event_ticket_categories.event_date_id = event_dates.id
+            WHERE event_dates.event_id IS NOT NULL
         ");
     }
 
@@ -76,13 +93,6 @@ class CreateEventDates extends Migration
      */
     public function down()
     {
-        Schema::table('event_ticket_categories', function (Blueprint $table) {
-
-            $table->dropForeign('event_ticket_categories_event_date_id_foreign');
-            $table->dropColumn('event_date_id');
-
-        });
-
         Schema::table('events', function (Blueprint $table) {
 
             $table->dateTime('startDate')->nullable();
@@ -100,6 +110,7 @@ class CreateEventDates extends Migration
                 events.doorsDate = event_dates.doorsDate;
         ");
 
+        Schema::dropIfExists('event_ticket_categories_dates');
         Schema::dropIfExists("event_dates");
     }
 }

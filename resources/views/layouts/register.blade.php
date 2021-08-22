@@ -11,13 +11,26 @@
         <div class="row">
 
             <div class="col-md-12">
-                @if($event->startDate)
-                    <div class="col-md-3 hero-small-date text-center">
-                        <h3>{{ $event->startDate->format('d') }}</h3>
-                        <h4>{{ $event->startDate->formatLocalized('%B %Y') }}</h4>
-                    </div>
+                @if($event->eventDates->count() > 0)
 
-                    <div class="col-md-9 hero-small-date-content">
+                    <?php $_eventDates = isset($ticketCategory) ? $ticketCategory->eventDates : $event->eventDates; ?>
+
+                    @if(count($_eventDates) === 1)
+                        <div class="col-md-3 hero-small-date text-center">
+                            <h3>{{ $_eventDates[0]->startDate->format('d') }}</h3>
+                            <h4>{{ $_eventDates[0]->startDate->formatLocalized('%B %Y') }}</h4>
+                        </div>
+                        <div class="col-md-9 hero-small-date-content">
+                    @else
+                        @foreach($_eventDates as $eventDate)
+                            <div class="col-md-{{ ceil(12 / count($_eventDates)) }} hero-small-date text-center">
+                                <h3>{{ $eventDate->startDate->format('d') }}</h3>
+                                <h4>{{ $eventDate->startDate->formatLocalized('%B %Y') }}</h4>
+                            </div>
+                        @endforeach
+                        <div class="col-md-12 hero-small-date-content">
+                    @endif
+
                 @else
                     <div class="col-md-12 hero-small-date-content">
                 @endif

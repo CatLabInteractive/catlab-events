@@ -1,9 +1,9 @@
 <h3>Quiz kalender</h3>
 @if(!empty($cities))
     <p>
-        Ben je op zoek naar een leuke groepsactiviteit in {{ implode($cities, ', ') }}
+        Ben je op zoek naar een leuke groepsactiviteit in {{ implode(', ', $cities) }}
         of weet je even niet wat te doen?
-        Wij organiseren vast de leukste quizzes van {{ implode($cities, ', ') }}!
+        Wij organiseren vast de leukste quizzes van {{ implode(', ', $cities) }}!
     </p>
 @endif
 

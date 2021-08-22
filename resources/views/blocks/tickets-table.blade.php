@@ -41,7 +41,20 @@
     <?php $first = true; ?>
     @foreach($ticketCategories as $ticketCategory)
         <tr <?php if($first) { $first = false; } else { echo 'class="inactive"'; } ?> >
-            <td >{{ $ticketCategory->name }}</td>
+            <td >
+                {{ $ticketCategory->name }}
+                @if($ticketCategory->eventDates->count() > 0)
+                    <br />
+                    <small>
+                    {{ $ticketCategory
+                        ->eventDates
+                        ->pluck('startDate')
+                        ->map(function(DateTime $v) { return $v->format('d/m/Y'); })
+                        ->join(', ')
+                      }}
+                    </small>
+                @endif
+            </td>
             <td >
                 {{ $ticketCategory->getFormattedTotalPrice() }}
             </td>

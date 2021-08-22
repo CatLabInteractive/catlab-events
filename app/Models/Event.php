@@ -219,11 +219,12 @@ class Event extends Model implements EuklesModel
     public function scopeUpcoming($builder)
     {
         $builder->whereIn('events.id', function($query) {
-            $query->select('event_id')
+            $query->select('upcoming_event_dates.event_id')
                 ->from('event_dates as upcoming_event_dates')
                 ->whereRaw('upcoming_event_dates.event_id = events.id')
                 ->where('upcoming_event_dates.endDate', '>', new \DateTime())
-                ->orWhereNull('upcoming_event_dates.endDate');
+                ->orWhereNull('upcoming_event_dates.endDate')
+                ->groupBy('upcoming_event_dates.event_id');
         });
     }
 
@@ -255,8 +256,7 @@ class Event extends Model implements EuklesModel
      */
     public function scopeOrderByStartDate($builder, $direction = 'asc')
     {
-        $builder->select('events.*');
-        $builder->leftJoin('event_dates as edo', 'events.id', '=', 'edo.event_id');
+        $builder->leftJoin(\DB::raw('(SELECT event_id, MIN(startDate) as startDate FROM event_dates GROUP BY event_id) AS edo'), 'events.id', '=', 'edo.event_id');
         $builder->orderBy('edo.startDate', $direction);
     }
 

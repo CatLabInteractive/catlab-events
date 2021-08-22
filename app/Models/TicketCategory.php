@@ -69,11 +69,31 @@ class TicketCategory extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\belongsToMany
      */
-    public function eventDate()
+    public function eventDates()
     {
-        return $this->belongsTo(EventDate::class);
+        return $this->belongsToMany(
+            EventDate::class,
+            'event_ticket_categories_dates',
+            'event_ticket_category_id',
+            'event_date_id'
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public function getDateRangeForDisplay()
+    {
+        $min = $this->eventDates->pluck('startDate')->min();
+        $max = $this->eventDates->pluck('endDate')->max();
+
+        if ($min->format('Y-m-d') === $max->format('Y-m-d')) {
+            return [ $min ];
+        } else {
+            return [ $min, $max ];
+        }
     }
 
     /**
