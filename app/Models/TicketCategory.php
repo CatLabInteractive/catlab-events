@@ -191,6 +191,34 @@ class TicketCategory extends Model implements EuklesModel
     }
 
     /**
+     * @return int
+     */
+    public function countSoldTickets()
+    {
+        return $this
+            ->orders()
+            ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
+            ->count();
+    }
+
+    /**
+     * @return int
+     */
+    public function countSoldEventDateTickets()
+    {
+        if (count($this->eventDates) === 0) {
+            return $this->countSoldTickets();
+        }
+
+        $total = 0;
+        foreach ($this->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            $total += $eventDate->countSoldTickets();
+        }
+        return $total;
+    }
+
+    /**
      * @return bool
      * @throws \Exception
      */
@@ -354,8 +382,8 @@ class TicketCategory extends Model implements EuklesModel
      */
     public function getEuklesAttributes()
     {
-        $availableTickets = $this->countAvailableTickets(false);
-        $soldTickets = $this->countSoldTickets(false);
+        $availableTickets = $this->countAvailableTickets();
+        $soldTickets = $this->countSoldEventDateTickets();
 
         return [
             'start' => $this->startDate ? $this->startDate->format('c') : null,
