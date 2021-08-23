@@ -370,6 +370,14 @@ class TicketCategory extends Model implements EuklesModel
     }
 
     /**
+     * @return bool
+     */
+    public function hasFiniteTickets()
+    {
+        return $this->max_tickets > 0;
+    }
+
+    /**
      * @return array[]|mixed
      */
     public function getEuklesId()

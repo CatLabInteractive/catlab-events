@@ -64,7 +64,6 @@ class Event extends Model implements EuklesModel
         'is_published',
         'vat_percentage',
         'include_ticket_fee',
-        'max_tickets',
         'registration',
         'requires_team'
     ];
@@ -310,11 +309,6 @@ class Event extends Model implements EuklesModel
      */
     public function countAvailableTickets($includePending = true)
     {
-        /*
-        if ($this->max_tickets) {
-            return $this->max_tickets - $this->countSoldTickets($includePending);
-        }*/
-
         if (count($this->eventDates) === 0) {
             return null;
         }
@@ -408,10 +402,6 @@ class Event extends Model implements EuklesModel
      */
     public function isLastTicketsWarning()
     {
-        if (!$this->hasFiniteTickets()) {
-            return false;
-        }
-
         if (!$this->hasTickets()) {
             return false;
         }
@@ -984,14 +974,6 @@ class Event extends Model implements EuklesModel
         return $this->organisation->uitpas &&
             $this->uitdb_event_id &&
             \UitDb::getUitPasService();
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasFiniteTickets()
-    {
-        return $this->max_tickets > 0;
     }
 
     /**
