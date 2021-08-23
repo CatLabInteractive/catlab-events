@@ -405,6 +405,7 @@ class TicketCategory extends Model implements EuklesModel
         $soldTickets = $this->countSoldEventDateTickets();
 
         return [
+            'name' => $this->name,
             'start' => $this->startDate ? $this->startDate->format('c') : null,
             'end' => $this->endDate ? $this->endDate->format('c') : null,
             'ticketsSold' => $soldTickets,
