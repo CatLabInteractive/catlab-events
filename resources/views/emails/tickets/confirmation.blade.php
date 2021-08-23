@@ -32,12 +32,12 @@
 
         @if($eventDate->doorsDate)
             <p>
-                Aanmelden kan vanaf <strong>{{ $eventDate->format('H:i') }}</strong>, de quiz zelf start stipt om
-                {{ $eventDate->format('H:i') }}.
+                Aanmelden kan vanaf <strong>{{ $eventDate->doorsDate->format('H:i') }}</strong>, de quiz zelf start stipt om
+                {{ $eventDate->startDate->format('H:i') }}.
             </p>
         @else
             <p>
-                De quiz start stipt om <strong>{{ $eventDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $eventDate->format('H:i') }} aan.
+                De quiz start stipt om <strong>{{ $eventDate->startDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $eventDate->format('H:i') }} aan.
             </p>
         @endif
 
