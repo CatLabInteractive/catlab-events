@@ -37,10 +37,10 @@
                 <td>{{ $order->event->name }}</td>
             </tr>
 
-            @if($order->event && $order->event->startDate)
+            @if(count($order->ticketCategory->eventDates) > 0)
                 <tr>
                     <td>Datum</td>
-                    <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
+                    <td>{{ $order->ticketCategory->getDatesForDisplay() }}</td>
                 </tr>
             @endif
 

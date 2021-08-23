@@ -28,7 +28,8 @@ abstract class SendEmail
             'order' => $order,
             'from' => \Auth::getUser(),
             'event' => $event,
-            'group' => $group
+            'group' => $group,
+            'ticketCategory' => $order->ticketCategory
         ];
 
         if ($event->confirmation_email && view()->exists($event->confirmation_email)) {

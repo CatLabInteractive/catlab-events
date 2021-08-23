@@ -87,7 +87,7 @@
         @if($order->event->startDate)
             <tr>
                 <td>Datum</td>
-                <td>{{ $order->event->startDate->format('d/m/Y H:i') }}</td>
+                <td>{{ $order->ticketCategory->getDatesForDisplay() }}</td>
             </tr>
         @endif
     </table>

@@ -41,7 +41,7 @@
                     <h2 class="banner-subtitle">
                         @if($event->venue)
 
-                            @if($event->startDate)
+                            @if(count($_eventDates) === 1)
                                 {{ $event->startDate->format('H:i') }} -
                             @endif
 

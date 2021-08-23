@@ -66,7 +66,8 @@ class OrderController extends Controller
             'orders/view',
             [
                 'order' => $order,
-                'orderData' => $orderData
+                'orderData' => $orderData,
+                'ticketCategory' => $order->ticketCategory
             ]
         );
     }

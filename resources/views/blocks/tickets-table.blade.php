@@ -46,12 +46,7 @@
                 @if($ticketCategory->eventDates->count() > 0)
                     <br />
                     <small>
-                    {{ $ticketCategory
-                        ->eventDates
-                        ->pluck('startDate')
-                        ->map(function(DateTime $v) { return $v->format('d/m/Y'); })
-                        ->join(', ')
-                      }}
+                    {{ $ticketCategory->getDatesForDisplay() }}
                     </small>
                 @endif
             </td>

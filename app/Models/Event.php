@@ -296,10 +296,21 @@ class Event extends Model implements EuklesModel
      */
     public function countAvailableTickets($includePending = true)
     {
+        /*
         if ($this->max_tickets) {
             return $this->max_tickets - $this->countSoldTickets($includePending);
+        }*/
+
+        if (count($this->eventDates) === 0) {
+            return null;
         }
-        return null;
+
+        $availableTickets = 0;
+        foreach ($this->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            $availableTickets += $eventDate->countAvailableTickets();
+        }
+        return $availableTickets;
     }
 
     /**
@@ -433,6 +444,7 @@ class Event extends Model implements EuklesModel
 
     /**
      * @return TicketCategory|null
+     * @throws \Exception
      */
     protected function getRelevantTicketCategory()
     {
@@ -495,6 +507,7 @@ class Event extends Model implements EuklesModel
 
     /**
      * @return DateTime
+     * @throws \Exception
      */
     public function getSaleStartDate()
     {
