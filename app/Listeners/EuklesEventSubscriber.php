@@ -90,7 +90,8 @@ class EuklesEventSubscriber
 
         $attributes = [
             'event' => $order->event,
-            'order' => $order
+            'order' => $order,
+            'ticketCategory' => $order->ticketCategory
         ];
 
         if ($order->group) {
@@ -132,7 +133,8 @@ class EuklesEventSubscriber
 
         $attributes = [
             'event' => $order->event,
-            'order' => $order
+            'order' => $order,
+            'ticketCategory' => $order->ticketCategory
         ];
 
         if ($order->group) {

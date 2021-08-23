@@ -24,6 +24,7 @@ namespace App\Models;
 
 use App\Tools\TicketPriceCalculator;
 use CatLab\Charon\Laravel\Database\Model;
+use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use DateTime;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Class TicketCategory
  * @package App\Models
  */
-class TicketCategory extends Model
+class TicketCategory extends Model implements EuklesModel
 {
     use SoftDeletes;
 
@@ -338,5 +339,38 @@ class TicketCategory extends Model
             ->pluck('startDate')
             ->map(function(DateTime $v) { return $v->format('d/m/Y H:i'); })
             ->join($separator);
+    }
+
+    /**
+     * @return array[]|mixed
+     */
+    public function getEuklesId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEuklesAttributes()
+    {
+        $availableTickets = $this->countAvailableTickets(false);
+        $soldTickets = $this->countSoldTickets(false);
+
+        return [
+            'start' => $this->startDate ? $this->startDate->format('c') : null,
+            'end' => $this->endDate ? $this->endDate->format('c') : null,
+            'ticketsSold' => $soldTickets,
+            'ticketsTotal' => $this->hasFiniteTickets() ? $availableTickets + $soldTickets : '∞',
+            'ticketsAvailable' => $this->hasFiniteTickets() ? $availableTickets : '∞'
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function getEuklesType()
+    {
+        return 'ticketCategory';
     }
 }

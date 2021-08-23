@@ -1092,19 +1092,13 @@ class Event extends Model implements EuklesModel
      */
     public function getEuklesAttributes()
     {
-        $availableTickets = $this->countAvailableTickets(false);
-        $soldTickets = $this->countSoldTickets(false);
-
         $out = [
             'uid' => $this->id,
             'name' => $this->name,
             'url' => $this->getUrl(),
             'start' => $this->startDate ? $this->startDate->format('c') : null,
             'end' => $this->endDate ? $this->endDate->format('c') : null,
-            'facebookEventUrl' => $this->getFacebookEventUrl(),
-            'ticketsSold' => $soldTickets,
-            'ticketsTotal' => $this->hasFiniteTickets() ? $availableTickets + $soldTickets : '∞',
-            'ticketsAvailable' => $this->hasFiniteTickets() ? $availableTickets : '∞'
+            'facebookEventUrl' => $this->getFacebookEventUrl()
         ];
 
         if ($this->venue) {
