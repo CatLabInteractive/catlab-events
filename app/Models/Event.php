@@ -216,15 +216,26 @@ class Event extends Model implements EuklesModel
      * @return mixed
      * @throws \Exception
      */
-    public function scopeUpcoming($builder)
+    public function scopeUpcoming(\Illuminate\Database\Eloquent\Builder $builder)
     {
-        $builder->whereIn('events.id', function($query) {
-            $query->select('upcoming_event_dates.event_id')
-                ->from('event_dates as upcoming_event_dates')
-                ->whereRaw('upcoming_event_dates.event_id = events.id')
-                ->where('upcoming_event_dates.endDate', '>', new \DateTime())
-                ->orWhereNull('upcoming_event_dates.endDate')
-                ->groupBy('upcoming_event_dates.event_id');
+        $builder->where(function(\Illuminate\Database\Eloquent\Builder $builder) {
+
+            $builder->whereIn('events.id', function($query) {
+                $query->select('upcoming_event_dates.event_id')
+                    ->from('event_dates as upcoming_event_dates')
+                    ->whereRaw('upcoming_event_dates.event_id = events.id')
+                    ->where('upcoming_event_dates.endDate', '>', new \DateTime())
+                    ->orWhereNull('upcoming_event_dates.endDate')
+                    ->groupBy('upcoming_event_dates.event_id');
+            });
+
+            $builder->orWhereIn('events.id', function($query) {
+                $query->select('no_dates_event.id')
+                    ->from('events as no_dates_event')
+                    ->leftJoin('event_dates', 'no_dates_event.id', '=', 'event_dates.event_id')
+                    ->whereNull('event_dates.event_id');
+            });
+
         });
     }
 
@@ -274,6 +285,9 @@ class Event extends Model implements EuklesModel
      */
     public function isFinished()
     {
+        if (!$this->endDate) {
+            return false;
+        }
         return $this->endDate < (new DateTime());
     }
 

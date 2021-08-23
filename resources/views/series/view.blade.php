@@ -260,8 +260,8 @@
                             </div>
                             <div class="col-md-9 hero-small-date-content">
                                 <h2 class="banner-title">
-                                    <a href="{{ $v->getUrl() }}">{{ $v->name }}</a>
-                                    @if($v->isSoldOut(true))
+                                    <a href="{{ $event->getUrl() }}">{{ $event->name }}</a>
+                                    @if($event->isSoldOut(true))
                                         <span class="lastTickets">Uitverkocht!</span>
                                     @endif
                                 </h2>
