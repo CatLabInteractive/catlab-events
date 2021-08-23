@@ -321,6 +321,29 @@ class Event extends Model implements EuklesModel
         return $availableTickets;
     }
 
+    public function hasFiniteTickets()
+    {
+        if (count($this->eventDates) === 0) {
+            return false;
+        }
+
+        foreach ($this->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            if ($eventDate->hasFiniteTickets()) {
+                return true;
+            }
+        }
+
+        foreach ($this->ticketCategories as $ticketCategory) {
+            /** @var TicketCategory $ticketCategory */
+            if ($ticketCategory->hasFiniteTickets()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @param bool $includePendingTickets
      * @return bool
@@ -403,6 +426,10 @@ class Event extends Model implements EuklesModel
     public function isLastTicketsWarning()
     {
         if (!$this->hasTickets()) {
+            return false;
+        }
+
+        if (!$this->hasFiniteTickets()) {
             return false;
         }
 

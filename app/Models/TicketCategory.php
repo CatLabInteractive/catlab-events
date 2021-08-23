@@ -374,7 +374,18 @@ class TicketCategory extends Model implements EuklesModel
      */
     public function hasFiniteTickets()
     {
-        return $this->max_tickets > 0;
+        if ($this->max_tickets > 0) {
+            return true;
+        }
+
+        foreach ($this->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            if ($eventDate->hasFiniteTickets()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

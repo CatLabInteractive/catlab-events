@@ -105,6 +105,14 @@ class EventDate extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function hasFiniteTickets()
+    {
+        return $this->max_tickets > 0;
+    }
+
+    /**
      * @return int|null
      */
     public function countAvailableTickets()
