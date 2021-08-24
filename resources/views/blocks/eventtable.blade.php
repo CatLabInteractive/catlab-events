@@ -49,6 +49,8 @@
             <td>
                 @if($v->venue)
                     <a href="{{ $v->venue->getLocalUrl() }}">{{ $v->venue->name }}</a>
+                @else
+                    {{ $v->getNonVenueLocation() }}
                 @endif
             </td>
         </tr>

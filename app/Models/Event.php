@@ -267,6 +267,8 @@ class Event extends Model implements EuklesModel
     public function scopeOrderByStartDate($builder, $direction = 'asc')
     {
         $builder->leftJoin(\DB::raw('(SELECT event_id, MIN(startDate) as startDate FROM event_dates GROUP BY event_id) AS edo'), 'events.id', '=', 'edo.event_id');
+
+        $builder->orderBy(\DB::raw('edo.startDate IS NULL'), $direction);
         $builder->orderBy('edo.startDate', $direction);
     }
 
@@ -953,6 +955,27 @@ class Event extends Model implements EuklesModel
             return null;
         }
         return $this->livestream->getLivestreamUrl();
+    }
+
+    /**
+     * Give a description of where this event will take place
+     * @return string
+     */
+    public function getNonVenueLocation()
+    {
+        if ($this->venue) {
+            return $this->venue->name;
+        }
+
+        if ($this->getLiveStreamUrl()) {
+            return 'online';
+        }
+
+        if ($this->isQuizWitzCampaign()) {
+            return 'quizpakket';
+        }
+
+        return 'online';
     }
 
     /**
