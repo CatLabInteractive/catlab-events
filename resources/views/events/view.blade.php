@@ -219,7 +219,7 @@
         </section>
     @endif
 
-    @if(isset($eventDateAttendees))
+    @if(isset($eventDateAttendees) && $eventDateAttendees['maxGroups'] > 0)
         <section>
             <div class="container">
                 <div class="row">
