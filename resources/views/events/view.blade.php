@@ -152,12 +152,8 @@
     @if($event->canRegister())
         <section>
             <div class="container">
-
                 <div class="row">
-
-
                         <div class="col-md-12">
-
                             <p class="intro-title">
                                 @if($event->startDate)
                                     {{ $event->startDate->formatLocalized('%-d %B %Y') }}, {{ $event->startDate->format('H:i') }}
@@ -229,7 +225,7 @@
                         <table class="table">
                             <tr>
                                 @foreach($eventDateAttendees['eventDates'] as $v)
-                                    <th>{{ $v['date']->format('d/M') }}</th>
+                                    <th>{{ ucfirst($v['date']->formatLocalized('%A %-d %B')) }}</th>
                                 @endforeach
                             </tr>
 
