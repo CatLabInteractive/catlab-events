@@ -224,6 +224,7 @@
                         <h3>Deelnemers</h3>
                         <table class="table">
                             <tr>
+                                <th>#</th>
                                 @foreach($eventDateAttendees['eventDates'] as $v)
                                     <th>{{ ucfirst($v['date']->formatLocalized('%A %-d %B')) }}</th>
                                 @endforeach
@@ -231,6 +232,7 @@
 
                             @for($i = 0; $i < $eventDateAttendees['maxGroups']; $i ++)
                                 <tr>
+                                    <td>{{$i + 1}}</td>
                                     @foreach($eventDateAttendees['eventDates'] as $v)
                                         <td>
                                             @if(isset($v['groups'][$i]))
