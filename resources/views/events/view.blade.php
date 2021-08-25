@@ -228,18 +228,18 @@
                         <h3>Deelnemers</h3>
                         <table class="table">
                             <tr>
-                                @foreach($eventDateAttendees['eventDates'] as $attendeeEventDate)
-                                    <th>{{ $attendeeEventDate['date']->format('d/M') }}</th>
+                                @foreach($eventDateAttendees['eventDates'] as $v)
+                                    <th>{{ $v['date']->format('d/M') }}</th>
                                 @endforeach
                             </tr>
 
                             @for($i = 0; $i < $eventDateAttendees['maxGroups']; $i ++)
                                 <tr>
-                                    @foreach($eventDateAttendees['eventDates'] as $attendeeEventDate)
+                                    @foreach($eventDateAttendees['eventDates'] as $v)
                                         <td>
-                                            @if($attendeeEventDate['eventDates']['groups'][$i])
-                                                <a href="{{ $attendeeEventDate['eventDates']['groups'][$i]->getUrl() }}">
-                                                    {{ $attendeeEventDate['eventDates']['groups'][$i]->name }}
+                                            @if(isset($v['groups'][$i]))
+                                                <a href="{{ $v['groups'][$i]->getUrl() }}">
+                                                    {{ $v['groups'][$i]->name }}
                                                 </a>
                                             @endif
                                         </td>

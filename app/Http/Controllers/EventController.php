@@ -316,7 +316,7 @@ class EventController extends Controller
             /** @var EventDate $eventDate */
             $attendees = $eventDate->attendees()->get();
             $out['maxGroups'] = max($out['maxGroups'], $attendees->count());
-            $out[] = [
+            $out['eventDates'][] = [
                 'date' => $eventDate->startDate,
                 'groups' => $attendees
             ];
