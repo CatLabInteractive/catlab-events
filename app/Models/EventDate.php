@@ -134,4 +134,25 @@ class EventDate extends Model
             ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
             ->count();
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function attendees()
+    {
+        $orderGroupIds = $this->orders()
+            ->accepted()
+            ->whereNotNull('group_id')
+            ->pluck('group_id')
+            ->toArray();
+
+        if (count($orderGroupIds) > 0) {
+            return Group
+                ::whereIn('id', $orderGroupIds)
+                ->orderByRaw("FIELD(id, " . implode(',', $orderGroupIds) . ")");
+        } else {
+            return Group
+                ::whereIn('id', $orderGroupIds);
+        }
+    }
 }

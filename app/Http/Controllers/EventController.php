@@ -24,6 +24,7 @@ namespace App\Http\Controllers;
 
 use App\Events\PreparingOrder;
 use App\Models\Event;
+use App\Models\EventDate;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\Organisation;
@@ -269,7 +270,6 @@ class EventController extends Controller
 
         $isAdmin = $user && $user->isAdmin();
         if ($isAdmin) {
-            $attendees = $event->attendees()->get();
             $showAvailableTickets = true;
         }
 
@@ -289,12 +289,40 @@ class EventController extends Controller
         return view('events.view', [
             'event' => $event,
             'nextEvent' => $event,
-            'attendees' => $attendees,
             'showAvailableTickets' => $showAvailableTickets,
             'isAdmin' => $isAdmin,
             'ticketCategories' => $ticketCategories,
-            'canonicalUrl' => $event->getUrl()
+            'canonicalUrl' => $event->getUrl(),
+            'eventDateAttendees' => $this->buildEventDateAttendees($event)
         ]);
+    }
+
+    /**
+     * @param Event $event
+     * @return array|false
+     */
+    protected function buildEventDateAttendees(Event $event)
+    {
+        if (count($event->eventDates) === 0) {
+            return false;
+        }
+
+        $out = [
+            'eventDates' => [],
+            'maxGroups' => 0
+        ];
+
+        foreach ($event->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            $attendees = $eventDate->attendees()->get();
+            $out['maxGroups'] = max($out['maxGroups'], $attendees->count());
+            $out[] = [
+                'date' => $eventDate->startDate,
+                'groups' => $attendees
+            ];
+        }
+
+        return $out;
     }
 
     /**

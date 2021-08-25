@@ -219,33 +219,33 @@
         </section>
     @endif
 
-    @if($attendees && count($attendees) > 0)
-
+    @if(isset($eventDateAttendees))
         <section>
             <div class="container">
                 <div class="row">
 
                     <div class="col-md-12">
                         <h3>Deelnemers</h3>
-                        @if($isAdmin)
-                            <a href="{{ action('Admin\EventController@exportMembers', [ $event->id ]) }}" class="btn btn-default">Email
-                                csv</a>
-                            <a href="{{ action('Admin\EventController@exportSales', [ $event->id ]) }}" class="btn btn-default">Deelnemers
-                                csv</a>
-                            <a href="{{ action('Admin\EventController@exportSalesTimeline', [ $event->id ]) }}" class="btn btn-default">Historiek registraties</a>
-                            <a href="{{ action('Admin\EventController@exportClearing', [ $event->id ]) }}" class="btn btn-default">Clearing
-                                pdf</a>
-                            <br><br>
-                        @endif
-
                         <table class="table">
-                            @foreach($attendees as $attendee)
+                            <tr>
+                                @foreach($eventDateAttendees['eventDates'] as $attendeeEventDate)
+                                    <th>{{ $attendeeEventDate['date']->format('d/M') }}</th>
+                                @endforeach
+                            </tr>
+
+                            @for($i = 0; $i < $eventDateAttendees['maxGroups']; $i ++)
                                 <tr>
-                                    <td>
-                                        <a href="{{ $attendee->getUrl() }}">{{ $attendee->name }}</a>
-                                    </td>
+                                    @foreach($eventDateAttendees['eventDates'] as $attendeeEventDate)
+                                        <td>
+                                            @if($attendeeEventDate['eventDates']['groups'][$i])
+                                                <a href="{{ $attendeeEventDate['eventDates']['groups'][$i]->getUrl() }}">
+                                                    {{ $attendeeEventDate['eventDates']['groups'][$i]->name }}
+                                                </a>
+                                            @endif
+                                        </td>
+                                    @endforeach
                                 </tr>
-                            @endforeach
+                            @endfor
                         </table>
                     </div>
 
@@ -253,7 +253,6 @@
                 </div>
             </div>
         </section>
-
     @endif
 
     <?php
