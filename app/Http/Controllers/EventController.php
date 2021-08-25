@@ -269,8 +269,10 @@ class EventController extends Controller
         }
 
         $isAdmin = $user && $user->isAdmin();
+        $eventDateAttendees = false;
         if ($isAdmin) {
             $showAvailableTickets = true;
+            $eventDateAttendees = $this->buildEventDateAttendees($event);
         }
 
         $ticketCategories = $event->ticketCategories->sort(function(TicketCategory $a, TicketCategory $b) {
@@ -293,7 +295,7 @@ class EventController extends Controller
             'isAdmin' => $isAdmin,
             'ticketCategories' => $ticketCategories,
             'canonicalUrl' => $event->getUrl(),
-            'eventDateAttendees' => $this->buildEventDateAttendees($event)
+            'eventDateAttendees' => $eventDateAttendees
         ]);
     }
 
