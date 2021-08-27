@@ -59,7 +59,9 @@ class SendCancelConfirmation extends SendEmail
         // Send email
         if ($order->group) {
             foreach ($order->group->members as $member) {
-                $this->sendCancellationEmail($order, $member->user);
+                if ($member->user) {
+                    $this->sendCancellationEmail($order, $member->user);
+                }
             }
         } else {
             $this->sendCancellationEmail($order, $order->user);
