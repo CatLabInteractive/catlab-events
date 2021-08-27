@@ -60,7 +60,9 @@ class SendConfirmationEmail extends SendEmail
         try {
             if ($order->group) {
                 foreach ($order->group->members as $member) {
-                    $this->sendConfirmationEmail($order, $order->event, $member->user);
+                    if ($member->user) {
+                        $this->sendConfirmationEmail($order, $order->event, $member->user);
+                    }
                 }
             } else {
                 $this->sendConfirmationEmail($order, $order->event, $order->user);
