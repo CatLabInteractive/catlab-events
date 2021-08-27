@@ -21,6 +21,7 @@
         @endif
     </div>
 
+    @include('livestream.help')
     @include('livestream.footer')
 
 @endsection
