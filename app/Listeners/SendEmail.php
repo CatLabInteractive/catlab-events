@@ -7,6 +7,8 @@ use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
 use CatLab\Accounts\Client\ApiClient;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class SendEmail
@@ -43,11 +45,15 @@ abstract class SendEmail
         /** @var User $user */
         $apiClient = new ApiClient($user);
 
-        $apiClient->sendEmail(
-            $event->name . ': We zijn er bij!',
-            $view->render(),
-            $user->email
-        );
+        try {
+            $apiClient->sendEmail(
+                $event->name . ': We zijn er bij!',
+                $view->render(),
+                $user->email
+            );
+        } catch (RequestException $e) {
+            \Log::error($e);
+        }
     }
 
     /**
@@ -75,10 +81,14 @@ abstract class SendEmail
         $user = $order->user;
         $apiClient = new ApiClient($user);
 
-        $apiClient->sendEmail(
-            $order->event->name . ': We zijn er niet bij :(',
-            $view->render(),
-            $user->email
-        );
+        try {
+            $apiClient->sendEmail(
+                $order->event->name . ': We zijn er niet bij :(',
+                $view->render(),
+                $user->email
+            );
+        } catch (RequestException $e) {
+            \Log::error($e);
+        }
     }
 }
