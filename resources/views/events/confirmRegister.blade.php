@@ -99,7 +99,7 @@
 
             @if($group)
                 <tr>
-                    <td>Team</td>
+                    <td style="width: 33%">Team</td>
                     <td>{{ $group->name }}</td>
                 </tr>
             @endif
@@ -109,17 +109,24 @@
                 <td>{{ $event->name }}</td>
             </tr>
 
-            @if($event->startDate)
+            @if($ticketCategory->eventDates->count() > 0)
                 <tr>
                     <td>Datum</td>
-                    <td>{{ $event->startDate->format('d/m/Y H:i') }}</td>
+                    <td>{!!
+                        $ticketCategory
+                            ->eventDates->pluck('startDate')
+                            ->map(function($startDate) {
+                                return $startDate->format('d/m/Y H:i');
+                            })
+                            ->join('<br />')
+                    !!}</td>
                 </tr>
             @endif
 
             @if($event->venue)
                 <tr>
                     <td>Locatie</td>
-                    <td>{{ $event->venue->getAddressFull() }}</td>
+                    <td><address>{!! $event->venue->getAddressFull('<br />') !!}</address></td>
                 </tr>
             @endif
 

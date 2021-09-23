@@ -138,10 +138,12 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->expanded()
             ->linkable();
 
+        /*
         $this->field('max_tickets')
             ->visible()
             ->writeable(true, true)
             ->number();
+        */
 
         $this->field('fb_event_id')
             ->visible()

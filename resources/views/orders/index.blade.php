@@ -11,15 +11,15 @@
         <p>Je hebt nog geen tickets.</p>
     @else
 
-        <p>Tickets zijn pas geldig zodra ze online betaald zijn.</p>
+        <p>Tickets zijn pas geldig zodra ze online betaald zijn.</p>`
 
         <table class="table">
             @foreach($orders as $order)
 
                 <tr>
                     <td>
-                        @if($order->event && $order->event->startDate)
-                            {{ $order->event->startDate->format('d/m/Y H:i') }}
+                        @if($order->ticketCategory)
+                            {{ $order->ticketCategory->getDatesForDisplay() }}
                         @endif
                     </td>
 

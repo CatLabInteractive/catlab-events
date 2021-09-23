@@ -23,6 +23,8 @@
 namespace App\Models;
 
 use CatLab\Charon\Laravel\Database\Model;
+use DateTime;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -63,5 +65,65 @@ class EventDate extends Model
     public function getNameAttribute()
     {
         return $this->startDate->format('D d/m/Y H:i');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function ticketCategories()
+    {
+        return $this->belongsToMany(
+            TicketCategory::class,
+            'event_ticket_categories_dates',
+            'event_date_id',
+            'event_ticket_category_id',
+        );
+    }
+
+    /**
+     * @return Builder
+     */
+    public function orders()
+    {
+        return Order::whereIn('ticket_category_id', $this->ticketCategories->pluck('id'));
+    }
+
+    /**
+     * @return false
+     */
+    public function isSoldOut()
+    {
+        return $this->countAvailableTickets() === 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFinished()
+    {
+        return $this->endDate < (new DateTime());
+    }
+
+    /**
+     * @return int|null
+     */
+    public function countAvailableTickets()
+    {
+        if ($this->max_tickets) {
+            return $this->max_tickets - $this->countSoldTickets();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function countSoldTickets()
+    {
+        return $this
+            ->orders()
+            ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
+            ->count();
     }
 }

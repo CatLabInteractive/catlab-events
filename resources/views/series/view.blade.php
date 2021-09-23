@@ -45,13 +45,20 @@
                             <h1 class="banner-title">{{ $nextEvent->name }}</h1>
                             <h2 class="banner-subtitle">
                                 {{ $series->name }}
-                                @if($nextEvent->startDate)
-                                    <br />{{ $nextEvent->startDate->formatLocalized('%A %-d %B %Y, %k:%M') }}
+                            </h2>
+
+                            <div class="banner-desc">
+                                @if(count($nextEvent->eventDates) > 0)
+                                    <ul>
+                                        @foreach($nextEvent->eventDates as $eventDate)
+                                            <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }}</li>
+                                        @endforeach
+                                    </ul>
                                 @endif
                                 @if($nextEvent->venue)
-                                    <br />{{ $nextEvent->venue->getShortLocation() }}
+                                    {{ $nextEvent->venue->getShortLocation() }}
                                 @endif
-                            </h2>
+                            </div>
 
                             @if($urgencyMessage = $nextEvent->getUrgencyMessage())
                                 <span class="lastTickets">{{$urgencyMessage}}</span>
@@ -219,29 +226,31 @@
 
                 {{-- @component('blocks.newsletterbutton', [ 'text' => 'Hou me op de hoogte' ])@endcomponent --}}
 
-                @foreach($events as $v)
+                @foreach($events as $event)
 
-                    @if( $v->startDate)
-                        <div class="row">
-                            <div class="col-md-3 hero-small-date text-center">
-                                <h3>{{ $v->startDate->format('d') }}</h3>
-                                <h4>{{ $v->startDate->formatLocalized('%B %Y') }}</h4>
+                    @if(count($event->eventDates) > 0)
+                        @foreach( $event->eventDates as $v)
+                            <div class="row">
+                                <div class="col-md-3 hero-small-date text-center">
+                                    <h3>{{ $v->startDate->format('d') }}</h3>
+                                    <h4>{{ $v->startDate->formatLocalized('%B %Y') }}</h4>
+                                </div>
+                                <div class="col-md-9 hero-small-date-content">
+                                    <h2 class="banner-title">
+                                        <a href="{{ $event->getUrl() }}">{{ $event->name }}</a>
+                                        @if($v->isSoldOut(true))
+                                            <span class="lastTickets">Uitverkocht!</span>
+                                        @endif
+                                    </h2>
+                                    <p class="banner-subtitle">
+                                        {{ $v->startDate->format('H:i') }}
+                                        @if($event->venue) - {{ $event->venue->getShortLocation() }}@endif
+                                    </p>
+                                </div>
                             </div>
-                            <div class="col-md-9 hero-small-date-content">
-                                <h2 class="banner-title">
-                                    <a href="{{ $v->getUrl() }}">{{ $v->name }}</a>
-                                    @if($v->isSoldOut(true))
-                                        <span class="lastTickets">Uitverkocht!</span>
-                                    @endif
-                                </h2>
-                                <p class="banner-subtitle">
-                                    {{ $v->startDate->format('H:i') }}
-                                    @if($v->venue) - {{ $v->venue->getShortLocation() }}@endif
-                                </p>
-                            </div>
-                        </div>
 
-                        <br />
+                            <br />
+                        @endforeach
                     @else
 
                         <div class="row">

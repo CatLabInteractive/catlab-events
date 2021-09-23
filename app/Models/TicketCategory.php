@@ -69,11 +69,31 @@ class TicketCategory extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\belongsToMany
      */
-    public function eventDate()
+    public function eventDates()
     {
-        return $this->belongsTo(EventDate::class);
+        return $this->belongsToMany(
+            EventDate::class,
+            'event_ticket_categories_dates',
+            'event_ticket_category_id',
+            'event_date_id'
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public function getDateRangeForDisplay()
+    {
+        $min = $this->eventDates->pluck('startDate')->min();
+        $max = $this->eventDates->pluck('endDate')->max();
+
+        if ($min->format('Y-m-d') === $max->format('Y-m-d')) {
+            return [ $min ];
+        } else {
+            return [ $min, $max ];
+        }
     }
 
     /**
@@ -132,6 +152,44 @@ class TicketCategory extends Model
     }
 
     /**
+     * @return null|int
+     */
+    public function countAvailableTickets()
+    {
+        $eventAvailable = $this->countAvailableEventDateTickets();
+        if ($eventAvailable !== null && $eventAvailable <= 0) {
+            return 0;
+        }
+
+        if ($this->max_tickets) {
+            if ($eventAvailable !== null) {
+                return min($eventAvailable, $this->max_tickets - $this->countSoldTickets());
+            } else {
+                return $this->max_tickets - $this->countSoldTickets();
+            }
+        } elseif ($eventAvailable !== null) {
+            return $eventAvailable;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @return int|null
+     */
+    public function countAvailableEventDateTickets()
+    {
+        if (count($this->eventDates) === 0) {
+            return null;
+        }
+
+        return $this->eventDates
+            ->map(function(EventDate $eventDate) {
+                return $eventDate->countAvailableTickets();
+            })->min();
+    }
+
+    /**
      * @return bool
      * @throws \Exception
      */
@@ -171,6 +229,10 @@ class TicketCategory extends Model
      */
     public function getAvailableError()
     {
+        if ($this->event->isFinished()) {
+            return [ 'Te laat' ];
+        }
+
         if (!isset($this->availableError)) {
 
             $available = $this->countAvailableTickets();
@@ -236,41 +298,6 @@ class TicketCategory extends Model
     }
 
     /**
-     * @return int
-     */
-    public function countSoldTickets()
-    {
-        return $this
-            ->orders()
-            ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
-            ->count()
-        ;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function countAvailableTickets()
-    {
-        $eventAvailable = $this->event->countAvailableTickets();
-        if ($eventAvailable !== null && $eventAvailable <= 0) {
-            return 0;
-        }
-
-        if ($this->max_tickets) {
-            if ($eventAvailable !== null) {
-                return min($eventAvailable, $this->max_tickets - $this->countSoldTickets());
-            } else {
-                return $this->max_tickets - $this->countSoldTickets();
-            }
-        } elseif ($eventAvailable !== null) {
-            return $eventAvailable;
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * @return array
      */
     public function getJsonLD()
@@ -299,5 +326,17 @@ class TicketCategory extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * @param string $separator
+     */
+    public function getDatesForDisplay($separator = ', ')
+    {
+        return $this
+            ->eventDates
+            ->pluck('startDate')
+            ->map(function(DateTime $v) { return $v->format('d/m/Y H:i'); })
+            ->join($separator);
     }
 }

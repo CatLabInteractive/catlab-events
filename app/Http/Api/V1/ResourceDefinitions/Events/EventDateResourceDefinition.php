@@ -59,5 +59,10 @@ class EventDateResourceDefinition extends BaseResourceDefinition
             ->visible(true)
             ->writeable()
             ->datetime();
+
+        $this->field('max_tickets')
+            ->visible(true)
+            ->writeable(true, true)
+            ->number();
     }
 }

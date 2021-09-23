@@ -15,27 +15,33 @@
         We zijn er bij!
     </p>
 
-    @if($event->venue)
-        <p>
-            Op <strong>{{ $event->startDate->format('d/m/Y') }}</strong> gaan we naar
-            <strong>{{ $event->venue->name }}</strong> om deel te nemen aan <strong>{{ $event->name }}</strong>.
-        </p>
-    @else
-        <p>
-            Op <strong>{{ $event->startDate->format('d/m/Y') }}</strong> spelen we <strong>{{ $event->name }}</strong>.
-        </p>
-    @endif
+    @foreach ($ticketCategory->eventDates as $eventDate)
 
-    @if($event->doorsDate)
-        <p>
-            Aanmelden kan vanaf <strong>{{ $event->doorsDate->format('H:i') }}</strong>, de quiz zelf start stipt om
-            {{ $event->startDate->format('H:i') }}.
-        </p>
-    @else
-        <p>
-            De quiz start stipt om <strong>{{ $event->startDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $event->startDate->format('H:i') }} aan.
-        </p>
-    @endif
+        <h3>{{ $eventDate->startDate->format('d/m/Y') }}</h3>
+        @if($event->venue)
+            <p>
+                Op <strong>{{ $eventDate->startDate->format('d/m/Y') }}</strong> gaan we naar
+                <strong>{{ $event->venue->name }}</strong> om deel te nemen aan <strong>{{ $event->name }}</strong>.
+            </p>
+        @else
+            <p>
+                Op <strong>{{ $eventDate->startDate->format('d/m/Y') }}</strong> spelen we <strong>{{ $event->name }}</strong>.
+            </p>
+        @endif
+
+
+        @if($eventDate->doorsDate)
+            <p>
+                Aanmelden kan vanaf <strong>{{ $eventDate->format('H:i') }}</strong>, de quiz zelf start stipt om
+                {{ $eventDate->format('H:i') }}.
+            </p>
+        @else
+            <p>
+                De quiz start stipt om <strong>{{ $eventDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $eventDate->format('H:i') }} aan.
+            </p>
+        @endif
+
+    @endforeach
 
     <h3>Voorbereiding</h3>
     <ul>
@@ -63,7 +69,7 @@
         </p>
 
         <p>
-            Meld je voor {{ $event->startDate->format('H:i') }} aan bij de inschrijvingstafel. Daar ontvang je de (geheime)
+            Meld je aan bij de inschrijvingstafel. Daar ontvang je de (geheime)
             team-code. Deze code is strikt persoonlijk; laat hem niet aan de andere teams zien. Daarna mag je zelf
             een tafeltje kiezen.
         </p>
