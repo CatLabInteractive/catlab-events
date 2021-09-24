@@ -53,25 +53,25 @@
                     @endif
 
                     @if(count($event->producers) > 0)
-                        <p><strong>Eindredactie:</strong>
+                        <p><strong>Eindredactie:</strong><br />
                             @foreach($event->producers as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
                         </p>
                     @endif
 
                     @if(count($event->authors) > 0)
-                        <p><strong>Auteurs:</strong>
+                        <p><strong>Auteurs:</strong><br />
                             @foreach($event->authors as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
                         </p>
                     @endif
 
                     @if(count($event->presenters) > 0)
-                        <p><strong>Presentatoren:</strong>
+                        <p><strong>Presentatoren:</strong><br />
                             @foreach($event->presenters as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
                         </p>
                     @endif
 
                     @if(count($event->musicians) > 0)
-                        <p><strong>Muziek:</strong>
+                        <p><strong>Muziek:</strong><br />
                             @foreach($event->musicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
                         </p>
                     @endif
