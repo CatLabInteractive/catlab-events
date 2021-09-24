@@ -45,6 +45,11 @@ abstract class SendEmail
         /** @var User $user */
         $apiClient = new ApiClient($user);
 
+        /* @TODO
+         * This is not okay as some group members might not have logged in for a long time and might thus have
+         * an expired access token, resulting in these emails not being send.
+         */
+
         try {
             $apiClient->sendEmail(
                 $event->name . ': We zijn er bij!',

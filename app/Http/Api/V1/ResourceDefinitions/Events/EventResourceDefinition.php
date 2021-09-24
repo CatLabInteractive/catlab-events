@@ -190,6 +190,12 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->expanded();
 
+        $this->relationship('producers', PersonResourceDefinition::class)
+            ->many()
+            ->visible()
+            ->expanded()
+            ->linkable();
+
         $this->relationship('authors', PersonResourceDefinition::class)
             ->many()
             ->visible()

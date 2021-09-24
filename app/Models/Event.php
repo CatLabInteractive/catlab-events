@@ -879,6 +879,14 @@ class Event extends Model implements EuklesModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
+    public function producers()
+    {
+        return $this->people()->wherePivot('role', '=', Person::ROLE_PRODUCER);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function authors()
     {
         return $this->people()->wherePivot('role', '=', Person::ROLE_AUTHOR);

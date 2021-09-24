@@ -52,6 +52,12 @@
                         </div>
                     @endif
 
+                    @if(count($event->producers) > 0)
+                        <p><strong>Eindredactie:</strong>
+                            @foreach($event->producers as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                        </p>
+                    @endif
+
                     @if(count($event->authors) > 0)
                         <p><strong>Auteurs:</strong>
                             @foreach($event->authors as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
@@ -215,7 +221,7 @@
         </section>
     @endif
 
-    @if(isset($eventDateAttendees) && $eventDateAttendees['maxGroups'] > 0)
+    @if(isset($eventDateAttendees) && $eventDateAttendees && $eventDateAttendees['maxGroups'] > 0)
         <section>
             <div class="container">
                 <div class="row">
