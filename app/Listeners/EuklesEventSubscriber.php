@@ -228,7 +228,7 @@ class EuklesEventSubscriber
                     'event' => $e->event
                 ]
             )
-                ->link($e->user, 'waitinglist', $this)
+                ->link($e->user, 'waitinglist', $e->event)
         );
     }
 

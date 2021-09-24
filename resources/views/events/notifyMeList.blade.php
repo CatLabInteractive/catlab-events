@@ -53,7 +53,6 @@
         <div class="alert alert-success">
             <p>
                 Je staat op de pre-registratielijst sinds {{ $waitingListItem->pivot->created_at->formatLocalized('%A %d %B %Y, %H:%M') }}.
-                We sturen je een dag voor de start van de ticketverkoop een mailtje.
             </p>
         </div>
 
