@@ -908,6 +908,11 @@ class Event extends Model implements EuklesModel
         return $this->people()->wherePivot('role', '=', Person::ROLE_MUSICIAN);
     }
 
+    public function saveManyProducers($children)
+    {
+        $this->saveManyPeople($children, Person::ROLE_PRODUCER);
+    }
+
     public function saveManyAuthors($children)
     {
         $this->saveManyPeople($children, Person::ROLE_AUTHOR);
