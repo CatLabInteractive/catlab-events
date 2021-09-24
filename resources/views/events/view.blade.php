@@ -52,6 +52,53 @@
                         </div>
                     @endif
 
+                        <div>
+                            <p>
+                                @if($event->event_url)
+                                    <a href="{{ $event->event_url }}" class="btn btn-default"><i class="fa fa-external-link"></i>  Meer informatie</a>
+                                @endif
+
+                                @if($event->getLiveStreamUrl() && !$event->hasTickets())
+                                    <a href="{{ $event->getLiveStreamUrl() }}" class="btn btn-primary"><i class="fa fa-play"></i> Livestream</a>
+                                @endif
+
+                                @if($event->hasScores())
+                                    <a href="{{ action('EventController@scores', [ $event->id ]) }}" class="btn btn-default">Eindscore</a>
+                                @endif
+
+                                @if($event->canRegister())
+                                    <a href="{{ action('EventController@selectTicketCategory', [ $event->id ]) }}"
+                                       class="btn btn-primary">{{ $event->getOrderLabel() }}</a>
+                                @endif
+
+                                @if($event->getFacebookEventUrl())
+                                    <a href="{{ $event->getFacebookEventUrl() }}" class="btn btn-primary" target="_blank"><i
+                                                class="fa fa-facebook"></i></a>
+                                @endif
+                            </p>
+                        </div>
+
+                        @if ($event->isSelling())
+                            <p class="price">
+                                @if($event->team_size)
+                                    Tickets: {!! $event->getFormattedPublishedPrice(true) !!} per team (max {{$event->team_size}} spelers)
+                                @else
+                                    Tickets: {!! $event->getFormattedPublishedPrice(true) !!}
+                                @endif
+
+                                <?php $priceDetails = $event->getPublishedPriceDetails(true); ?>
+                                @if($priceDetails)<br />
+                                <span class="details">*: {!! $priceDetails !!}</span>
+                                @endif
+                            </p>
+                        @endif
+
+                    <!--
+                    <p class="alert alert-success">Op zoek naar ploegmaten? Vind ze op
+                        <a href="https://www.quizploeg.com/">Quizzer zkt. ploeg</a>.</p>
+                        -->
+
+                        <h4>Credits</h4>
                     @if(count($event->producers) > 0)
                         <p><strong>Eindredactie:</strong><br />
                             @foreach($event->producers as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
@@ -90,52 +137,6 @@
                             </a>
                         </p>
                     @endif
-
-                    <div>
-                        <p>
-                            @if($event->event_url)
-                                <a href="{{ $event->event_url }}" class="btn btn-default"><i class="fa fa-external-link"></i>  Meer informatie</a>
-                            @endif
-
-                            @if($event->getLiveStreamUrl() && !$event->hasTickets())
-                                <a href="{{ $event->getLiveStreamUrl() }}" class="btn btn-primary"><i class="fa fa-play"></i> Livestream</a>
-                            @endif
-
-                            @if($event->hasScores())
-                                <a href="{{ action('EventController@scores', [ $event->id ]) }}" class="btn btn-default">Eindscore</a>
-                            @endif
-
-                            @if($event->canRegister())
-                                <a href="{{ action('EventController@selectTicketCategory', [ $event->id ]) }}"
-                                   class="btn btn-primary">{{ $event->getOrderLabel() }}</a>
-                            @endif
-
-                            @if($event->getFacebookEventUrl())
-                                <a href="{{ $event->getFacebookEventUrl() }}" class="btn btn-primary" target="_blank"><i
-                                            class="fa fa-facebook"></i></a>
-                            @endif
-                        </p>
-                    </div>
-
-                    @if ($event->isSelling())
-                        <p class="price">
-                            @if($event->team_size)
-                                Tickets: {!! $event->getFormattedPublishedPrice(true) !!} per team (max {{$event->team_size}} spelers)
-                            @else
-                                Tickets: {!! $event->getFormattedPublishedPrice(true) !!}
-                            @endif
-
-                            <?php $priceDetails = $event->getPublishedPriceDetails(true); ?>
-                            @if($priceDetails)<br />
-                                <span class="details">*: {!! $priceDetails !!}</span>
-                            @endif
-                        </p>
-                    @endif
-
-                        <!--
-                    <p class="alert alert-success">Op zoek naar ploegmaten? Vind ze op
-                        <a href="https://www.quizploeg.com/">Quizzer zkt. ploeg</a>.</p>
-                        -->
 
                 </div>
 
