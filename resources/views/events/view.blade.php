@@ -76,6 +76,12 @@
                         </p>
                     @endif
 
+                    @if(count($event->technicians) > 0)
+                        <p><strong>Technische ondersteuning:</strong><br />
+                            @foreach($event->technicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                        </p>
+                    @endif
+
                     @if($event->competition)
                         <p>
                             <strong>Competitie:</strong>

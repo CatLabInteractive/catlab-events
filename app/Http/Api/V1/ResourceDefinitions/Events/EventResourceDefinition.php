@@ -214,6 +214,12 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->expanded()
             ->linkable();
 
+        $this->relationship('technicians', PersonResourceDefinition::class)
+            ->many()
+            ->visible()
+            ->expanded()
+            ->linkable();
+
         $this->field('is_published')
             ->visible(true, true)
             ->writeable(false, true)

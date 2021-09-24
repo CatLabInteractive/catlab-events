@@ -38,6 +38,7 @@ class Person extends Model
     const ROLE_AUTHOR = 'author';
     const ROLE_PRESENTER = 'presenter';
     const ROLE_MUSICIAN = 'musician';
+    const ROLE_TECHNICIAN = 'technicians';
 
     use SoftDeletes;
 

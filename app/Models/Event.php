@@ -908,6 +908,14 @@ class Event extends Model implements EuklesModel
         return $this->people()->wherePivot('role', '=', Person::ROLE_MUSICIAN);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function technicians()
+    {
+        return $this->people()->wherePivot('role', '=', Person::ROLE_TECHNICIAN);
+    }
+
     public function saveManyProducers($children)
     {
         $this->saveManyPeople($children, Person::ROLE_PRODUCER);
@@ -926,6 +934,11 @@ class Event extends Model implements EuklesModel
     public function saveManyMusicians($children)
     {
         $this->saveManyPeople($children, Person::ROLE_MUSICIAN);
+    }
+
+    public function saveManyTechnicians($children)
+    {
+        $this->saveManyPeople($children, Person::ROLE_TECHNICIAN);
     }
 
     protected function saveManyPeople($children, $role)
