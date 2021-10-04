@@ -29,9 +29,8 @@ use App\Http\Api\V1\ResourceDefinitions\ScoreResourceDefinition;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
-use App\Models\Order;
 use CatLab\Charon\Enums\Action;
-use CatLab\Charon\Models\ResourceResponse;
+use CatLab\Charon\Laravel\Models\ResourceResponse;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use Illuminate\Http\Request;
@@ -154,17 +153,28 @@ class GroupController extends Controller implements FrontCrudControllerContract
         $this->authorize('merge', $group);
 
         $user = \Auth::getUser();
-        $otherGroups = Group::query()
-            ->where('groups.id', '!=', $group->id)
-            ->orderBy('name')
-            ->get()
-            ->filter(function(Group $group) use ($user) {
-                return $user->can('merge', $group);
-            })
-            ->mapWithKeys(function($v) {
-                return [ $v->id => $v->name ];
-            })
-        ;
+
+        if ($user->can('mergeAnyGroup', Group::class)) {
+            $otherGroups = Group::query()
+                ->where('groups.id', '!=', $group->id)
+                ->orderBy('name')
+                ->get()
+                ->filter(function(Group $group) use ($user) {
+                    return $user->can('merge', $group);
+                });
+        } else {
+            $otherGroups = $user->groups()
+                ->where('groups.id', '!=', $group->id)
+                ->orderBy('name')
+                ->get()
+                ->filter(function(Group $group) use ($user) {
+                    return $user->can('merge', $group);
+                });
+        }
+
+        $otherGroups = $otherGroups->mapWithKeys(function($v) {
+            return [ $v->id => $v->name ];
+        });
 
         return view('groups/merge', [
             'group' => $group,
@@ -215,6 +225,8 @@ class GroupController extends Controller implements FrontCrudControllerContract
         $response = $this->callApiMethod('merge', $request, [ $group->id ]);
         if ($response instanceof ResourceResponse) {
             return redirect(action('GroupController@show', [ $response->getResource()->getSource()->id ]));
+        } else {
+            return redirect(action('GroupController@index'));
         }
     }
 

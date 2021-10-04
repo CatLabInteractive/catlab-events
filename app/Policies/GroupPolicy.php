@@ -89,4 +89,14 @@ class GroupPolicy
     {
         return $user->isAdmin() || $group->isAdmin($user);
     }
+
+    /**
+     * When returning false, only the groups this use is in will be returned.
+     * @param User $user
+     * @return bool
+     */
+    public function mergeAnyGroup(User $user)
+    {
+        return $user->isAdmin();
+    }
 }
