@@ -23,6 +23,7 @@
 namespace App\Http\Api\V1\ResourceDefinitions\Groups;
 
 use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
+use App\Http\Api\V1\Validators\GroupMemberValidator;
 use App\Models\GroupMember;
 use CatLab\Charon\Models\ResourceDefinition;
 
@@ -63,5 +64,7 @@ class GroupMemberResourceDefinition extends BaseResourceDefinition
             ->visible(true)
             ->writeable(true, true)
             ->enum([ 'member', 'admin' ]);
+
+        $this->validator(new GroupMemberValidator());
     }
 }
