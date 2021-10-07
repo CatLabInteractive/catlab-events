@@ -223,7 +223,8 @@ class Event extends Model implements EuklesModel
                 $query->select('upcoming_event_dates.event_id')
                     ->from('event_dates as upcoming_event_dates')
                     ->whereRaw('upcoming_event_dates.event_id = events.id')
-                    ->whereDate('upcoming_event_dates.endDate', '>=', date('Y-m-d'))
+                    ->where('upcoming_event_dates.endDate', '>', new \DateTime())
+                    ->whereNull('upcoming_event_dates.deleted_at')
                     ->groupBy('upcoming_event_dates.event_id');
             });
 
