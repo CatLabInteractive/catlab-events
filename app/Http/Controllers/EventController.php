@@ -70,7 +70,9 @@ class EventController extends Controller
         $nextEvent = null;
         $nextEventIndex = 0;
         while ($nextEvent === null) {
-            $nextEvent = $organisation->events()->upcoming()
+            $nextEvent = $organisation
+                ->events()
+                ->upcoming()
                 ->published()
                 ->orderByStartDate()
                 ->skip($nextEventIndex)

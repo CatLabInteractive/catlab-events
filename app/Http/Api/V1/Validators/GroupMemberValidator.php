@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * CatLab Events - Event ticketing system
  * Copyright (C) 2017 Thijs Van der Schaeghe
  * CatLab Interactive bvba, Gent, Belgium
@@ -29,10 +29,10 @@ use CatLab\Requirements\Exceptions\ValidatorValidationException;
 use CatLab\Requirements\Models\Message;
 
 /**
- * Class GroupValidator
+ * Class GroupMemberValidator
  * @package App\Http\Api\V1\Validators
  */
-class GroupValidator extends ResourceValidator
+class GroupMemberValidator extends ResourceValidator
 {
     /**
      * @param $value
@@ -41,7 +41,7 @@ class GroupValidator extends ResourceValidator
      */
     public function validate($value)
     {
-        $this->checkUniqueGroupName($value);
+        $this->checkValidEmailAddress($value);
     }
 
     /**
@@ -50,32 +50,22 @@ class GroupValidator extends ResourceValidator
      */
     public function getErrorMessage(ValidatorValidationException $exception) : Message
     {
-        return new Message('Woops, te laat. Je teamnaam is niet uniek, kies alsjeblieft een andere teamnaam.', null, null);
+        return new Message('Gelieve een geldig email adres in te geven.', null, null);
     }
 
     /**
      * @param $value
      * @throws RequirementValidationException
      */
-    protected function checkUniqueGroupName($value)
+    protected function checkValidEmailAddress($value)
     {
         // no name set? That will be caught by the 'required' validator
-        if (!$value->getProperties()->getFromName('name')) {
+        if (!$value->getProperties()->getFromName('email')) {
             return;
         }
 
-        $groupName = $value->getProperties()->getFromName('name')->getValue();
-
-        // Look for a team with the same name
-        $existing = Group::similarName($groupName)->first();
-
-        if (isset($existing)) {
-            // check if we are trying to edit ourselves
-            if ($this->getOriginal() && $this->getOriginal()->id === $existing->id) {
-                return;
-            }
-
-            // No? Error!
+        $email = $value->getProperties()->getFromName('email')->getValue();
+        if (!filter_var( $email, FILTER_VALIDATE_EMAIL )) {
             throw ValidatorValidationException::make($this, $value);
         }
     }

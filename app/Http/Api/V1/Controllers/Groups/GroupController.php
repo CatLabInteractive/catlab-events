@@ -30,7 +30,7 @@ use App\Models\GroupMember;
 use App\Models\User;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Charon\Enums\Action;
-use CatLab\Charon\Models\ResourceResponse;
+use CatLab\Charon\Laravel\Models\ResourceResponse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;

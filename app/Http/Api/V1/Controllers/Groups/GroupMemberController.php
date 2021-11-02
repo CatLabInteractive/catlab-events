@@ -46,6 +46,7 @@ class GroupMemberController extends ResourceController
 
     /**
      * @param RouteCollection $routes
+     * @throws \CatLab\Charon\Exceptions\InvalidContextAction
      */
     public static function setRoutes(RouteCollection $routes)
     {
@@ -108,10 +109,11 @@ class GroupMemberController extends ResourceController
      * Called before saveEntity
      * @param Request $request
      * @param \Illuminate\Database\Eloquent\Model $entity
+     * @return Model
      */
     protected function afterSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity)
     {
-        if ($entity->email) {
+        if ($entity->email && filter_var( $entity->email, FILTER_VALIDATE_EMAIL )) {
             $apiClient = new ApiClient(\Auth::getUser());
 
             $attributes = [

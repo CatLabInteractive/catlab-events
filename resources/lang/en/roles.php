@@ -7,5 +7,5 @@ return [
 
     'authors' => 'Authors',
     'presentation' => 'Presentation',
-    'music' => 'Music'
+    'music' => 'Music',
 ];
