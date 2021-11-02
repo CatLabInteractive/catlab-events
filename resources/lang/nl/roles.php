@@ -7,5 +7,7 @@ return [
 
     'authors' => 'Auteurs',
     'presentation' => 'Presentatie',
-    'music' => 'Muziek'
+    'music' => 'Muziek',
+    'technicians' => 'Technieker',
+    'producer' => 'Eindredactie'
 ];
