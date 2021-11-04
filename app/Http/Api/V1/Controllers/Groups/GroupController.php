@@ -160,7 +160,7 @@ class GroupController extends ResourceController
             ]);
 
             $groupMember->user()->associate($user);
-            $groupMember->group()->associate($user);
+            //$groupMember->group()->associate($user);
 
             $group->addChildrenToEntity('members', [$groupMember]);
         }
