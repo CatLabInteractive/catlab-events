@@ -13,14 +13,14 @@
                 @endif
 
                 window.chatwootSettings = {
-                    locale: '{{ \App::getLocale() }}'
+                    locale: '{{ \App::getLocale() }}',
+                    position: 'left',
+                    type: 'expanded_bubble'
                 };
 
                 window.chatwootSDK.run({
                     websiteToken: websiteToken,
-                    baseUrl: BASE_URL,
-                    position: 'left',
-                    type: 'expanded_bubble'
+                    baseUrl: BASE_URL
                 })
             }
         })(document,"script");
