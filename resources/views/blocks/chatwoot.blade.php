@@ -18,7 +18,9 @@
 
                 window.chatwootSDK.run({
                     websiteToken: websiteToken,
-                    baseUrl: BASE_URL
+                    baseUrl: BASE_URL,
+                    position: 'left',
+                    type: 'expanded_bubble'
                 })
             }
         })(document,"script");
