@@ -22,6 +22,10 @@
 
 namespace App\Tools;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
 /**
  * Class StringHelper
  * @package App\Tools
@@ -46,5 +50,38 @@ class StringHelper
         $input = trim($input);
 
         return $input;
+    }
+
+    /**
+     * @param \DateTime[] $dates
+     */
+    public static function datesToDescription(Collection $dates)
+    {
+        $dates = $dates->sort();
+
+        $parts = [];
+        $hours = [];
+
+        foreach ($dates as $index => $date) {
+
+            // is the next date on the same day?
+            $next = $dates[$index + 1] ?? null;
+            if (!$next) {
+                $format = '%A %-d %B %Y';
+            } elseif ($next->format('m-Y') === $date->format('m-Y')) {
+                $format = '%A %-d';
+            } elseif ($next->format('m') === $date->format('m')) {
+                $format = '%A %-d %B';
+            }
+
+            $parts[] = $date->formatLocalized($format);
+        }
+
+        if (count($parts) === 1) {
+            return $parts[0];
+        }
+
+        $lastDate = array_pop($parts);
+        return Str::ucfirst(implode(', ', $parts) . ' & ' . $lastDate);
     }
 }

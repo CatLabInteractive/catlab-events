@@ -406,9 +406,10 @@ class EventController extends Controller
             return $a->price - $b->price;
         });
 
+        /*
         if (count($availableTickets) === 1) {
             return redirect(action('EventController@register', [ $event->id, $availableTickets[0]->id ]));
-        }
+        }*/
 
         return view('events.selectTicketCategory', [
             'event' => $event,

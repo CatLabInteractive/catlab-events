@@ -189,6 +189,19 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @return string
+     */
+    public function getEventDateDescription()
+    {
+        if (count($this->eventDates) > 0) {
+            $dates = $this->eventDates->pluck('startDate');
+            return StringHelper::datesToDescription($dates);
+        } else {
+            return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
+        }
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function attendees()

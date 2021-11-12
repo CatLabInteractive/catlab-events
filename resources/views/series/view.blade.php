@@ -51,7 +51,11 @@
                                 @if(count($nextEvent->eventDates) > 0)
                                     <ul>
                                         @foreach($nextEvent->eventDates as $eventDate)
-                                            <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }}</li>
+                                            @if($eventDate->isSoldOut())
+                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }} (Uitverkocht)</li>
+                                            @else
+                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }}</li>
+                                            @endif
                                         @endforeach
                                     </ul>
                                 @endif
