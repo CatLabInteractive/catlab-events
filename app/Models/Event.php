@@ -196,8 +196,10 @@ class Event extends Model implements EuklesModel
         if (count($this->eventDates) > 0) {
             $dates = $this->eventDates->pluck('startDate');
             return StringHelper::datesToDescription($dates);
-        } else {
+        } elseif ($this->startDate) {
             return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
+        } else {
+            return 'Quizpakket';
         }
     }
 
