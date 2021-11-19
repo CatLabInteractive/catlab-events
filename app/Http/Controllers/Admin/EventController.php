@@ -47,7 +47,9 @@ use PDF;
  */
 class EventController extends Controller
 {
-    use FrontCrudController;
+    use FrontCrudController {
+        index as frontIndex;
+    }
 
     /**
      * @param $path
@@ -78,6 +80,16 @@ class EventController extends Controller
     public function createApiController()
     {
         return new \App\Http\Api\V1\Controllers\Events\EventController();
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
+    {
+        $request->query->set('sort', '!id');
+        return $this->frontIndex($request);
     }
 
     /**
