@@ -37,7 +37,7 @@
             </p>
         @else
             <p>
-                De quiz start stipt om <strong>{{ $eventDate->startDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $eventDate->format('H:i') }} aan.
+                De quiz start stipt om <strong>{{ $eventDate->startDate->format('H:i') }}</strong>, meld je daarom zeker voor {{ $eventDate->startDate->format('H:i') }} aan.
             </p>
         @endif
 

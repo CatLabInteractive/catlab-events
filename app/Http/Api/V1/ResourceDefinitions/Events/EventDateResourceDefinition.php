@@ -48,11 +48,13 @@ class EventDateResourceDefinition extends BaseResourceDefinition
         $this->field('startDate')
             ->visible(true)
             ->writeable()
+            ->required()
             ->datetime();
 
         $this->field('endDate')
             ->visible(true)
             ->writeable()
+            ->required()
             ->datetime();
 
         $this->field('doorsDate')
