@@ -29,6 +29,7 @@ use App\Http\Api\V1\ResourceDefinitions\LiveStreamResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\PersonResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\SeriesResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\VenueResourceDefinition;
+use App\Http\Api\V1\Validators\EventValidator;
 use App\Models\Event;
 use Illuminate\Support\Str;
 
@@ -258,5 +259,7 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->visible(true, true)
             ->writeable(true, true)
             ->string();
+
+        $this->validator(new EventValidator());
     }
 }
