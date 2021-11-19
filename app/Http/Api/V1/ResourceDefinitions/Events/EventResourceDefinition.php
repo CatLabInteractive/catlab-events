@@ -172,6 +172,7 @@ class EventResourceDefinition extends BaseResourceDefinition
 
         $this->field('vat_percentage')
             ->visible()
+            ->required()
             ->writeable(true, true)
             ->number();
 
