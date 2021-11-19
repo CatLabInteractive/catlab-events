@@ -92,11 +92,11 @@ class EventResourceDefinition extends BaseResourceDefinition
 
         // Start date
         $this->field('startDate')
-            ->visible(true)
+            ->visible(false)
             ->datetime();
 
         $this->field('endDate')
-            ->visible(true)
+            ->visible(false)
             ->datetime();
 
         $this->relationship('eventDates', EventDateResourceDefinition::class)
@@ -256,7 +256,7 @@ class EventResourceDefinition extends BaseResourceDefinition
         $this->addLanguageField();
 
         $this->field('livestream_url')
-            ->visible(true, true)
+            ->visible(false, true)
             ->writeable(true, true)
             ->string();
 
