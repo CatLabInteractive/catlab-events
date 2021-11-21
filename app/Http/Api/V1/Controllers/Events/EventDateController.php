@@ -40,7 +40,7 @@ use Illuminate\Http\Request;
 class EventDateController extends ResourceController
 {
     const RESOURCE_DEFINITION = EventDateResourceDefinition::class;
-    const RESOURCE_ID = 'eventDate';
+    const RESOURCE_ID = 'id';
     const PARENT_RESOURCE_ID = 'event';
 
     use \CatLab\Charon\Laravel\Controllers\ChildCrudController;
