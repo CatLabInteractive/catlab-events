@@ -24,9 +24,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventDate;
+use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
+use CatLab\Laravel\Table\Table;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 
 /**
@@ -43,6 +50,44 @@ class EventDateController extends Controller implements FrontCrudControllerContr
     public function __construct()
     {
         $this->setLayout('layouts.admin');
+    }
+
+    /**
+     * @param $path
+     * @param $controller
+     * @param string $modelId
+     */
+    public static function routes($path, $controller, $modelId = 'id')
+    {
+        self::traitRoutes($path, $controller, $modelId);
+        \Route::get($path . '/{' . $modelId . '}/fetchScore', $controller . '@fetchScore');
+    }
+
+    /**
+     * @param Request $request
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
+     */
+    public function getTableForResourceCollection (
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        $table = $this->traitGetTableForResourceCollection($request, $collection, $resourceDefinition, $context);
+
+        $table->modelAction(
+            (new ResourceAction('Admin\EventDateController@fetchScore', 'Update score'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+                ->setCondition(function ($model) use ($request) {
+                    return !empty($model->getSource()->quizwitz_report_id);
+                })
+        );
+
+        return $table;
     }
 
     /**
@@ -102,5 +147,53 @@ class EventDateController extends Controller implements FrontCrudControllerContr
 
                 break;
         }
+    }
+
+
+    /**
+     * @param Request $request
+     * @param $eventDateId
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function fetchScore(Request $request, $eventDateId)
+    {
+        /** @var EventDate $eventDate */
+        $eventDate = EventDate::findOrFail($eventDateId);
+
+        $reportId = $eventDate->quizwitz_report_id;
+
+        $url = config('services.quizwitz.url') . 'report';
+        $url .= '/' . $reportId;
+        $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
+
+        $client = new Client();
+        $response = $client->get($url);
+
+        $data = json_decode($response->getBody(), true);
+        $players = $data['players'];
+
+        // Sort ze players
+        usort($players, function($a, $b) {
+            return $b['score'] - $a['score'];
+        });
+
+        // dump all existing scores.
+        $eventDate->dumpScores();
+
+        $position = 1;
+        foreach ($players as $player) {
+            $name = $player['name'];
+            $score = $player['score'];
+
+            $group = $eventDate->attendees()->where('name', '=', $name)->first();
+            $eventDate->setScore($position, $name, $score, $group);
+
+            $position ++;
+        }
+
+        return redirect()->back()
+            ->with('message', 'Score was updated!')
+            ->withInput();
     }
 }

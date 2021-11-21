@@ -59,8 +59,6 @@ class EventController extends Controller
     public static function routes($path, $controller, $modelId = 'id')
     {
         self::traitRoutes($path, $controller, $modelId);
-
-        \Route::get($path . '/{' . $modelId . '}/fetchScore', $controller . '@fetchScore');
     }
 
     /**
@@ -122,63 +120,7 @@ class EventController extends Controller
             );
         }
 
-        $table->modelAction(
-            (new ResourceAction('Admin\EventController@fetchScore', 'Update score'))
-                ->setRouteParameters($this->getShowRouteParameters($request))
-                ->setQueryParameters($this->getShowQueryParameters($request))
-                ->setCondition(function ($model) use ($request) {
-                    return !empty($model->getSource()->quizwitz_report_id);
-                })
-        );
-
         return $table;
-    }
-
-    /**
-     * @param Request $request
-     * @param $eventId
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function fetchScore(Request $request, $eventId)
-    {
-        /** @var Event $event */
-        $event = Event::findOrFail($eventId);
-
-        $reportId = $event->quizwitz_report_id;
-
-        $url = config('services.quizwitz.url') . 'report';
-        $url .= '/' . $reportId;
-        $url .= '?output=json&client=' . urlencode(config('services.quizwitz.apiClient'));
-
-        $client = new Client();
-        $response = $client->get($url);
-
-        $data = json_decode($response->getBody(), true);
-        $players = $data['players'];
-
-        // Sort ze players
-        usort($players, function($a, $b) {
-            return $b['score'] - $a['score'];
-        });
-
-        // dump all existing scores.
-        $event->dumpScores();
-
-        $position = 1;
-        foreach ($players as $player) {
-            $name = $player['name'];
-            $score = $player['score'];
-
-            $group = $event->attendees()->where('name', '=', $name)->first();
-            $event->setScore($position, $name, $score, $group);
-
-            $position ++;
-        }
-
-        return redirect()->back()
-            ->with('message', 'Score was updated!')
-            ->withInput();
     }
 
     /**

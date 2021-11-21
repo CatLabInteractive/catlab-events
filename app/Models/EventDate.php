@@ -59,6 +59,11 @@ class EventDate extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function scores()
+    {
+        return $this->hasMany(Score::class);
+    }
+
     /**
      * @return mixed
      */
@@ -154,5 +159,47 @@ class EventDate extends Model
             return Group
                 ::whereIn('id', $orderGroupIds);
         }
+    }
+
+    /**
+     * Remove all existing scores.
+     */
+    public function dumpScores()
+    {
+        // Delete any existing
+        $this->scores()->delete();
+    }
+
+    /**
+     * @param Group $group
+     * @param $position
+     * @param $name
+     * @param $point
+     */
+    public function setScore($position, $name, $point, Group $group = null)
+    {
+        // Create new
+        $score = new Score();
+
+        if ($group) {
+            $score->group()->associate($group);
+        }
+
+        $score->eventDate()->associate($this);
+        $score->event()->associate($this->event);
+
+        $score->position = $position;
+        $score->score = $point;
+        $score->name = $name;
+
+        $score->save();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasScores()
+    {
+        return $this->scores()->count() > 0;
     }
 }

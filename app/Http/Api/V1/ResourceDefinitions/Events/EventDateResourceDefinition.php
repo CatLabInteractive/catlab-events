@@ -66,5 +66,12 @@ class EventDateResourceDefinition extends BaseResourceDefinition
             ->visible(true)
             ->writeable(true, true)
             ->number();
+
+        if (config('services.quizwitz.apiClient')) {
+            $this->field('quizwitz_report_id')
+                ->visible()
+                ->writeable(true, true)
+                ->number();
+        }
     }
 }

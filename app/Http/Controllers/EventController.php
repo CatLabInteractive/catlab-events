@@ -795,14 +795,8 @@ class EventController extends Controller
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
 
-        $scores = $event->scores()->with('group')->orderBy('position', 'asc')->get();
-        if (count($scores) === 0) {
-            abort(404, 'No scores found');
-        }
-
         return view('events.scores', [
-            'event' => $event,
-            'scores' => $scores
+            'event' => $event
         ]);
     }
 

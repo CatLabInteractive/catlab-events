@@ -163,13 +163,6 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true)
             ->number();
 
-        if (config('services.quizwitz.apiClient')) {
-            $this->field('quizwitz_report_id')
-                ->visible()
-                ->writeable(true, true)
-                ->number();
-        }
-
         $this->field('vat_percentage')
             ->visible()
             ->required()

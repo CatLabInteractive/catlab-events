@@ -143,10 +143,12 @@ class Event extends Model implements EuklesModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+
+    /*
     public function scores()
     {
         return $this->hasMany(Score::class);
-    }
+    }*/
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -822,46 +824,6 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * Remove all existing scores.
-     */
-    public function dumpScores()
-    {
-        // Delete any existing
-        $this->scores()->delete();
-    }
-
-    /**
-     * @param Group $group
-     * @param $position
-     * @param $name
-     * @param $point
-     */
-    public function setScore($position, $name, $point, Group $group = null)
-    {
-        // Create new
-        $score = new Score();
-
-        if ($group) {
-            $score->group()->associate($group);
-        }
-
-        $score->event()->associate($this);
-        $score->position = $position;
-        $score->score = $point;
-        $score->name = $name;
-
-        $score->save();
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasScores()
-    {
-        return $this->scores()->count() > 0;
-    }
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function waitingList()
@@ -1150,6 +1112,20 @@ class Event extends Model implements EuklesModel
         }
 
         return $out;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasScores()
+    {
+        foreach ($this->eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            if ($eventDate->hasScores()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
