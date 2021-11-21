@@ -263,9 +263,10 @@ class Event extends Model implements EuklesModel
      */
     public function scopeFinished($builder)
     {
-        $builder->select('events.*');
-        $builder->leftJoin('event_dates', 'events.id', '=', 'event_dates.event_id');
-        $builder->where('event_dates.endDate', '<', new \DateTime());
+        $builder->select('events.*')
+            ->leftJoin('event_dates', 'events.id', '=', 'event_dates.event_id')
+            ->where('event_dates.endDate', '<', new \DateTime())
+            ->groupBy('event_dates.event_id');
     }
 
     /**
