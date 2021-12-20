@@ -42,7 +42,12 @@ class CatLabAccountController extends Controller
 
         $client = new ApiClient($user);
 
-        $url = $client->getAccountLink('/' . $path, Request::query());
+        $parameters = Request::query();
+        if (!isset($parameters['return'])) {
+            $parameters['return'] = action('HomeController@home', [], true);
+        }
+
+        $url = $client->getAccountLink('/' . $path, $parameters);
         return redirect($url);
     }
 }
