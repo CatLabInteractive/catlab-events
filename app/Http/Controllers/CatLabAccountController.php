@@ -44,7 +44,11 @@ class CatLabAccountController extends Controller
 
         $parameters = Request::query();
         if (!isset($parameters['return'])) {
-            $parameters['return'] = action('HomeController@home', [], true);
+            $parameters['return'] = action('EventController@index', [], true);
+        }
+
+        if (!isset($parameters['lang'])) {
+            $parameters['lang'] = mb_substr(\App::getLocale(), 0, 2);
         }
 
         $url = $client->getAccountLink('/' . $path, $parameters);
