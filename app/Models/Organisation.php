@@ -373,6 +373,14 @@ class Organisation extends Model
     }
 
     /**
+     * @return string
+     */
+    public function getTeamName()
+    {
+        return $this->name . ' team';
+    }
+
+    /**
      * @return string|null
      */
     public function getContactOptionsText()

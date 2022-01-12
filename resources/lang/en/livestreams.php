@@ -10,5 +10,7 @@
     'logout' => 'Logout',
 
     'loginToChat' => ':action to join the chat channel.',
-    'loginAction' => 'Log in'
+    'loginAction' => 'Log in',
+
+    'haveFun' => 'Have fun!'
 ];

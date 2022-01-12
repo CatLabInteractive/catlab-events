@@ -25,5 +25,11 @@
     @if(count($organisation->getSocialLinks()) > 0)
         {!! $organisation->getSocialLinksText() !!}
     @endif
+
+    </p>
+
+    <p>
+        {{ __('livestreams.haveFun') }}<br />
+        {{ $organisation->getTeamName() }}
     </p>
 @endif
