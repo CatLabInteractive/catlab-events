@@ -14,11 +14,7 @@
                 @if(count($v->eventDates) > 0)
                     @foreach ($v->eventDates as $eventDate)
                         @if($eventDate->startDate)
-                            @if(!$eventDate->isFinished() && $v->series)
-                                <a href="{{ $v->series->getUrl($v) }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
-                            @else
-                                <a href="{{ $v->getUrl() }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
-                            @endif
+                            <a href="{{ $v->series->getUrl($v) }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
                             <br />
                         @endif
                     @endforeach

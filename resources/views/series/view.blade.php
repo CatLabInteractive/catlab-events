@@ -288,7 +288,6 @@
         </div>
     </section>
 
-    {{--
     @if($series->description)
         <section class="no-padding">
             <div class="container">
@@ -316,7 +315,6 @@
             </div>
         </section>
     @endif
-    --}}
 
     {{--
     <section class="no-padding">

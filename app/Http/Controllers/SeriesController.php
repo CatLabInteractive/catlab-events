@@ -60,16 +60,18 @@ class SeriesController
         $nextEvent = null;
         $eventId = $request->get('event');
         if ($eventId) {
+            /** @var Event $nextEvent */
             $nextEvent = $series
                 ->events()
                 ->published()
-                ->upcoming()
                 ->where('id', '=', $eventId)
                 ->first();
 
             // Also store in session
-            if ($nextEvent) {
+            if ($nextEvent && !$nextEvent->isFinished()) {
                 $request->session()->put('eventFocusId', $nextEvent->id);
+            } else {
+                $request->session()->forget('eventFocusId');
             }
         } elseif ($request->session()->has('eventFocusId')) {
             $nextEvent = $series
