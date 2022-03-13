@@ -78,7 +78,7 @@ Route::group([
             FrontCrudController::routes('livestreams', 'Admin\LiveStreamController', 'livestream');
             FrontCrudController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
             //FrontCrudController::routes('events/{event}/dates', 'Admin\EventDateController', 'eventDate');
-            \App\Http\Controllers\Admin\EventDateController::routes('eventDates', 'Admin\EventDateController', 'id');
+            \App\Http\Controllers\Admin\EventDateController::routes('events/{event}/eventDates', 'Admin\EventDateController', 'id');
 
             Route::get('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@generateUrlsForm');
             Route::post('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@processGenerateUrls');
