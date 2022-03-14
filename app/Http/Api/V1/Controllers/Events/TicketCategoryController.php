@@ -114,7 +114,7 @@ class TicketCategoryController extends ResourceController
         /** @var Event $event */
         $event = $entity->event;
 
-        if ($event->uitdb_event_id) {
+        if (!$event->isFinished() && $event->uitdb_event_id) {
             // Check if we have a ticket price
             $uitPasService = \UitDb::getUitPasService();
             if ($uitPasService) {
