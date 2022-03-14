@@ -99,6 +99,16 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->visible(false)
             ->datetime();
 
+        $this->field('event_type')
+            ->visible()
+            ->writeable(true, true)
+            ->required()
+            ->string()
+            ->enum([
+                Event::TYPE_EVENT,
+                Event::TYPE_PACKAGE
+            ]);
+
         $this->relationship('eventDates', EventDateResourceDefinition::class)
             ->visible()
             ->writeable(true, true)

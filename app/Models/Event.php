@@ -43,6 +43,9 @@ class Event extends Model implements EuklesModel
 {
     use SoftDeletes;
 
+    const TYPE_EVENT = 'event';
+    const TYPE_PACKAGE = 'package';
+
     /**
      * When should we start showing the last tickets warning?
      */
@@ -65,7 +68,8 @@ class Event extends Model implements EuklesModel
         'vat_percentage',
         'include_ticket_fee',
         'registration',
-        'requires_team'
+        'requires_team',
+        'event_type'
     ];
 
     /**
@@ -203,6 +207,14 @@ class Event extends Model implements EuklesModel
         } else {
             return 'Quizpakket';
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasEventDates()
+    {
+        return count($this->eventDates) > 0;
     }
 
     /**
