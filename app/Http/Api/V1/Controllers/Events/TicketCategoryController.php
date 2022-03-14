@@ -25,9 +25,10 @@ namespace App\Http\Api\V1\Controllers\Events;
 use App\Http\Api\V1\Controllers\Base\ResourceController;
 use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
 use App\Models\Event;
-use App\Models\EventDate;
 use CatLab\Charon\Collections\RouteCollection;
-use CatLab\Charon\Models\Properties\RelationshipField;
+use CatLab\Requirements\Collections\MessageCollection;
+use CatLab\Requirements\Exceptions\ResourceValidationException;
+use CatLab\Requirements\Models\TranslatableMessage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -42,7 +43,9 @@ class TicketCategoryController extends ResourceController
     const RESOURCE_ID = 'ticketCategory';
     const PARENT_RESOURCE_ID = 'event';
 
-    use \CatLab\Charon\Laravel\Controllers\ChildCrudController;
+    use \CatLab\Charon\Laravel\Controllers\ChildCrudController {
+        beforeSaveEntity as traitBeforeSaveEntity;
+    }
 
     /**
      * @param RouteCollection $routes
@@ -89,5 +92,40 @@ class TicketCategoryController extends ResourceController
     public function getRelationshipKey(): string
     {
         return self::PARENT_RESOURCE_ID;
+    }
+
+    /**
+     * Called before saveEntity
+     * @param Request $request
+     * @param \Illuminate\Database\Eloquent\Model $entity
+     * @param bool $isNew
+     * @return Model
+     * @throws ResourceValidationException
+     * @throws \App\UitDB\Exceptions\InvalidCardException
+     * @throws \App\UitDB\Exceptions\InvalidEventException
+     * @throws \App\UitDB\Exceptions\UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function beforeSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity, $isNew = false)
+    {
+        $this->traitBeforeSaveEntity($request, $entity, $isNew);
+
+        // Verify uitpas event
+        /** @var Event $event */
+        $event = $entity->event;
+
+        if ($event->uitdb_event_id) {
+            // Check if we have a ticket price
+            $uitPasService = \UitDb::getUitPasService();
+            if ($uitPasService) {
+                if (!$uitPasService->hasApplicableUitPasPrice($entity)) {
+                    $messages = new MessageCollection();
+                    $messages->add(new TranslatableMessage('No applicable UiTPas tariff found. Please add UiTPas tariff first.', []));
+                    throw ResourceValidationException::make($messages);
+                }
+            }
+        }
+
+        return $entity;
     }
 }
