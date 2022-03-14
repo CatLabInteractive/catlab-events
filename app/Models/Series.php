@@ -130,6 +130,17 @@ class Series extends Model
         return $upcomingEvents->first();
     }
 
+    /**
+     * @return int
+     */
+    public function countUpcomingEvents()
+    {
+        return $this->events()
+            ->upcoming()
+            ->published()
+            ->count();
+    }
+
     public function youtubeThumbnail()
     {
         return $this->belongsTo(Asset::class, 'youtube_thumbnail_asset_id');

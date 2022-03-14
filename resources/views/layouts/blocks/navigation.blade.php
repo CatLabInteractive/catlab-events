@@ -34,7 +34,16 @@
                 >
                     <a
                         href="{{ $navSeries->getUrl() }}"
-                    >{{ $navSeries->name }}</a>
+                    >
+                        {{ $navSeries->name }}
+
+                        @if($navSeries->hasNextEvent())
+                            <span class="badge badge-light">{{$navSeries->countUpcomingEvents()}}</span>
+                            <span class="sr-only">komende evenementen</span>
+                        @endif
+                    </a>
+
+
                 </li>
             @endforeach
 
