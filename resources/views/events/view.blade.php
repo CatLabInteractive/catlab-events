@@ -92,35 +92,39 @@
                         <a href="https://www.quizploeg.com/">Quizzer zkt. ploeg</a>.</p>
                         -->
 
+                    @if(count($event->people) > 0)
+
                         <h4>Credits</h4>
-                    @if(count($event->producers) > 0)
-                        <p><strong>Eindredactie:</strong><br />
-                            @foreach($event->producers as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
-                        </p>
-                    @endif
+                        @if(count($event->producers) > 0)
+                            <p><strong>Eindredactie:</strong><br />
+                                @foreach($event->producers as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                            </p>
+                        @endif
 
-                    @if(count($event->authors) > 0)
-                        <p><strong>Auteurs:</strong><br />
-                            @foreach($event->authors as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
-                        </p>
-                    @endif
+                        @if(count($event->authors) > 0)
+                            <p><strong>Auteurs:</strong><br />
+                                @foreach($event->authors as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                            </p>
+                        @endif
 
-                    @if(count($event->presenters) > 0)
-                        <p><strong>Presentatoren:</strong><br />
-                            @foreach($event->presenters as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
-                        </p>
-                    @endif
+                        @if(count($event->presenters) > 0)
+                            <p><strong>Presentatoren:</strong><br />
+                                @foreach($event->presenters as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                            </p>
+                        @endif
 
-                    @if(count($event->musicians) > 0)
-                        <p><strong>Muziek:</strong><br />
-                            @foreach($event->musicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
-                        </p>
-                    @endif
+                        @if(count($event->musicians) > 0)
+                            <p><strong>Muziek:</strong><br />
+                                @foreach($event->musicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                            </p>
+                        @endif
 
-                    @if(count($event->technicians) > 0)
-                        <p><strong>Technische ondersteuning:</strong><br />
-                            @foreach($event->technicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
-                        </p>
+                        @if(count($event->technicians) > 0)
+                            <p><strong>Technische ondersteuning:</strong><br />
+                                @foreach($event->technicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
+                            </p>
+                        @endif
+
                     @endif
 
                     @if($event->competition)

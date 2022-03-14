@@ -199,13 +199,17 @@ class Event extends Model implements EuklesModel
      */
     public function getEventDateDescription()
     {
+        if ($this->isPackage()) {
+            return 'Quizpakket';
+        }
+
         if (count($this->eventDates) > 0) {
             $dates = $this->eventDates->pluck('startDate');
             return StringHelper::datesToDescription($dates);
         } elseif ($this->startDate) {
             return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
         } else {
-            return 'Quizpakket';
+            return 'FOUT! Nog geen datum ingesteld.';
         }
     }
 
@@ -215,6 +219,22 @@ class Event extends Model implements EuklesModel
     public function hasEventDates()
     {
         return count($this->eventDates) > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEvent()
+    {
+        return $this->event_type === Event::TYPE_EVENT;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPackage()
+    {
+        return $this->event_type === Event::TYPE_PACKAGE;
     }
 
     /**
