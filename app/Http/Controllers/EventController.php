@@ -622,7 +622,7 @@ class EventController extends Controller
                 ]);
         }
 
-        event(new PreparingOrder($user, $event, $this->getEuklesOriginWebsite(), $group));
+        event(new PreparingOrder($user, $event, $this->getEuklesOriginWebsite(), $ticketCategory, $group));
 
         $input = [];
 

@@ -25,6 +25,7 @@ namespace App\Events;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\Order;
+use App\Models\TicketCategory;
 use App\Models\User;
 use Illuminate\Queue\SerializesModels;
 
@@ -52,15 +53,21 @@ class PreparingOrder
     public $event;
 
     /**
+     * @var TicketCategory
+     */
+    public $ticketCategory;
+
+    /**
      * @var array
      */
     public $session;
 
-    public function __construct(User $actor, Event $event, $session, Group $group = null)
+    public function __construct(User $actor, Event $event, $session, TicketCategory $ticketCategory, Group $group = null)
     {
         $this->actor = $actor;
         $this->group = $group;
         $this->event = $event;
         $this->session = $session;
+        $this->ticketCategory = $ticketCategory;
     }
 }
