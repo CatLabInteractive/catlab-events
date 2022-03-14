@@ -24,6 +24,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\EventDate;
 use App\Models\Group;
 use App\Models\Organisation;
 use App\Models\Score;
@@ -69,51 +70,64 @@ class CompetitionController
             ->orderByStartDate()
             ->get()
             ->filter(function(Event $event) {
-                return $event->scores->count() > 0;
+                $eventDates = $event->eventDates;
+                foreach ($eventDates as $eventDate) {
+                    if ($eventDate->scores->count() > 0) {
+                        return true;
+                    }
+                }
+                return false;
             });
 
         $statistics = [];
-        foreach ($events as $event) {
-            /** @var Event $event */
-            $scores = $event->scores;
 
-            $averages = $this->getScoreParameters($event);
-            $statistics[$event->id] = $averages;
+        $eventDates = [];
+        foreach ($events as $rootEvent) {
+            foreach ($rootEvent->eventDates as $event) {
 
-            foreach ($scores as $score) {
-                /** @var Score $score */
+                /** @var EventDate $event */
+                $eventDates[] = $event;
 
-                if ($score->group) {
-                    $group = $score->group;
-                    $groupKey = $group->id;
-                } else {
-                    // Create temporary group
-                    $group = new Group();
-                    $groupKey = $score->name;
-                    $group->name = $score->name;
-                }
+                $scores = $event->scores;
 
-                if (!isset($teams[$groupKey])) {
-                    $teams[$groupKey] = [
-                        'group' => $group,
-                        'events' => [],
-                        'totalScore' => 0,
-                        'totalWeighted' => 0
+                $averages = $this->getScoreParameters($event);
+                $statistics[$event->id] = $averages;
+
+                foreach ($scores as $score) {
+                    /** @var Score $score */
+
+                    if ($score->group) {
+                        $group = $score->group;
+                        $groupKey = $group->id;
+                    } else {
+                        // Create temporary group
+                        $group = new Group();
+                        $groupKey = $score->name;
+                        $group->name = $score->name;
+                    }
+
+                    if (!isset($teams[$groupKey])) {
+                        $teams[$groupKey] = [
+                            'group' => $group,
+                            'events' => [],
+                            'totalScore' => 0,
+                            'totalWeighted' => 0
+                        ];
+                    }
+
+                    $weightedScore = ($score->score / $averages['max']) * $averages['difficulty'];
+                    $weightedScore *= self::POINT_PER_QUIZ;
+                    $weightedScore = round($weightedScore);
+
+                    $teams[$groupKey]['totalScore'] += $score->score;
+                    $teams[$groupKey]['totalWeighted'] += $weightedScore;
+
+                    $teams[$groupKey]['events'][$event->id] = [
+                        'score' => $score->score,
+                        'position' => $score->position,
+                        'weightedScore' => $weightedScore
                     ];
                 }
-
-                $weightedScore = ($score->score / $averages['max']) * $averages['difficulty'];
-                $weightedScore *= self::POINT_PER_QUIZ;
-                $weightedScore = round($weightedScore);
-
-                $teams[$groupKey]['totalScore'] += $score->score;
-                $teams[$groupKey]['totalWeighted'] += $weightedScore;
-
-                $teams[$groupKey]['events'][$event->id] = [
-                    'score' => $score->score,
-                    'position' => $score->position,
-                    'weightedScore' => $weightedScore
-                ];
             }
         }
 
@@ -143,7 +157,7 @@ class CompetitionController
         return view('competition', [
             'upcoming' => $competition->events()->upcoming()->get(),
             'competition' => $competition,
-            'events' => $events,
+            'eventDates' => $eventDates,
             'groups' => $teams,
             'statistics' => $statistics,
             'canonicalUrl' => action('CompetitionController@show', $competition->id)
@@ -154,7 +168,7 @@ class CompetitionController
      * @param Event $event
      * @return array
      */
-    protected function getScoreParameters(Event $event)
+    protected function getScoreParameters(EventDate $event)
     {
         $scores = $event->scores->pluck('score');
 
@@ -183,7 +197,7 @@ class CompetitionController
      * @param Event $event
      * @return float
      */
-    protected function getDifficulty(Event $event)
+    protected function getDifficulty(EventDate $event)
     {
         if ($event->max_points) {
             $limit = $event->max_points;
