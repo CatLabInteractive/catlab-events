@@ -267,7 +267,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             'reference' => $data['reference'],
             'price' => $price,
             'domain' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '',
-            'receipt' => $data['receipt'],
+            'receipt' => isset($data['receipt']) ? $data['receipt'] : null,
             'playLink' => $this->play_link
         ];
     }
