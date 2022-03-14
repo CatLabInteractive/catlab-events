@@ -38,6 +38,11 @@ class Series extends Model
     protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 
     /**
+     * @var Event
+     */
+    private $nextEvent = false; // false means it is not loaded yet
+
+    /**
      * @return Series|Model|null
      */
     public static function getRandom()
@@ -85,11 +90,23 @@ class Series extends Model
      */
     public function getNextEvent()
     {
-        return $this->events()
-            ->upcoming()
-            ->published()
-            ->orderByStartDate()
-            ->first();
+        if ($this->nextEvent === false) {
+            $this->nextEvent = $this->events()
+                ->upcoming()
+                ->published()
+                ->orderByStartDate()
+                ->first();;
+        }
+
+        return $this->nextEvent;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasNextEvent()
+    {
+        return $this->getNextEvent() !== null;
     }
 
     /**
