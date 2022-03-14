@@ -23,6 +23,7 @@
 namespace App\Models;
 
 use CatLab\Charon\Laravel\Database\Model;
+use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  *
  */
-class EventDate extends Model
+class EventDate extends Model implements EuklesModel
 {
     use SoftDeletes;
 
@@ -201,5 +202,33 @@ class EventDate extends Model
     public function hasScores()
     {
         return $this->scores()->count() > 0;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEuklesAttributes()
+    {
+        return [
+            'start' => $this->startDate ? $this->startDate->format('c') : null,
+            'end' => $this->endDate ? $this->endDate->format('c') : null,
+            'doors' => $this->doors ? $this->doors->format('c') : null
+        ];
+    }
+
+    /**
+     * @return int
+     */
+    public function getEuklesId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEuklesType()
+    {
+        return 'event-date';
     }
 }
