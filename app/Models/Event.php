@@ -1177,11 +1177,20 @@ class Event extends Model implements EuklesModel
         $out = [
             'uid' => $this->id,
             'name' => $this->name,
-            'url' => $this->getUrl(),
-            'start' => $this->startDate ? $this->startDate->format('c') : null,
-            'end' => $this->endDate ? $this->endDate->format('c') : null,
-            'facebookEventUrl' => $this->getFacebookEventUrl()
+            'url' => $this->getUrl()
         ];
+
+        if ($this->getFacebookEventUrl()) {
+            $out['facebookEventUrl'] = $this->getFacebookEventUrl();
+        }
+
+        if ($this->startDate) {
+            $out['start'] = $this->startDate->format('c');
+        }
+
+        if ($this->endDate) {
+            $out['end'] = $this->endDate->format('c');
+        }
 
         if ($this->venue) {
             $out = array_merge($out, [
