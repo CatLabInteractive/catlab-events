@@ -152,11 +152,12 @@ class EventDateController extends Controller implements FrontCrudControllerContr
 
     /**
      * @param Request $request
+     * @param $eventId
      * @param $eventDateId
      * @return \Illuminate\Http\RedirectResponse
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function fetchScore(Request $request, $eventDateId)
+    public function fetchScore(Request $request, $eventId, $eventDateId)
     {
         /** @var EventDate $eventDate */
         $eventDate = EventDate::findOrFail($eventDateId);
