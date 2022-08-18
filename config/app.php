@@ -182,7 +182,7 @@ return [
         /*
          * Package Service Providers...
          */
-        Laravel\Tinker\TinkerServiceProvider::class,
+        //Laravel\Tinker\TinkerServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -205,9 +205,9 @@ return [
         Barryvdh\DomPDF\ServiceProvider::class,
 
         CentralStorageServiceProvider::class,
-        Roumen\Sitemap\SitemapServiceProvider::class,
 
-        willvincent\Feeds\FeedsServiceProvider::class,
+        //Roumen\Sitemap\SitemapServiceProvider::class,
+        //willvincent\Feeds\FeedsServiceProvider::class,
 
         \App\UitDB\UitDbServiceProvider::class
 
