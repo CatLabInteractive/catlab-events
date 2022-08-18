@@ -197,6 +197,30 @@ class UiTPASVerifier
     }
 
     /**
+     * @param TicketCategory $ticketCategory
+     * @return bool
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function hasApplicableUitPasPrice(TicketCategory $ticketCategory)
+    {
+        $uitPasEvent = $this->getUitPasEvent($ticketCategory->event);
+
+        try {
+            $priceClass = $this->getApplicableUitPASPrice($ticketCategory, $uitPasEvent);
+            if ($priceClass) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PriceClassNotFound $e) {
+            return false;
+        }
+    }
+
+    /**
      * @param Event $event
      * @param SimpleXMLElement $priceCategory
      * @param $cardNumber

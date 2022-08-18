@@ -404,7 +404,12 @@ class TicketCategory extends Model implements EuklesModel
         $availableTickets = $this->countAvailableTickets();
         $soldTickets = $this->countSoldEventDateTickets();
 
-        return [
+        $eventDates = [];
+        foreach ($this->eventDates as $eventDate) {
+            $eventDates[] = $eventDate->getEuklesAttributes();
+        }
+
+        $out = [
             'name' => $this->name,
             'start' => $this->startDate ? $this->startDate->format('c') : null,
             'end' => $this->endDate ? $this->endDate->format('c') : null,
@@ -412,6 +417,12 @@ class TicketCategory extends Model implements EuklesModel
             'ticketsTotal' => $this->hasFiniteTickets() ? $availableTickets + $soldTickets : '∞',
             'ticketsAvailable' => $this->hasFiniteTickets() ? $availableTickets : '∞'
         ];
+
+        if (count($eventDates) > 0) {
+            $out['eventDates'] = $eventDates;
+        }
+
+        return $out;
     }
 
     /**

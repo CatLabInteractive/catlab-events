@@ -43,6 +43,9 @@ class Event extends Model implements EuklesModel
 {
     use SoftDeletes;
 
+    const TYPE_EVENT = 'event';
+    const TYPE_PACKAGE = 'package';
+
     /**
      * When should we start showing the last tickets warning?
      */
@@ -65,7 +68,8 @@ class Event extends Model implements EuklesModel
         'vat_percentage',
         'include_ticket_fee',
         'registration',
-        'requires_team'
+        'requires_team',
+        'event_type'
     ];
 
     /**
@@ -195,14 +199,42 @@ class Event extends Model implements EuklesModel
      */
     public function getEventDateDescription()
     {
+        if ($this->isPackage()) {
+            return 'Quizpakket';
+        }
+
         if (count($this->eventDates) > 0) {
             $dates = $this->eventDates->pluck('startDate');
             return StringHelper::datesToDescription($dates);
         } elseif ($this->startDate) {
             return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
         } else {
-            return 'Quizpakket';
+            return 'FOUT! Nog geen datum ingesteld.';
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasEventDates()
+    {
+        return count($this->eventDates) > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEvent()
+    {
+        return $this->event_type === Event::TYPE_EVENT;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPackage()
+    {
+        return $this->event_type === Event::TYPE_PACKAGE;
     }
 
     /**
@@ -1145,11 +1177,20 @@ class Event extends Model implements EuklesModel
         $out = [
             'uid' => $this->id,
             'name' => $this->name,
-            'url' => $this->getUrl(),
-            'start' => $this->startDate ? $this->startDate->format('c') : null,
-            'end' => $this->endDate ? $this->endDate->format('c') : null,
-            'facebookEventUrl' => $this->getFacebookEventUrl()
+            'url' => $this->getUrl()
         ];
+
+        if ($this->getFacebookEventUrl()) {
+            $out['facebookEventUrl'] = $this->getFacebookEventUrl();
+        }
+
+        if ($this->startDate) {
+            $out['start'] = $this->startDate->format('c');
+        }
+
+        if ($this->endDate) {
+            $out['end'] = $this->endDate->format('c');
+        }
 
         if ($this->venue) {
             $out = array_merge($out, [

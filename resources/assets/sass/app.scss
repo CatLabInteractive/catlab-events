@@ -59,3 +59,23 @@ table tr.total {
 table .small {
   color: gray;
 }
+
+.header-transparent ul.navbar-nav > li.no-next-event > a {
+  color: #aaa;
+}
+
+.header-transparent ul.navbar-nav > li a .badge {
+  display: inline-block;
+  min-width: 8px;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: top;
+  background-color: #777;
+  border-radius: 10px;
+  margin-left: 1px;
+}

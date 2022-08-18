@@ -16,7 +16,7 @@
         "catlabinteractive/laravel-charon-frontend": "~1.4.0",
         "catlabinteractive/laravel-table": "^1.0.2",
         "doctrine/dbal": "~2.5",
-        "guzzlehttp/oauth-subscriber": "^0.4.0",
+        "guzzlehttp/oauth-subscriber": "^0.6.0",
         "laravel/framework": "5.8.*",
         "laravel/tinker": "~1.0",
         "laravelcollective/html": "^5.8.0",

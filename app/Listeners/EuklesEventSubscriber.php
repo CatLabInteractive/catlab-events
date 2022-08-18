@@ -56,7 +56,8 @@ class EuklesEventSubscriber
         $euklesProperties = [
             'actor' => $e->actor,
             'event' => $e->event,
-            'session' => $e->session
+            'session' => $e->session,
+            'ticketCategory' => $e->ticketCategory
         ];
 
         if ($e->group) {

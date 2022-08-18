@@ -23,6 +23,7 @@
 namespace App\Http\Api\V1\ResourceDefinitions\Events;
 
 use App\Http\Api\V1\ResourceDefinitions\BaseResourceDefinition;
+use App\Http\Api\V1\Validators\TicketCategoryValidator;
 use App\Models\TicketCategory;
 use CatLab\Charon\Models\ResourceDefinition;
 
@@ -83,5 +84,7 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->expanded()
             ->required();
+
+        $this->validator(new TicketCategoryValidator());
     }
 }

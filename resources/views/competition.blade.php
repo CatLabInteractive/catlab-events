@@ -40,11 +40,11 @@
         <tr>
             <th>#</th>
             <th>Player</th>
-            @foreach($events as $v)
+            @foreach($eventDates as $v)
                 <th>
                     <a
-                        href="{{ $v->getUrl() }}"
-                    >{{ $v->name }}</a>
+                        href="{{ $v->event->getUrl() }}"
+                    >{{ $v->event->name }} {{$v->startDate->format('d/m')}}</a>
                 </th>
             @endforeach
             <th>Seizoenscore</th>
@@ -53,7 +53,7 @@
         <tr>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
-            @foreach($events as $v)
+            @foreach($eventDates as $v)
                 <td style="font-size: 80%;">
                     L: {{ $statistics[$v->id]['limit'] }}, MED: {{ $statistics[$v->id]['average'] }}, D: {{ $statistics[$v->id]['difficulty'] }}
                 </td>
@@ -72,7 +72,7 @@
                         {{ $group['group']->name }}
                     @endif
                 </td>
-                @foreach($events as $v)
+                @foreach($eventDates as $v)
                     @if(isset($group['events'][$v->id]))
                         <td>
                             <span title="Score: {{ $group['events'][$v->id]['score'] }}">
