@@ -234,9 +234,9 @@ class Organisation extends Model
     /**
      * @return mixed
      */
-    public function countEvents()
+    public function countEvents($includePrivate = true)
     {
-        return $this->events()->count() + $this->private_events_count;
+        return $this->events()->count() + ($includePrivate ? $this->private_events_count : 0);
     }
 
     /**

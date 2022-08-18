@@ -29,11 +29,11 @@
                     <div class="ts-facts">
                     <span class="ts-facts-img">
                     <img class="lazy" data-src="/images/icons/fact-speaker.png" alt="Aantal quizzen icoon"
-                         title="We hebben reeds {{ organisation()->countEvents() }} quizzen georganiseerd."/>
+                         title="We hebben reeds {{ organisation()->countEvents() }} quizzen georganiseerd (waarvan {{ organisation()->countEvents(false) }} publiek)."/>
                     </span>
                         <div class="ts-facts-content">
                             <h2 class="ts-facts-num"><span
-                                        class="counterUp">{{ organisation()->events()->count() }}</span></h2>
+                                        class="counterUp">{{ organisation()->countEvents() }}</span></h2>
                             <h3 class="ts-facts-title">Quizzes</h3>
                         </div>
                     </div>
