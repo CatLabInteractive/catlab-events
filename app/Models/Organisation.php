@@ -232,6 +232,14 @@ class Organisation extends Model
     }
 
     /**
+     * @return mixed
+     */
+    public function countEvents()
+    {
+        return $this->events()->count() + $this->private_events_count;
+    }
+
+    /**
      * @return Series|null
      */
     public function getRandomSeries()
