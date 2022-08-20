@@ -67,7 +67,7 @@ class EventValidator extends ResourceValidator
     {
         // only validate on publish.
         $published = $value->getProperties()->getFromName('is_published');
-        if (!$published->getValue()) {
+        if (!$published || !$published->getValue()) {
             return;
         }
 
