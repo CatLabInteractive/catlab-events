@@ -19,7 +19,6 @@
         "doctrine/dbal": "~2.5",
         "fab1en/rocket-chat-rest-client": "dev-master",
         "guzzlehttp/oauth-subscriber": "^0.6.0",
-        "illuminate/console": "*",
         "laravel/framework": "~9.0.0",
         "laravelcollective/html": "^6.3",
         "paynl/sdk": "^1.5",
