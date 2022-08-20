@@ -46,18 +46,23 @@ class SitemapController
 
 
             // Events
-            foreach (App\Models\Event::orderByStartDateDesc()->get() as $event) {
+            foreach (App\Models\Event::published()->orderByStartDateDesc()->get() as $event) {
 
-                $timeDiff = (time() - $event->startDate->getTimestamp());
-                if ($timeDiff < 0) {
+                if (!$event->startDate) {
                     $priority = 1;
                 } else {
-                    $years = 1 + ($timeDiff / (365 * 24 * 60 * 60));
-                    $priority = 1 - ($years / 5);
-                    if ($priority < 0.1) {
-                        $priority = 0.1;
+
+                    $timeDiff = (time() - $event->startDate->getTimestamp());
+                    if ($timeDiff < 0) {
+                        $priority = 1;
+                    } else {
+                        $years = 1 + ($timeDiff / (365 * 24 * 60 * 60));
+                        $priority = 1 - ($years / 5);
+                        if ($priority < 0.1) {
+                            $priority = 0.1;
+                        }
+                        $priority = round($priority * 100) / 100;
                     }
-                    $priority = round($priority * 100) / 100;
                 }
 
                 $sitemap->add(
