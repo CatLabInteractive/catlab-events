@@ -193,6 +193,10 @@ class UiTPASVerifier
             throw InvalidEventException::make();
         }
 
+        if ($simpleXml->event->count() < 1) {
+            throw InvalidEventException::make();
+        }
+
         return $simpleXml->event[0];
     }
 
