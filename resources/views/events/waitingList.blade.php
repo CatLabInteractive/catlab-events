@@ -12,7 +12,7 @@
         <div class="alert alert-success">
             <p>
                 Er zijn nog tickets voor <strong>{{ $event->name }}</strong>.
-                Je kan nog gewoon <a href="{{ action('EventController@selectTicketCategory', [ $event->id ] ) }}"><i class="fa fa-ticket"></i> {{ $nextEvent->getOrderLabel() }}</a>.
+                Je kan nog gewoon <a href="{{ action('EventController@selectTicketCategory', [ $event->id ] ) }}"><i class="fa fa-ticket"></i> {{ $event->getOrderLabel() }}</a>.
             </p>
         </div>
 
