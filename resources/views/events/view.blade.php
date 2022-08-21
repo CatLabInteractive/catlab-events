@@ -266,6 +266,7 @@
         $alternatives = organisation()->events()
             ->where('id', '!=', $event->id)
             ->upcoming()
+            ->published()
             ->get();
     ?>
     @if(count($alternatives) > 0)
