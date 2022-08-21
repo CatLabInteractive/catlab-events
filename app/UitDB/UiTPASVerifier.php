@@ -167,7 +167,9 @@ class UiTPASVerifier
 
         try {
             $query = [
-                'cdbid' => $event->getUitDBId()
+                'cdbid' => $event->getUitDBId(),
+                'max' => 1,
+                'start' => 0
             ];
 
             if ($cardNumber) {
