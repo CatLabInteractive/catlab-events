@@ -168,7 +168,7 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->writeable();
 
         $this->field('private_events_count')
-            ->int()
+            ->number()
             ->visible()
             ->writeable();
 
