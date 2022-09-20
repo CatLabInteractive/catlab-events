@@ -72,6 +72,8 @@ class StringHelper
                 $format = '%A %-d';
             } elseif ($next->format('m') === $date->format('m')) {
                 $format = '%A %-d %B';
+            } else {
+                $format = '%A %-d %B';
             }
 
             $parts[] = $date->formatLocalized($format);
