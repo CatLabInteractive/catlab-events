@@ -74,11 +74,11 @@ class EventController extends Controller
                     ->where('group_id', '=', $group->id)
                     ->first()
             ) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     /**
