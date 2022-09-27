@@ -265,15 +265,25 @@ class TicketCategory extends Model implements EuklesModel
         if (!isset($this->availableError)) {
 
             $available = $this->countAvailableTickets();
-            if ($available !== null && $available <= 0) {
+            if (
+                $available !== null &&
+                $available <= 0 &&
+                ! (! (\Auth::user() && \Auth::user()->can('buyWhenSoldOut', $this)))
+            ) {
                 $this->availableError = [ 'Uitverkocht.' ];
             }
 
-            elseif ($this->start_date && ($this->start_date > new DateTime())) {
+            elseif (
+                $this->start_date && ($this->start_date > new DateTime()) &&
+                ! (\Auth::user() && \Auth::user()->can('buyBeforeStartDate', $this))
+            ) {
                 $this->availableError = [ 'Vanaf %s', $this->start_date ];
             }
 
-            elseif ($this->end_date && ($this->end_date < new DateTime())) {
+            elseif (
+                $this->end_date && ($this->end_date < new DateTime())
+                && ! (\Auth::user() && \Auth::user()->can('buyAfterEndDate', $this))
+            ) {
                 //$this->availableError = [ 'Verlopen sinds %s', $this->end_date ];
                 $this->availableError = [ 'Te laat' ];
             }

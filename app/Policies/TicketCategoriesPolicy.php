@@ -22,6 +22,7 @@
 
 namespace App\Policies;
 
+use App\Http\Controllers\EventController;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\TicketCategory;
@@ -81,6 +82,41 @@ class TicketCategoriesPolicy
     public function edit(User $user, TicketCategory $ticketCategory)
     {
         return $this->isAdmin($user, $ticketCategory->event);
+    }
+
+    /**
+     * @param User $user
+     * @param TicketCategory $ticketCategory
+     * @return bool
+     */
+    public function buyBeforeStartDate(User $user, TicketCategory $ticketCategory)
+    {
+        if (EventController::hasValidWaitingListToken($ticketCategory->event)) {
+            return true;
+        }
+
+        return false;
+        //return $this->isAdmin($user, $ticketCategory->event);
+    }
+
+    /**
+     * @param User $user
+     * @param TicketCategory $ticketCategory
+     * @return false
+     */
+    public function buyWhenSoldOut(User $user, TicketCategory $ticketCategory)
+    {
+        return false;
+    }
+
+    /**
+     * @param User $user
+     * @param TicketCategory $ticketCategory
+     * @return false
+     */
+    public function buyAfterEndDate(User $user, TicketCategory $ticketCategory)
+    {
+        return false;
     }
 
     /**

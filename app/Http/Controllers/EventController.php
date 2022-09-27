@@ -45,6 +45,43 @@ class EventController extends Controller
     const SESSION_WAITING_LIST_ACCESS_TOKEN = 'waiting_list_access_token';
 
     /**
+     * @return bool
+     */
+    public static function hasValidWaitingListToken(Event $event)
+    {
+        // check if we have an access token
+        $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
+        if (!$accessToken) {
+            return true;
+        }
+
+        /** @var User $validAccessToken */
+        $validAccessToken =
+            $event->waitingList()
+                ->wherePivot('access_token', '=', $accessToken)
+                ->first();
+
+        if (!$validAccessToken) {
+            return true;
+        }
+
+        // was this access token already used?
+        foreach ($validAccessToken->groups as $group) {
+            if (
+                $event
+                    ->orders()
+                    ->accepted()
+                    ->where('group_id', '=', $group->id)
+                    ->first()
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Show all upcoming events
      */
     public function index(Request $request)
@@ -429,37 +466,7 @@ class EventController extends Controller
     {
         // is sold out?
         if ($event->isSoldOut(true)) {
-
-            // check if we have an access token
-            $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
-            if (!$accessToken) {
-                return true;
-            }
-
-            /** @var User $validAccessToken */
-            $validAccessToken =
-                $event->waitingList()
-                    ->wherePivot('access_token', '=', $accessToken)
-                    ->first();
-
-            if (!$validAccessToken) {
-                return true;
-            }
-
-            // was this access token already used?
-            foreach ($validAccessToken->groups as $group) {
-                if (
-                $event
-                    ->orders()
-                    ->accepted()
-                    ->where('group_id', '=', $group->id)
-                    ->first()
-                ) {
-                    return true;
-                }
-            }
-
-            return false;
+            return self::hasValidWaitingListToken($event);
         }
 
         return false;
