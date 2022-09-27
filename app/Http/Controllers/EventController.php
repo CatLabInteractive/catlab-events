@@ -52,7 +52,7 @@ class EventController extends Controller
         // check if we have an access token
         $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
         if (!$accessToken) {
-            return true;
+            return false;
         }
 
         /** @var User $validAccessToken */
@@ -62,7 +62,7 @@ class EventController extends Controller
                 ->first();
 
         if (!$validAccessToken) {
-            return true;
+            return false;
         }
 
         // was this access token already used?
