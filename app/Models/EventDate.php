@@ -121,10 +121,10 @@ class EventDate extends Model implements EuklesModel
     /**
      * @return int|null
      */
-    public function countAvailableTickets()
+    public function countAvailableTickets($includePendingSales = true)
     {
         if ($this->max_tickets) {
-            return $this->max_tickets - $this->countSoldTickets();
+            return $this->max_tickets - $this->countSoldTickets($includePendingSales);
         } else {
             return null;
         }
@@ -133,11 +133,17 @@ class EventDate extends Model implements EuklesModel
     /**
      * @return int
      */
-    public function countSoldTickets()
+    public function countSoldTickets($includePendingSales = true)
     {
+        if ($includePendingSales) {
+            $states = [Order::STATE_ACCEPTED, Order::STATE_PENDING];
+        } else {
+            $states = [Order::STATE_ACCEPTED ];
+        }
+
         return $this
             ->orders()
-            ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
+            ->whereIn('state', $states)
             ->count();
     }
 

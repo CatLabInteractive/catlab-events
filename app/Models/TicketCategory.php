@@ -156,18 +156,18 @@ class TicketCategory extends Model implements EuklesModel
     /**
      * @return null|int
      */
-    public function countAvailableTickets()
+    public function countAvailableTickets($includePendingSales = true)
     {
-        $eventAvailable = $this->countAvailableEventDateTickets();
+        $eventAvailable = $this->countAvailableEventDateTickets($includePendingSales);
         if ($eventAvailable !== null && $eventAvailable <= 0) {
             return 0;
         }
 
         if ($this->max_tickets) {
             if ($eventAvailable !== null) {
-                return min($eventAvailable, $this->max_tickets - $this->countSoldTickets());
+                return min($eventAvailable, $this->max_tickets - $this->countSoldTickets($includePendingSales));
             } else {
-                return $this->max_tickets - $this->countSoldTickets();
+                return $this->max_tickets - $this->countSoldTickets($includePendingSales);
             }
         } elseif ($eventAvailable !== null) {
             return $eventAvailable;
@@ -179,42 +179,48 @@ class TicketCategory extends Model implements EuklesModel
     /**
      * @return int|null
      */
-    public function countAvailableEventDateTickets()
+    public function countAvailableEventDateTickets($includePendingSales = true)
     {
         if (count($this->eventDates) === 0) {
             return null;
         }
 
         return $this->eventDates
-            ->map(function(EventDate $eventDate) {
-                return $eventDate->countAvailableTickets();
+            ->map(function(EventDate $eventDate) use ($includePendingSales) {
+                return $eventDate->countAvailableTickets($includePendingSales);
             })->min();
     }
 
     /**
      * @return int
      */
-    public function countSoldTickets()
+    public function countSoldTickets($includePendingSales = true)
     {
+        if ($includePendingSales) {
+            $states = [Order::STATE_ACCEPTED, Order::STATE_PENDING];
+        } else {
+            $states = [Order::STATE_ACCEPTED ];
+        }
+
         return $this
             ->orders()
-            ->whereIn('state', [ Order::STATE_ACCEPTED, Order::STATE_PENDING ])
+            ->whereIn('state', $states)
             ->count();
     }
 
     /**
      * @return int
      */
-    public function countSoldEventDateTickets()
+    public function countSoldEventDateTickets($includePendingSales = true)
     {
         if (count($this->eventDates) === 0) {
-            return $this->countSoldTickets();
+            return $this->countSoldTickets($includePendingSales);
         }
 
         $total = 0;
         foreach ($this->eventDates as $eventDate) {
             /** @var EventDate $eventDate */
-            $total += $eventDate->countSoldTickets();
+            $total += $eventDate->countSoldTickets($includePendingSales);
         }
         return $total;
     }
@@ -413,8 +419,8 @@ class TicketCategory extends Model implements EuklesModel
      */
     public function getEuklesAttributes()
     {
-        $availableTickets = $this->countAvailableTickets();
-        $soldTickets = $this->countSoldEventDateTickets();
+        $availableTickets = $this->countAvailableTickets(false);
+        $soldTickets = $this->countSoldEventDateTickets(false);
 
         $eventDates = [];
         foreach ($this->eventDates as $eventDate) {
