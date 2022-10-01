@@ -466,7 +466,11 @@ class EventController extends Controller
     {
         // is sold out?
         if ($event->isSoldOut(true)) {
-            return self::hasValidWaitingListToken($event);
+            if (self::hasValidWaitingListToken($event)) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
         return false;
