@@ -275,7 +275,7 @@ class TicketCategory extends Model implements EuklesModel
             if (
                 $available !== null &&
                 $available <= 0 &&
-                ! (! (\Auth::user() && \Auth::user()->can('buyWhenSoldOut', $this)))
+                ! (\Auth::user() && \Auth::user()->can('buyWhenSoldOut', $this))
             ) {
                 $this->availableError = [ 'Uitverkocht.' ];
             }
