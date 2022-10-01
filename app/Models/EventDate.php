@@ -99,7 +99,7 @@ class EventDate extends Model implements EuklesModel
      */
     public function isSoldOut()
     {
-        return $this->countAvailableTickets() === 0;
+        return $this->countAvailableTickets() <= 0;
     }
 
     /**
