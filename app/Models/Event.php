@@ -368,7 +368,7 @@ class Event extends Model implements EuklesModel
         $availableTickets = 0;
         foreach ($this->eventDates as $eventDate) {
             /** @var EventDate $eventDate */
-            $availableTickets += $eventDate->countAvailableTickets();
+            $availableTickets += $eventDate->countAvailableTickets($includePending);
         }
         return $availableTickets;
     }

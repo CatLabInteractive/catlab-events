@@ -124,7 +124,7 @@ class EventDate extends Model implements EuklesModel
     public function countAvailableTickets($includePendingSales = true)
     {
         if ($this->max_tickets) {
-            return $this->max_tickets - $this->countSoldTickets($includePendingSales);
+            return max(0, $this->max_tickets - $this->countSoldTickets($includePendingSales));
         } else {
             return null;
         }

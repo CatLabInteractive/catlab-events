@@ -167,7 +167,7 @@ class TicketCategory extends Model implements EuklesModel
             if ($eventAvailable !== null) {
                 return min($eventAvailable, $this->max_tickets - $this->countSoldTickets($includePendingSales));
             } else {
-                return $this->max_tickets - $this->countSoldTickets($includePendingSales);
+                return max(0, $this->max_tickets - $this->countSoldTickets($includePendingSales));
             }
         } elseif ($eventAvailable !== null) {
             return $eventAvailable;
