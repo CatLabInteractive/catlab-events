@@ -106,9 +106,10 @@ class TicketCategoriesPolicy
      */
     public function buyWhenSoldOut(User $user, TicketCategory $ticketCategory)
     {
+        /*
         if (EventController::hasValidWaitingListToken($ticketCategory->event)) {
             return true;
-        }
+        }*/
 
         return false;
     }
