@@ -57,7 +57,7 @@ class StringHelper
      */
     public static function datesToDescription(Collection $dates)
     {
-        $dates = $dates->sort();
+        $dates = $dates->sort()->values();
 
         $parts = [];
         $hours = [];

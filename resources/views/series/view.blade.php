@@ -232,8 +232,8 @@
 
                 @foreach($events as $event)
 
-                    @if(count($event->eventDates->sortBy('startDate')) > 0)
-                        @foreach( $event->eventDates as $v)
+                    @if(count($event->eventDates) > 0)
+                        @foreach( $event->eventDates->sortBy('startDate') as $v)
                             <div class="row">
                                 <div class="col-md-3 hero-small-date text-center">
                                     <h3>{{ $v->startDate->format('d') }}</h3>
