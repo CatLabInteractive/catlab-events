@@ -61,7 +61,7 @@
 
     @if($adminLink)
         <a href="{{$adminLink}}" class="btn btn-default">Lijst bekijken</a>
-        <a href="{{action('WaitingListController@massGenerateAccessTokens', [ $event->id ])}}" class="btn btn-default">Mass code table</a>
+        <a href="{{action('WaitingListController@massGenerateAccessTokens', [ $event->id ])}}" class="btn btn-default">Mass code list</a>
     @endif
 
 @endsection
