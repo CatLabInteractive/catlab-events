@@ -50,7 +50,7 @@
                             <div class="banner-desc">
                                 @if(count($nextEvent->eventDates) > 0)
                                     <ul>
-                                        @foreach($nextEvent->eventDates as $eventDate)
+                                        @foreach($event->eventDates->sortBy('startDate') as $v)
                                             @if($eventDate->isSoldOut())
                                                 <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }} (Uitverkocht)</li>
                                             @else
@@ -233,7 +233,7 @@
                 @foreach($events as $event)
 
                     @if(count($event->eventDates) > 0)
-                        @foreach( $event->eventDates->sortBy('startDate')->values()->all() as $v)
+                        @foreach($event->eventDates->sortBy('startDate') as $v)
                             <div class="row">
                                 <div class="col-md-3 hero-small-date text-center">
                                     <h3>{{ $v->startDate->format('d') }}</h3>

@@ -12,7 +12,7 @@
         <tr>
             <td>
                 @if(count($v->eventDates) > 0)
-                    @foreach ($v->eventDates as $eventDate)
+                    @foreach ($v->eventDates->sortBy('startDate') as $eventDate)
                         @if($eventDate->startDate)
                             <a href="{{ $v->series->getUrl($v) }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
                             <br />
