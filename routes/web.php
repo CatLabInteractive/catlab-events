@@ -144,6 +144,7 @@ Route::group([
 
     Route::get('events/{event}/waitinglist/view', 'WaitingListController@viewList')->middleware([ 'admin' ]);
     Route::get('events/{event}/waitinglist/generate/{user}', 'WaitingListController@generateAccessToken')->middleware([ 'admin' ]);
+    Route::get('events/{event}/waitinglist/mass-generate', 'WaitingListController@massGenerateAccessTokens')->middleware([ 'admin' ]);
 
     Route::get('orders', 'OrderController@index');
     Route::get('orders/{id}', 'OrderController@view');

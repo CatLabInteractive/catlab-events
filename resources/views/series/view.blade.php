@@ -232,7 +232,7 @@
 
                 @foreach($events as $event)
 
-                    @if(count($event->eventDates) > 0)
+                    @if(count($event->eventDates->orderBy('startDate')) > 0)
                         @foreach( $event->eventDates as $v)
                             <div class="row">
                                 <div class="col-md-3 hero-small-date text-center">

@@ -23,6 +23,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 /**
@@ -184,19 +186,7 @@ class WaitingListController
 
         foreach ($users as $user) {
             // Check for group
-            $goingGroup = null;
-            foreach ($user->groups as $group) {
-                if (
-                    $event
-                        ->orders()
-                        ->accepted()
-                        ->where('group_id', '=', $group->id)
-                        ->first()
-                ) {
-                    $goingGroup = $group;
-                    break;
-                }
-            }
+            $goingGroup = $this->getAttendingGroup($event, $user);
 
             $waitingList[] = [
                 'index' => ++ $index,
@@ -230,15 +220,91 @@ class WaitingListController
             return redirect('WaitingListController@notifyList', [ $event ]);
         }
 
+        $this->generatePivotAccessToken($user);
+        return view('events/waitingListInvitation', [
+            'event' => $event,
+            'user' => $user,
+            'url' => $this->getAccessTokenUrl($event, $user)
+        ]);
+    }
+
+    /**
+     * @param $eventId
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function massGenerateAccessTokens($eventId)
+    {
+        /** @var Event $event */
+        $event = Event::findOrFail($eventId);
+
+        $waitingList = [];
+        $index = 0;
+
+        $users = $event
+            ->waitingList()
+            ->withPivot('access_token')
+            ->get();
+
+        foreach ($users as $user) {
+            if (!$this->getAttendingGroup($event, $user)) {
+                $this->generatePivotAccessToken($user);
+
+                $waitingList[] = [
+                    'index' => ++$index,
+                    'user' => $user,
+                    'url' => $this->getAccessTokenUrl($event, $user)
+                ];
+            }
+        }
+
+        return view('events/massGeneration', [
+            'event' => $event,
+            'waitingList' => $waitingList
+        ]);
+    }
+
+    /**
+     * @param Event $event
+     * @param User $user
+     * @return Order|null
+     */
+    protected function getAttendingGroup(Event $event, User $user)
+    {
+        foreach ($user->groups as $group) {
+            if (
+                $event
+                    ->orders()
+                    ->accepted()
+                    ->where('group_id', '=', $group->id)
+                    ->first()
+            ) {
+                return $group;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param User $user
+     * @return void
+     */
+    private function generatePivotAccessToken(User $user)
+    {
         if (!$user->pivot->access_token) {
             $token = Str::random(12);
             $user->pivot->access_token = $token;
             $user->pivot->save();
         }
+    }
 
-        return view('events/waitingListInvitation', [
-            'event' => $event,
-            'user' => $user
-        ]);
+    /**
+     * @param Event $event
+     * @param $user
+     * @return string
+     */
+    private function getAccessTokenUrl(Event $event, $user)
+    {
+        return action('EventController@selectTicketCategory', [ $event->id, 'wt' => $user->pivot->access_token ]);
     }
 }

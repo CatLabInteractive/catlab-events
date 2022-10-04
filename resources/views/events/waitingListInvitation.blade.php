@@ -19,7 +19,7 @@ Beste {{ $user->username }},
 Er is een ticket vrijgekomen voor {{ $event->name }} op {{ $event->startDate->format('m/d/Y') }} en jij staat als volgende op de wachtlijst.
 
 Ben je nog geïnteresseerd in het ticket? Bestel het dan snel via
-{{ action('EventController@selectTicketCategory', [ $event->id, 'wt' => $user->pivot->access_token ]) }}
+{{ $url }}
 
 Wees er snel bij, want als je het niet binnen de 24u besteld gaat het naar de volgende.
 Toch geen interesse? Stuur ons dan een mailtje terug, zodat wij de volgende kunnen uitnodigen.
