@@ -10,16 +10,16 @@
 
     <h3>Pre-registration / waiting list</h3>
 
-    <table>
-        <tr>
-            @foreach($waitingList as $listItem)
+    <table class="table">
+        @foreach($waitingList as $listItem)
+            <tr>
                 <td>{{$listItem['index']}}</td>
-                <td>{{ $user['user']->pivot->created_at->format('d/m/Y H:i') }}</td>
+                <td>{{$user['user']->pivot->created_at->format('d/m/Y H:i')}}</td>
                 <td>{{$listItem['user']->name}}</td>
                 <td>{{$listItem['user']->email}}</td>
                 <td>{{$listItem['url']}}</td>
-            @endforeach
-        </tr>
+            </tr>
+        @endforeach
     </table>
 
 @endsection
