@@ -82,6 +82,32 @@ class EventController extends Controller
     }
 
     /**
+     * @param Event $event
+     * @return bool
+     */
+    public static function removeValidWaitingListToken(Event $event)
+    {
+        // check if we have an access token
+        $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
+        if (!$accessToken) {
+            return false;
+        }
+
+        /** @var User $validAccessToken */
+        $validAccessToken =
+            $event->waitingList()
+                ->wherePivot('access_token', '=', $accessToken)
+                ->first();
+
+        if (!$validAccessToken) {
+            return false;
+        }
+
+        $event->waitingList()->detach($validAccessToken->id);
+        return true;
+    }
+
+    /**
      * Show all upcoming events
      */
     public function index(Request $request)

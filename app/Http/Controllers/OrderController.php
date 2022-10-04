@@ -105,6 +105,8 @@ class OrderController extends Controller
             $retryFormInput['uitpas'] = \Request::session()->get('uitpas_card_number');
         }
 
+        EventController::removeValidWaitingListToken($order->event);
+
         return view(
             'orders/thanks',
             [
