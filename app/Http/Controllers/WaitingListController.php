@@ -257,7 +257,7 @@ class WaitingListController
             }
         }
 
-        return view('events/massGeneration', [
+        return view('events.waitingListMassGeneration', [
             'event' => $event,
             'waitingList' => $waitingList
         ]);
