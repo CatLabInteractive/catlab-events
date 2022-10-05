@@ -379,7 +379,7 @@ class EventController extends Controller
             'maxGroups' => 0
         ];
 
-        foreach ($event->eventDates as $eventDate) {
+        foreach ($event->eventDates->sortBy('startDate') as $eventDate) {
             /** @var EventDate $eventDate */
             $attendees = $eventDate->attendees()->get();
             $out['maxGroups'] = max($out['maxGroups'], $attendees->count());
