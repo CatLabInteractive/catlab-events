@@ -91,7 +91,10 @@ class TicketCategoriesPolicy
      */
     public function buyBeforeStartDate(User $user, TicketCategory $ticketCategory)
     {
-        if (EventController::hasValidWaitingListToken($ticketCategory->event)) {
+        if (
+            EventController::hasValidWaitingListToken($ticketCategory->event) &&
+            !$ticketCategory->event->isRegistrationClosed()
+        ) {
             return true;
         }
 
