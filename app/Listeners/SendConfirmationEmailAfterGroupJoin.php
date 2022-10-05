@@ -56,11 +56,12 @@ class SendConfirmationEmailAfterGroupJoin extends SendEmail
         $orders = $group->orders()
             ->leftJoin('events', 'events.id', '=', 'orders.event_id')
             ->where('orders.state', '=', Order::STATE_ACCEPTED)
-            ->where('events.endDate', '>', new \DateTime())
             ->get();
 
         foreach ($orders as $order) {
-            $this->sendConfirmationEmail($order, $order->event, $member->user);
+            if ($order->event->startDate && !$order->event->isFinished()) {
+                $this->sendConfirmationEmail($order, $order->event, $member->user);
+            }
         }
     }
 }
