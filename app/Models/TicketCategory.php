@@ -282,8 +282,7 @@ class TicketCategory extends Model implements EuklesModel
 
             elseif (
                 $this->start_date && ($this->start_date > new DateTime()) &&
-                ! (\Auth::user() && \Auth::user()->can('buyBeforeStartDate', $this)) &&
-                !EventController::hasValidWaitingListToken($this->event)
+                ! (\Auth::user() && \Auth::user()->can('buyBeforeStartDate', $this))
             ) {
                 $this->availableError = [ 'Vanaf %s', $this->start_date ];
             }
