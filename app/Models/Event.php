@@ -561,7 +561,8 @@ class Event extends Model implements EuklesModel
      */
     public function isRegistrationClosed()
     {
-        return $this->registration === self::REGISTRATION_CLOSED;
+        return $this->registration === self::REGISTRATION_CLOSED ||
+            $this->registration === self::REGISTRATION_FULL;
     }
 
     /**
