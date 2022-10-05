@@ -412,7 +412,7 @@ class Event extends Model implements EuklesModel
             return false;
         }
 
-        if ($this->registration === self::REGISTRATION_FULL) {
+        if ($this->isRegistrationFull()) {
             return true;
         }
 
@@ -561,8 +561,15 @@ class Event extends Model implements EuklesModel
      */
     public function isRegistrationClosed()
     {
-        return $this->registration === self::REGISTRATION_CLOSED ||
-            $this->registration === self::REGISTRATION_FULL;
+        return $this->registration === self::REGISTRATION_CLOSED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRegistrationFull()
+    {
+        return $this->registration === self::REGISTRATION_FULL;
     }
 
     /**

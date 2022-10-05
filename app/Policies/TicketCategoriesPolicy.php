@@ -93,7 +93,8 @@ class TicketCategoriesPolicy
     {
         if (
             EventController::hasValidWaitingListToken($ticketCategory->event) &&
-            !$ticketCategory->event->isRegistrationClosed()
+            !$ticketCategory->event->isRegistrationClosed() &&
+            !$ticketCategory->event->isRegistrationFull()
         ) {
             return true;
         }
