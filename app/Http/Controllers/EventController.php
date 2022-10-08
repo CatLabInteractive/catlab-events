@@ -47,7 +47,7 @@ class EventController extends Controller
     /**
      * @return bool
      */
-    public static function hasValidWaitingListToken(Event $event)
+    public static function getValidWaitingListToken(Event $event)
     {
         // check if we have an access token
         $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
@@ -56,55 +56,24 @@ class EventController extends Controller
         }
 
         /** @var User $validAccessToken */
-        $validAccessToken =
-            $event->waitingList()
-                ->wherePivot('access_token', '=', $accessToken)
-                ->first();
+        $user = $event->waitingList()
+            ->wherePivot('access_token', '=', $accessToken)
+            ->first();
 
-        if (!$validAccessToken) {
+        if (!$user) {
             return false;
         }
 
-        // was this access token already used?
-        foreach ($validAccessToken->groups as $group) {
-            if (
-                $event
-                    ->orders()
-                    ->accepted()
-                    ->where('group_id', '=', $group->id)
-                    ->first()
-            ) {
-                return false;
-            }
-        }
+        // Find any order that might be using this token
+        $existingOrders = Order::accepted()
+            ->waitingListAccessToken($accessToken)
+            ->count();
 
-        return true;
-    }
-
-    /**
-     * @param Event $event
-     * @return bool
-     */
-    public static function removeValidWaitingListToken(Event $event)
-    {
-        // check if we have an access token
-        $accessToken = \Request::session()->get(self::SESSION_WAITING_LIST_ACCESS_TOKEN);
-        if (!$accessToken) {
+        if ($existingOrders > 0) {
             return false;
         }
 
-        /** @var User $validAccessToken */
-        $validAccessToken =
-            $event->waitingList()
-                ->wherePivot('access_token', '=', $accessToken)
-                ->first();
-
-        if (!$validAccessToken) {
-            return false;
-        }
-
-        $event->waitingList()->detach($validAccessToken->id);
-        return true;
+        return $accessToken;
     }
 
     /**
@@ -492,7 +461,7 @@ class EventController extends Controller
     {
         // is sold out?
         if ($event->isSoldOut(true)) {
-            if (self::hasValidWaitingListToken($event)) {
+            if (self::getValidWaitingListToken($event)) {
                 return false;
             } else {
                 return true;
@@ -757,7 +726,8 @@ class EventController extends Controller
         $client = new ApiClient($user);
 
         // create a default order
-        $order = $ticketCategory->createOrder($group);
+        $waitingListAccessToken = self::getValidWaitingListToken($event);
+        $order = $ticketCategory->createOrder($group, $waitingListAccessToken ?: null);
 
         // Check if an uitpas card id was provided.
         $uitPas = $request->input('uitpas');

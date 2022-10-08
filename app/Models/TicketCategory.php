@@ -107,12 +107,14 @@ class TicketCategory extends Model implements EuklesModel
     }
 
     /**
-     * @param Group $group
+     * @param Group|null $group
+     * @param string $waitingListAccessToken
      * @return Order
      */
-    public function createOrder(Group $group = null)
+    public function createOrder(Group $group = null, $waitingListAccessToken = null)
     {
         $order = new Order();
+        $order->waiting_list_access_token = $waitingListAccessToken;
 
         $order->event()->associate($this->event);
 

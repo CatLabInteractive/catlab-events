@@ -247,6 +247,15 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeWaitingListAccessToken($query)
+    {
+        return $query->where('waiting_list_access_token', '=', $query);
+    }
+
+    /**
      * @return array[]
      */
     public function getEuklesId()
