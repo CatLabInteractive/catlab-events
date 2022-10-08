@@ -248,11 +248,12 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
 
     /**
      * @param $query
-     * @return mixed
+     * @param $accessToken
+     * @return Builder
      */
-    public function scopeWaitingListAccessToken($query)
+    public function scopeWaitingListAccessToken($query, $accessToken)
     {
-        return $query->where('waiting_list_access_token', '=', $query);
+        return $query->where('waiting_list_access_token', '=', $accessToken);
     }
 
     /**
