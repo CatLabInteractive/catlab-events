@@ -12,7 +12,7 @@
                         <div class="ts-facts">
                         <span class="ts-facts-img">
                         <img class="lazy" data-src="/images/icons/fact-country.png" alt="Jaren actief icoon"
-                             title="{{ organisation()->name }} is reeds {{ (new DateTime())->diff($firstQuizDate)->y }} actief."/>
+                             title="{{ organisation()->name }} is reeds {{ (new DateTime())->diff($firstQuizDate)->y }} jaar actief."/>
                         </span>
                             <div class="ts-facts-content">
                                 <h2 class="ts-facts-num"><span
