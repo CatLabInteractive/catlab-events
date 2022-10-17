@@ -422,7 +422,7 @@ class Event extends Model implements EuklesModel
                 return false;
             }
 
-            if ($availableTickets && $availableTickets <= 0) {
+            if ($availableTickets <= 0) {
                 $this->registration = self::REGISTRATION_FULL;
                 $this->save();
                 return true;
