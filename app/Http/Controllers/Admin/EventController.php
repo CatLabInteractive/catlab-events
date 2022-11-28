@@ -269,6 +269,7 @@ class EventController extends Controller
             'Id',
             'Reference',
             'Date',
+            'Ticket Category',
             'Group name',
             'Email address',
             'Ticket category',
