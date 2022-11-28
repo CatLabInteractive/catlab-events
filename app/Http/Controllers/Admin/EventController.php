@@ -29,6 +29,7 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Order;
+use App\Models\TicketCategory;
 use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\ResourceDefinition;
@@ -164,14 +165,17 @@ class EventController extends Controller
     /**
      * @param $eventId
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Exception
      */
     public function exportMembers($eventId)
     {
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
 
+        $ticketCategories = $event->getTicketCategoriesChronologically();
+
         $out = [];
-        foreach ($event->ticketCategories as $ticketCategory) {
+        foreach ($ticketCategories as $ticketCategory) {
             foreach ($ticketCategory->attendees()->get() as $group) {
                 /** @var Group $v */
 

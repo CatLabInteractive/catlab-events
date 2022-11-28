@@ -113,6 +113,24 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @return mixed
+     */
+    public function getTicketCategoriesChronologically()
+    {
+        return $this->ticketCategories->sort(function(TicketCategory $a, TicketCategory $b) {
+
+            $aStartDate = $a->eventDates->pluck('startDate')->min();
+            $bStartDate = $b->eventDates->pluck('startDate')->min();
+
+            if ($aStartDate && $bStartDate) {
+                return $aStartDate - $bStartDate;
+            }
+
+            return $a->id - $b->id;
+        });
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function venue()

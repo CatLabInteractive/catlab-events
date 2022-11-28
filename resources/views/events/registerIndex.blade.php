@@ -16,9 +16,11 @@
 
                 <tr>
                     <td>
-                        <a href="{{ $v->getUrl() }}">
-                            {{ $v->startDate->format('d/m/Y H:i') }}
-                        </a>
+                        @if($v->startDate)
+                            <a href="{{ $v->getUrl() }}">
+                                {{ $v->startDate->format('d/m/Y H:i') }}
+                            </a>
+                        @endif
                     </td>
 
                     <td>
