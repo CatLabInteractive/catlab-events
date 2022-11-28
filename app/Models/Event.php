@@ -123,7 +123,7 @@ class Event extends Model implements EuklesModel
             $bStartDate = $b->eventDates->pluck('startDate')->min();
 
             if ($aStartDate && $bStartDate) {
-                return $aStartDate - $bStartDate;
+                return $aStartDate->getTimestamp() - $bStartDate->getTimestamp();
             }
 
             return $a->id - $b->id;
