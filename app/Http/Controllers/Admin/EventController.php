@@ -171,24 +171,29 @@ class EventController extends Controller
         $event = Event::findOrFail($eventId);
 
         $out = [];
-        foreach ($event->attendees()->get() as $group) {
-            /** @var Group $v */
+        foreach ($event->ticketCategories as $ticketCategory) {
+            foreach ($ticketCategory->attendees()->get() as $group) {
+                /** @var Group $v */
 
-            foreach ($group->members as $member) {
-                /** @var GroupMember $member */
-                if ($member->user) {
-                    $out[] = [
-                        $member->user->email,
-                        $group->name,
-                        $member->getName()
-                    ];
+                foreach ($group->members as $member) {
+                    /** @var GroupMember $member */
+                    if ($member->user) {
+                        $out[] = [
+                            $ticketCategory->id,
+                            $ticketCategory->name,
+                            $member->user->email,
+                            $group->name,
+                            $member->getName()
+                        ];
+                    }
                 }
             }
+
         }
 
         return $this->outputCsv(
-            str_slug($event->name) . '-members',
-            ['email', 'team', 'username'],
+            Str::slug($event->name) . '-emails',
+            ['ticketCategoryId', 'ticketCategory', 'email', 'team', 'username'],
             $out
         );
     }

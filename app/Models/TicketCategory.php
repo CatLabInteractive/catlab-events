@@ -84,6 +84,28 @@ class TicketCategory extends Model implements EuklesModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function attendees()
+    {
+        $orderGroupIds = $this->event->orders()
+            ->accepted()
+            ->whereNotNull('group_id')
+            ->where('ticket_category_id', '=', $this)
+            ->pluck('group_id')
+            ->toArray();
+
+        if (count($orderGroupIds) > 0) {
+            return Group
+                ::whereIn('id', $orderGroupIds)
+                ->orderByRaw("FIELD(id, " . implode(',', $orderGroupIds) . ")");
+        } else {
+            return Group
+                ::whereIn('id', $orderGroupIds);
+        }
+    }
+
+    /**
      * @return array
      */
     public function getDateRangeForDisplay()
