@@ -91,7 +91,7 @@ class TicketCategory extends Model implements EuklesModel
         $orderGroupIds = $this->event->orders()
             ->accepted()
             ->whereNotNull('group_id')
-            ->where('ticket_category_id', '=', $this)
+            ->where('ticket_category_id', '=', $this->id)
             ->pluck('group_id')
             ->toArray();
 
