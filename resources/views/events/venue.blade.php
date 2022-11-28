@@ -25,6 +25,8 @@
         </tr>
     </table>
 
+    {!! $venue->description !!}
+
     @include('blocks.agenda')
 
     <section id="contact">
