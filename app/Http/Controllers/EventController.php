@@ -112,7 +112,7 @@ class EventController extends Controller
         if (
             $upcomingEvent &&
             $upcomingEvent->startDate &&
-            $upcomingEvent->startDate->getTimestamp() < (new \DateTime())->sub(new \DateInterval('P2D'))
+            $upcomingEvent->startDate->getTimestamp() < (new \DateTime())->add(new \DateInterval('P2D'))->getTimestamp()
         ) {
             $nextEvent = $upcomingEvent;
         } else {
