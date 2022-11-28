@@ -99,23 +99,43 @@ class EventController extends Controller
             return redirect('admin');
         }
 
-        $nextEvent = null;
-        $nextEventIndex = 0;
-        while ($nextEvent === null) {
-            $nextEvent = $organisation
-                ->events()
-                ->upcoming()
-                ->published()
-                ->orderByStartDate()
-                ->skip($nextEventIndex)
-                ->first();
+        // Do we have an event that happens in the next 48 hours?
+        $upcomingEvents = $organisation
+            ->events()
+            ->upcoming()
+            ->published()
+            ->orderByStartDate()
+            ->limit(1);
 
-            if (!$nextEvent) {
-                $nextEvent = false;
-            } else if ($nextEvent->isSoldOut()) {
-                $nextEvent = null;
-                $nextEventIndex ++;
+        $upcomingEvent = $upcomingEvents->first();
+
+        if (
+            $upcomingEvent &&
+            $upcomingEvent->startDate &&
+            $upcomingEvent->startDate->getTimestamp() < (new \DateTime())->sub(new \DateInterval('P2D'))
+        ) {
+            $nextEvent = $upcomingEvent;
+        } else {
+
+            $nextEvent = null;
+            $nextEventIndex = 0;
+            while ($nextEvent === null) {
+                $nextEvent = $organisation
+                    ->events()
+                    ->upcoming()
+                    ->published()
+                    ->orderByStartDate()
+                    ->skip($nextEventIndex)
+                    ->first();
+
+                if (!$nextEvent) {
+                    $nextEvent = false;
+                } else if ($nextEvent->isSoldOut()) {
+                    $nextEvent = null;
+                    $nextEventIndex++;
+                }
             }
+
         }
 
         if ($nextEvent) {
