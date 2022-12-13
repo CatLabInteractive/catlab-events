@@ -80,7 +80,9 @@
                                     <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-default"><i class="fa fa-play"></i> Livestream</a>
                                 @endif
 
-                                @if($nextEvent->isSelling())
+                                @if(!$nextEvent->hasFiniteTickets())
+
+                                @elseif($nextEvent->isSelling())
                                     <a href="{{ action('EventController@selectTicketCategory', [ $nextEvent->id ] ) }}" class="btn btn-primary"><i class="fa fa-ticket"></i> {{ $nextEvent->getOrderLabel() }}</a>
                                 @elseif($nextEvent->isSoldOut())
                                     <a href="{{ action('WaitingListController@waitingList', [ $nextEvent->id ]) }}" class="btn btn-danger"><i class="fa fa-ticket"></i> {{ $nextEvent->getNotSellingReason() }} / Wachtlijst</a>
