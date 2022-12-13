@@ -80,7 +80,7 @@ class StringHelper
         }
 
         if (count($parts) === 1) {
-            return $parts[0];
+            return Str::ucfirst($parts[0]);
         }
 
         $lastDate = array_pop($parts);
