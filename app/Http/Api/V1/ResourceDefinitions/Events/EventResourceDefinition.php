@@ -179,11 +179,6 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true)
             ->number();
 
-        $this->field('team_size')
-            ->visible()
-            ->writeable(true, true)
-            ->number();
-
         $this->field('campaign_id')
             ->display('quizwitz_campaign_id')
             ->visible()
@@ -235,6 +230,11 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(false, true)
             ->required()
             ->bool();
+
+        $this->field('team_size')
+            ->visible()
+            ->writeable(true, true)
+            ->number();
 
         $this->field('include_ticket_fee')
             ->visible()
