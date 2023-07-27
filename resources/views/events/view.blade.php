@@ -72,7 +72,7 @@
                             </p>
                         </div>
 
-                        @if ($event->isSelling())
+                        @if ($event->willSell())
                             <p class="price">
                                 @if($event->team_size)
                                     Tickets: {!! $event->getFormattedPublishedPrice(true) !!} per team (max {{$event->team_size}} spelers)
