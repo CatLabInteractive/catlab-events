@@ -43,7 +43,7 @@
         >
             <!-- Subpage title start -->
             <div class="page-banner-title">
-                <div class="text-center">
+                <div class="container text-center">
                     <h2>@yield('title')</h2>
                 </div>
             </div><!-- Subpage title end -->

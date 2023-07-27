@@ -127,7 +127,7 @@
         >
             <!-- Subpage title start -->
             <div class="page-banner-title">
-                <div class="text-center">
+                <div class="container text-center">
                     <h2>{{ $series->name }}</h2>
                 </div>
             </div><!-- Subpage title end -->
