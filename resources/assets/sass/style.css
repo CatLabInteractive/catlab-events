@@ -2451,6 +2451,8 @@ h4.panel-title a.collapsed:before {
 .page-banner-title h2 {
     color: #fff;
     font-size: 60px;
+    padding-left: 75px;
+    line-height: 0.9;
 }
 .page-banner-title .breadcrumb {
     background: none;
