@@ -42,7 +42,7 @@
             @endif
     >
         <!-- Subpage title start -->
-        <div class="page-banner-title">
+        <div class="container page-banner-title">
             <div class="text-center">
                 <h2>@yield('title')</h2>
             </div>
