@@ -334,7 +334,7 @@ class TicketCategory extends Model implements EuklesModel
     {
         $warnings = [];
 
-        if ($this->max_tickets) {
+        if ($this->max_tickets && $this->countAvailableTickets() < 11) {
             $warnings[] = [ 'Nog %s beschikbaar.', $this->countAvailableTickets() ];
         }
 
