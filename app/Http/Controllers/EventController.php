@@ -296,6 +296,7 @@ class EventController extends Controller
      * View a single event
      * @param $eventId
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Exception
      */
     public function view($eventId)
     {
