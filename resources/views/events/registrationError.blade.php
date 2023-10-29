@@ -16,7 +16,7 @@
 
                 @if($showWaitingList)
                     <br />
-                    <a href="{{ action('WaitingListController@waitingList', [ $nextEvent->id ]) }}" class="btn btn-danger">Schrijf je in op de wachtlijst</a>
+                    <a href="{{ action('WaitingListController@waitingList', [ $event->id ]) }}" class="btn btn-danger">Schrijf je in op de wachtlijst</a>
                 @endif
             </div>
         </div>
