@@ -13,6 +13,11 @@
         <div class="col-md-12">
             <div class="alert alert-danger">
                 {{ $error }}
+
+                @if($showWaitingList)
+                    <br />
+                    <a href="{{ action('WaitingListController@waitingList', [ $nextEvent->id ]) }}" class="btn btn-danger">Schrijf je in op de wachtlijst</a>
+                @endif
             </div>
         </div>
     </div>

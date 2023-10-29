@@ -316,7 +316,7 @@ class EventController extends Controller
         foreach ($event->ticketCategories as $ticketCategory) {
             /** @var TicketCategory $ticketCategory */
             $availableTickets = $ticketCategory->countAvailableTickets();
-            if (isset($availableTickets) && $availableTickets <= 10) {
+            if (isset($availableTickets) && $availableTickets <= 10 && !$this->isSoldOut($event)) {
                 $showAvailableTickets = true;
                 break;
             }
@@ -409,7 +409,8 @@ class EventController extends Controller
                 'events.registrationError',
                 [
                     'event' => $event,
-                    'error' => 'Dit evenement is uitverkocht.'
+                    'error' => 'Dit evenement is uitverkocht.',
+                    'showWaitingList' => true,
                 ]
             );
         }
