@@ -2,6 +2,7 @@
 
 namespace App\Http\Api\V1\Controllers;
 
+use App\Events\OrderCancelled;
 use App\Http\Api\V1\Controllers\Base\ResourceController;
 use App\Http\Api\V1\ResourceDefinitions\OrderResourceDefinition;
 use App\Models\Organisation;
@@ -68,6 +69,16 @@ class OrdersController extends ResourceController
     public function getRelationshipKey(): string
     {
         return self::PARENT_RESOURCE_ID;
+    }
+
+    protected function beforeSaveEntity(Request $request, Model $entity, $isNew = false)
+    {
+        if ($entity->isDirty('ticket_category_id')) {
+            // Ticket category was changed, so send email again.
+            event(new OrderCancelled($entity, true));
+        }
+
+        return $entity;
     }
 
     protected function afterSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity, $isNew = false)
