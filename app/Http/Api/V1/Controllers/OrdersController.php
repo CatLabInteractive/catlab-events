@@ -71,16 +71,6 @@ class OrdersController extends ResourceController
         return self::PARENT_RESOURCE_ID;
     }
 
-    protected function beforeSaveEntity(Request $request, Model $entity, $isNew = false)
-    {
-        if ($entity->isDirty('ticket_category_id')) {
-            // Ticket category was changed, so send email again.
-            event(new OrderCancelled($entity, true));
-        }
-
-        return $entity;
-    }
-
     protected function afterSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity, $isNew = false)
     {
         if ($isNew) {
