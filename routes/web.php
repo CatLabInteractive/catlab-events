@@ -76,6 +76,8 @@ Route::group([
             FrontCrudController::routes('venues', 'Admin\VenueController', 'venue');
             FrontCrudController::routes('people', 'Admin\PeopleController', 'person');
             FrontCrudController::routes('livestreams', 'Admin\LiveStreamController', 'livestream');
+            FrontCrudController::routes('orders', 'Admin\OrderController', 'order');
+
             FrontCrudController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
             //FrontCrudController::routes('events/{event}/dates', 'Admin\EventDateController', 'eventDate');
             \App\Http\Controllers\Admin\EventDateController::routes('events/{event}/eventDates', 'Admin\EventDateController', 'id');

@@ -51,6 +51,7 @@ $routes->group(
 
         \App\Http\Api\V1\Controllers\PeopleController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\LiveStreamController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\OrdersController::setRoutes($routes);
 
     }
 );
