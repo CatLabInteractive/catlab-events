@@ -262,6 +262,11 @@ class TicketCategory extends Model implements EuklesModel
         return $this->getAvailableError() === false;
     }
 
+    public function isFree()
+    {
+        return $this->getTotalPrice() < 0.01;
+    }
+
     /**
      * Same as isAvailable, but returns true for tickets
      * that are not on sale yet.
@@ -364,7 +369,7 @@ class TicketCategory extends Model implements EuklesModel
                 }
             }
             return vsprintf($error[0], $arguments);
-        } else {
+        } elseif ($error) {
             return implode(', ', $error);
         }
     }

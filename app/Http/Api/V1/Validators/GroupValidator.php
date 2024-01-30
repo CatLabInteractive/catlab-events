@@ -66,8 +66,11 @@ class GroupValidator extends ResourceValidator
 
         $groupName = $value->getProperties()->getFromName('name')->getValue();
 
-        // Look for a team with the same name
-        $existing = Group::similarName($groupName)->first();
+        // Look for a team with the same name (that has been active in the past 18 months)
+        $existing = Group::similarName($groupName)
+            ->leftJoin('orders', 'orders.group_id', '=', 'groups.id')
+            ->where('orders.created_at', '>', date('Y-m-d', strtotime('-18 months')))
+            ->first();
 
         if (isset($existing)) {
             // check if we are trying to edit ourselves

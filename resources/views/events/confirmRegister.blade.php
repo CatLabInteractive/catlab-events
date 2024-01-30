@@ -130,31 +130,39 @@
                 </tr>
             @endif
 
-            <tr>
-                <td>Kostprijs</td>
-                <td>
-                    {{ $ticketPriceCalculator->getFormattedPrice() }}
-                    <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)
-                </td>
-            </tr>
+            @if(!$ticketCategory->isFree())
 
-            <tr>
-                <td>Transactiekosten</td>
-                <td>
-                    {{ $ticketPriceCalculator->getFormattedTransactionFee() }}
-                    <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedTransactionFeeVat() }} btw)</span>
-                </td>
-            </tr>
+                <tr>
+                    <td>Kostprijs</td>
+                    <td>
+                        {{ $ticketPriceCalculator->getFormattedPrice() }}
+                        <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)
+                    </td>
+                </tr>
 
-            <tr class="total">
-                <td>Totaal</td>
-                <td>{{ $ticketPriceCalculator->getFormattedTotalPrice() }}</td>
-            </tr>
+                <tr>
+                    <td>Transactiekosten</td>
+                    <td>
+                        {{ $ticketPriceCalculator->getFormattedTransactionFee() }}
+                        <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedTransactionFeeVat() }} btw)</span>
+                    </td>
+                </tr>
+
+                <tr class="total">
+                    <td>Totaal</td>
+                    <td>{{ $ticketPriceCalculator->getFormattedTotalPrice() }}</td>
+                </tr>
+
+            @endif
         </table>
 
     </div>
 
-    <p>{{ Form::submit('Betalen', array('class' => 'btn btn-primary')) }}</p>
+    @if($ticketCategory->isFree())
+        <p>{{ Form::submit('Inschrijven', array('class' => 'btn btn-primary')) }}</p>
+    @else
+        <p>{{ Form::submit('Betalen', array('class' => 'btn btn-primary')) }}</p>
+    @endif
 
     {{ Form::close() }}
 

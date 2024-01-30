@@ -186,7 +186,7 @@ class EventController extends Controller
                             $ticketCategory->id,
                             $ticketCategory->name,
                             $member->user->email,
-                            $group->name,
+                            $event->getAttendeeName($group->name),
                             $member->getName()
                         ];
                     }
@@ -296,7 +296,7 @@ class EventController extends Controller
                 'Reference' => $data['reference'],
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
                 'Ticket Category' => $order->ticketCategory->name,
-                'Group name' => $order->group ? $order->group->name : null,
+                'Group name' => $order->group ? $event->getAttendeeName($order->group->name) : null,
                 'Email address' => $order->user ? $order->user->email : null,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];

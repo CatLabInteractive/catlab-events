@@ -246,7 +246,7 @@
                                         <td>
                                             @if(isset($v['groups'][$i]))
                                                 <a href="{{ $v['groups'][$i]->getUrl() }}">
-                                                    {{ $v['groups'][$i]->name }}
+                                                    {{ $event->getAttendeeName($v['groups'][$i]) }}
                                                 </a>
                                             @endif
                                         </td>

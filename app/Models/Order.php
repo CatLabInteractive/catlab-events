@@ -191,6 +191,10 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function getOrderData($expanded = false)
     {
+        if (!$this->catlab_order_id) {
+            return null;
+        }
+
         if ($expanded) {
             $client = new ApiClient($this->user);
         } else {

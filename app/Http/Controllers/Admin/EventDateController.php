@@ -162,6 +162,9 @@ class EventDateController extends Controller implements FrontCrudControllerContr
         /** @var EventDate $eventDate */
         $eventDate = EventDate::findOrFail($eventDateId);
 
+        /** @var Event $event */
+        $event = $eventDate->event;
+
         $reportId = $eventDate->quizwitz_report_id;
 
         $url = config('services.quizwitz.url') . 'report';
@@ -187,7 +190,7 @@ class EventDateController extends Controller implements FrontCrudControllerContr
             $name = $player['name'];
             $score = $player['score'];
 
-            $group = $eventDate->attendees()->where('name', '=', $name)->first();
+            $group = $event->getAttendeeFromName($eventDate, $name);
             $eventDate->setScore($position, $name, $score, $group);
 
             $position ++;

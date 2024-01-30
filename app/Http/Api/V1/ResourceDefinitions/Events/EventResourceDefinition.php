@@ -135,6 +135,7 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->one()
             ->visible()
             ->linkable(true, true)
+            ->required()
             ->expanded();
 
         $this->relationship('logo', AssetResourceDefinition::class)

@@ -277,6 +277,27 @@ class Event extends Model implements EuklesModel
     }
 
     /**
+     * @param Group $group
+     * @return mixed
+     */
+    public function getAttendeeName(Group $group)
+    {
+        // @TODO: Check for duplicate names (which are possible now) and add a prefix/postfix to the name.
+        return $group->name;
+    }
+
+    /**
+     * @param EventDate $eventDate
+     * @param $name
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model|object|null
+     */
+    public function getAttendeeFromName(EventDate $eventDate, $name)
+    {
+        // TODO: Make sure that the prefix / postfix is removed from the name.
+        return $eventDate->attendees()->where('name', '=', $name)->first();
+    }
+
+    /**
      * Upcoming
      * @param $builder
      * @return mixed

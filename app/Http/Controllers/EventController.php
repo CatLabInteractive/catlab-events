@@ -751,6 +751,12 @@ class EventController extends Controller
         $waitingListAccessToken = self::getValidWaitingListToken($event);
         $order = $ticketCategory->createOrder($group, $waitingListAccessToken ?: null);
 
+        if ($ticketCategory->isFree()) {
+            $order->save();
+            $order->changeState(Order::STATE_ACCEPTED);
+            return $this->redirect(action('OrderController@thanks', [ $order->id ]));
+        }
+
         // Check if an uitpas card id was provided.
         $uitPas = $request->input('uitpas');
         if ($uitPas) {
