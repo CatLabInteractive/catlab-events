@@ -186,7 +186,7 @@ class EventController extends Controller
                             $ticketCategory->id,
                             $ticketCategory->name,
                             $member->user->email,
-                            $event->getAttendeeName($group->name),
+                            $event->getAttendeeName($group),
                             $member->getName()
                         ];
                     }
@@ -289,51 +289,54 @@ class EventController extends Controller
             /** @var Order $order */
 
             $data = $order->getOrderData(true);
-            $total = $data['price'];
+
+            $total = $data ? $data['price'] : 0;
 
             $tmp = [
                 'Id' => $order->id,
-                'Reference' => $data['reference'],
+                'Reference' => $data ? $data['reference'] : '',
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
                 'Ticket Category' => $order->ticketCategory->name,
-                'Group name' => $order->group ? $event->getAttendeeName($order->group->name) : null,
+                'Group name' => $order->group ? $event->getAttendeeName($order->group) : null,
                 'Email address' => $order->user ? $order->user->email : null,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];
 
             $index = 0;
-            $columnNames = [ 'Ticket', 'Costs' ];
+            $columnNames = ['Ticket', 'Costs'];
 
             // items and pricing
-            foreach ($data['items'] as $item) {
+            if ($data) {
+                foreach ($data['items'] as $item) {
 
-                if (!isset($columnNames[$index])) {
-                    break;
+                    if (!isset($columnNames[$index])) {
+                        break;
+                    }
+
+                    $column = $columnNames[$index];
+                    $vatColumn = $column . ' VAT';
+
+                    if (!in_array($column, $columns)) {
+                        $columns[] = $column;
+                        $columnsSum[$column] = 0;
+                    }
+
+                    if (!in_array($vatColumn, $columns)) {
+                        $columns[] = $vatColumn;
+                        $columnsSum[$vatColumn] = 0;
+                    }
+
+                    $price = $item['amount'] * $item['price'];
+                    $vat = $item['amount'] * $item['vat'];
+
+                    $tmp[$column] = $toMoney ? toMoney($price) : $price;
+                    $columnsSum[$column] += $price;
+
+                    $tmp[$vatColumn] = $toMoney ? toMoney($vat) : $vat;
+                    $columnsSum[$vatColumn] += $vat;
+
+                    $index++;
                 }
-
-                $column = $columnNames[$index];
-                $vatColumn = $column . ' VAT';
-
-                if (!in_array($column, $columns)) {
-                    $columns[] = $column;
-                    $columnsSum[$column] = 0;
-                }
-
-                if (!in_array($vatColumn, $columns)) {
-                    $columns[] = $vatColumn;
-                    $columnsSum[$vatColumn] = 0;
-                }
-
-                $price = $item['amount'] * $item['price'];
-                $vat = $item['amount'] * $item['vat'];
-
-                $tmp[$column] = $toMoney ? toMoney($price) : $price;
-                $columnsSum[$column] += $price;
-
-                $tmp[$vatColumn] = $toMoney ? toMoney($vat) : $vat;
-                $columnsSum[$vatColumn] += $vat;
-
-                $index ++;
             }
 
             $columnData[] = $tmp;
