@@ -70,7 +70,7 @@ class OrderPolicy
      */
     public function destroy(User $user, Order $order)
     {
-        return $this->isAdmin($user, $order);
+        return false;
     }
 
     /**
