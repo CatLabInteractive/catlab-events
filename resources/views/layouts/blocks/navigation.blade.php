@@ -85,6 +85,11 @@
                         {{ Auth::user()->username }} <i class="fa fa-angle-down"></i>
                     </a>
                     <ul class="dropdown-menu menu-center" role="menu">
+
+                        @if(Auth::user()->isAdmin())
+                            <li><a href="{{ action('HomeController@admin') }}">Admin panel</a></li>
+                        @endif
+
                         <li><a href="{{ action('GroupController@index') }}">Mijn teams</a></li>
                         <li><a href="{{ action('OrderController@index') }}">Mijn tickets</a></li>
                         <li><a href="{{ action('CatLabAccountController@redirect', [ 'myaccount' ]) }}" target="_blank" rel="noopener">Mijn account</a></li>
