@@ -1,8 +1,7 @@
 @if(\App\Http\Controllers\EventController::getValidWaitingListToken($event))
     <div class="alert alert-info">
         <p>
-            <strong>Opgelet! </strong>
-            Je staat op de wachtlijst voor {{ $event->name }}.
+            Je staat op de <a href="{{ action('WaitingListController@waitingList', [ $event->id ]) }}">wachtlijst</a> voor {{ $event->name }}.
             Als er nog tickets vrijgekomen zijn, kan je deze hieronder bestellen.
         </p>
     </div>
