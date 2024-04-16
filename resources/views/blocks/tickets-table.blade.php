@@ -1,4 +1,4 @@
-@if(\App\Models\Event::getValidWaitingListToken($event))
+@if(\App\Http\Controllers\EventController::getValidWaitingListToken($event))
     <div class="alert alert-info">
         <p>
             <strong>Opgelet! </strong>
