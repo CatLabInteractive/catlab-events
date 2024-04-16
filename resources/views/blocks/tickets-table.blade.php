@@ -1,4 +1,12 @@
-@if(isset($event) && $event->isSoldOut() && !$event->isFinished())
+@if(\App\Models\Event::getValidWaitingListToken($event))
+    <div class="alert alert-info">
+        <p>
+            <strong>Opgelet! </strong>
+            Je staat op de wachtlijst voor {{ $event->name }}.
+            Als er nog tickets vrijgekomen zijn, kan je deze hieronder bestellen.
+        </p>
+    </div>
+@elseif(isset($event) && $event->isSoldOut() && !$event->isFinished())
     <div class="alert alert-danger">
         <p>
             <strong>Te laat! </strong>
