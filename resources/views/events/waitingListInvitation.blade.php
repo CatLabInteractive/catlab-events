@@ -32,10 +32,11 @@ Er is een ticket vrijgekomen voor {{ $event->name }} op {{ $event->eventDates
         ->join(' & ')
 }} en jij staat als volgende op de wachtlijst.
 
-Ben je nog geïnteresseerd in het ticket? Bestel het dan snel via
+Ben je nog geïnteresseerd in het ticket? Bestel het dan via
 {{ $url }}
 
-Wees er snel bij, want als je het niet binnen de 24u bestelt gaat het naar de volgende.
+Wees er snel bij, want we hebben dit mailtje naar enkele mensen gestuurd.
+
 Toch geen interesse? Stuur ons dan een mailtje terug, zodat wij de volgende kunnen uitnodigen.
 
 Veel succes!
