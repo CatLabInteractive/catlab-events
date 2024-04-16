@@ -26,7 +26,12 @@
 <pre>
 Beste {{ $user->username }},
 
-Er is een ticket vrijgekomen voor {{ $event->name }} op {{ $event->startDate->format('d/m/Y') }} en jij staat als volgende op de wachtlijst.
+Er is een ticket vrijgekomen voor {{ $event->name }} op
+    {{ $event->eventDates
+        ->filter(function($date) { return $date->isSoldOut(); })
+        ->map(function($date) { return $date->startDate->format('d/m/Y'); })
+        ->join(' & ')
+    }} en jij staat als volgende op de wachtlijst.
 
 Ben je nog geïnteresseerd in het ticket? Bestel het dan snel via
 {{ $url }}
