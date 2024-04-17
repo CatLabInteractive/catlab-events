@@ -43,7 +43,14 @@
 
     @endforeach
 
+    <p>
+        Onze quizzen worden steevast digitaal gespeeld, waarbij de deelnemers antwoorden met een zelf meegebrachte tablet,
+        of een smartphone. Met een smartphone werkt het even goed als met een tablet, maar een tablet is groter en wat
+        handiger om samen te bekijken.
+    </p>
+
     <h3>Voorbereiding</h3>
+
     <ul>
         @if($group)
             <li>
@@ -56,7 +63,7 @@
         </li>
 
         <li>
-            Zorg ervoor dat je tablet (1 per team) opgeladen is.
+            Breng per team een opgeladen tablet of smartphone mee.
         </li>
     </ul>
 
