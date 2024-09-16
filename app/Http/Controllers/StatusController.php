@@ -13,6 +13,6 @@ class StatusController
 
         return new JsonResponse([
             'status' => 'ok'
-        ]);
+        ], 200);
     }
 }
