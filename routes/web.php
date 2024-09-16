@@ -132,6 +132,8 @@ Route::get('events/{event}/register', 'EventController@selectTicketCategory');
 
 Route::get('orders/{id}/thanks', 'OrderController@thanks');
 
+Route::get('status', 'StatusController@status');
+
 Route::group([
     'middleware' => [ 'auth' ],
 ], function() {
