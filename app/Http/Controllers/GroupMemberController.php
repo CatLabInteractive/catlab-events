@@ -54,12 +54,12 @@ class GroupMemberController implements FrontCrudControllerContract
         return new \App\Http\Api\V1\Controllers\Groups\GroupMemberController();
     }
 
-    public static function getRouteIdParameterName()
+    public static function getRouteIdParameterName(): string
     {
         return 'id';
     }
 
-    public static function getApiRouteIdParameterName()
+    public static function getApiRouteIdParameterName(): string
     {
         return \App\Http\Api\V1\Controllers\Groups\GroupMemberController::RESOURCE_ID;
     }

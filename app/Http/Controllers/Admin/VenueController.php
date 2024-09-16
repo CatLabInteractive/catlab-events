@@ -51,12 +51,12 @@ class VenueController extends Controller
         return new \App\Http\Api\V1\Controllers\VenueController();
     }
 
-    public static function getRouteIdParameterName()
+    public static function getRouteIdParameterName(): string
     {
         return 'id';
     }
 
-    public static function getApiRouteIdParameterName()
+    public static function getApiRouteIdParameterName(): string
     {
         return \App\Http\Api\V1\Controllers\VenueController::RESOURCE_ID;
     }

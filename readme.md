@@ -54,3 +54,13 @@ and then redirect the user to the payment gateway. The registration happens in r
 6. If the payment does not succeed, we need to cancel the order to make sure the user can try again and the UiTPAS sale 
 won't block the transaction. We call [`uitpas/cultureevent/cancelonline/{ticketSaleId}`](https://documentatie.uitdatabank.be/content/uitpas_api/latest/events/online-annulatie-van-verkoop-van-ticket-adhv-id.html) 
 This is done in registerOrderCancel in [UiTPASVerifier](app/UitDB/UiTPASVerifier.php).
+
+## Domains
+events.catlab.eu
+live.quizfabriek.be
+live.huiskamerquiz.be
+tickets.quizfabriek.be
+live.quizwitz.com
+live.sittingbull.be
+quiz.gent
+www.quiz.gent

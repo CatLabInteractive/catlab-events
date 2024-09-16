@@ -52,12 +52,12 @@ class CompetitionController extends Controller
         return new \App\Http\Api\V1\Controllers\CompetitionController();
     }
 
-    public static function getRouteIdParameterName()
+    public static function getRouteIdParameterName(): string
     {
         return 'id';
     }
 
-    public static function getApiRouteIdParameterName()
+    public static function getApiRouteIdParameterName(): string
     {
         return \App\Http\Api\V1\Controllers\CompetitionController::RESOURCE_ID;
     }

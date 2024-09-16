@@ -98,12 +98,12 @@ class EventDateController extends Controller implements FrontCrudControllerContr
         return new \App\Http\Api\V1\Controllers\Events\EventDateController();
     }
 
-    public static function getRouteIdParameterName()
+    public static function getRouteIdParameterName(): string
     {
         return 'id';
     }
 
-    public static function getApiRouteIdParameterName()
+    public static function getApiRouteIdParameterName(): string
     {
         return \App\Http\Api\V1\Controllers\Events\EventDateController::RESOURCE_ID;
     }

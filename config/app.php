@@ -192,7 +192,6 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
         Collective\Html\HtmlServiceProvider::class,
 
         \CatLab\CharonFrontend\CharonFrontendServiceProvider::class,
@@ -205,9 +204,6 @@ return [
         Barryvdh\DomPDF\ServiceProvider::class,
 
         CentralStorageServiceProvider::class,
-        Roumen\Sitemap\SitemapServiceProvider::class,
-
-        willvincent\Feeds\FeedsServiceProvider::class,
 
         \App\UitDB\UitDbServiceProvider::class
 
@@ -268,8 +264,6 @@ return [
 
         'Eukles' => CatLab\Eukles\Client\EuklesClientFacade::class,
         'CentralStorage' => CatLab\CentralStorage\Client\CentralStorageClientFacade::class,
-
-        'Feeds'    => willvincent\Feeds\Facades\FeedsFacade::class,
 
         'UitDb' => \App\UitDB\Contracts\UitDBFacade::class
 

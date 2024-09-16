@@ -7,6 +7,10 @@
  * @author   Taylor Otwell <taylor@laravel.com>
  */
 
+error_reporting(-1);
+
+ini_set('display_errors', 1);
+
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader
