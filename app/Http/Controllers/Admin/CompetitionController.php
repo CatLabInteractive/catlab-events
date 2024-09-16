@@ -52,6 +52,16 @@ class CompetitionController extends Controller
         return new \App\Http\Api\V1\Controllers\CompetitionController();
     }
 
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\CompetitionController::RESOURCE_ID;
+    }
+
     /**
      * Get any parameters that might be required by the controller.
      * @param Request $request

@@ -53,6 +53,16 @@ class PeopleController extends Controller implements FrontCrudControllerContract
         return new \App\Http\Api\V1\Controllers\PeopleController();
     }
 
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\PeopleController::RESOURCE_ID;
+    }
+
     /**
      * Get any parameters that might be required by the controller.
      * @param Request $request

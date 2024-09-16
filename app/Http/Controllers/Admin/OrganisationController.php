@@ -45,4 +45,14 @@ class OrganisationController extends Controller
     {
         return new \App\Http\Api\V1\Controllers\OrganisationController();
     }
+
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\OrganisationController::RESOURCE_ID;
+    }
 }

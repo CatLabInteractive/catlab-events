@@ -62,6 +62,16 @@ class GroupController extends Controller implements FrontCrudControllerContract
         return new \App\Http\Api\V1\Controllers\Groups\GroupController();
     }
 
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\Groups\GroupController::RESOURCE_ID;
+    }
+
     /**
      * @param string $action
      * @param string $view

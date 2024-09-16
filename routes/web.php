@@ -12,7 +12,6 @@
 */
 
 use App\Tools\SlackNotifier;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 
 
 // Do we have catlab client id? (my own personal single sign on service)
@@ -68,18 +67,17 @@ Route::group([
 
         ],
         function() {
-            FrontCrudController::routes('organisations', 'Admin\OrganisationController', 'organisation');
-            FrontCrudController::routes('competitions', 'Admin\CompetitionController', 'competition');
-            FrontCrudController::routes('series', 'Admin\SeriesController', 'series');
+            \App\Http\Controllers\Admin\OrganisationController::routes('organisations', 'Admin\OrganisationController', 'organisation');
+            \App\Http\Controllers\Admin\CompetitionController::routes('competitions', 'Admin\CompetitionController', 'competition');
+            \App\Http\Controllers\Admin\SeriesController::routes('series', 'Admin\SeriesController', 'series');
             \App\Http\Controllers\Admin\EventController::routes('events', 'Admin\EventController', 'event');
 
-            FrontCrudController::routes('venues', 'Admin\VenueController', 'venue');
-            FrontCrudController::routes('people', 'Admin\PeopleController', 'person');
-            FrontCrudController::routes('livestreams', 'Admin\LiveStreamController', 'livestream');
-            FrontCrudController::routes('orders', 'Admin\OrderController', 'order');
+            \App\Http\Controllers\Admin\VenueController::routes('venues', 'Admin\VenueController', 'venue');
+            \App\Http\Controllers\Admin\PeopleController::routes('people', 'Admin\PeopleController', 'person');
+            \App\Http\Controllers\Admin\LiveStreamController::routes('livestreams', 'Admin\LiveStreamController', 'livestream');
+            \App\Http\Controllers\Admin\OrderController::routes('orders', 'Admin\OrderController', 'order');
 
-            FrontCrudController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
-            //FrontCrudController::routes('events/{event}/dates', 'Admin\EventDateController', 'eventDate');
+            \App\Http\Controllers\Admin\TicketCategoryController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
             \App\Http\Controllers\Admin\EventDateController::routes('events/{event}/eventDates', 'Admin\EventDateController', 'id');
 
             Route::get('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@generateUrlsForm');
@@ -100,12 +98,12 @@ Route::group([
         }
     );
 
-    FrontCrudController::routes('groups', 'GroupController', 'group');
+    \App\Http\Controllers\GroupController::routes('groups', 'GroupController', 'group');
     Route::get('groups/{id}/merge', 'GroupController@mergeGroup');
     Route::post('groups/{id}/merge', 'GroupController@confirmMergeGroup');
     Route::post('groups/{id}/merge/confirm', 'GroupController@processMergeGroup');
 
-    FrontCrudController::routes('groups/{group}/members', 'GroupMemberController', 'member');
+    \App\Http\Controllers\GroupMemberController::routes('groups/{group}/members', 'GroupMemberController', 'member');
 
     Route::get('invitations/{id}/{token}/accept', 'GroupController@acceptInvitation');
 

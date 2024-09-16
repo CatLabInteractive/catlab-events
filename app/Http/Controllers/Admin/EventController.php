@@ -81,6 +81,16 @@ class EventController extends Controller
         return new \App\Http\Api\V1\Controllers\Events\EventController();
     }
 
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\Events\EventController::RESOURCE_ID;
+    }
+
     /**
      * @param Request $request
      * @return \Illuminate\Http\Response

@@ -54,6 +54,16 @@ class GroupMemberController implements FrontCrudControllerContract
         return new \App\Http\Api\V1\Controllers\Groups\GroupMemberController();
     }
 
+    public static function getRouteIdParameterName()
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName()
+    {
+        return \App\Http\Api\V1\Controllers\Groups\GroupMemberController::RESOURCE_ID;
+    }
+
     /**
      * Get any parameters that might be required by the controller.
      * @param $method
