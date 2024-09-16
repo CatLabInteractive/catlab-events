@@ -30,7 +30,7 @@
 
             @foreach(organisation()->series()->active()->get() as $navSeries)
                 <li
-                    class="@if(ends_with(url()->current(), $navSeries->getUrl())) active @endif @if(!$navSeries->hasNextEvent()) no-next-event @endif"
+                    class="@if(\Str::endsWith(url()->current(), $navSeries->getUrl())) active @endif @if(!$navSeries->hasNextEvent()) no-next-event @endif"
                 >
                     <a
                         href="{{ $navSeries->getUrl() }}"
