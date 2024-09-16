@@ -46,25 +46,28 @@ class ValidDomain
             return $next($request);
         }
 
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $rootUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
+        $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
+
+        if (isset($hos)) {
+            $rootUrl = $protocol . '://' . $hos;
 
             if (!in_array($rootUrl, $validDomains)) {
 
                 // Is this a https "www" issue?
-                $wwwRootUrl = 'https://' . $_SERVER['HTTP_HOST'];
+                $wwwRootUrl = 'https://' . $hos;
                 if (in_array($wwwRootUrl, $validDomains)) {
                     return $this->redirect($wwwRootUrl);
                 }
 
                 // Is this a "www" issue?
-                $wwwRootUrl = $_SERVER['REQUEST_SCHEME'] . '://www.' . $_SERVER['HTTP_HOST'];
+                $wwwRootUrl = $protocol . '://www.' . $hos;
                 if (in_array($wwwRootUrl, $validDomains)) {
                     return $this->redirect($wwwRootUrl);
                 }
 
                 // Is this a https "www" issue?
-                $wwwRootUrl = 'https://www.' . $_SERVER['HTTP_HOST'];
+                $wwwRootUrl = 'https://www.' . $hos;
                 if (in_array($wwwRootUrl, $validDomains)) {
                     return $this->redirect($wwwRootUrl);
                 }

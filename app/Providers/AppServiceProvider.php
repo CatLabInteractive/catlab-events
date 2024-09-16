@@ -39,8 +39,11 @@ class AppServiceProvider extends ServiceProvider
     {
         if (isset($_SERVER['HTTP_HOST'])) {
 
+            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];
+            $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
+
             // set app url
-            $rootUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
+            $rootUrl = $protocol . '://' . $host;
 
             config(['app.url' => $rootUrl]);
 
