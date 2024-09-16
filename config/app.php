@@ -261,6 +261,7 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
         'PDF' => Barryvdh\DomPDF\Facade::class,
+        'Str' => Illuminate\Support\Str::class,
 
         'Eukles' => CatLab\Eukles\Client\EuklesClientFacade::class,
         'CentralStorage' => CatLab\CentralStorage\Client\CentralStorageClientFacade::class,
