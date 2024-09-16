@@ -134,6 +134,13 @@ class EventController extends Controller
         return $table;
     }
 
+    protected function getRouteParameters(Request $request, $method)
+    {
+        return [
+            'event' => $request->route(self::getRouteIdParameterName())
+        ];
+    }
+
     /**
      * Get any parameters that might be required by the controller.
      * @param Request $request

@@ -91,10 +91,10 @@ Route::group([
             Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
             Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
 
-            Route::get('events/{event}/export/members', 'Admin\EventController@exportMembers');
-            Route::get('events/{event}/export/sales', 'Admin\EventController@exportSales');
-            Route::get('events/{event}/export/clearing', 'Admin\EventController@exportClearing');
-            Route::get('events/{event}/export/salesovertime', 'Admin\EventController@exportSalesTimeline');
+            Route::get('events/{id}/export/members', 'Admin\EventController@exportMembers');
+            Route::get('events/{id}/export/sales', 'Admin\EventController@exportSales');
+            Route::get('events/{id}/export/clearing', 'Admin\EventController@exportClearing');
+            Route::get('events/{id}/export/salesovertime', 'Admin\EventController@exportSalesTimeline');
         }
     );
 
