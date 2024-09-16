@@ -1,0 +1,32 @@
+{
+  "name": "CatLab Events",
+  "env": {
+    "DB_DATABASE": {
+      "required": true
+    },
+    "DB_USERNAME": {
+      "required": true
+    },
+    "DB_PASSWORD": {
+      "required": true
+    },
+    "DB_HOST": {
+      "required": true
+    },
+    "APP_URL": {
+      "required": true
+    }
+  },
+
+  "checks": {
+    "web": [
+      {
+        "type":        "startup",
+        "name":        "web check",
+        "description": "Checking if the app responds to the /status endpoint",
+        "path":        "/status",
+        "attempts": 3
+      }
+    ]
+  }
+}
