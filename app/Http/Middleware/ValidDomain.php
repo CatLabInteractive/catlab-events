@@ -36,6 +36,11 @@ class ValidDomain
      */
     public function handle($request, Closure $next)
     {
+        // Check if route is /status, and if so, ignore
+        if ($request->is('status')) {
+            return $next($request);
+        }
+
         $validDomains = config('app.valid_domains');
         if ($validDomains === null || count($validDomains) === 0) {
             return $next($request);
