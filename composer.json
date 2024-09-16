@@ -13,7 +13,7 @@
         "catlabinteractive/central-storage-client": "~1.0.3",
         "catlabinteractive/eukles-client": "~1.0.8",
         "catlabinteractive/laravel-catlab-accounts": "~4.0",
-        "catlabinteractive/laravel-charon-frontend": "~1.6.1",
+        "catlabinteractive/laravel-charon-frontend": "~1.7.0",
         "catlabinteractive/laravel-table": "^1.0.2",
         "doctrine/dbal": "~2.5",
         "fab1en/rocket-chat-rest-client": "dev-master",
