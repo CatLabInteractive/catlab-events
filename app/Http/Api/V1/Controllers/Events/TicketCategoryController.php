@@ -25,6 +25,7 @@ namespace App\Http\Api\V1\Controllers\Events;
 use App\Http\Api\V1\Controllers\Base\ResourceController;
 use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
 use App\Models\Event;
+use App\UitDB\Exceptions\InvalidEventException;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Requirements\Collections\MessageCollection;
 use CatLab\Requirements\Exceptions\ResourceValidationException;
@@ -116,13 +117,20 @@ class TicketCategoryController extends ResourceController
 
         if (!$event->isFinished() && $event->uitdb_event_id) {
             // Check if we have a ticket price
-            $uitPasService = \UitDb::getUitPasService();
-            if ($uitPasService) {
-                if (!$uitPasService->hasApplicableUitPasPrice($entity)) {
-                    $messages = new MessageCollection();
-                    $messages->add(new TranslatableMessage('No applicable UiTPas tariff found. Please add UiTPas tariff first.', []));
-                    throw ResourceValidationException::make($messages);
+
+            try {
+                $uitPasService = \UitDb::getUitPasService();
+                if ($uitPasService) {
+                    if (!$uitPasService->hasApplicableUitPasPrice($entity)) {
+                        $messages = new MessageCollection();
+                        $messages->add(new TranslatableMessage('No applicable UiTPas tariff found. Please add UiTPas tariff first.', []));
+                        throw ResourceValidationException::make($messages);
+                    }
                 }
+            } catch (InvalidEventException $e) {
+                $messages = new MessageCollection();
+                $messages->add(new TranslatableMessage('No applicable UiTPas event found.', []));
+                throw ResourceValidationException::make($messages);
             }
         }
 
