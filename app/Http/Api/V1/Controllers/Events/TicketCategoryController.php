@@ -129,7 +129,7 @@ class TicketCategoryController extends ResourceController
                 }
             } catch (InvalidEventException $e) {
                 $messages = new MessageCollection();
-                $messages->add(new TranslatableMessage('No applicable UiTPas event found.', []));
+                $messages->add(new TranslatableMessage('No applicable UiTPas event found. Please make sure UiTPas organisation and pricing is set correctly.', []));
                 throw ResourceValidationException::make($messages);
             }
         }

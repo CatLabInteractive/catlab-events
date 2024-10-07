@@ -2,7 +2,7 @@ version: '3.9'
 services:
   webserver:
     container_name: catlab-events
-    working_dir: /var/www/
+    working_dir: /var/www/html
     build:
       context: .
       dockerfile: Dockerfile
