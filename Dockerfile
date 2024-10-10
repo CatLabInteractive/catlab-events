@@ -1,9 +1,8 @@
 ARG PHP_EXTENSIONS="mysqli pdo_mysql bcmath zip intl gd"
 ARG NODE_VERSION=16
+ENV APACHE_DOCUMENT_ROOT=public/
 
 FROM thecodingmachine/php:8.0-v4-slim-apache
-
-ENV APACHE_DOCUMENT_ROOT=public/
 
 USER root
 RUN apt-get update && apt-get install locales-all && apt-get clean
