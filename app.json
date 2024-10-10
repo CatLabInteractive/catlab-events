@@ -18,6 +18,10 @@
     }
   },
 
+  "scripts" : {
+    "postdeploy" : "php artisan migrate --force"
+  },
+
   "healthchecks": {
     "web": [
       {
