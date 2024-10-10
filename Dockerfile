@@ -5,6 +5,8 @@ FROM thecodingmachine/php:8.0-v4-slim-apache
 
 ENV APACHE_DOCUMENT_ROOT=public/
 
+RUN apt-get install locales-all
+
 # Copy the source code in /www into the container at /var/www/html
 COPY --chown=docker:docker . /var/www/html
 
