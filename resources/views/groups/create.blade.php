@@ -9,7 +9,7 @@
     @endif
 
     {{ Form::open(array('url' => $action)) }}
-    {{ method_field($verb) }}
+    {{ method_field($method) }}
 
     <h3>Team</h3>
 
