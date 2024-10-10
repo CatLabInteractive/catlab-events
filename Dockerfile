@@ -7,8 +7,11 @@ ENV APACHE_DOCUMENT_ROOT=public/
 
 # Configure locales
 USER root
-RUN for l in ${LOCALES}; do sed -i -e "s/# \(${l} .*\)/\1/" /etc/locale.gen; done
+RUN for l in ${LOCALES}; \
+        do sed -i -e "s/# \(${l} .*\)/\1/" /etc/locale.gen; \
+    done
 RUN dpkg-reconfigure -f noninteractive locales
+
 USER docker
 
 # Copy the source code in /www into the container at /var/www/html
