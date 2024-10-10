@@ -19,7 +19,9 @@
   },
 
   "scripts" : {
-    "postdeploy" : "php artisan migrate --force"
+    "dokku" : {
+      "predeploy" : "php artisan migrate --force"
+    }
   },
 
   "healthchecks": {

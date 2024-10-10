@@ -1,35 +1,12 @@
-# Use an official PHP runtime
-FROM php:8.0-apache
+ARG PHP_EXTENSIONS="mysqli pdo_mysql bcmath zip intl gd"
+ARG NODE_VERSION=16
 
-# Enable Apache modules
-RUN a2enmod rewrite
+FROM thecodingmachine/php:8.0-v4-slim-apache
 
-RUN apt-get update && apt-get install -y \
-    unzip \
-    zip \
-    locales \
-    locales-all \
-    libgeoip-dev \
-    libzip-dev \
-    libicu-dev \
-    libpng-dev \
-    zlib1g-dev \
-    libmagickwand-dev \
-    npm;
-
-# Install any extensions you need
-RUN docker-php-ext-install mysqli pdo pdo_mysql gettext bcmath zip intl gd
-
-COPY docker/apache/apache.conf /etc/apache2/sites-available/000-default.conf
-COPY docker/php/upload.ini /usr/local/etc/php/conf.d/upload.ini
-
-# Install composer
-COPY --from=composer /usr/bin/composer /usr/bin/composer
-
-RUN chown -R www-data:www-data /var/www/html
+ENV APACHE_DOCUMENT_ROOT=public/
 
 # Copy the source code in /www into the container at /var/www/html
-COPY . /var/www/html
+COPY --chown=docker:docker . /var/www/html
 
 WORKDIR /var/www/html
 
@@ -37,5 +14,3 @@ RUN composer install
 
 RUN npm install
 RUN npm run prod
-
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
