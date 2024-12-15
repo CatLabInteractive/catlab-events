@@ -359,6 +359,7 @@ class Event extends Model implements EuklesModel
 
         $builder->orderBy(\DB::raw('edo.startDate IS NULL'), $direction);
         $builder->orderBy('edo.startDate', $direction);
+        $builder->orderBy('events.id', $direction === 'asc' ? 'desc' : 'asc');
     }
 
     /**

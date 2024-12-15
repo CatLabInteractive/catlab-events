@@ -19,3 +19,6 @@ _ide_helper.php
 public/vendor
 composer.local.json
 composer.local.lock
+
+.phpunit.result.cache
+.vscode/
