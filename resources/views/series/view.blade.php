@@ -74,7 +74,7 @@
                                     <a href="{{ $nextEvent->event_url }}" class="btn btn-default"><i class="fa fa-external-link"></i> Meer informatie</a>
                                 @endif
 
-                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default"><i class="fa fa-check"></i> Praktisch</a>
+                                <a href="{{ $nextEvent->getUrl() }}" class="btn btn-default"><i class="fa fa-check"></i> Praktisch & inschrijven</a>
 
                                 @if($nextEvent->getLiveStreamUrl() && !$nextEvent->hasTickets())
                                     <a href="{{ $nextEvent->getLiveStreamUrl() }}" class="btn btn-default"><i class="fa fa-play"></i> Livestream</a>
@@ -262,7 +262,7 @@
                         <div class="row">
                             <div class="col-md-3 hero-small-date text-center">
                                 <h3>Pakket</h3>
-                                <h4>Wanneer je wilt</h4>
+                                <h4>Speel wanneer je wil</h4>
                             </div>
                             <div class="col-md-9 hero-small-date-content">
                                 <h2 class="banner-title">

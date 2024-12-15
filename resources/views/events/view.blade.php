@@ -120,7 +120,7 @@
                         @endif
 
                         @if(count($event->technicians) > 0)
-                            <p><strong>Technische ondersteuning:</strong><br />
+                            <p><strong>Regie & techniek:</strong><br />
                                 @foreach($event->technicians as $person){{ $loop->first ? '' : ', ' }}<a href="{{ $person->getUrl() }}">{{ $person->name }}</a>@endforeach
                             </p>
                         @endif
@@ -318,8 +318,10 @@
                                 </strong>
                             </p>
 
-                            @if($v->series)
+                            @if($v->series && (!$event->series || $v->series->id !== $event->series->id))
                                 {!! $v->series->teaser!!}
+                            @elseif($v->description)
+                                {!! $v->description !!}
                             @endif
 
                             <p>
