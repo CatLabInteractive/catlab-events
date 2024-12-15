@@ -187,4 +187,34 @@ jQuery(function($) {
 		$('#back-to-top').tooltip('hide');
 
 
+		// Find faq containers
+		$('.faq-container').each(function() {
+
+			// Find faq items
+			var faqItems = $(this).find('li');
+
+			// Loop through each faq item
+			faqItems.each(function() {
+
+				// Find faq item header
+				var faqItemHeader = $(this).find('h5');
+				faqItemHeader.css('cursor', 'pointer');
+
+				// Find faq item body
+				var faqItemBody = $(this).find('p');
+				faqItemBody.hide();
+			
+
+				// Add click event to faq item header
+				faqItemHeader.on('click', function() {
+
+					// Toggle faq item body
+					faqItemBody.slideToggle();
+
+				});
+
+			});
+
+		});
+
 });
