@@ -217,6 +217,15 @@ class Series extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function hasFaq()
+    {
+        // Look for id="faq" in description
+        return strpos($this->description, 'id="faq"') !== false;
+    }
+
+    /**
      * @return array
      */
     public function getJsonLD()
