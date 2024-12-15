@@ -102,9 +102,9 @@
                             @if ($nextEvent->isSelling())
                                 <p class="price">
                                     @if($nextEvent->team_size)
-                                        <a href="{{ $nextEvent->getUrl() }}" class="plain">Tickets: {!! $nextEvent->getFormattedPublishedPrice(true) !!} per team (max {{$nextEvent->team_size}} spelers)</a><br />
+                                        <a href="{{ $nextEvent->getUrl() }}" class="plain">Tickets: vanaf {!! $nextEvent->getFormattedPublishedPrice(true) !!} per team (max {{$nextEvent->team_size}} spelers)</a><br />
                                     @else
-                                        <a href="{{ $nextEvent->getUrl() }}" class="plain">Tickets: {!! $nextEvent->getFormattedPublishedPrice(true) !!}</a><br />
+                                        <a href="{{ $nextEvent->getUrl() }}" class="plain">Tickets: vanaf {!! $nextEvent->getFormattedPublishedPrice(true) !!}</a><br />
                                     @endif
                                     <?php $priceDetails = $nextEvent->getPublishedPriceDetails(true); ?>
                                     @if($priceDetails)
@@ -224,7 +224,7 @@
     <section class="ts-intro">
         <div class="container">
             @if($events)
-                <h2 class="intro-sub-title">Binnenkort</h2>
+                <h2 class="intro-sub-title">Inschrijven</h2>
 
                 @if(count($events) === 0)
                     <p>Er zijn nog geen evenementen aangekondigd, maar hou deze pagina in de gaten.</p>

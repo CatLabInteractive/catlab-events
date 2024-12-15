@@ -75,9 +75,9 @@
                         @if ($event->willSell())
                             <p class="price">
                                 @if($event->team_size)
-                                    Tickets: {!! $event->getFormattedPublishedPrice(true) !!} per team (max {{$event->team_size}} spelers)
+                                    Tickets: vanaf {!! $event->getFormattedPublishedPrice(true) !!} per team (max {{$event->team_size}} spelers)
                                 @else
-                                    Tickets: {!! $event->getFormattedPublishedPrice(true) !!}
+                                    Tickets: vanaf {!! $event->getFormattedPublishedPrice(true) !!}
                                 @endif
 
                                 <?php $priceDetails = $event->getPublishedPriceDetails(true); ?>

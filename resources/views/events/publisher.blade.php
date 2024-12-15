@@ -27,9 +27,9 @@
                         {$nextEvent->startDate->formatLocalized('%-d %B, H:i')}, {$nextEvent->venue->city}.<br>
 
                         @if($nextEvent->team_size)
-                            Tickets: {!! $nextEvent->getFormattedPublishedPrice(true) !!} per team (max {{$nextEvent->team_size}} spelers)
+                            Tickets: vanaf {!! $nextEvent->getFormattedPublishedPrice(true) !!} per team (max {{$nextEvent->team_size}} spelers)
                         @else
-                            Tickets: {!! $nextEvent->getFormattedPublishedPrice(true) !!}
+                            Tickets: vanaf {!! $nextEvent->getFormattedPublishedPrice(true) !!}
                         @endif
                     </h4>
                     <a href="{$url}">schrijf je in <i class="fa fa-angle-right"></i></a>
