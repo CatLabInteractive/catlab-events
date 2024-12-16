@@ -33,7 +33,7 @@
                     class="@if(\Str::endsWith(url()->current(), $navSeries->getUrl())) active @endif @if(!$navSeries->hasNextEvent()) no-next-event @endif"
                 >
                     <a
-                        href="{{ $navSeries->getUrl() }}"
+                        href="{{ $navSeries->getUrl($navSeries->getNextEvent()) }}"
                     >
                         {{ $navSeries->name }}
 
