@@ -199,10 +199,10 @@
                         @endif
 
                         <p>
-                            <a href="{{ $series->getUrl() }}" class="btn btn-primary">Meer over {{ $series->name }}</a> 
+                            <a href="{{ $series->getUrl($event) }}" class="btn btn-primary">Meer over {{ $series->name }}</a> 
 
                             @if($series->hasFaq())
-                                <a href="{{ $series->getUrl() }}#faq" class="btn btn-primary">Vaak gestelde vragen</a> 
+                                <a href="{{ $series->getUrl($event) }}#faq" class="btn btn-primary">Vaak gestelde vragen</a> 
                             @endif
                         </p>
 
