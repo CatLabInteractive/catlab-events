@@ -13,7 +13,8 @@
     @endif
 
     <p>
-        Eens je de link volgt en de quiz activeert, heb je 72 uur de tijd om de quiz spelen. Daarna vervalt de link.
+        Je mag de link gerust openen, activatie vereist een extra stap.<br />
+        Eens geactiveerd kan je de quiz gedurende 72 uur spelen.
     </p>
 
     <p>
