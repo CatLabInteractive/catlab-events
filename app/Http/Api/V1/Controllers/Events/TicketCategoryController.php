@@ -118,6 +118,7 @@ class TicketCategoryController extends ResourceController
         if (!$event->isFinished() && $event->uitdb_event_id) {
             // Check if we have a ticket price
 
+            /*
             try {
                 $uitPasService = \UitDb::getUitPasService();
                 if ($uitPasService) {
@@ -131,7 +132,7 @@ class TicketCategoryController extends ResourceController
                 $messages = new MessageCollection();
                 $messages->add(new TranslatableMessage('No applicable UiTPas event found. Please make sure UiTPas organisation and pricing is set correctly.', []));
                 throw ResourceValidationException::make($messages);
-            }
+            }*/
         }
 
         return $entity;
