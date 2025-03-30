@@ -31,6 +31,7 @@ use CatLab\Charon\Collections\RouteCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * Class GroupMemberController
@@ -100,7 +101,7 @@ class GroupMemberController extends ResourceController
         $parent = $this->getParent($request);
         $member->group()->associate($parent);
 
-        $member->token = str_random(12);
+        $member->token = Str::random(12);
 
         return $member;
     }
