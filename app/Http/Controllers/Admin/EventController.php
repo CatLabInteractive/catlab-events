@@ -230,7 +230,7 @@ class EventController extends Controller
         list ($columns, $out) = $this->prepareExportSales($event);
 
         return $this->outputCsv(
-            str_slug($event->name) . '-payments',
+            Str::slug($event->name) . '-payments',
             $columns,
             $out
         );
@@ -243,7 +243,7 @@ class EventController extends Controller
         list ($columns, $out) = $this->prepareExportSalesOverTime($event);
 
         return $this->outputCsv(
-            str_slug($event->name) . '-salesOverTime',
+            Str::slug($event->name) . '-salesOverTime',
             $columns,
             $out
         );
