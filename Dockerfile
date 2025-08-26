@@ -1,4 +1,4 @@
-ARG PHP_EXTENSIONS="mysqli pdo_mysql bcmath zip intl gd"
+ARG PHP_EXTENSIONS="mysqli bcmath zip intl gd"
 ARG NODE_VERSION=16
 
 FROM thecodingmachine/php:8.0-v4-slim-apache
