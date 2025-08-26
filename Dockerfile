@@ -1,5 +1,4 @@
-ARG PHP_EXTENSIONS="mysqli bcmath zip intl gd"
-ARG NODE_VERSION=16
+ARG NODE_VERSION=18
 
 FROM thecodingmachine/php:8.0-v5-slim-apache
 ENV APACHE_DOCUMENT_ROOT=public/
@@ -13,6 +12,9 @@ USER docker
 COPY --chown=docker:docker . /var/www/html
 
 WORKDIR /var/www/html
+
+RUN install-php-extensions mysqli pdo_mysql bcmath zip intl gd
+
 
 RUN composer install
 
