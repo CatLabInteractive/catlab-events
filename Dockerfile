@@ -1,7 +1,7 @@
 ARG PHP_EXTENSIONS="mysqli bcmath zip intl gd"
 ARG NODE_VERSION=16
 
-FROM thecodingmachine/php:8.0-v4-slim-apache
+FROM thecodingmachine/php:8.0-v5-slim-apache
 ENV APACHE_DOCUMENT_ROOT=public/
 
 # Configure locales
