@@ -16,5 +16,6 @@ WORKDIR /var/www/html
 
 RUN composer install
 
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 RUN npm install
 RUN npm run prod
