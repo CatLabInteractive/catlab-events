@@ -136,17 +136,19 @@
                     <td>Kostprijs</td>
                     <td>
                         {{ $ticketPriceCalculator->getFormattedPrice() }}
-                        <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)
+                        <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedPriceVat() }} btw)</span>
                     </td>
                 </tr>
 
-                <tr>
-                    <td>Transactiekosten</td>
-                    <td>
-                        {{ $ticketPriceCalculator->getFormattedTransactionFee() }}
-                        <span class="small">(incl. {{ $ticketPriceCalculator->getFormattedTransactionFeeVat() }} btw)</span>
-                    </td>
-                </tr>
+				<?php if ($ticketPriceCalculator->calculateTransactionFee() > 0) { ?>
+					<tr>
+						<td>Transactiekosten</td>
+						<td>
+							{{ $ticketPriceCalculator->getFormattedTransactionFee() }}
+							<span class="small">(incl. {{ $ticketPriceCalculator->getFormattedTransactionFeeVat() }} btw)</span>
+						</td>
+					</tr>
+				<?php } ?>
 
                 <tr class="total">
                     <td>Totaal</td>

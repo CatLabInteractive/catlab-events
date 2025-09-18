@@ -786,27 +786,33 @@ class EventController extends Controller
 
         $ticketPriceCalculator = $order->getTicketPriceCalculator();
 
+        $transactionFee = $ticketPriceCalculator->calculateTransactionFee();
+
+        $items = [
+            [
+                'name' => $event->name,
+                'description' => $group ? 'Inschrijving ' . $group->name : 'Inschrijving',
+                'amount' => 1,
+                'price' => $ticketPriceCalculator->getTicketPrice(false),
+                'vat' => $ticketPriceCalculator->getTicketPriceVat()
+            ],
+        ];
+
+        if ($transactionFee > 0) {
+            $items[] = [
+                'name' => 'Transactiekosten',
+                'amount' => 1,
+                'price' => $ticketPriceCalculator->calculateTransactionFee(),
+                'vat' => $ticketPriceCalculator->calculateTransactionFeeVat()
+            ];
+        }
+
         try {
             $orderData = $client->createOrder([
 
                 'callback' => action('OrderController@sync', [ $order->id ]),
                 'partner' => $event->organisation->catlab_partner_id,
-                'items' => [
-                    [
-                        'name' => $event->name,
-                        'description' => $group ? 'Inschrijving ' . $group->name : 'Inschrijving',
-                        'amount' => 1,
-                        'price' => $ticketPriceCalculator->getTicketPrice(false),
-                        'vat' => $ticketPriceCalculator->getTicketPriceVat()
-                    ],
-
-                    [
-                        'name' => 'Transactiekosten',
-                        'amount' => 1,
-                        'price' => $ticketPriceCalculator->calculateTransactionFee(),
-                        'vat' => $ticketPriceCalculator->calculateTransactionFeeVat()
-                    ]
-                ],
+                'items' => $items,
                 'maxTransactionFee' => $ticketPriceCalculator->calculateTransactionFee(false)
 
             ]);

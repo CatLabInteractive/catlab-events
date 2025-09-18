@@ -77,6 +77,9 @@ class TicketPriceCalculator
      */
     public function calculateTransactionFee($includeVat = false)
     {
+        // As partner sales are now handled differently, there is no point in calculating a transaction fee.
+        return 0;
+
         /** @var Organisation $organisation */
         $organisation = $this->ticketCategory->event->organisation;
         $percentage = $organisation->getTransactionFeeFactor();

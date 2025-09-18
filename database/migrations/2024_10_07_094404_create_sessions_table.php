@@ -13,7 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
+        try {
+            \Illuminate\Support\Facades\DB::statement('SET SESSION sql_require_primary_key=0');
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage());
+        }
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
