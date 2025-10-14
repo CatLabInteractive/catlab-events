@@ -198,6 +198,10 @@ class EventDateController extends Controller implements FrontCrudControllerContr
         $position = 1;
         foreach ($players as $player) {
             $name = $player['name'];
+            if (isset($player['extraData']) && isset($player['extraData']['name'])) {
+                $name = $player['extraData']['name'];
+            }
+
             $score = $player['score'];
 
             $group = $event->getAttendeeFromName($eventDate, $name);
