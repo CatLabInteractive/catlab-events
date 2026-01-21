@@ -12,6 +12,8 @@ USER docker
 # Copy the source code in /www into the container at /var/www/html
 COPY --chown=docker:docker . /var/www/html
 
+COPY docker/apache/mpm-prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
+
 WORKDIR /var/www/html
 
 RUN composer install
