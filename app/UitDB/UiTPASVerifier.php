@@ -740,10 +740,6 @@ class UiTPASVerifier
                 throw UiTPASGenericCardError::make($ticketCategory, $buyConstraint);
         }
 
-        if ($buyConstraint === 'INVALID_CARD_STATUS') {
-            return null;
-        }
-
         // find based on name
         for ($i = 0; $i < $priceClasses->count(); $i ++) {
             $priceClass = $priceClasses[$i];

@@ -33,6 +33,15 @@ use App\Models\TicketCategory;
 class UitDBEvents
 {
     /**
+     * Default UiTDatabank event type term ID for "Concert"
+     */
+    const DEFAULT_EVENT_TYPE_ID = '0.50.4.0.0';
+
+    /**
+     * Default event duration in hours when no end date is specified
+     */
+    const DEFAULT_EVENT_DURATION_HOURS = 3;
+    /**
      * @var UitDatabankService
      */
     private $uitDatabankService;
@@ -138,7 +147,7 @@ class UitDBEvents
             'calendarType' => $this->getCalendarType($event),
             'terms' => [
                 [
-                    'id' => '0.50.4.0.0',
+                    'id' => self::DEFAULT_EVENT_TYPE_ID,
                     'domain' => 'eventtype',
                 ]
             ],
@@ -205,7 +214,7 @@ class UitDBEvents
                 'startDate' => $eventDate->startDate->toIso8601String(),
                 'endDate' => $eventDate->endDate
                     ? $eventDate->endDate->toIso8601String()
-                    : $eventDate->startDate->copy()->addHours(3)->toIso8601String(),
+                    : $eventDate->startDate->copy()->addHours(self::DEFAULT_EVENT_DURATION_HOURS)->toIso8601String(),
             ];
             $subEvents[] = $subEvent;
         }

@@ -88,6 +88,11 @@ class UitDatabankService implements UitDBService
     private $oauth2Token;
 
     /**
+     * @var int|null
+     */
+    private $oauth2TokenExpiresAt;
+
+    /**
      * @var Organisation
      */
     private $organisation;
@@ -262,7 +267,7 @@ class UitDatabankService implements UitDBService
      */
     public function getOAuth2Token()
     {
-        if ($this->oauth2Token) {
+        if ($this->oauth2Token && $this->oauth2TokenExpiresAt && time() < $this->oauth2TokenExpiresAt) {
             return $this->oauth2Token;
         }
 
@@ -279,6 +284,7 @@ class UitDatabankService implements UitDBService
 
         $data = json_decode((string)$response->getBody(), true);
         $this->oauth2Token = $data['access_token'];
+        $this->oauth2TokenExpiresAt = time() + ($data['expires_in'] ?? 3600) - 60;
 
         return $this->oauth2Token;
     }
