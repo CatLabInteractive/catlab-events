@@ -23,6 +23,8 @@
 namespace App\UitDB;
 
 use App\Models\Event;
+use App\Models\EventDate;
+use App\Models\TicketCategory;
 
 /**
  * Class UitDBEvents
@@ -31,12 +33,235 @@ use App\Models\Event;
 class UitDBEvents
 {
     /**
-     * Upload an event to the uitdb and return the event id.
+     * @var UitDatabankService
+     */
+    private $uitDatabankService;
+
+    /**
+     * UitDBEvents constructor.
+     * @param UitDatabankService $uitDatabankService
+     */
+    public function __construct(UitDatabankService $uitDatabankService)
+    {
+        $this->uitDatabankService = $uitDatabankService;
+    }
+
+    /**
+     * Upload or update an event to the uitdatabank and return the event id.
      * @param Event $event
-     * @return string
+     * @return string|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function upload(Event $event)
     {
-        return 'abcdef';
+        if (!$this->uitDatabankService->hasClientCredentials()) {
+            return null;
+        }
+
+        $existingId = $event->getUitDBId();
+
+        if ($existingId) {
+            return $this->updateEvent($event, $existingId);
+        } else {
+            return $this->createEvent($event);
+        }
+    }
+
+    /**
+     * Create a new event in UiTDatabank.
+     * @param Event $event
+     * @return string|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function createEvent(Event $event)
+    {
+        $payload = $this->buildEventPayload($event);
+
+        $response = $this->uitDatabankService->entryApiRequest(
+            'POST',
+            '/events',
+            [
+                'json' => $payload
+            ]
+        );
+
+        if (isset($response['eventId'])) {
+            $event->uitdb_event_id = $response['eventId'];
+            $event->save();
+            return $response['eventId'];
+        }
+
+        // Some API versions return the id in a different field
+        if (isset($response['id'])) {
+            $event->uitdb_event_id = $response['id'];
+            $event->save();
+            return $response['id'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Update an existing event in UiTDatabank.
+     * @param Event $event
+     * @param string $uitdbEventId
+     * @return string
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function updateEvent(Event $event, $uitdbEventId)
+    {
+        $payload = $this->buildEventPayload($event);
+
+        $this->uitDatabankService->entryApiRequest(
+            'PUT',
+            '/events/' . $uitdbEventId,
+            [
+                'json' => $payload
+            ]
+        );
+
+        return $uitdbEventId;
+    }
+
+    /**
+     * Build the event payload for the UiTDatabank Entry API.
+     * @param Event $event
+     * @return array
+     */
+    protected function buildEventPayload(Event $event)
+    {
+        $payload = [
+            'mainLanguage' => 'nl',
+            'name' => [
+                'nl' => $event->name,
+            ],
+            'calendarType' => $this->getCalendarType($event),
+            'terms' => [
+                [
+                    'id' => '0.50.4.0.0',
+                    'domain' => 'eventtype',
+                ]
+            ],
+        ];
+
+        // Add description if available
+        if ($event->description) {
+            $payload['description'] = [
+                'nl' => strip_tags($event->description),
+            ];
+        }
+
+        // Add location if venue is set
+        if ($event->venue) {
+            $payload['location'] = $this->buildLocationPayload($event);
+        }
+
+        // Add calendar info
+        $calendarPayload = $this->buildCalendarPayload($event);
+        $payload = array_merge($payload, $calendarPayload);
+
+        // Add price info
+        $priceInfo = $this->buildPriceInfoPayload($event);
+        if (!empty($priceInfo)) {
+            $payload['priceInfo'] = $priceInfo;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Determine the calendar type for the event.
+     * @param Event $event
+     * @return string
+     */
+    protected function getCalendarType(Event $event)
+    {
+        $eventDates = $event->eventDates;
+
+        if ($eventDates->count() > 1) {
+            return 'multiple';
+        }
+
+        return 'single';
+    }
+
+    /**
+     * Build calendar payload based on event dates.
+     * @param Event $event
+     * @return array
+     */
+    protected function buildCalendarPayload(Event $event)
+    {
+        $eventDates = $event->eventDates;
+
+        if ($eventDates->count() === 0) {
+            return [];
+        }
+
+        $subEvents = [];
+        foreach ($eventDates as $eventDate) {
+            /** @var EventDate $eventDate */
+            $subEvent = [
+                'startDate' => $eventDate->startDate->toIso8601String(),
+                'endDate' => $eventDate->endDate
+                    ? $eventDate->endDate->toIso8601String()
+                    : $eventDate->startDate->copy()->addHours(3)->toIso8601String(),
+            ];
+            $subEvents[] = $subEvent;
+        }
+
+        return [
+            'subEvent' => $subEvents,
+        ];
+    }
+
+    /**
+     * Build location payload from event venue.
+     * @param Event $event
+     * @return array
+     */
+    protected function buildLocationPayload(Event $event)
+    {
+        $venue = $event->venue;
+
+        $location = [
+            'name' => [
+                'nl' => $venue->name,
+            ],
+            'address' => [
+                'nl' => [
+                    'streetAddress' => $venue->address,
+                    'postalCode' => $venue->postalCode,
+                    'addressLocality' => $venue->city,
+                    'addressCountry' => $venue->country ?? 'BE',
+                ]
+            ],
+        ];
+
+        return $location;
+    }
+
+    /**
+     * Build price info payload from ticket categories.
+     * @param Event $event
+     * @return array
+     */
+    protected function buildPriceInfoPayload(Event $event)
+    {
+        $priceInfo = [];
+
+        foreach ($event->ticketCategories as $ticketCategory) {
+            /** @var TicketCategory $ticketCategory */
+            $priceInfo[] = [
+                'category' => 'base',
+                'name' => [
+                    'nl' => $ticketCategory->name,
+                ],
+                'price' => floatval($ticketCategory->price),
+                'priceCurrency' => 'EUR',
+            ];
+        }
+
+        return $priceInfo;
     }
 }

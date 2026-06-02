@@ -62,7 +62,11 @@ return [
         'oauth_consumer' => env('UITDB_OAUTH_CONSUMER'),
         'oauth_secret' => env('UITDB_OAUTH_SECRET'),
 
-        'entry_api_key' => env('UITDB_ENTRY_API_KEY')
+        'entry_api_key' => env('UITDB_ENTRY_API_KEY'),
+
+        // OAuth2 Client Credentials for new UiTPAS/UiTDatabank API
+        'client_id' => env('UITDB_CLIENT_ID'),
+        'client_secret' => env('UITDB_CLIENT_SECRET'),
     ],
 
     'google' => [

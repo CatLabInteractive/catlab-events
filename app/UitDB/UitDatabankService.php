@@ -73,6 +73,21 @@ class UitDatabankService implements UitDBService
     private $oauthSecret;
 
     /**
+     * @var string
+     */
+    private $clientId;
+
+    /**
+     * @var string
+     */
+    private $clientSecret;
+
+    /**
+     * @var string|null
+     */
+    private $oauth2Token;
+
+    /**
      * @var Organisation
      */
     private $organisation;
@@ -86,7 +101,9 @@ class UitDatabankService implements UitDBService
             config('services.uitdb.env'),
             config('services.uitdb.entry_api_key'),
             config('services.uitdb.oauth_consumer'),
-            config('services.uitdb.oauth_secret')
+            config('services.uitdb.oauth_secret'),
+            config('services.uitdb.client_id'),
+            config('services.uitdb.client_secret')
         );
     }
 
@@ -101,21 +118,28 @@ class UitDatabankService implements UitDBService
     /**
      * UitDatabank constructor.
      * @param $env
-     * @param $key
+     * @param $entryApiKey
      * @param $oauthConsumer
      * @param $oauthSecret
+     * @param $clientId
+     * @param $clientSecret
      */
     public function __construct(
         $env,
         $entryApiKey,
         $oauthConsumer,
-        $oauthSecret
+        $oauthSecret,
+        $clientId = null,
+        $clientSecret = null
     ) {
         $this->entryApiKey = $entryApiKey;
         $this->env = $env;
 
         $this->oauthConsumer = $oauthConsumer;
         $this->oauthSecret = $oauthSecret;
+
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
 
         $this->guzzle = new \GuzzleHttp\Client();
     }
@@ -126,6 +150,14 @@ class UitDatabankService implements UitDBService
     public function getEntryApiKey()
     {
         return $this->entryApiKey;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getClientId()
+    {
+        return $this->clientId;
     }
 
     /**
@@ -150,7 +182,9 @@ class UitDatabankService implements UitDBService
                     'io' => 'https://io-test.uitdatabank.be',
                     'ui' => 'https://test.uitdatabank.be',
                     'jwt' => 'https://jwt-test.uitdatabank.be',
-                    'legacy' => 'https://test.uitid.be/uitid/rest/'
+                    'legacy' => 'https://test.uitid.be/uitid/rest/',
+                    'uitpas' => 'https://api-test.uitpas.be',
+                    'auth' => 'https://account-test.uitid.be',
                 ];
 
             default:
@@ -160,6 +194,8 @@ class UitDatabankService implements UitDBService
                     'ui' => 'https://www.uitdatabank.be',
                     'jwt' => 'https://jwt.uitdatabank.be',
                     'legacy' => 'https://www.uitid.be/uitid/rest/',
+                    'uitpas' => 'https://api.uitpas.be',
+                    'auth' => 'https://account.uitid.be',
                 ];
         }
     }
@@ -196,23 +232,112 @@ class UitDatabankService implements UitDBService
     /**
      * @param $method
      * @param $path
+     * @param array $options
      * @return \Psr\Http\Message\StreamInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function authenticatedRequest($method, $path)
+    protected function authenticatedRequest($method, $path, array $options = [])
     {
         $url = $this->getEnvironment()['io'] . $path;
 
-        $headers = [
-            'Authorization' => 'Bearer ' . $this->jwt,
-            'X-Api-Key' => $this->entryApiKey
-        ];
+        $headers = array_merge(
+            $options['headers'] ?? [],
+            [
+                'Authorization' => 'Bearer ' . $this->jwt,
+                'X-Api-Key' => $this->entryApiKey
+            ]
+        );
 
-        $response = $this->guzzle->request($method, $url, [
-            'headers' => $headers
-        ]);
+        $requestOptions = array_merge($options, ['headers' => $headers]);
+
+        $response = $this->guzzle->request($method, $url, $requestOptions);
 
         return $response->getBody();
+    }
+
+    /**
+     * Obtain an OAuth2 access token using client credentials flow.
+     * @return string
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getOAuth2Token()
+    {
+        if ($this->oauth2Token) {
+            return $this->oauth2Token;
+        }
+
+        $environment = $this->getEnvironment();
+        $tokenUrl = $environment['auth'] . '/oauth/token';
+
+        $response = $this->guzzle->post($tokenUrl, [
+            'form_params' => [
+                'grant_type' => 'client_credentials',
+                'client_id' => $this->clientId,
+                'client_secret' => $this->clientSecret,
+            ]
+        ]);
+
+        $data = json_decode((string)$response->getBody(), true);
+        $this->oauth2Token = $data['access_token'];
+
+        return $this->oauth2Token;
+    }
+
+    /**
+     * Make an authenticated request to the UiTDatabank Entry API using OAuth2.
+     * @param string $method
+     * @param string $path
+     * @param array $options
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function entryApiRequest($method, $path, array $options = [])
+    {
+        $token = $this->getOAuth2Token();
+        $environment = $this->getEnvironment();
+        $url = $environment['io'] . $path;
+
+        $headers = array_merge(
+            $options['headers'] ?? [],
+            [
+                'Authorization' => 'Bearer ' . $token,
+                'X-Api-Key' => $this->entryApiKey,
+            ]
+        );
+
+        $requestOptions = array_merge($options, ['headers' => $headers]);
+
+        $response = $this->guzzle->request($method, $url, $requestOptions);
+
+        return json_decode((string)$response->getBody(), true);
+    }
+
+    /**
+     * Make an authenticated request to the UiTPAS API using OAuth2.
+     * @param string $method
+     * @param string $path
+     * @param array $options
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function uitpasApiRequest($method, $path, array $options = [])
+    {
+        $token = $this->getOAuth2Token();
+        $environment = $this->getEnvironment();
+        $url = $environment['uitpas'] . $path;
+
+        $headers = array_merge(
+            $options['headers'] ?? [],
+            [
+                'Authorization' => 'Bearer ' . $token,
+            ]
+        );
+
+        $requestOptions = array_merge($options, ['headers' => $headers]);
+
+        $response = $this->guzzle->request($method, $url, $requestOptions);
+
+        return json_decode((string)$response->getBody(), true);
     }
 
     /**
@@ -220,10 +345,35 @@ class UitDatabankService implements UitDBService
      */
     public function getUitPasService(): ?UiTPASVerifier
     {
+        if ($this->clientId && $this->clientSecret) {
+            return new UiTPASVerifier($this);
+        }
+
+        // Fall back to legacy OAuth1 if no client credentials configured
         if (!$this->oauthConsumer) {
             return null;
         }
         return new UiTPASVerifier($this);
+    }
+
+    /**
+     * Check if OAuth2 client credentials are configured.
+     * @return bool
+     */
+    public function hasClientCredentials()
+    {
+        return !empty($this->clientId) && !empty($this->clientSecret);
+    }
+
+    /**
+     * @return UitDBEvents|null
+     */
+    public function getEventService(): ?UitDBEvents
+    {
+        if (!$this->hasClientCredentials()) {
+            return null;
+        }
+        return new UitDBEvents($this);
     }
 
     /**
