@@ -70,10 +70,17 @@ class UitDBEvents
         $existingId = $event->getUitDBId();
 
         if ($existingId) {
-            return $this->updateEvent($event, $existingId);
+            $uitdbEventId = $this->updateEvent($event, $existingId);
         } else {
-            return $this->createEvent($event);
+            $uitdbEventId = $this->createEvent($event);
         }
+
+        // Upload images after the event is created/updated
+        if ($uitdbEventId) {
+            $this->uploadImages($event, $uitdbEventId);
+        }
+
+        return $uitdbEventId;
     }
 
     /**
@@ -248,6 +255,93 @@ class UitDBEvents
         ];
 
         return $location;
+    }
+
+    /**
+     * Upload images (poster and logo) to UiTDatabank for the given event.
+     * @param Event $event
+     * @param string $uitdbEventId
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function uploadImages(Event $event, $uitdbEventId)
+    {
+        $images = $this->getEventImageUrls($event);
+
+        foreach ($images as $index => $image) {
+            $this->addImageToEvent($uitdbEventId, $image['url'], $image['description'], $image['copyrightHolder']);
+        }
+    }
+
+    /**
+     * Get the image URLs for an event.
+     * @param Event $event
+     * @return array
+     */
+    protected function getEventImageUrls(Event $event)
+    {
+        $images = [];
+
+        if ($event->poster && $event->poster->getUrl()) {
+            $images[] = [
+                'url' => $event->poster->getUrl(),
+                'description' => $event->name,
+                'copyrightHolder' => $event->organisation->name ?? $event->name,
+            ];
+        }
+
+        if ($event->logo && $event->logo->getUrl()) {
+            $images[] = [
+                'url' => $event->logo->getUrl(),
+                'description' => $event->name . ' - logo',
+                'copyrightHolder' => $event->organisation->name ?? $event->name,
+            ];
+        }
+
+        return $images;
+    }
+
+    /**
+     * Add an image to an event in UiTDatabank via media object upload.
+     * @param string $uitdbEventId
+     * @param string $imageUrl
+     * @param string $description
+     * @param string $copyrightHolder
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function addImageToEvent($uitdbEventId, $imageUrl, $description, $copyrightHolder)
+    {
+        // First, create a media object by URL
+        $mediaResponse = $this->uitDatabankService->entryApiRequest(
+            'POST',
+            '/images',
+            [
+                'json' => [
+                    'url' => $imageUrl,
+                    'language' => 'nl',
+                    'description' => $description,
+                    'copyrightHolder' => $copyrightHolder,
+                ]
+            ]
+        );
+
+        $mediaObjectId = $mediaResponse['imageId'] ?? $mediaResponse['mediaObjectId'] ?? $mediaResponse['id'] ?? null;
+
+        if (!$mediaObjectId) {
+            return;
+        }
+
+        // Then, link the media object to the event
+        $this->uitDatabankService->entryApiRequest(
+            'POST',
+            '/events/' . $uitdbEventId . '/images',
+            [
+                'json' => [
+                    'mediaObjectId' => $mediaObjectId,
+                ]
+            ]
+        );
     }
 
     /**
