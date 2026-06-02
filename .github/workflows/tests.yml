@@ -19,14 +19,14 @@ jobs:
         run: cp .env.example .env
 
       - name: Build and start containers
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
 
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL..."
           source .env
           for i in $(seq 1 30); do
-            if docker-compose exec -T mysql-db mysql -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
+            if docker compose exec -T mysql-db mysql -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
               echo "MySQL is ready!"
               break
             fi
@@ -35,14 +35,14 @@ jobs:
           done
 
       - name: Generate application key
-        run: docker-compose exec -T webserver php artisan key:generate
+        run: docker compose exec -T webserver php artisan key:generate
 
       - name: Run migrations
-        run: docker-compose exec -T webserver php artisan migrate --force
+        run: docker compose exec -T webserver php artisan migrate --force
 
       - name: Run tests
-        run: docker-compose exec -T webserver vendor/bin/phpunit
+        run: docker compose exec -T webserver vendor/bin/phpunit
 
       - name: Stop containers
         if: always()
-        run: docker-compose down
+        run: docker compose down
