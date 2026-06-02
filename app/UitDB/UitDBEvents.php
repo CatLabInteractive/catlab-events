@@ -35,7 +35,7 @@ class UitDBEvents
     /**
      * Default UiTDatabank event type term ID for "Concert"
      */
-    const DEFAULT_EVENT_TYPE_ID = '0.50.4.0.0';
+    const DEFAULT_EVENT_TYPE_ID = '0.50.21.0.0';
 
     /**
      * Default event duration in hours when no end date is specified
