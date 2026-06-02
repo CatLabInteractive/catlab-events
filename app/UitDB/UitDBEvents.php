@@ -268,7 +268,7 @@ class UitDBEvents
     {
         $images = $this->getEventImageUrls($event);
 
-        foreach ($images as $index => $image) {
+        foreach ($images as $image) {
             $this->addImageToEvent($uitdbEventId, $image['url'], $image['description'], $image['copyrightHolder']);
         }
     }
@@ -329,6 +329,7 @@ class UitDBEvents
         $mediaObjectId = $mediaResponse['imageId'] ?? $mediaResponse['mediaObjectId'] ?? $mediaResponse['id'] ?? null;
 
         if (!$mediaObjectId) {
+            \Log::warning('UiTDatabank: Could not extract media object ID from image upload response for event ' . $uitdbEventId);
             return;
         }
 
