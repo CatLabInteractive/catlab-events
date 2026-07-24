@@ -31,5 +31,19 @@
         <env name="ERRBIT_ENABLED" value="false"/>
         <env name="VALID_DOMAINS" value=""/>
         <env name="EUKLES_SERVER" value=""/>
+        <!-- Deterministic Eukles config: the container inherits the developer's
+             .env, so without pinning these, EuklesEventSubscriber::subscribe()
+             (which gates registration on config('eukles.key')) would silently
+             vary by machine. A fixed key/secret makes it always register and
+             always hit the FakeEuklesClient bound in IntegrationTestCase. -->
+        <env name="EUKLES_PROJECT_KEY" value="test-key"/>
+        <env name="EUKLES_PROJECT_SECRET" value="test-secret"/>
+        <!-- Blank the UiTDatabank credentials actually read by
+             config/services.php (uitdb.*) so a developer's real .env values
+             can't leak into the test container and make behaviour depend on
+             the machine running the suite. -->
+        <env name="UITDB_OAUTH_CONSUMER" value=""/>
+        <env name="UITDB_OAUTH_SECRET" value=""/>
+        <env name="UITDB_ENTRY_API_KEY" value=""/>
     </php>
 </phpunit>

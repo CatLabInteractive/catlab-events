@@ -47,4 +47,27 @@ class PaidTicketPurchaseTest extends IntegrationTestCase
         $this->actingAs($user)->get("/orders/{$order->id}/thanks")->assertStatus(200);
         $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
     }
+
+    public function testSyncCallbackWorksUnauthenticated()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+        $user = $this->createUser();
+
+        $this->actingAs($user)
+            ->post("/events/{$event->id}/register/{$category->id}/process");
+
+        $order = Order::query()->first();
+        $this->assertNotNull($order);
+
+        // The PSP calls the callback without any session — it must work
+        // for guests, or real payment confirmations break.
+        $this->app['auth']->guard()->logout();
+        $this->flushSession();
+
+        $this->catlabApi->orderStatus = 'ACCEPTED';
+        $this->get("/orders/{$order->id}/sync")->assertStatus(200);
+
+        $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
 }

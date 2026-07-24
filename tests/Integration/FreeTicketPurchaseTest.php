@@ -28,6 +28,9 @@ class FreeTicketPurchaseTest extends IntegrationTestCase
         $this->assertCount(0, $this->catlabApi->createOrderCalls);
         $this->assertCount(1, $this->catlabApi->sendEmailCalls);
 
+        // Order confirmation is tracked via the faked Eukles client.
+        $this->assertNotEmpty($this->eukles->tracked);
+
         // The thanks page renders and the order STAYS accepted afterwards.
         $this->actingAs($user)->get("/orders/{$order->id}/thanks")->assertStatus(200);
         $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);

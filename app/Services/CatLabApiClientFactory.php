@@ -39,7 +39,7 @@ class CatLabApiClientFactory
      * @param User|null $user
      * @return ApiClient
      */
-    public function forUser(User $user = null): ApiClient
+    public function forUser(?User $user = null): ApiClient
     {
         return new ApiClient($user);
     }

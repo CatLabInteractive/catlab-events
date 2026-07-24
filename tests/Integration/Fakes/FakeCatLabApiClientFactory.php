@@ -15,7 +15,7 @@ class FakeCatLabApiClientFactory extends CatLabApiClientFactory
         $this->client = $client;
     }
 
-    public function forUser(User $user = null): ApiClient
+    public function forUser(?User $user = null): ApiClient
     {
         return $this->client;
     }
