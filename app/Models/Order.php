@@ -163,8 +163,12 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     public function synchronize($forceTrigger = false)
     {
         // No catlab id? Order was not registered succesfully, so cancel it now.
+        // Only applies to orders still pending payment: accepted orders (free
+        // tickets never get a catlab order id) must not be touched.
         if (!$this->catlab_order_id) {
-            $this->changeState(self::STATE_CANCELLED);
+            if ($this->isPending()) {
+                $this->changeState(self::STATE_CANCELLED);
+            }
             return;
         }
 
