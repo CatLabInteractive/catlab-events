@@ -22,7 +22,8 @@
 
 namespace App\Providers;
 
-use Airbrake\Notifier;
+use Airbrake\Notifier as AirbrakeNotifier;
+use App\Errbit\Notifier;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -41,7 +42,7 @@ class ErrbitServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(Notifier::class, function ($app) {
+        $this->app->singleton(AirbrakeNotifier::class, function ($app) {
             $config = $app['config']['services.errbit'];
 
             return new Notifier([

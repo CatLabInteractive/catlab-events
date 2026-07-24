@@ -8,7 +8,7 @@
         "php": ">=8.0",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "airbrake/phpbrake": "^1.0",
+        "airbrake/phpbrake": "0.8.0",
         "barryvdh/laravel-debugbar": "^3.2",
         "barryvdh/laravel-dompdf": "^1.0.0",
         "catlabinteractive/central-storage-client": "~1.0.3",

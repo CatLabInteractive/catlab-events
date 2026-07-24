@@ -4,33 +4,32 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c6f914964f07b4b6a74c638b91d943f4",
+    "content-hash": "f84ad7e158bde76dac9e8f7baad83a99",
     "packages": [
         {
             "name": "airbrake/phpbrake",
-            "version": "v1.0.0",
+            "version": "v0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/airbrake/phpbrake.git",
-                "reference": "c5c354934fa879a70e0e6167f7269fe39935beca"
+                "reference": "05a972a5c1ee43367f489357153e757b9d0b1095"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/airbrake/phpbrake/zipball/c5c354934fa879a70e0e6167f7269fe39935beca",
-                "reference": "c5c354934fa879a70e0e6167f7269fe39935beca",
+                "url": "https://api.github.com/repos/airbrake/phpbrake/zipball/05a972a5c1ee43367f489357153e757b9d0b1095",
+                "reference": "05a972a5c1ee43367f489357153e757b9d0b1095",
                 "shasum": ""
             },
             "require": {
                 "cash/lrucache": "^1.0",
                 "guzzlehttp/guzzle": ">=6.3",
-                "php": ">=8.1"
+                "php": ">=5.4"
             },
             "require-dev": {
                 "mikey179/vfsstream": "^1.6",
                 "monolog/monolog": "^1.22|^2.0",
-                "phpunit/phpunit": "^10.0",
-                "psy/psysh": "^0.11",
-                "squizlabs/php_codesniffer": "^3.7"
+                "phpunit/phpunit": "^5.7",
+                "squizlabs/php_codesniffer": "^2.9"
             },
             "suggest": {
                 "guzzlehttp/guzzle": "Guzzle HTTP client"
@@ -42,9 +41,6 @@
                 }
             },
             "autoload": {
-                "files": [
-                    "src/constants.php"
-                ],
                 "psr-4": {
                     "Airbrake\\": "src/"
                 }
@@ -64,9 +60,9 @@
             ],
             "support": {
                 "issues": "https://github.com/airbrake/phpbrake/issues",
-                "source": "https://github.com/airbrake/phpbrake/tree/v1.0.0"
+                "source": "https://github.com/airbrake/phpbrake/tree/v0.8.0"
             },
-            "time": "2023-12-07T00:39:40+00:00"
+            "time": "2021-04-06T01:29:47+00:00"
         },
         {
             "name": "barryvdh/laravel-debugbar",
