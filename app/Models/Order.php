@@ -25,7 +25,6 @@ namespace App\Models;
 use App\Events\OrderCancelled;
 use App\Events\OrderConfirmed;
 use App\Tools\TicketPriceCalculator;
-use CatLab\Accounts\Client\ApiClient;
 use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
@@ -195,12 +194,8 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             return null;
         }
 
-        if ($expanded) {
-            $client = new ApiClient($this->user);
-        } else {
-            $client = new ApiClient(null);
-        }
-
+        $factory = app(\App\Services\CatLabApiClientFactory::class);
+        $client = $factory->forUser($expanded ? $this->user : null);
 
         return $client->getOrder($this->catlab_order_id, $expanded);
     }
