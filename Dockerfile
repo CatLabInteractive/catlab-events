@@ -1,7 +1,7 @@
 ARG NODE_VERSION=18
 ARG PHP_EXTENSIONS="mysqli pdo_mysql bcmath zip intl gd"
 
-FROM thecodingmachine/php:8.0-v5-slim-apache
+FROM thecodingmachine/php:8.5-v5-slim-apache
 ENV APACHE_DOCUMENT_ROOT=public/
 
 # Configure locales
