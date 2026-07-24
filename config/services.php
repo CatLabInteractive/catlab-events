@@ -67,6 +67,13 @@ return [
 
     'google' => [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY')
+    ],
+
+    'errbit' => [
+        'enabled' => env('ERRBIT_ENABLED', env('APP_ENV') === 'production'),
+        'host' => env('ERRBIT_HOST'),
+        'project_id' => env('ERRBIT_PROJECT_ID', 1),
+        'project_key' => env('ERRBIT_PROJECT_KEY')
     ]
 
 ];
