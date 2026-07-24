@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="bootstrap/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Integration">
+            <directory suffix="Test.php">./tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_DRIVER" value="sync"/>
+        <!-- Dedicated test database on the docker-compose mysql service.
+             DB_USERNAME=root because the runner creates the schema; the root
+             password equals DB_PASSWORD from .env (see docker-compose.yml). -->
+        <env name="DB_HOST" value="mysql-db"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="catlab_events_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <!-- Keep auth local (actingAs works; no OAuth redirect) -->
+        <env name="CATLAB_CLIENT_ID" value=""/>
+        <!-- No external services -->
+        <env name="ERRBIT_ENABLED" value="false"/>
+        <env name="VALID_DOMAINS" value=""/>
+        <env name="EUKLES_SERVER" value=""/>
+    </php>
+</phpunit>
