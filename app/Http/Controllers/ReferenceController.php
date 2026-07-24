@@ -47,7 +47,12 @@ class ReferenceController
      */
     public static function getReferences()
     {
-        if (!\Schema::hasTable('series')) {
+        try {
+            if (!\Schema::hasTable('series')) {
+                return [];
+            }
+        } catch (\Exception $e) {
+            // No database available (e.g. while running tests without a db).
             return [];
         }
 

@@ -53,7 +53,7 @@ class Organisation extends Model
         static $representedOrganisation;
 
         if (!isset($representedOrganisation)) {
-            $representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST']);
+            $representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST'] ?? '');
         }
 
         return $representedOrganisation;
