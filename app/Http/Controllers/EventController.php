@@ -33,7 +33,6 @@ use App\Models\User;
 use App\Models\Venue;
 use App\UitDB\Exceptions\UitPASException;
 use Auth;
-use CatLab\Accounts\Client\ApiClient;
 use Illuminate\Http\Request;
 
 /**
@@ -745,7 +744,7 @@ class EventController extends Controller
             ]);
         }
 
-        $client = new ApiClient($user);
+        $client = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
         // create a default order
         $waitingListAccessToken = self::getValidWaitingListToken($event);

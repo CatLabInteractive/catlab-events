@@ -6,7 +6,6 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
-use CatLab\Accounts\Client\ApiClient;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 
@@ -43,7 +42,7 @@ abstract class SendEmail
         }
 
         /** @var User $user */
-        $apiClient = new ApiClient($user);
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
         /* @TODO
          * This is not okay as some group members might not have logged in for a long time and might thus have
@@ -84,7 +83,7 @@ abstract class SendEmail
 
         /** @var User $user */
         $user = $order->user;
-        $apiClient = new ApiClient($user);
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
         try {
             $apiClient->sendEmail(
