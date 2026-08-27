@@ -158,6 +158,49 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
+     * Who may read this order: the buyer, a member of the order's group, or
+     * an admin. (Security audit 2026-08-27: orders/{id} was readable by any
+     * logged-in user, exposing team, items and the livestream link, fetched
+     * with the OWNER's stored accounts token.)
+     *
+     * @param User|null $user
+     * @return bool
+     */
+    public function isViewableBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdmin() || (int)$this->user_id === (int)$user->id) {
+            return true;
+        }
+        return $this->group ? $this->group->isMember($user) : false;
+    }
+
+    /**
+     * HMAC that gates orders/{id}/sync -- accounts' notify callback, which
+     * cannot carry a session -- so that only the URL we handed to accounts
+     * for THIS order can trigger a synchronisation (security audit
+     * 2026-08-27: anyone could trigger transitions and e-mails for any
+     * order id).
+     *
+     * @return string
+     */
+    public function syncSignature(): string
+    {
+        return hash_hmac('sha256', 'order-sync:' . $this->id, (string)config('app.key'));
+    }
+
+    /**
+     * @param string|null $signature
+     * @return bool
+     */
+    public function verifySyncSignature(?string $signature): bool
+    {
+        return is_string($signature) && strlen($signature) === 64 && hash_equals($this->syncSignature(), $signature);
+    }
+
+    /**
      * @param bool $forceTrigger
      */
     public function synchronize($forceTrigger = false)
@@ -175,10 +218,13 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         $catlabOrder = $this->getOrderData();
         $status = $catlabOrder['status'];
 
-        if ($this->status !== $status || $forceTrigger) {
+        // The column is `state` (`status` never existed on this model: the
+        // guard below was dead and a cancelled order could flip back to
+        // pending -- security audit 2026-08-27).
+        if ($this->state !== $status || $forceTrigger) {
             // Don't go from "canceled" to "pending"...
             if (
-                $this->status === Order::STATE_CANCELLED &&
+                $this->state === Order::STATE_CANCELLED &&
                 $status === Order::STATE_PENDING
             ) {
                 // don't do anything!

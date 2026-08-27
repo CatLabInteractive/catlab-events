@@ -59,6 +59,8 @@ class OrderController extends Controller
     {
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+        abort_unless($order->isViewableBy(\Auth::user()), 403);
+
         $order->synchronize();
 
         $orderData = $order->getOrderData(true);
@@ -87,6 +89,8 @@ class OrderController extends Controller
 
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+        abort_unless($order->isViewableBy(\Auth::user()), 403);
+
         $order->synchronize($forceTrigger);
 
         $trackConversion = !!$forceTracker;
@@ -125,6 +129,12 @@ class OrderController extends Controller
     {
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+
+        // Accounts' notify callback: no session possible, so the URL we
+        // handed to accounts carries a per-order signature (see
+        // EventController::processRegister / Order::syncSignature).
+        abort_unless($order->verifySyncSignature(\Request::get('sig')), 403);
+
         $order->synchronize();
 
         return \Response::json([ 'success' => 1 ]);

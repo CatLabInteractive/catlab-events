@@ -130,8 +130,6 @@ Route::get('events/{event}/waitinglist/subscribe', 'WaitingListController@addToW
 
 Route::get('events/{event}/register', 'EventController@selectTicketCategory');
 
-Route::get('orders/{id}/thanks', 'OrderController@thanks');
-
 Route::get('status', 'StatusController@status')
     ->name('status');
 
@@ -151,6 +149,9 @@ Route::group([
 
     Route::get('orders', 'OrderController@index');
     Route::get('orders/{id}', 'OrderController@view');
+    // The buyer returns here from the payment page (same browser session);
+    // owner / group member / admin only (security audit 2026-08-27).
+    Route::get('orders/{id}/thanks', 'OrderController@thanks');
 
     Route::get('catlabaccount/{remotePath?}', 'CatLabAccountController@redirect')
         ->where('remotePath', '(.*)');
