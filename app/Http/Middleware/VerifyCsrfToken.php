@@ -32,6 +32,8 @@ class VerifyCsrfToken extends BaseVerifier
      * @var array
      */
     protected $except = [
-        //
+        // Pay.nl exchange: server-to-server POST, verified through the Pay.nl
+        // API (Paynl\Transaction::getForExchange), no browser session.
+        'donate/callback',
     ];
 }
