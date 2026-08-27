@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52a915819aaa0dd6ed954088e8b76f38",
+    "content-hash": "d13d08c1880b583ceb5b63485bfd939d",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -70,44 +70,44 @@
         },
         {
             "name": "barryvdh/laravel-debugbar",
-            "version": "v3.13.5",
+            "version": "v3.16.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/barryvdh/laravel-debugbar.git",
-                "reference": "92d86be45ee54edff735e46856f64f14b6a8bb07"
+                "url": "https://github.com/fruitcake/laravel-debugbar.git",
+                "reference": "f265cf5e38577d42311f1a90d619bcd3740bea23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/barryvdh/laravel-debugbar/zipball/92d86be45ee54edff735e46856f64f14b6a8bb07",
-                "reference": "92d86be45ee54edff735e46856f64f14b6a8bb07",
+                "url": "https://api.github.com/repos/fruitcake/laravel-debugbar/zipball/f265cf5e38577d42311f1a90d619bcd3740bea23",
+                "reference": "f265cf5e38577d42311f1a90d619bcd3740bea23",
                 "shasum": ""
             },
             "require": {
-                "illuminate/routing": "^9|^10|^11",
-                "illuminate/session": "^9|^10|^11",
-                "illuminate/support": "^9|^10|^11",
-                "maximebf/debugbar": "~1.22.0",
-                "php": "^8.0",
+                "illuminate/routing": "^9|^10|^11|^12",
+                "illuminate/session": "^9|^10|^11|^12",
+                "illuminate/support": "^9|^10|^11|^12",
+                "php": "^8.1",
+                "php-debugbar/php-debugbar": "~2.2.0",
                 "symfony/finder": "^6|^7"
             },
             "require-dev": {
                 "mockery/mockery": "^1.3.3",
-                "orchestra/testbench-dusk": "^5|^6|^7|^8|^9",
-                "phpunit/phpunit": "^9.6|^10.5",
+                "orchestra/testbench-dusk": "^7|^8|^9|^10",
+                "phpunit/phpunit": "^9.5.10|^10|^11",
                 "squizlabs/php_codesniffer": "^3.5"
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-master": "3.13-dev"
-                },
                 "laravel": {
-                    "providers": [
-                        "Barryvdh\\Debugbar\\ServiceProvider"
-                    ],
                     "aliases": {
                         "Debugbar": "Barryvdh\\Debugbar\\Facades\\Debugbar"
-                    }
+                    },
+                    "providers": [
+                        "Barryvdh\\Debugbar\\ServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "3.16-dev"
                 }
             },
             "autoload": {
@@ -132,13 +132,14 @@
             "keywords": [
                 "debug",
                 "debugbar",
+                "dev",
                 "laravel",
                 "profiler",
                 "webprofiler"
             ],
             "support": {
-                "issues": "https://github.com/barryvdh/laravel-debugbar/issues",
-                "source": "https://github.com/barryvdh/laravel-debugbar/tree/v3.13.5"
+                "issues": "https://github.com/fruitcake/laravel-debugbar/issues",
+                "source": "https://github.com/fruitcake/laravel-debugbar/tree/v3.16.0"
             },
             "funding": [
                 {
@@ -150,7 +151,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-04-12T11:20:37+00:00"
+            "time": "2025-07-14T11:56:43+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
@@ -400,20 +401,21 @@
         },
         {
             "name": "catlabinteractive/base",
-            "version": "v1.0.12",
+            "version": "v1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/base.git",
-                "reference": "6b3da8f0e8431333b60a5039405fd21da0b4d926"
+                "reference": "0effae262fdfbfdd4036dfc3034649752781be55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/base/zipball/6b3da8f0e8431333b60a5039405fd21da0b4d926",
-                "reference": "6b3da8f0e8431333b60a5039405fd21da0b4d926",
+                "url": "https://api.github.com/repos/CatLabInteractive/base/zipball/0effae262fdfbfdd4036dfc3034649752781be55",
+                "reference": "0effae262fdfbfdd4036dfc3034649752781be55",
                 "shasum": ""
             },
             "require": {
-                "ext-mbstring": "*"
+                "ext-mbstring": "*",
+                "php": ">=7.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "5.3.*"
@@ -437,29 +439,29 @@
             "description": "A few classes that you always need.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/base/issues",
-                "source": "https://github.com/CatLabInteractive/base/tree/v1.0.12"
+                "source": "https://github.com/CatLabInteractive/base/tree/v1.1.2"
             },
-            "time": "2022-08-17T14:06:29+00:00"
+            "time": "2026-07-13T14:00:06+00:00"
         },
         {
             "name": "catlabinteractive/central-storage-client",
-            "version": "v1.0.6",
+            "version": "v1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/central-storage-client.git",
-                "reference": "9dd89214342000b059f9bc1ebf871cdb08b79919"
+                "reference": "b944a243babedfe5cfa8c8ff775b91c9fbaf7a8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/central-storage-client/zipball/9dd89214342000b059f9bc1ebf871cdb08b79919",
-                "reference": "9dd89214342000b059f9bc1ebf871cdb08b79919",
+                "url": "https://api.github.com/repos/CatLabInteractive/central-storage-client/zipball/b944a243babedfe5cfa8c8ff775b91c9fbaf7a8b",
+                "reference": "b944a243babedfe5cfa8c8ff775b91c9fbaf7a8b",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": ">=6.0"
             },
             "require-dev": {
-                "laravel/framework": "5.4.*",
+                "laravel/framework": "~9.0",
                 "phpunit/phpunit": "*"
             },
             "type": "library",
@@ -481,32 +483,32 @@
             "description": "Client for CatLab central storage.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/central-storage-client/issues",
-                "source": "https://github.com/CatLabInteractive/central-storage-client/tree/v1.0.6"
+                "source": "https://github.com/CatLabInteractive/central-storage-client/tree/v1.0.7"
             },
-            "time": "2021-05-15T08:49:54+00:00"
+            "time": "2022-06-21T08:54:29+00:00"
         },
         {
             "name": "catlabinteractive/charon",
-            "version": "v1.5.12",
+            "version": "v1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/charon.git",
-                "reference": "330fda33ede979877d82fba15276677293409963"
+                "reference": "e89c811dcfdb40e1ef16849721fcb5abf56680ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/charon/zipball/330fda33ede979877d82fba15276677293409963",
-                "reference": "330fda33ede979877d82fba15276677293409963",
+                "url": "https://api.github.com/repos/CatLabInteractive/charon/zipball/e89c811dcfdb40e1ef16849721fcb5abf56680ae",
+                "reference": "e89c811dcfdb40e1ef16849721fcb5abf56680ae",
                 "shasum": ""
             },
             "require": {
                 "catlabinteractive/requirements": "^1.0.7",
                 "ext-mbstring": "*",
-                "php": ">=7.1"
+                "php": ">=8.1"
             },
             "require-dev": {
                 "catlabinteractive/cursor-pagination": "^1.0.8",
-                "phpunit/phpunit": "^9.0"
+                "phpunit/phpunit": "^10.5 || ^11.0"
             },
             "suggest": {
                 "ezyang/htmlpurifier": "^4.14"
@@ -530,30 +532,32 @@
             "description": "Charon is a framework for building self documented RESTful API's.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/charon/issues",
-                "source": "https://github.com/CatLabInteractive/charon/tree/v1.5.12"
+                "source": "https://github.com/CatLabInteractive/charon/tree/v1.12.0"
             },
-            "time": "2022-09-13T13:37:31+00:00"
+            "time": "2026-08-27T09:13:39+00:00"
         },
         {
             "name": "catlabinteractive/charon-laravel",
-            "version": "v1.7.1",
+            "version": "v1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/charon-laravel.git",
-                "reference": "55df15767259af3d32168a6cd949eadb6636dd7d"
+                "reference": "034b73fc2a46681b049e960f97ad75043e131b69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/charon-laravel/zipball/55df15767259af3d32168a6cd949eadb6636dd7d",
-                "reference": "55df15767259af3d32168a6cd949eadb6636dd7d",
+                "url": "https://api.github.com/repos/CatLabInteractive/charon-laravel/zipball/034b73fc2a46681b049e960f97ad75043e131b69",
+                "reference": "034b73fc2a46681b049e960f97ad75043e131b69",
                 "shasum": ""
             },
             "require": {
-                "catlabinteractive/charon": "^1.5.8"
+                "catlabinteractive/charon": "^1.12",
+                "php": ">=8.1"
             },
             "require-dev": {
-                "laravel/framework": "^9.0",
-                "phpunit/phpunit": "^9.0"
+                "laravel/framework": "^9.0 || ^10.0 || ^11.0 || ^12.0",
+                "orchestra/testbench": "^7.0 || ^8.0 || ^9.0 || ^10.0",
+                "phpunit/phpunit": "^9.5.10 || ^10.5 || ^11.0 || ^12.0"
             },
             "type": "library",
             "extra": {
@@ -581,9 +585,9 @@
             "description": "Laravel specific libraries for Charon.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/charon-laravel/issues",
-                "source": "https://github.com/CatLabInteractive/charon-laravel/tree/v1.7.1"
+                "source": "https://github.com/CatLabInteractive/charon-laravel/tree/v1.12.0"
             },
-            "time": "2024-09-16T20:45:29+00:00"
+            "time": "2026-08-27T09:13:51+00:00"
         },
         {
             "name": "catlabinteractive/eukles-client",
@@ -633,16 +637,16 @@
         },
         {
             "name": "catlabinteractive/laravel-catlab-accounts",
-            "version": "v4.0.2",
+            "version": "v4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-catlab-accounts.git",
-                "reference": "cdb22b55b50acba55bfe8825a9292633beeaf200"
+                "reference": "2c0367eb59a65edcd9a0c880a55c78c3df47aafe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/cdb22b55b50acba55bfe8825a9292633beeaf200",
-                "reference": "cdb22b55b50acba55bfe8825a9292633beeaf200",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/2c0367eb59a65edcd9a0c880a55c78c3df47aafe",
+                "reference": "2c0367eb59a65edcd9a0c880a55c78c3df47aafe",
                 "shasum": ""
             },
             "require": {
@@ -667,26 +671,33 @@
             "description": "Oauth-Openid client for the catlab authentication api for Ll",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-catlab-accounts/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.0.2"
+                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.1.0"
             },
-            "time": "2026-08-27T12:01:29+00:00"
+            "time": "2026-08-27T20:53:44+00:00"
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v1.7.0",
+            "version": "v1.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "89fd2e9dd743f134b8badd708d3669e766a444d4"
+                "reference": "9344e04e2ff8c432b72d0cd2acd48a9c7ef96024"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/89fd2e9dd743f134b8badd708d3669e766a444d4",
-                "reference": "89fd2e9dd743f134b8badd708d3669e766a444d4",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/9344e04e2ff8c432b72d0cd2acd48a9c7ef96024",
+                "reference": "9344e04e2ff8c432b72d0cd2acd48a9c7ef96024",
                 "shasum": ""
             },
             "require": {
-                "catlabinteractive/charon-laravel": "~1.7.0"
+                "catlabinteractive/charon-laravel": "^1.9",
+                "catlabinteractive/laravel-table": "^1.0.2",
+                "laravel/framework": "^9.0 || ^10.0 || ^11.0 || ^12.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0 || ^8.0 || ^9.0 || ^10.0",
+                "phpunit/phpunit": "^9.5.10 || ^10.5 || ^11.0 || ^12.0"
             },
             "type": "library",
             "autoload": {
@@ -707,22 +718,22 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.7.0"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.7.2"
             },
-            "time": "2024-09-16T20:15:49+00:00"
+            "time": "2026-07-29T22:08:01+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",
-            "version": "v1.0.3",
+            "version": "v1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-table.git",
-                "reference": "0de4384c02cd9eac074394731a17f2ed00682630"
+                "reference": "3f334a5b8baab9d7ac9e9bce9b35c7315856c445"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/0de4384c02cd9eac074394731a17f2ed00682630",
-                "reference": "0de4384c02cd9eac074394731a17f2ed00682630",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/3f334a5b8baab9d7ac9e9bce9b35c7315856c445",
+                "reference": "3f334a5b8baab9d7ac9e9bce9b35c7315856c445",
                 "shasum": ""
             },
             "type": "library",
@@ -744,9 +755,9 @@
             "description": "Laravel html table builder.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-table/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.0.3"
+                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.0.5"
             },
-            "time": "2022-08-17T12:47:24+00:00"
+            "time": "2026-08-27T10:59:32+00:00"
         },
         {
             "name": "catlabinteractive/requirements",
@@ -958,6 +969,7 @@
                     "type": "tidelift"
                 }
             ],
+            "abandoned": true,
             "time": "2022-05-20T20:07:39+00:00"
         },
         {
@@ -2732,33 +2744,33 @@
         },
         {
             "name": "laravel/tinker",
-            "version": "v2.9.0",
+            "version": "v2.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/tinker.git",
-                "reference": "502e0fe3f0415d06d5db1f83a472f0f3b754bafe"
+                "reference": "c9f80cc835649b5c1842898fb043f8cc098dd741"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/tinker/zipball/502e0fe3f0415d06d5db1f83a472f0f3b754bafe",
-                "reference": "502e0fe3f0415d06d5db1f83a472f0f3b754bafe",
+                "url": "https://api.github.com/repos/laravel/tinker/zipball/c9f80cc835649b5c1842898fb043f8cc098dd741",
+                "reference": "c9f80cc835649b5c1842898fb043f8cc098dd741",
                 "shasum": ""
             },
             "require": {
-                "illuminate/console": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "illuminate/contracts": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
-                "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "illuminate/console": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+                "illuminate/contracts": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
                 "php": "^7.2.5|^8.0",
                 "psy/psysh": "^0.11.1|^0.12.0",
-                "symfony/var-dumper": "^4.3.4|^5.0|^6.0|^7.0"
+                "symfony/var-dumper": "^4.3.4|^5.0|^6.0|^7.0|^8.0"
             },
             "require-dev": {
                 "mockery/mockery": "~1.3.3|^1.4.2",
                 "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^8.5.8|^9.3.3"
+                "phpunit/phpunit": "^8.5.8|^9.3.3|^10.0"
             },
             "suggest": {
-                "illuminate/database": "The Illuminate Database package (^6.0|^7.0|^8.0|^9.0|^10.0|^11.0)."
+                "illuminate/database": "The Illuminate Database package (^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0)."
             },
             "type": "library",
             "extra": {
@@ -2792,9 +2804,9 @@
             ],
             "support": {
                 "issues": "https://github.com/laravel/tinker/issues",
-                "source": "https://github.com/laravel/tinker/tree/v2.9.0"
+                "source": "https://github.com/laravel/tinker/tree/v2.11.1"
             },
-            "time": "2024-01-04T16:10:04+00:00"
+            "time": "2026-02-06T14:12:35+00:00"
         },
         {
             "name": "laravel/ui",
@@ -2822,13 +2834,13 @@
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-master": "3.x-dev"
-                },
                 "laravel": {
                     "providers": [
                         "Laravel\\Ui\\UiServiceProvider"
                     ]
+                },
+                "branch-alias": {
+                    "dev-master": "3.x-dev"
                 }
             },
             "autoload": {
@@ -3449,74 +3461,6 @@
                 "source": "https://github.com/Masterminds/html5-php/tree/2.11.0"
             },
             "time": "2026-08-18T06:18:41+00:00"
-        },
-        {
-            "name": "maximebf/debugbar",
-            "version": "v1.22.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/maximebf/php-debugbar.git",
-                "reference": "d7881b498f9e649610bf6ae91cdd6353859f75d2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/maximebf/php-debugbar/zipball/d7881b498f9e649610bf6ae91cdd6353859f75d2",
-                "reference": "d7881b498f9e649610bf6ae91cdd6353859f75d2",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2|^8",
-                "psr/log": "^1|^2|^3",
-                "symfony/var-dumper": "^4|^5|^6|^7"
-            },
-            "require-dev": {
-                "dbrekelmans/bdi": "^1",
-                "phpunit/phpunit": "^8|^9",
-                "symfony/panther": "^1|^2.1",
-                "twig/twig": "^1.38|^2.7|^3.0"
-            },
-            "suggest": {
-                "kriswallsmith/assetic": "The best way to manage assets",
-                "monolog/monolog": "Log using Monolog",
-                "predis/predis": "Redis storage"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.22-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "DebugBar\\": "src/DebugBar/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Maxime Bouroumeau-Fuseau",
-                    "email": "maxime.bouroumeau@gmail.com",
-                    "homepage": "http://maximebf.com"
-                },
-                {
-                    "name": "Barry vd. Heuvel",
-                    "email": "barryvdh@gmail.com"
-                }
-            ],
-            "description": "Debug bar in the browser for php application",
-            "homepage": "https://github.com/maximebf/php-debugbar",
-            "keywords": [
-                "debug",
-                "debugbar"
-            ],
-            "support": {
-                "issues": "https://github.com/maximebf/php-debugbar/issues",
-                "source": "https://github.com/maximebf/php-debugbar/tree/v1.22.6"
-            },
-            "time": "2024-09-16T11:47:59+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -4152,16 +4096,16 @@
         },
         {
             "name": "paynl/sdk",
-            "version": "1.6.7",
+            "version": "1.6.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paynl/sdk.git",
-                "reference": "03c21abadb382676fdc0c1d488712ae1a50e4fde"
+                "reference": "8a662da82c15fa0d58b744f25863d6274e527948"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paynl/sdk/zipball/03c21abadb382676fdc0c1d488712ae1a50e4fde",
-                "reference": "03c21abadb382676fdc0c1d488712ae1a50e4fde",
+                "url": "https://api.github.com/repos/paynl/sdk/zipball/8a662da82c15fa0d58b744f25863d6274e527948",
+                "reference": "8a662da82c15fa0d58b744f25863d6274e527948",
                 "shasum": ""
             },
             "require": {
@@ -4194,9 +4138,9 @@
             ],
             "support": {
                 "issues": "https://github.com/paynl/sdk/issues",
-                "source": "https://github.com/paynl/sdk/tree/v1.6.7"
+                "source": "https://github.com/paynl/sdk/tree/v1.6.11"
             },
-            "time": "2023-11-13T15:33:10+00:00"
+            "time": "2026-07-16T14:24:48+00:00"
         },
         {
             "name": "php-curl-class/php-curl-class",
@@ -4277,6 +4221,80 @@
                 "source": "https://github.com/php-curl-class/php-curl-class/tree/9.19.2"
             },
             "time": "2024-04-09T18:03:13+00:00"
+        },
+        {
+            "name": "php-debugbar/php-debugbar",
+            "version": "v2.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-debugbar/php-debugbar.git",
+                "reference": "abb9fa3c5c8dbe7efe03ddba56782917481de3e8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-debugbar/php-debugbar/zipball/abb9fa3c5c8dbe7efe03ddba56782917481de3e8",
+                "reference": "abb9fa3c5c8dbe7efe03ddba56782917481de3e8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1",
+                "psr/log": "^1|^2|^3",
+                "symfony/var-dumper": "^5.4|^6.4|^7.3|^8.0"
+            },
+            "replace": {
+                "maximebf/debugbar": "self.version"
+            },
+            "require-dev": {
+                "dbrekelmans/bdi": "^1",
+                "phpunit/phpunit": "^10",
+                "symfony/browser-kit": "^6.0|7.0",
+                "symfony/panther": "^1|^2.1",
+                "twig/twig": "^3.11.2"
+            },
+            "suggest": {
+                "kriswallsmith/assetic": "The best way to manage assets",
+                "monolog/monolog": "Log using Monolog",
+                "predis/predis": "Redis storage"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DebugBar\\": "src/DebugBar/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Maxime Bouroumeau-Fuseau",
+                    "email": "maxime.bouroumeau@gmail.com",
+                    "homepage": "http://maximebf.com"
+                },
+                {
+                    "name": "Barry vd. Heuvel",
+                    "email": "barryvdh@gmail.com"
+                }
+            ],
+            "description": "Debug bar in the browser for php application",
+            "homepage": "https://github.com/php-debugbar/php-debugbar",
+            "keywords": [
+                "debug",
+                "debug bar",
+                "debugbar",
+                "dev"
+            ],
+            "support": {
+                "issues": "https://github.com/php-debugbar/php-debugbar/issues",
+                "source": "https://github.com/php-debugbar/php-debugbar/tree/v2.2.6"
+            },
+            "time": "2025-12-22T13:21:32+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -5318,27 +5336,27 @@
         },
         {
             "name": "spatie/laravel-referer",
-            "version": "1.9.0",
+            "version": "1.9.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-referer.git",
-                "reference": "127ad9752f7bca860291ce38873d0985bd831b7c"
+                "reference": "7c2bfdd4e7a8cbacbd28cdbb15d1daa8b2ae3840"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-referer/zipball/127ad9752f7bca860291ce38873d0985bd831b7c",
-                "reference": "127ad9752f7bca860291ce38873d0985bd831b7c",
+                "url": "https://api.github.com/repos/spatie/laravel-referer/zipball/7c2bfdd4e7a8cbacbd28cdbb15d1daa8b2ae3840",
+                "reference": "7c2bfdd4e7a8cbacbd28cdbb15d1daa8b2ae3840",
                 "shasum": ""
             },
             "require": {
-                "illuminate/contracts": "^8.73|^9.0|^10.0|^11.0",
-                "illuminate/http": "^8.73|^9.0|^10.0|^11.0",
-                "illuminate/support": "^8.73|^9.0|^10.0|^11.0",
+                "illuminate/contracts": "^8.73|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/http": "^8.73|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^8.73|^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^7.4|^8.0"
             },
             "require-dev": {
-                "orchestra/testbench": "^6.23|^7.0|^8.0|^9.0",
-                "phpunit/phpunit": "^9.5|^10.5"
+                "orchestra/testbench": "^6.23|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^9.5|^10.5|^11.5.3|^12.0"
             },
             "type": "library",
             "extra": {
@@ -5373,7 +5391,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-referer/issues",
-                "source": "https://github.com/spatie/laravel-referer/tree/1.9.0"
+                "source": "https://github.com/spatie/laravel-referer/tree/1.9.3"
             },
             "funding": [
                 {
@@ -5385,7 +5403,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-04-08T07:56:33+00:00"
+            "time": "2026-02-21T21:26:49+00:00"
         },
         {
             "name": "symfony/console",
@@ -8222,19 +8240,21 @@
         },
         {
             "name": "hamcrest/hamcrest-php",
-            "version": "v2.1.1",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hamcrest/hamcrest-php.git",
-                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487"
+                "reference": "b61cd040da1a4925bc90a51c074f5297e7c0fa52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
-                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
+                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/b61cd040da1a4925bc90a51c074f5297e7c0fa52",
+                "reference": "b61cd040da1a4925bc90a51c074f5297e7c0fa52",
                 "shasum": ""
             },
             "require": {
+                "ext-ctype": "*",
+                "ext-dom": "*",
                 "php": "^7.4|^8.0"
             },
             "replace": {
@@ -8243,13 +8263,15 @@
                 "kodova/hamcrest-php": "*"
             },
             "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
                 "phpunit/php-file-iterator": "^1.4 || ^2.0 || ^3.0",
                 "phpunit/phpunit": "^4.8.36 || ^5.7 || ^6.5 || ^7.0 || ^8.0 || ^9.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.1-dev"
+                    "dev-master": "3.0-dev"
                 }
             },
             "autoload": {
@@ -8267,35 +8289,34 @@
             ],
             "support": {
                 "issues": "https://github.com/hamcrest/hamcrest-php/issues",
-                "source": "https://github.com/hamcrest/hamcrest-php/tree/v2.1.1"
+                "source": "https://github.com/hamcrest/hamcrest-php/tree/v3.0.0"
             },
-            "time": "2025-04-30T06:54:44+00:00"
+            "time": "2026-03-17T11:56:53+00:00"
         },
         {
             "name": "mockery/mockery",
-            "version": "1.6.12",
+            "version": "1.6.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mockery/mockery.git",
-                "reference": "1f4efdd7d3beafe9807b08156dfcb176d18f1699"
+                "reference": "967a801bd188989a5669bd280f252d51c0fdc9ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mockery/mockery/zipball/1f4efdd7d3beafe9807b08156dfcb176d18f1699",
-                "reference": "1f4efdd7d3beafe9807b08156dfcb176d18f1699",
+                "url": "https://api.github.com/repos/mockery/mockery/zipball/967a801bd188989a5669bd280f252d51c0fdc9ee",
+                "reference": "967a801bd188989a5669bd280f252d51c0fdc9ee",
                 "shasum": ""
             },
             "require": {
-                "hamcrest/hamcrest-php": "^2.0.1",
-                "lib-pcre": ">=7.0",
+                "hamcrest/hamcrest-php": "^2.0 || ^3.0",
                 "php": ">=7.3"
             },
             "conflict": {
                 "phpunit/phpunit": "<8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^8.5 || ^9.6.17",
-                "symplify/easy-coding-standard": "^12.1.14"
+                "phpunit/phpunit": "^9.6.36",
+                "symplify/easy-coding-standard": "^13.2.17"
             },
             "type": "library",
             "autoload": {
@@ -8352,7 +8373,7 @@
                 "security": "https://github.com/mockery/mockery/security/advisories",
                 "source": "https://github.com/mockery/mockery"
             },
-            "time": "2024-05-16T03:13:13+00:00"
+            "time": "2026-08-19T19:37:52+00:00"
         },
         {
             "name": "myclabs/deep-copy",
