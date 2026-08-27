@@ -753,7 +753,7 @@ class EventController extends Controller
         if ($ticketCategory->isFree()) {
             $order->save();
             $order->changeState(Order::STATE_ACCEPTED);
-            return $this->redirect(action('OrderController@thanks', [ $order->id ]));
+            return $this->redirect($order->getThanksUrl());
         }
 
         // Check if an uitpas card id was provided.
@@ -809,7 +809,8 @@ class EventController extends Controller
         try {
             $orderData = $client->createOrder([
 
-                'callback' => action('OrderController@sync', [ $order->id ]),
+                // Signed per order: orders/{id}/sync has no session (audit 2026-08-27).
+                'callback' => action('OrderController@sync', [ $order->id, 'sig' => $order->syncSignature() ]),
                 'partner' => $event->organisation->catlab_partner_id,
                 'items' => $items,
                 'maxTransactionFee' => $ticketPriceCalculator->calculateTransactionFee(false)

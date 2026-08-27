@@ -57,7 +57,11 @@ class Kernel extends HttpKernel
             \Illuminate\Session\Middleware\StartSession::class,
             // \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            //\App\Http\Middleware\VerifyCsrfToken::class,
+            // Re-enabled (security audit 2026-08-27): without it any site could
+            // auto-POST purchases, group merges or admin changes in a logged-in
+            // visitor's name. Server-to-server callbacks are listed in
+            // VerifyCsrfToken::$except.
+            \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\ValidDomain::class,
             \Spatie\Referer\CaptureReferer::class,

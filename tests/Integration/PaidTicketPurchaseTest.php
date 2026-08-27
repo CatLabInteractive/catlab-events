@@ -35,10 +35,11 @@ class PaidTicketPurchaseTest extends IntegrationTestCase
             $response->headers->get('Location')
         );
 
-        // Step 2: the PSP reports payment — callback flips the order to
-        // accepted and triggers the confirmation email.
+        // Step 2: the PSP reports payment — accounts GETs the (signed)
+        // callback we handed it, which flips the order to accepted and
+        // triggers the confirmation email.
         $this->catlabApi->orderStatus = 'ACCEPTED';
-        $this->get("/orders/{$order->id}/sync")->assertStatus(200);
+        $this->get("/orders/{$order->id}/sync?sig=" . $order->syncSignature())->assertStatus(200);
 
         $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
         $this->assertCount(1, $this->catlabApi->sendEmailCalls);
@@ -61,12 +62,13 @@ class PaidTicketPurchaseTest extends IntegrationTestCase
         $this->assertNotNull($order);
 
         // The PSP calls the callback without any session — it must work
-        // for guests, or real payment confirmations break.
+        // for guests, or real payment confirmations break. It carries the
+        // per-order signature instead (security audit 2026-08-27).
         $this->app['auth']->guard()->logout();
         $this->flushSession();
 
         $this->catlabApi->orderStatus = 'ACCEPTED';
-        $this->get("/orders/{$order->id}/sync")->assertStatus(200);
+        $this->get("/orders/{$order->id}/sync?sig=" . $order->syncSignature())->assertStatus(200);
 
         $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
     }

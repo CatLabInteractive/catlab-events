@@ -1,0 +1,107 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    name: Integration tests (MySQL)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: catlab_events_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        # Same major as the production image (Dockerfile: thecodingmachine/php:8.5)
+        # and the extensions it enables (PHP_EXTENSIONS).
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mysqli, pdo_mysql, bcmath, zip, intl, gd, mbstring
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Prepare environment
+        # phpunit.integration.xml supplies the test env except APP_KEY and
+        # the DB host/password (it points at the docker-compose `mysql-db`
+        # service; real env vars take precedence over <env> in phpunit.xml).
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --no-interaction
+
+      - name: Run integration tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_PASSWORD: root
+        run: vendor/bin/phpunit -c phpunit.integration.xml
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mysqli, pdo_mysql, bcmath, zip, intl, gd, mbstring
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --no-interaction
+
+      - name: Run unit tests
+        # The Feature suite's scaffold ExampleTest renders the home page and
+        # needs a populated database; only the Unit suite runs here.
+        run: vendor/bin/phpunit -c phpunit.xml --testsuite Unit
+
+  assets:
+    name: Frontend assets build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        # Same major as the production image (Dockerfile: NODE_VERSION=18).
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build production assets
+        run: npm run production

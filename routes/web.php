@@ -130,8 +130,6 @@ Route::get('events/{event}/waitinglist/subscribe', 'WaitingListController@addToW
 
 Route::get('events/{event}/register', 'EventController@selectTicketCategory');
 
-Route::get('orders/{id}/thanks', 'OrderController@thanks');
-
 Route::get('status', 'StatusController@status')
     ->name('status');
 
@@ -157,7 +155,10 @@ Route::group([
 
 });
 
+// Session-less by design (accounts' callback / the payment return URL that is
+// often opened on another device); both carry a per-order signature.
 Route::get('orders/{id}/sync', 'OrderController@sync');
+Route::get('orders/{id}/thanks', 'OrderController@thanks');
 
 Route::get('documents/nl/privacy', 'DocumentController@privacy');
 Route::get('documents/nl/tos', 'DocumentController@tos');

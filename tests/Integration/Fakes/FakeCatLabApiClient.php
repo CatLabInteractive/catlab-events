@@ -28,12 +28,27 @@ class FakeCatLabApiClient extends ApiClient
 
     public function getOrder($id, $expanded = false)
     {
-        return [
+        $order = [
             'id' => $id,
             'status' => $this->orderStatus,
             'price' => 10.0,
             'reference' => 'TEST-' . $id,
         ];
+
+        if ($expanded) {
+            // Shape of accounts' ?expanded=1 payload, as far as the order
+            // views read it (orders/view.blade.php iterates `items`).
+            $order['items'] = [
+                [ 'name' => 'Test ticket', 'amount' => 1, 'price' => 8.26, 'vat' => 1.74 ],
+            ];
+            $order['originalItems'] = $order['items'];
+            $order['originalPrice'] = 10.0;
+            $order['discount'] = 0.0;
+            $order['vat'] = 1.74;
+            $order['price_novat'] = 8.26;
+        }
+
+        return $order;
     }
 
     public function sendEmail($subject, $body, $target = null)
