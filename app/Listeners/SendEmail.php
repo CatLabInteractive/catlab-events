@@ -7,7 +7,6 @@ use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class SendEmail
@@ -55,7 +54,7 @@ abstract class SendEmail
                 $view->render(),
                 $user->email
             );
-        } catch (RequestException $e) {
+        } catch (GuzzleException $e) {
             \Log::error($e);
         }
     }
@@ -91,7 +90,7 @@ abstract class SendEmail
                 $view->render(),
                 $user->email
             );
-        } catch (RequestException $e) {
+        } catch (GuzzleException $e) {
             \Log::error($e);
         }
     }
