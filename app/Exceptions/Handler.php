@@ -81,10 +81,23 @@ class Handler extends ExceptionHandler
             return;
         }
 
+        // Errbit being unreachable must never break error handling, but a
+        // failed delivery must not be silent either: phpbrake reports HTTP
+        // failures (401, rate limit, unreachable host) by returning the
+        // notice with an 'error' key rather than by throwing.
         try {
-            app(\Airbrake\Notifier::class)->notify($exception);
+            $notice = app(\Airbrake\Notifier::class)->notify($exception);
+            if (is_array($notice) && isset($notice['error'])) {
+                \Log::warning('Errbit rejected the notice', [
+                    'error' => $notice['error'],
+                    'exception' => get_class($exception)
+                ]);
+            }
         } catch (Throwable $e) {
-            // Errbit being unreachable should never break error handling.
+            \Log::warning('Errbit notification failed', [
+                'error' => $e->getMessage(),
+                'exception' => get_class($exception)
+            ]);
         }
     }
 

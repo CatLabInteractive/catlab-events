@@ -92,4 +92,42 @@ class ErrbitReportingTest extends TestCase
 
         $this->assertFalse($opt->getValue($notifier)['remoteConfig']);
     }
+
+    public function testErrbitDeliveryErrorIsLogged()
+    {
+        // phpbrake does not throw on a failed delivery (401, rate limit,
+        // unreachable host): it returns the notice with an 'error' key.
+        // Swallowing that made a misconfigured Errbit indistinguishable from
+        // "no errors happened" (2026-08-27: APP_ENV was unset in production).
+        $this->enableErrbit();
+
+        $notifier = $this->createMock(Notifier::class);
+        $notifier->method('notify')->willReturn(['error' => 'airbrake: 401 Unauthorized']);
+        $this->app->instance(Notifier::class, $notifier);
+
+        \Log::spy();
+
+        $this->app->make(ExceptionHandler::class)->report(new \RuntimeException('boom'));
+
+        \Log::shouldHaveReceived('warning')->once()->withArgs(function ($message, $context = []) {
+            return str_contains($message, 'Errbit') && ($context['error'] ?? null) === 'airbrake: 401 Unauthorized';
+        });
+    }
+
+    public function testErrbitExceptionIsLogged()
+    {
+        $this->enableErrbit();
+
+        $notifier = $this->createMock(Notifier::class);
+        $notifier->method('notify')->willThrowException(new \Exception('errbit is down'));
+        $this->app->instance(Notifier::class, $notifier);
+
+        \Log::spy();
+
+        $this->app->make(ExceptionHandler::class)->report(new \RuntimeException('boom'));
+
+        \Log::shouldHaveReceived('warning')->once()->withArgs(function ($message, $context = []) {
+            return str_contains($message, 'Errbit') && ($context['error'] ?? null) === 'errbit is down';
+        });
+    }
 }
