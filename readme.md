@@ -35,9 +35,15 @@ the [UiTDatabank Entry API](https://docs.publiq.be/docs/uitdatabank/entry-api/in
 discounted/subsidised tickets for verified organisations and to synchronize events with UiTDatabank.
 
 ### Event Synchronization
-Events created in the admin panel can be automatically synchronized to UiTDatabank using the Entry API v3.
-The synchronization is handled by [UitDBEvents](app/UitDB/UitDBEvents.php) and uses OAuth2 client credentials 
-authentication. Configure `UITDB_CLIENT_ID` and `UITDB_CLIENT_SECRET` in your environment to enable this feature.
+Events are automatically synchronized to UiTDatabank using the Entry API v3. Whenever a published event is
+created or updated, [EventObserver](app/Observers/EventObserver.php) dispatches a [SyncEventToUitDb](app/Jobs/SyncEventToUitDb.php)
+queued job, which calls [UitDBEvents::upload()](app/UitDB/UitDBEvents.php) to create or update the event in
+UiTDatabank (and write the resulting `uitdb_event_id` back onto the event). Deleting an event dispatches a
+[DeleteEventFromUitDb](app/Jobs/DeleteEventFromUitDb.php) job that removes it from UiTDatabank as well.
+
+This uses OAuth2 client credentials authentication: configure `UITDB_CLIENT_ID` and `UITDB_CLIENT_SECRET` in
+your environment to enable synchronization (it is a no-op otherwise), and make sure a queue worker is running
+(`php artisan queue:work`) since the jobs are dispatched onto the default queue rather than run synchronously.
 
 ### UiTPAS Integration
 The UiTPAS integration supports both the legacy OAuth1 XML-based API and the newer OAuth2 JSON-based API (v2).

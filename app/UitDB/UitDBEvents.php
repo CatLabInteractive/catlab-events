@@ -102,19 +102,55 @@ class UitDBEvents
         );
 
         if (isset($response['eventId'])) {
-            $event->uitdb_event_id = $response['eventId'];
-            $event->save();
+            $this->writeBackEventId($event, $response['eventId']);
             return $response['eventId'];
         }
 
         // Some API versions return the id in a different field
         if (isset($response['id'])) {
-            $event->uitdb_event_id = $response['id'];
-            $event->save();
+            $this->writeBackEventId($event, $response['id']);
             return $response['id'];
         }
 
         return null;
+    }
+
+    /**
+     * Persist the UiTDatabank event id onto the event without firing model
+     * events. The EventObserver dispatches a sync job whenever an event is
+     * saved, so writing this id back through a regular save() would trigger
+     * another sync job for this very upload, looping indefinitely. Using
+     * saveQuietly() (available since Laravel 8) avoids that entirely; the
+     * observer additionally guards against this by ignoring saves where
+     * uitdb_event_id is the only changed attribute, in case this is ever
+     * called in a context where saveQuietly() is unavailable.
+     * @param Event $event
+     * @param string $uitdbEventId
+     * @return void
+     */
+    protected function writeBackEventId(Event $event, $uitdbEventId)
+    {
+        $event->uitdb_event_id = $uitdbEventId;
+
+        if (method_exists($event, 'saveQuietly')) {
+            $event->saveQuietly();
+        } else {
+            $event->save();
+        }
+    }
+
+    /**
+     * Delete an event from UiTDatabank.
+     * @param string $uitdbEventId
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function deleteEvent(string $uitdbEventId)
+    {
+        $this->uitDatabankService->entryApiRequest(
+            'DELETE',
+            '/events/' . $uitdbEventId
+        );
     }
 
     /**
