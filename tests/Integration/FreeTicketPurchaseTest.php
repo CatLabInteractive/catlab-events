@@ -22,7 +22,10 @@ class FreeTicketPurchaseTest extends IntegrationTestCase
         $this->assertNotNull($order, 'An order should have been created');
         $this->assertEquals(Order::STATE_ACCEPTED, $order->state);
         $this->assertEquals($user->id, $order->user_id);
-        $response->assertRedirect(action('OrderController@thanks', [$order->id]));
+        // The thanks URL is signed (it doubles as the payment return URL,
+        // which may be opened on another device -- audit 2026-08-27).
+        $response->assertRedirect($order->getThanksUrl());
+        $this->assertStringContainsString("/orders/{$order->id}/thanks?sig=", $order->getThanksUrl());
 
         // No payment API involved; confirmation email requested via the API.
         $this->assertCount(0, $this->catlabApi->createOrderCalls);

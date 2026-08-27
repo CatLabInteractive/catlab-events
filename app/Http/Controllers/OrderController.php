@@ -59,6 +59,8 @@ class OrderController extends Controller
     {
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+        $this->authorize('view', $order);
+
         $order->synchronize();
 
         $orderData = $order->getOrderData(true);
@@ -87,6 +89,16 @@ class OrderController extends Controller
 
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+
+        // The payment return URL is often opened on another device (QR code
+        // scanned to pay on a phone), so a session cannot be required: the
+        // URL handed to the payer carries a per-order signature. Logged-in
+        // owners / group members / admins (OrderPolicy::view) need no signature.
+        abort_unless(
+            \Gate::allows('view', $order) || $order->verifyThanksSignature(\Request::get('sig')),
+            403
+        );
+
         $order->synchronize($forceTrigger);
 
         $trackConversion = !!$forceTracker;
@@ -110,7 +122,7 @@ class OrderController extends Controller
             [
                 'order' => $order,
                 'trackConversion' => $trackConversion,
-                'redirectUrl' => action('OrderController@thanks', [ $orderId ]),
+                'redirectUrl' => $order->getThanksUrl(),
                 'retryFormAction' => $retryFormAction,
                 'retryFormInput' => $retryFormInput
             ]
@@ -125,6 +137,12 @@ class OrderController extends Controller
     {
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
+
+        // Accounts' notify callback: no session possible, so the URL we
+        // handed to accounts carries a per-order signature (see
+        // EventController::processRegister / Order::syncSignature).
+        abort_unless($order->verifySyncSignature(\Request::get('sig')), 403);
+
         $order->synchronize();
 
         return \Response::json([ 'success' => 1 ]);

@@ -54,12 +54,26 @@ class OrderPolicy
     }
 
     /**
+     * Who may read an order: the buyer, a member of the order's group, a
+     * global admin, or an admin of the organisation that runs the event.
+     * Shared by the public orders/{id} page and the backoffice API; the API
+     * resource exposes nothing the buyer does not already see on that page.
+     * (Security audit 2026-08-27: orders/{id} was readable by any logged-in
+     * user, exposing team, items and the livestream link, fetched with the
+     * OWNER's stored accounts token.)
+     *
      * @param User $user
      * @param Order $order
      * @return bool
      */
     public function view(User $user, Order $order)
     {
+        if ($user->isAdmin() || (int)$order->user_id === (int)$user->id) {
+            return true;
+        }
+        if ($order->group && $order->group->isMember($user)) {
+            return true;
+        }
         return $this->isAdmin($user, $order);
     }
 

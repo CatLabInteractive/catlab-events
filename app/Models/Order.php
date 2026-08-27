@@ -147,14 +147,67 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function getPayUrl()
     {
-        // Set return url to the view component.
-        $return = action('OrderController@thanks', [ $this->id ]);
+        // Return URL = the thanks page. It is frequently opened on ANOTHER
+        // device (QR code scanned to pay on a phone), so it cannot rely on
+        // the buyer's session; it carries a per-order signature instead.
+        $return = $this->getThanksUrl();
 
         if (Str::startsWith(Str::lower($this->pay_url), 'http')) {
             return $this->pay_url . '?return=' . urlencode($return);
         } else {
             return \Config::get('services.catlab.url') . $this->pay_url . '?return=' . urlencode($return);
         }
+    }
+
+    /**
+     * Per-order, per-purpose HMAC (keyed with APP_KEY) for the URLs that
+     * cannot rely on a session: accounts' sync callback and the payment
+     * return URL (security audit 2026-08-27: both were open to anyone who
+     * could guess an order id).
+     *
+     * @param string $purpose
+     * @return string
+     */
+    private function signature(string $purpose): string
+    {
+        return hash_hmac('sha256', 'order-' . $purpose . ':' . $this->id, (string)config('app.key'));
+    }
+
+    private function verifySignature(string $purpose, ?string $signature): bool
+    {
+        return is_string($signature) && strlen($signature) === 64 && hash_equals($this->signature($purpose), $signature);
+    }
+
+    /** Gates orders/{id}/sync, accounts' notify callback (no session possible). */
+    public function syncSignature(): string
+    {
+        return $this->signature('sync');
+    }
+
+    public function verifySyncSignature(?string $signature): bool
+    {
+        return $this->verifySignature('sync', $signature);
+    }
+
+    /** Gates orders/{id}/thanks, the payment return URL (often opened on another device). */
+    public function thanksSignature(): string
+    {
+        return $this->signature('thanks');
+    }
+
+    public function verifyThanksSignature(?string $signature): bool
+    {
+        return $this->verifySignature('thanks', $signature);
+    }
+
+    /**
+     * The signed thanks / return URL.
+     *
+     * @return string
+     */
+    public function getThanksUrl(): string
+    {
+        return action('OrderController@thanks', [ $this->id, 'sig' => $this->thanksSignature() ]);
     }
 
     /**
@@ -175,10 +228,13 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
         $catlabOrder = $this->getOrderData();
         $status = $catlabOrder['status'];
 
-        if ($this->status !== $status || $forceTrigger) {
+        // The column is `state` (`status` never existed on this model: the
+        // guard below was dead and a cancelled order could flip back to
+        // pending -- security audit 2026-08-27).
+        if ($this->state !== $status || $forceTrigger) {
             // Don't go from "canceled" to "pending"...
             if (
-                $this->status === Order::STATE_CANCELLED &&
+                $this->state === Order::STATE_CANCELLED &&
                 $status === Order::STATE_PENDING
             ) {
                 // don't do anything!
