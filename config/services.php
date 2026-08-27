@@ -74,7 +74,9 @@ return [
     ],
 
     'errbit' => [
-        'enabled' => env('ERRBIT_ENABLED', env('APP_ENV') === 'production'),
+        // Mirror app.env's default: an unset APP_ENV is "production" for
+        // the app (and its log lines) so it must be for reporting too.
+        'enabled' => env('ERRBIT_ENABLED', env('APP_ENV', 'production') === 'production'),
         'host' => env('ERRBIT_HOST'),
         'project_id' => env('ERRBIT_PROJECT_ID', 1),
         'project_key' => env('ERRBIT_PROJECT_KEY')
