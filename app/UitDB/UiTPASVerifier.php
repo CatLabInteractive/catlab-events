@@ -33,8 +33,6 @@ use App\UitDB\Exceptions\UitPASAlreadyUsed;
 use App\UitDB\Exceptions\UitPASException;
 use App\UitDB\Exceptions\UiTPASGenericCardError;
 use GuzzleHttp\Exception\RequestException;
-use Psr\Http\Message\ResponseInterface;
-use SimpleXMLElement;
 
 /**
  * Class UiTPASVerifier
@@ -73,10 +71,390 @@ class UiTPASVerifier
         /** @var Event $event */
         $event = $ticketCategory->event;
 
-        $uitPasEvent = $this->getUitPasEvent($event, $cardNumber);
-        $priceClass = $this->getApplicableUitPASPrice($ticketCategory, $uitPasEvent);
+        if ($this->uitDatabank->hasClientCredentials()) {
+            return $this->applyUitPasTariffV2($ticketCategory, $ticketPriceCalculator, $cardNumber);
+        }
 
-        // no discount possible? Continue without.
+        return $this->applyUitPasTariffLegacy($ticketCategory, $ticketPriceCalculator, $cardNumber);
+    }
+
+    /**
+     * @param Order $order
+     * @param $cardNumber
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws PriceClassNotFound
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function registerTicketSale(Order $order, $cardNumber)
+    {
+        if ($this->uitDatabank->hasClientCredentials()) {
+            $this->registerTicketSaleV2($order, $cardNumber);
+            return;
+        }
+
+        $this->registerTicketSaleLegacy($order, $cardNumber);
+    }
+
+    /**
+     * @param Order $order
+     * @throws InvalidCardException
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function registerOrderCancel(Order $order)
+    {
+        if (!$order->uitpas_sale_id) {
+            return;
+        }
+
+        if ($this->uitDatabank->hasClientCredentials()) {
+            $this->registerOrderCancelV2($order);
+            return;
+        }
+
+        $this->registerOrderCancelLegacy($order);
+    }
+
+    /**
+     * @param TicketCategory $ticketCategory
+     * @return bool
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function hasApplicableUitPasPrice(TicketCategory $ticketCategory)
+    {
+        if ($this->uitDatabank->hasClientCredentials()) {
+            return $this->hasApplicableUitPasPriceV2($ticketCategory);
+        }
+
+        return $this->hasApplicableUitPasPriceLegacy($ticketCategory);
+    }
+
+    /**
+     * @param Event $event
+     * @return bool
+     */
+    public function canCheckIn(Event $event)
+    {
+        $organisation = $event->organisation;
+        if (!$organisation->uitdb_identifier && !$this->uitDatabank->hasClientCredentials()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Event $event
+     * @param $uitpas
+     * @return bool
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function uitPASCheckin(Event $event, $uitpas)
+    {
+        if ($this->uitDatabank->hasClientCredentials()) {
+            return $this->uitPASCheckinV2($event, $uitpas);
+        }
+
+        return $this->uitPASCheckinLegacy($event, $uitpas);
+    }
+
+    // ==========================================
+    // New UiTPAS API v2 (JSON/OAuth2) methods
+    // ==========================================
+
+    /**
+     * Apply UiTPAS tariff using the new v2 API.
+     * @param TicketCategory $ticketCategory
+     * @param TicketPriceCalculator $ticketPriceCalculator
+     * @param $cardNumber
+     * @return TicketPriceCalculator
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws PriceClassNotFound
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function applyUitPasTariffV2(TicketCategory $ticketCategory, TicketPriceCalculator $ticketPriceCalculator, $cardNumber)
+    {
+        /** @var Event $event */
+        $event = $ticketCategory->event;
+
+        if (!$event->getUitDBId()) {
+            throw InvalidEventException::make();
+        }
+
+        $tariffs = $this->getUitPasTariffsV2($event, $cardNumber);
+        $applicableTariff = $this->findApplicableTariffV2($ticketCategory, $tariffs);
+
+        if ($applicableTariff === null) {
+            return $ticketPriceCalculator;
+        }
+
+        $ticketPriceCalculator->applySubsidisedTariff(floatval($applicableTariff['price']));
+
+        return $ticketPriceCalculator;
+    }
+
+    /**
+     * Register a ticket sale using the new v2 API.
+     * @param Order $order
+     * @param $cardNumber
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws PriceClassNotFound
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function registerTicketSaleV2(Order $order, $cardNumber)
+    {
+        /** @var Event $event */
+        $event = $order->event;
+
+        if (!$event->getUitDBId()) {
+            throw InvalidEventException::make();
+        }
+
+        $tariffs = $this->getUitPasTariffsV2($event, $cardNumber);
+        $applicableTariff = $this->findApplicableTariffV2($order->ticketCategory, $tariffs);
+
+        if ($applicableTariff === null) {
+            return;
+        }
+
+        try {
+            $response = $this->uitDatabank->uitpasApiRequest(
+                'POST',
+                '/ticket-sales',
+                [
+                    'json' => [
+                        'eventId' => $event->getUitDBId(),
+                        'uitpasNumber' => $cardNumber,
+                        'tariff' => [
+                            'id' => $applicableTariff['id'],
+                        ],
+                    ]
+                ]
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $this->handleApiErrorV2($e->getResponse());
+            }
+            throw $e;
+        }
+
+        if (isset($response['id'])) {
+            $tariffPrice = floatval($applicableTariff['price']);
+            $order->setUiTPASTariff($tariffPrice, $response['id']);
+        }
+    }
+
+    /**
+     * Cancel a ticket sale using the new v2 API.
+     * @param Order $order
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function registerOrderCancelV2(Order $order)
+    {
+        try {
+            $this->uitDatabank->uitpasApiRequest(
+                'DELETE',
+                '/ticket-sales/' . $order->uitpas_sale_id
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $this->handleApiErrorV2($e->getResponse());
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Check if there's an applicable UiTPAS price using v2 API.
+     * @param TicketCategory $ticketCategory
+     * @return bool
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function hasApplicableUitPasPriceV2(TicketCategory $ticketCategory)
+    {
+        /** @var Event $event */
+        $event = $ticketCategory->event;
+
+        if (!$event->getUitDBId()) {
+            return false;
+        }
+
+        try {
+            $tariffs = $this->getUitPasTariffsV2($event);
+            $applicableTariff = $this->findApplicableTariffV2($ticketCategory, $tariffs);
+            return $applicableTariff !== null;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Perform UiTPAS check-in using the v2 API.
+     * @param Event $event
+     * @param $uitpas
+     * @return bool
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function uitPASCheckinV2(Event $event, $uitpas)
+    {
+        if (!$event->getUitDBId()) {
+            throw InvalidEventException::make();
+        }
+
+        try {
+            $this->uitDatabank->uitpasApiRequest(
+                'POST',
+                '/events/' . $event->getUitDBId() . '/checkins',
+                [
+                    'json' => [
+                        'uitpasNumber' => $uitpas,
+                    ]
+                ]
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $this->handleApiErrorV2($e->getResponse());
+            }
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get UiTPAS tariffs for an event using the v2 API.
+     * @param Event $event
+     * @param string|null $cardNumber
+     * @return array
+     * @throws InvalidEventException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function getUitPasTariffsV2(Event $event, $cardNumber = null)
+    {
+        $query = [];
+        if ($cardNumber) {
+            $query['uitpasNumber'] = $cardNumber;
+        }
+
+        try {
+            $response = $this->uitDatabank->uitpasApiRequest(
+                'GET',
+                '/events/' . $event->getUitDBId() . '/tariffs',
+                [
+                    'query' => $query
+                ]
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $statusCode = $e->getResponse()->getStatusCode();
+                if ($statusCode === 404) {
+                    throw InvalidEventException::make();
+                }
+                $this->handleApiErrorV2($e->getResponse());
+            }
+            throw $e;
+        }
+
+        return $response ?? [];
+    }
+
+    /**
+     * Find the applicable tariff for a ticket category from the v2 API response.
+     * @param TicketCategory $ticketCategory
+     * @param array $tariffs
+     * @return array|null
+     */
+    protected function findApplicableTariffV2(TicketCategory $ticketCategory, array $tariffs)
+    {
+        if (empty($tariffs)) {
+            return null;
+        }
+
+        // Search by name match first
+        foreach ($tariffs as $tariff) {
+            if (isset($tariff['name']) && $tariff['name'] === $ticketCategory->name) {
+                return $tariff;
+            }
+        }
+
+        // Search by price match
+        $price = floatval($ticketCategory->price);
+        foreach ($tariffs as $tariff) {
+            if (isset($tariff['price']) && floatval($tariff['price']) === $price) {
+                return $tariff;
+            }
+        }
+
+        // Return first available tariff if only one exists
+        if (count($tariffs) === 1) {
+            return $tariffs[0];
+        }
+
+        return null;
+    }
+
+    /**
+     * Handle API error from the v2 JSON API.
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @throws InvalidCardException
+     * @throws UitPASException
+     */
+    protected function handleApiErrorV2($response)
+    {
+        $body = (string)$response->getBody();
+        $data = json_decode($body, true);
+
+        $type = $data['type'] ?? '';
+        $title = $data['title'] ?? 'Unknown error';
+        $detail = $data['detail'] ?? $body;
+
+        switch ($type) {
+            case 'https://api.publiq.be/probs/uitpas/invalid-card':
+                throw new InvalidCardException('Je UitPAS kaartnummer kon niet worden herkend: ' . $detail);
+
+            case 'https://api.publiq.be/probs/uitpas/maximum-reached':
+                throw new UitPASException('Maximum aantal UiTPAS korting bereikt.');
+
+            default:
+                throw new UitPASException($title . ': ' . $detail);
+        }
+    }
+
+    // ==========================================
+    // Legacy UiTPAS API v1 (XML/OAuth1) methods
+    // ==========================================
+
+    /**
+     * @param TicketCategory $ticketCategory
+     * @param TicketPriceCalculator $ticketPriceCalculator
+     * @param $cardNumber
+     * @return TicketPriceCalculator
+     * @throws InvalidCardException
+     * @throws InvalidEventException
+     * @throws PriceClassNotFound
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function applyUitPasTariffLegacy(TicketCategory $ticketCategory, TicketPriceCalculator $ticketPriceCalculator, $cardNumber)
+    {
+        /** @var Event $event */
+        $event = $ticketCategory->event;
+
+        $uitPasEvent = $this->getUitPasEventLegacy($event, $cardNumber);
+        $priceClass = $this->getApplicableUitPASPriceLegacy($ticketCategory, $uitPasEvent);
+
         if ($priceClass === null) {
             return $ticketPriceCalculator;
         }
@@ -95,22 +473,21 @@ class UiTPASVerifier
      * @throws UitPASException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function registerTicketSale(Order $order, $cardNumber)
+    protected function registerTicketSaleLegacy(Order $order, $cardNumber)
     {
         /** @var Event $event */
         $event = $order->event;
 
-        $uitPasEvent = $this->getUitPasEvent($event, $cardNumber);
-        $priceClass = $this->getApplicableUitPASPrice($order->ticketCategory, $uitPasEvent);
+        $uitPasEvent = $this->getUitPasEventLegacy($event, $cardNumber);
+        $priceClass = $this->getApplicableUitPASPriceLegacy($order->ticketCategory, $uitPasEvent);
 
-        // no discount possible? Continue without.
         if ($priceClass === null) {
             return;
         }
 
         $tariff = floatval($priceClass->tariff);
 
-        $ticketSaleId = $this->registerOnlineSale($event, $priceClass, $cardNumber);
+        $ticketSaleId = $this->registerOnlineSaleLegacy($event, $priceClass, $cardNumber);
         if ($ticketSaleId) {
             $order->setUiTPASTariff($tariff, $ticketSaleId);
         }
@@ -122,12 +499,8 @@ class UiTPASVerifier
      * @throws UitPASException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function registerOrderCancel(Order $order)
+    protected function registerOrderCancelLegacy(Order $order)
     {
-        if (!$order->uitpas_sale_id) {
-            return;
-        }
-
         $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient(null, 'uitid');
         if (!$client) {
             throw new InvalidCardException('De UitPAS dienst is niet correct ingesteld voor dit account. Contacteer een administrator.');
@@ -138,7 +511,7 @@ class UiTPASVerifier
             $response = $client->post($url);
         } catch (RequestException $e) {
             if ($e->getResponse()) {
-                $this->handleApiError($e->getResponse());
+                $this->handleApiErrorLegacy($e->getResponse());
             } else {
                 throw $e;
             }
@@ -146,15 +519,75 @@ class UiTPASVerifier
     }
 
     /**
+     * @param TicketCategory $ticketCategory
+     * @return bool
+     */
+    protected function hasApplicableUitPasPriceLegacy(TicketCategory $ticketCategory)
+    {
+        $uitPasEvent = $this->getUitPasEventLegacy($ticketCategory->event);
+
+        try {
+            $priceClass = $this->getApplicableUitPASPriceLegacy($ticketCategory, $uitPasEvent);
+            if ($priceClass) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PriceClassNotFound $e) {
+            return false;
+        }
+    }
+
+    /**
+     * @param Event $event
+     * @param $uitpas
+     * @return bool
+     * @throws UitPASException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function uitPASCheckinLegacy(Event $event, $uitpas)
+    {
+        $organisation = $event->organisation;
+        if (!$organisation->uitdb_identifier) {
+            throw new UitPASException('Organisation is not authenticated.');
+        }
+
+        if (!$event->getUitDBId()) {
+            throw InvalidEventException::make();
+        }
+
+        try {
+            $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient($organisation, 'uitid');
+            $response = $client->post(
+                'uitpas/passholder/checkin',
+                [
+                    'form_params' => [
+                        'cdbid' => $event->getUitDBId(),
+                        'uitpasNumber' => $uitpas
+                    ]
+                ]
+            );
+        } catch (RequestException $e) {
+            if ($e->getResponse()) {
+                $this->handleApiErrorLegacy($e->getResponse());
+            } else {
+                throw $e;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param Event $event
      * @param null $cardNumber
-     * @return SimpleXMLElement
+     * @return \SimpleXMLElement
      * @throws InvalidCardException
      * @throws InvalidEventException
      * @throws UitPASException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getUitPasEvent(Event $event, $cardNumber = null)
+    protected function getUitPasEventLegacy(Event $event, $cardNumber = null)
     {
         $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient(null, 'uitid');
         if (!$client) {
@@ -184,13 +617,13 @@ class UiTPASVerifier
             );
         } catch (RequestException $e) {
             if ($e->getResponse()) {
-                $this->handleApiError($e->getResponse());
+                $this->handleApiErrorLegacy($e->getResponse());
             } else {
                 throw $e;
             }
         }
 
-        $simpleXml = new SimpleXMLElement((string)$response->getBody());
+        $simpleXml = new \SimpleXMLElement((string)$response->getBody());
         if ($simpleXml->total < 1) {
             throw InvalidEventException::make();
         }
@@ -203,40 +636,16 @@ class UiTPASVerifier
     }
 
     /**
-     * @param TicketCategory $ticketCategory
-     * @return bool
-     * @throws InvalidCardException
-     * @throws InvalidEventException
-     * @throws UitPASException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function hasApplicableUitPasPrice(TicketCategory $ticketCategory)
-    {
-        $uitPasEvent = $this->getUitPasEvent($ticketCategory->event);
-
-        try {
-            $priceClass = $this->getApplicableUitPASPrice($ticketCategory, $uitPasEvent);
-            if ($priceClass) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (PriceClassNotFound $e) {
-            return false;
-        }
-    }
-
-    /**
      * @param Event $event
-     * @param SimpleXMLElement $priceCategory
+     * @param \SimpleXMLElement $priceCategory
      * @param $cardNumber
-     * @return SimpleXMLElement
+     * @return \SimpleXMLElement
      * @throws InvalidCardException
      * @throws InvalidEventException
      * @throws UitPASException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function registerOnlineSale(Event $event, SimpleXMLElement $priceCategory, $cardNumber)
+    protected function registerOnlineSaleLegacy(Event $event, \SimpleXMLElement $priceCategory, $cardNumber)
     {
         $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient(null, 'uitid');
         if (!$client) {
@@ -259,27 +668,27 @@ class UiTPASVerifier
             );
         } catch (RequestException $e) {
             if ($e->getResponse()) {
-                $this->handleApiError($e->getResponse());
+                $this->handleApiErrorLegacy($e->getResponse());
             } else {
                 throw $e;
             }
         }
 
-        $simpleXml = new SimpleXMLElement((string)$response->getBody());
+        $simpleXml = new \SimpleXMLElement((string)$response->getBody());
         return $simpleXml->id;
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param \Psr\Http\Message\ResponseInterface $response
      * @throws InvalidCardException
      * @throws UitPASException
      */
-    protected function handleApiError(ResponseInterface $response)
+    protected function handleApiErrorLegacy($response)
     {
         $xml = (string)$response->getBody();
 
         try {
-            $simpleXml = new SimpleXMLElement($xml);
+            $simpleXml = new \SimpleXMLElement($xml);
         } catch (\Exception $e) {
             throw new UitPASException('Unknown UitPAS exception: ' . $xml);
         }
@@ -297,14 +706,13 @@ class UiTPASVerifier
     }
 
     /**
-     * Match our own ticket categories with the ticketPrices provided by UiTPAS.
-     * First it checks names for an exact match, then it checks prices for an exact match.
+     * Match our own ticket categories with the ticketPrices provided by UiTPAS (legacy).
      * @param TicketCategory $ticketCategory
-     * @param SimpleXMLElement $event
-     * @return SimpleXMLElement|null
+     * @param \SimpleXMLElement $event
+     * @return \SimpleXMLElement|null
      * @throws PriceClassNotFound
      */
-    protected function getApplicableUitPASPrice(TicketCategory $ticketCategory, SimpleXMLElement $event)
+    protected function getApplicableUitPASPriceLegacy(TicketCategory $ticketCategory, \SimpleXMLElement $event)
     {
         if (
             !$event->ticketSales ||
@@ -332,10 +740,6 @@ class UiTPASVerifier
                 throw UiTPASGenericCardError::make($ticketCategory, $buyConstraint);
         }
 
-        if ($buyConstraint === 'INVALID_CARD_STATUS') {
-            return null;
-        }
-
         // find based on name
         for ($i = 0; $i < $priceClasses->count(); $i ++) {
             $priceClass = $priceClasses[$i];
@@ -355,59 +759,5 @@ class UiTPASVerifier
         }
 
         throw PriceClassNotFound::make($ticketCategory);
-    }
-
-    /**
-     * @param $event
-     * @return bool
-     */
-    public function canCheckIn(Event $event)
-    {
-        $organisation = $event->organisation;
-        if (!$organisation->uitdb_identifier) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @param Event $event
-     * @param $uitpas
-     * @return bool
-     * @throws UitPASException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function uitPASCheckin(Event $event, $uitpas)
-    {
-        $organisation = $event->organisation;
-        if (!$organisation->uitdb_identifier) {
-            throw new UitPASException('Organisation is not authenticated.');
-        }
-
-        if (!$event->getUitDBId()) {
-            throw InvalidEventException::make();
-        }
-
-        try {
-            $client = $this->uitDatabank->getOauth1ConsumerGuzzleClient($organisation, 'uitid');
-            $response = $client->post(
-                'uitpas/passholder/checkin',
-                [
-                    'form_params' => [
-                        'cdbid' => $event->getUitDBId(),
-                        'uitpasNumber' => $uitpas
-                    ]
-                ]
-            );
-        } catch (RequestException $e) {
-            if ($e->getResponse()) {
-                $this->handleApiError($e->getResponse());
-            } else {
-                throw $e;
-            }
-        }
-
-        return true;
     }
 }

@@ -30,6 +30,8 @@ use App\Listeners\EuklesEventSubscriber;
 use App\Listeners\SendCancelConfirmation;
 use App\Listeners\SendConfirmationEmail;
 use App\Listeners\SendConfirmationEmailAfterGroupJoin;
+use App\Models\Event;
+use App\Observers\EventObserver;
 use CatLab\Accounts\Client\SocialiteProvider\CatLabExtendSocialite;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -83,5 +85,7 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         parent::boot();
+
+        Event::observe(EventObserver::class);
     }
 }

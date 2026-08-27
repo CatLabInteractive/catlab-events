@@ -22,6 +22,7 @@
 
 namespace App\UitDB\Contracts;
 
+use App\UitDB\UitDBEvents;
 use App\UitDB\UiTPASVerifier;
 
 /**
@@ -31,4 +32,6 @@ use App\UitDB\UiTPASVerifier;
 interface UitDBService
 {
     public function getUitPasService(): ?UiTPASVerifier;
+
+    public function getEventService(): ?UitDBEvents;
 }
