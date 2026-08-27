@@ -23,4 +23,5 @@ services:
     env_file:
       - ./.env
     ports:
-      - "3312:3306"
+      # Override with MYSQL_HOST_PORT in .env if 3312 is taken by another project.
+      - "${MYSQL_HOST_PORT:-3312}:3306"

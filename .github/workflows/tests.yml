@@ -2,53 +2,106 @@ name: Tests
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, main ]
+
+permissions:
+  contents: read
 
 jobs:
-  tests:
+  integration-tests:
+    name: Integration tests (MySQL)
     runs-on: ubuntu-latest
 
-    name: Run Tests
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: catlab_events_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copy environment file
-        run: cp .env.example .env
+      - name: Setup PHP
+        # Same major as the production image (Dockerfile: thecodingmachine/php:8.5)
+        # and the extensions it enables (PHP_EXTENSIONS).
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mysqli, pdo_mysql, bcmath, zip, intl, gd, mbstring
+          coverage: none
 
-      - name: Build and start containers
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-      - name: Wait for containers to initialize
+      - name: Prepare environment
+        # phpunit.integration.xml supplies the test env except APP_KEY and
+        # the DB host/password (it points at the docker-compose `mysql-db`
+        # service; real env vars take precedence over <env> in phpunit.xml).
         run: |
-          sleep 5
-          docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
-          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs webserver --tail=50
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --no-interaction
 
-      - name: Wait for MySQL to be ready
+      - name: Run integration tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_PASSWORD: root
+        run: vendor/bin/phpunit -c phpunit.integration.xml
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mysqli, pdo_mysql, bcmath, zip, intl, gd, mbstring
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Prepare environment
         run: |
-          echo "Waiting for MySQL..."
-          source .env
-          for i in $(seq 1 30); do
-            if docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T mysql-db mysql -u "$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
-              echo "MySQL is ready!"
-              break
-            fi
-            echo "Attempt $i/30..."
-            sleep 2
-          done
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --no-interaction
 
-      - name: Generate application key
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T webserver php artisan key:generate
+      - name: Run unit tests
+        # The Feature suite's scaffold ExampleTest renders the home page and
+        # needs a populated database; only the Unit suite runs here.
+        run: vendor/bin/phpunit -c phpunit.xml --testsuite Unit
 
-      - name: Run migrations
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T webserver php artisan migrate --force
+  assets:
+    name: Frontend assets build
+    runs-on: ubuntu-latest
 
-      - name: Run tests
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T webserver vendor/bin/phpunit
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Stop containers
-        if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down
+      - name: Setup Node
+        # Same major as the production image (Dockerfile: NODE_VERSION=18).
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build production assets
+        run: npm run production

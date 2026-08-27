@@ -59,7 +59,33 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $exception)
     {
+        if ($this->shouldReport($exception)) {
+            $this->notifyErrbit($exception);
+        }
+
         parent::report($exception);
+    }
+
+    /**
+     * Send an exception to Errbit, if configured.
+     *
+     * @param \Throwable $exception
+     * @return void
+     */
+    protected function notifyErrbit(Throwable $exception)
+    {
+        if (
+            !config('services.errbit.enabled') ||
+            !config('services.errbit.project_key')
+        ) {
+            return;
+        }
+
+        try {
+            app(\Airbrake\Notifier::class)->notify($exception);
+        } catch (Throwable $e) {
+            // Errbit being unreachable should never break error handling.
+        }
     }
 
     /**

@@ -71,3 +71,16 @@ live.quizwitz.com
 live.sittingbull.be
 quiz.gent
 www.quiz.gent
+
+## Running tests
+
+Unit tests (no database needed):
+
+    vendor/bin/phpunit --testsuite Unit
+
+Integration tests (runs inside docker against a dedicated
+`catlab_events_test` database; requires docker compose):
+
+    bin/integration-tests.sh
+
+Pass phpunit arguments through, e.g. `bin/integration-tests.sh --filter PaidTicketPurchaseTest`.
