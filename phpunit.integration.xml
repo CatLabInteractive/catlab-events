@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="bootstrap/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Integration">
+            <directory suffix="Test.php">./tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_DRIVER" value="sync"/>
+        <!-- Dedicated test database on the docker-compose mysql service.
+             DB_USERNAME=root because the runner creates the schema; the root
+             password equals DB_PASSWORD from .env (see docker-compose.yml). -->
+        <env name="DB_HOST" value="mysql-db"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_DATABASE" value="catlab_events_test"/>
+        <env name="DB_USERNAME" value="root"/>
+        <!-- Keep auth local (actingAs works; no OAuth redirect) -->
+        <env name="CATLAB_CLIENT_ID" value=""/>
+        <!-- No external services -->
+        <env name="ERRBIT_ENABLED" value="false"/>
+        <env name="VALID_DOMAINS" value=""/>
+        <env name="EUKLES_SERVER" value=""/>
+        <!-- Deterministic Eukles config: the container inherits the developer's
+             .env, so without pinning these, EuklesEventSubscriber::subscribe()
+             (which gates registration on config('eukles.key')) would silently
+             vary by machine. A fixed key/secret makes it always register and
+             always hit the FakeEuklesClient bound in IntegrationTestCase. -->
+        <env name="EUKLES_PROJECT_KEY" value="test-key"/>
+        <env name="EUKLES_PROJECT_SECRET" value="test-secret"/>
+        <!-- Blank the UiTDatabank credentials actually read by
+             config/services.php (uitdb.*) so a developer's real .env values
+             can't leak into the test container and make behaviour depend on
+             the machine running the suite. -->
+        <env name="UITDB_OAUTH_CONSUMER" value=""/>
+        <env name="UITDB_OAUTH_SECRET" value=""/>
+        <env name="UITDB_ENTRY_API_KEY" value=""/>
+    </php>
+</phpunit>

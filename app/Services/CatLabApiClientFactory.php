@@ -20,20 +20,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Http\Middleware;
+namespace App\Services;
 
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as BaseVerifier;
+use App\Models\User;
+use CatLab\Accounts\Client\ApiClient;
 
-class VerifyCsrfToken extends BaseVerifier
+/**
+ * Class CatLabApiClientFactory
+ *
+ * Single construction point for the CatLab Accounts API client so that
+ * tests can swap the container binding for a fake.
+ *
+ * @package App\Services
+ */
+class CatLabApiClientFactory
 {
     /**
-     * The URIs that should be excluded from CSRF verification.
-     *
-     * @var array
+     * @param User|null $user
+     * @return ApiClient
      */
-    protected $except = [
-        // Pay.nl exchange: server-to-server POST, verified through the Pay.nl
-        // API (Paynl\Transaction::getForExchange), no browser session.
-        'donate/callback',
-    ];
+    public function forUser(?User $user = null): ApiClient
+    {
+        return new ApiClient($user);
+    }
 }

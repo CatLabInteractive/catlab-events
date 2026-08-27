@@ -77,4 +77,19 @@ class ErrbitReportingTest extends TestCase
 
         $this->assertInstanceOf(Notifier::class, $notifier);
     }
+
+    public function testRemoteConfigStaysDisabled()
+    {
+        // phpbrake 0.8.0's constructor uses empty() and silently flips
+        // remoteConfig=false back to true, making it phone home to
+        // airbrake.io and disable all notifications.
+        $this->enableErrbit();
+
+        $notifier = $this->app->make(Notifier::class);
+
+        $opt = new \ReflectionProperty(Notifier::class, 'opt');
+        $opt->setAccessible(true);
+
+        $this->assertFalse($opt->getValue($notifier)['remoteConfig']);
+    }
 }
