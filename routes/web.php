@@ -149,16 +149,16 @@ Route::group([
 
     Route::get('orders', 'OrderController@index');
     Route::get('orders/{id}', 'OrderController@view');
-    // The buyer returns here from the payment page (same browser session);
-    // owner / group member / admin only (security audit 2026-08-27).
-    Route::get('orders/{id}/thanks', 'OrderController@thanks');
 
     Route::get('catlabaccount/{remotePath?}', 'CatLabAccountController@redirect')
         ->where('remotePath', '(.*)');
 
 });
 
+// Session-less by design (accounts' callback / the payment return URL that is
+// often opened on another device); both carry a per-order signature.
 Route::get('orders/{id}/sync', 'OrderController@sync');
+Route::get('orders/{id}/thanks', 'OrderController@thanks');
 
 Route::get('documents/nl/privacy', 'DocumentController@privacy');
 Route::get('documents/nl/tos', 'DocumentController@tos');

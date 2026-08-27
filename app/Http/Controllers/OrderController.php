@@ -89,7 +89,15 @@ class OrderController extends Controller
 
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
-        abort_unless($order->isViewableBy(\Auth::user()), 403);
+
+        // The payment return URL is often opened on another device (QR code
+        // scanned to pay on a phone), so a session cannot be required: the
+        // URL handed to the payer carries a per-order signature. Logged-in
+        // owners / group members / admins need no signature.
+        abort_unless(
+            $order->isViewableBy(\Auth::user()) || $order->verifyThanksSignature(\Request::get('sig')),
+            403
+        );
 
         $order->synchronize($forceTrigger);
 
@@ -114,7 +122,7 @@ class OrderController extends Controller
             [
                 'order' => $order,
                 'trackConversion' => $trackConversion,
-                'redirectUrl' => action('OrderController@thanks', [ $orderId ]),
+                'redirectUrl' => $order->getThanksUrl(),
                 'retryFormAction' => $retryFormAction,
                 'retryFormInput' => $retryFormInput
             ]

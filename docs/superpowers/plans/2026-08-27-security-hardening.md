@@ -4,7 +4,7 @@
 
 **Goal:** Close the CatLab Events findings from the 2026-08-27 cross-repo security audit (accounts / QuizWitz / events): CSRF protection disabled for every web route (HIGH), `orders/{id}` readable by any logged-in user (MEDIUM), `orders/{id}/thanks` and `orders/{id}/sync` public (MEDIUM), `Order::synchronize()` reading a non-existent `status` attribute (LOW).
 
-**Architecture:** Re-enable `VerifyCsrfToken` in the `web` group with `donate/callback` (Pay.nl exchange, server-to-server POST) excluded; every form already carries a token (Collective `Form::open` injects `_token`, raw `<form>`s use `{{ csrf_field() }}`, the only `$.post` in `custom.js` targets a contact route that no longer exists). Order pages check ownership (`Order::isViewableBy(User)`: buyer, member of the order's group, or admin). `orders/{id}/sync` stays session-less — it is the callback accounts GETs — but requires an HMAC over the order id (`Order::syncSignature()`, keyed with `APP_KEY`) that `EventController::processRegister` embeds in the callback URL. `synchronize()` compares `state`.
+**Architecture:** Re-enable `VerifyCsrfToken` in the `web` group with `donate/callback` (Pay.nl exchange, server-to-server POST) excluded; every form already carries a token (Collective `Form::open` injects `_token`, raw `<form>`s use `{{ csrf_field() }}`, the only `$.post` in `custom.js` targets a contact route that no longer exists). `orders/{id}` checks ownership (`Order::isViewableBy(User)`: buyer, member of the order's group, or admin). Two URLs cannot rely on a session and get a per-order, per-purpose HMAC keyed with `APP_KEY` instead: `orders/{id}/sync` (the callback accounts GETs; `Order::syncSignature()` embedded by `EventController::processRegister`) and `orders/{id}/thanks` (the payment return URL, frequently opened on ANOTHER device after a QR-code scan; `Order::thanksSignature()` embedded by `Order::getThanksUrl()` / `getPayUrl()`, with ownership as the alternative for logged-in visitors). `synchronize()` compares `state`.
 
 **Tech Stack:** Laravel 9, PHP ≥ 8.0 (project image `catlab-events-php85-test`), PHPUnit 8, integration harness `tests/Integration` (`RefreshDatabase`, `FakeCatLabApiClient`).
 
@@ -88,7 +88,9 @@ class CsrfProtectionTest extends IntegrationTestCase
 - [ ] Implement: uncomment `\App\Http\Middleware\VerifyCsrfToken::class` in `Kernel::$middlewareGroups['web']`; `$except = ['donate/callback']` with a comment; in `IntegrationTestCase::setUp()` add `$this->withoutMiddleware(VerifyCsrfToken::class);` (import it) so the existing tests keep posting without tokens.
 - [ ] GREEN + whole integration suite; commit `"Re-enable CSRF protection on web routes (Pay.nl exchange excluded)"`.
 
-### Task 2: `Order::isViewableBy()`; `orders/{id}` and `orders/{id}/thanks` require it
+### Task 2: `Order::isViewableBy()`; `orders/{id}` requires it, `orders/{id}/thanks` requires it OR the signed return URL
+
+(Revised during execution: the return URL is often opened on another device — QR-code payment on a phone — so `thanks` stays outside the `auth` group and accepts `Order::thanksSignature()` from the URL built by `Order::getThanksUrl()`.)
 
 **Files:** `app/Models/Order.php` (add `isViewableBy(User $user): bool`), `app/Http/Controllers/OrderController.php` (`view()`, `thanks()`), `routes/web.php:133` (move `thanks` under the `auth` group), `tests/Integration/OrderAccessTest.php` (create).
 

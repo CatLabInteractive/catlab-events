@@ -753,7 +753,7 @@ class EventController extends Controller
         if ($ticketCategory->isFree()) {
             $order->save();
             $order->changeState(Order::STATE_ACCEPTED);
-            return $this->redirect(action('OrderController@thanks', [ $order->id ]));
+            return $this->redirect($order->getThanksUrl());
         }
 
         // Check if an uitpas card id was provided.

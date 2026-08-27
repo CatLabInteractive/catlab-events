@@ -66,15 +66,35 @@ class OrderAccessTest extends IntegrationTestCase
 
     // -- orders/{id}/thanks -------------------------------------------------
 
-    public function testThanksPageRequiresLoginAndOwnership()
+    /**
+     * The thanks page is the payment RETURN URL. That URL is often opened
+     * on another device (a QR code scanned to pay on a phone), so it cannot
+     * require the buyer's session: it carries a per-order signature
+     * instead, generated with the pay URL. A logged-in owner/group
+     * member/admin may open it without the signature.
+     */
+    public function testThanksPageNeedsTheSignedReturnUrlOrOwnership()
     {
         list ($order, $buyer) = $this->pendingOrder();
 
-        $this->get("/orders/{$order->id}/thanks")->assertRedirect('/login');
-
+        // Bare id: enumerable, refused for anonymous and stranger alike.
+        $this->get("/orders/{$order->id}/thanks")->assertStatus(403);
         $stranger = $this->createUser();
         $this->actingAs($stranger)->get("/orders/{$order->id}/thanks")->assertStatus(403);
 
+        // The return URL embedded in the pay URL works without any session.
+        $this->app['auth']->guard()->logout();
+        $this->flushSession();
+        parse_str((string)parse_url($order->getPayUrl(), PHP_URL_QUERY), $payQuery);
+        $returnUrl = $payQuery['return'];
+        $this->assertStringContainsString("/orders/{$order->id}/thanks", $returnUrl);
+        $this->get(parse_url($returnUrl, PHP_URL_PATH) . '?' . parse_url($returnUrl, PHP_URL_QUERY))->assertStatus(200);
+
+        // A signature for another order does not open this one.
+        list ($other) = $this->pendingOrder();
+        $this->get("/orders/{$order->id}/thanks?sig=" . $other->thanksSignature())->assertStatus(403);
+
+        // The buyer needs no signature.
         $this->actingAs($buyer)->get("/orders/{$order->id}/thanks")->assertStatus(200);
     }
 

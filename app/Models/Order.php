@@ -147,8 +147,10 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function getPayUrl()
     {
-        // Set return url to the view component.
-        $return = action('OrderController@thanks', [ $this->id ]);
+        // Return URL = the thanks page. It is frequently opened on ANOTHER
+        // device (QR code scanned to pay on a phone), so it cannot rely on
+        // the buyer's session; it carries a per-order signature instead.
+        $return = $this->getThanksUrl();
 
         if (Str::startsWith(Str::lower($this->pay_url), 'http')) {
             return $this->pay_url . '?return=' . urlencode($return);
@@ -178,26 +180,54 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
-     * HMAC that gates orders/{id}/sync -- accounts' notify callback, which
-     * cannot carry a session -- so that only the URL we handed to accounts
-     * for THIS order can trigger a synchronisation (security audit
-     * 2026-08-27: anyone could trigger transitions and e-mails for any
-     * order id).
+     * Per-order, per-purpose HMAC (keyed with APP_KEY) for the URLs that
+     * cannot rely on a session: accounts' sync callback and the payment
+     * return URL (security audit 2026-08-27: both were open to anyone who
+     * could guess an order id).
      *
+     * @param string $purpose
      * @return string
      */
+    private function signature(string $purpose): string
+    {
+        return hash_hmac('sha256', 'order-' . $purpose . ':' . $this->id, (string)config('app.key'));
+    }
+
+    private function verifySignature(string $purpose, ?string $signature): bool
+    {
+        return is_string($signature) && strlen($signature) === 64 && hash_equals($this->signature($purpose), $signature);
+    }
+
+    /** Gates orders/{id}/sync, accounts' notify callback (no session possible). */
     public function syncSignature(): string
     {
-        return hash_hmac('sha256', 'order-sync:' . $this->id, (string)config('app.key'));
+        return $this->signature('sync');
+    }
+
+    public function verifySyncSignature(?string $signature): bool
+    {
+        return $this->verifySignature('sync', $signature);
+    }
+
+    /** Gates orders/{id}/thanks, the payment return URL (often opened on another device). */
+    public function thanksSignature(): string
+    {
+        return $this->signature('thanks');
+    }
+
+    public function verifyThanksSignature(?string $signature): bool
+    {
+        return $this->verifySignature('thanks', $signature);
     }
 
     /**
-     * @param string|null $signature
-     * @return bool
+     * The signed thanks / return URL.
+     *
+     * @return string
      */
-    public function verifySyncSignature(?string $signature): bool
+    public function getThanksUrl(): string
     {
-        return is_string($signature) && strlen($signature) === 64 && hash_equals($this->syncSignature(), $signature);
+        return action('OrderController@thanks', [ $this->id, 'sig' => $this->thanksSignature() ]);
     }
 
     /**
