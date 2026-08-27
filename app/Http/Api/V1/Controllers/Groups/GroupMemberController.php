@@ -26,7 +26,9 @@ use App\Http\Api\V1\Controllers\Base\ResourceController;
 use App\Http\Api\V1\ResourceDefinitions\Groups\GroupMemberResourceDefinition;
 use App\Models\Group;
 use App\Models\GroupMember;
-use CatLab\Accounts\Client\ApiClient;
+use CatLab\Charon\Laravel\Exceptions\CharonHttpException;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\GuzzleException;
 use CatLab\Charon\Collections\RouteCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -112,10 +114,10 @@ class GroupMemberController extends ResourceController
      * @param \Illuminate\Database\Eloquent\Model $entity
      * @return Model
      */
-    protected function afterSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity)
+    protected function afterSaveEntity(Request $request, \Illuminate\Database\Eloquent\Model $entity, $isNew = false)
     {
         if ($entity->email && filter_var( $entity->email, FILTER_VALIDATE_EMAIL )) {
-            $apiClient = new ApiClient(\Auth::getUser());
+            $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser(\Auth::getUser());
 
             $attributes = [
                 'from' => \Auth::getUser(),
@@ -126,12 +128,41 @@ class GroupMemberController extends ResourceController
 
             $view = \View::make('emails/groups/invite', $attributes);
 
-            $response = $apiClient->sendEmail(
-                'Uitnodiging ' . $entity->group->name,
-                $view->render(),
-                $entity->email
-            );
+            // The invitation goes out through accounts, which rate-limits
+            // mail per user (20/h) and answers 429; a timeout or outage
+            // surfaces as another GuzzleException. saveEntity() wraps us in a
+            // transaction, so throwing here rolls the member back: the
+            // inviter sees why and can simply try again later.
+            try {
+                $apiClient->sendEmail(
+                    'Uitnodiging ' . $entity->group->name,
+                    $view->render(),
+                    $entity->email
+                );
+            } catch (GuzzleException $e) {
+                $rateLimited = $e instanceof BadResponseException
+                    && $e->getResponse()->getStatusCode() === 429;
 
+                \Log::warning('Group invitation mail could not be sent', [
+                    'group' => $entity->group->id,
+                    'rateLimited' => $rateLimited,
+                    'error' => $e->getMessage()
+                ]);
+
+                if ($rateLimited) {
+                    throw new CharonHttpException(
+                        429,
+                        'Je hebt in korte tijd te veel uitnodigingen verstuurd. Probeer het over een uur opnieuw.',
+                        $e
+                    );
+                }
+
+                throw new CharonHttpException(
+                    503,
+                    'De uitnodiging kon niet verstuurd worden. Probeer het later opnieuw.',
+                    $e
+                );
+            }
         }
 
         return $entity;

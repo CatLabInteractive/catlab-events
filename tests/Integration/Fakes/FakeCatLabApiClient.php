@@ -51,8 +51,15 @@ class FakeCatLabApiClient extends ApiClient
         return $order;
     }
 
+    /** @var \Throwable|null thrown by sendEmail() to simulate accounts failing (429, timeout, ...) */
+    public $sendEmailException = null;
+
     public function sendEmail($subject, $body, $target = null)
     {
+        if ($this->sendEmailException) {
+            throw $this->sendEmailException;
+        }
+
         $this->sendEmailCalls[] = ['subject' => $subject, 'target' => $target];
 
         return true;
