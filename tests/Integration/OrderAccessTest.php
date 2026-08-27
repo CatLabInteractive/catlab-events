@@ -2,7 +2,10 @@
 
 namespace Tests\Integration;
 
+use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\Order;
+use App\Models\Organisation;
 use App\Models\User;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
@@ -22,10 +25,11 @@ class OrderAccessTest extends IntegrationTestCase
 {
     use CreatesEventFixtures;
 
-    /** @return array [Order, User $buyer] */
+    /** @return array [Order, User $buyer, Organisation] */
     private function pendingOrder(): array
     {
-        $event = $this->createEvent($this->createOrganisation());
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
         $category = $this->createTicketCategory($event, 15.0);
         $buyer = $this->createUser();
 
@@ -35,7 +39,23 @@ class OrderAccessTest extends IntegrationTestCase
         $this->app['auth']->guard()->logout();
         $this->flushSession();
 
-        return [ $order, $buyer ];
+        return [ $order, $buyer, $organisation ];
+    }
+
+    /** Puts the order in a group of which $member is a member (the test event does not require a team). */
+    private function addToGroup(Order $order, User $member): void
+    {
+        $group = new Group();
+        $group->name = 'Test group';
+        $group->save();
+
+        $groupMember = new GroupMember();
+        $groupMember->group()->associate($group);
+        $groupMember->user()->associate($member);
+        $groupMember->save();
+
+        $order->group()->associate($group);
+        $order->save();
     }
 
     private function admin(): User
@@ -62,6 +82,29 @@ class OrderAccessTest extends IntegrationTestCase
 
         $this->actingAs($buyer)->get("/orders/{$order->id}")->assertStatus(200);
         $this->actingAs($this->admin())->get("/orders/{$order->id}")->assertStatus(200);
+    }
+
+    /**
+     * Access goes through OrderPolicy::view, which the backoffice API shares:
+     * an administrator of the organisation that runs the event may open the
+     * order too, and so may any member of the order's group.
+     */
+    public function testOrganisationAdminAndGroupMemberCanViewTheOrder()
+    {
+        list ($order, $buyer, $organisation) = $this->pendingOrder();
+
+        $organisationAdmin = $this->createUser();
+        $organisation->users()->attach($organisationAdmin->id, [ 'role' => 10 ]);
+        $this->actingAs($organisationAdmin)->get("/orders/{$order->id}")->assertStatus(200);
+
+        $teamMate = $this->createUser();
+        $this->addToGroup($order, $teamMate);
+        $this->actingAs($teamMate)->get("/orders/{$order->id}")->assertStatus(200);
+
+        // Administering an unrelated organisation grants nothing.
+        $otherOrganisationAdmin = $this->createUser();
+        $this->createOrganisation()->users()->attach($otherOrganisationAdmin->id, [ 'role' => 10 ]);
+        $this->actingAs($otherOrganisationAdmin)->get("/orders/{$order->id}")->assertStatus(403);
     }
 
     // -- orders/{id}/thanks -------------------------------------------------

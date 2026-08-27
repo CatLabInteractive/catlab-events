@@ -160,26 +160,6 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
-     * Who may read this order: the buyer, a member of the order's group, or
-     * an admin. (Security audit 2026-08-27: orders/{id} was readable by any
-     * logged-in user, exposing team, items and the livestream link, fetched
-     * with the OWNER's stored accounts token.)
-     *
-     * @param User|null $user
-     * @return bool
-     */
-    public function isViewableBy(?User $user): bool
-    {
-        if (!$user) {
-            return false;
-        }
-        if ($user->isAdmin() || (int)$this->user_id === (int)$user->id) {
-            return true;
-        }
-        return $this->group ? $this->group->isMember($user) : false;
-    }
-
-    /**
      * Per-order, per-purpose HMAC (keyed with APP_KEY) for the URLs that
      * cannot rely on a session: accounts' sync callback and the payment
      * return URL (security audit 2026-08-27: both were open to anyone who
