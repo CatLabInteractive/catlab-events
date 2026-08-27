@@ -633,16 +633,16 @@
         },
         {
             "name": "catlabinteractive/laravel-catlab-accounts",
-            "version": "v4.0.0",
+            "version": "v4.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-catlab-accounts.git",
-                "reference": "6a1b7b34347db0b50171f20e2485f82fc62f64aa"
+                "reference": "ca1905a5aad992fa0a5c3dae7e4491c9a15cde0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/6a1b7b34347db0b50171f20e2485f82fc62f64aa",
-                "reference": "6a1b7b34347db0b50171f20e2485f82fc62f64aa",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/ca1905a5aad992fa0a5c3dae7e4491c9a15cde0a",
+                "reference": "ca1905a5aad992fa0a5c3dae7e4491c9a15cde0a",
                 "shasum": ""
             },
             "require": {
@@ -667,9 +667,9 @@
             "description": "Oauth-Openid client for the catlab authentication api for Ll",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-catlab-accounts/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.0.0"
+                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.0.1"
             },
-            "time": "2022-03-29T10:10:16+00:00"
+            "time": "2026-08-27T11:30:47+00:00"
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
