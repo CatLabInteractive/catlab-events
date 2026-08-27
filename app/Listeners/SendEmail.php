@@ -43,11 +43,9 @@ abstract class SendEmail
         /** @var User $user */
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
-        /* @TODO
-         * This is not okay as some group members might not have logged in for a long time and might thus have
-         * an expired access token, resulting in these emails not being send.
-         */
-
+        // Sent with the product's client credentials (laravel-catlab-accounts
+        // >= 4.1, accounts issue #99), so a member whose accounts token has
+        // long expired still gets the mail.
         try {
             $apiClient->sendEmail(
                 $event->name . ': We zijn er bij!',
