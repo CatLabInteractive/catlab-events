@@ -7,6 +7,7 @@ use App\Models\GroupMember;
 use App\Models\Order;
 use App\Models\Organisation;
 use App\Models\User;
+use Carbon\Carbon;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
 /**
@@ -180,6 +181,57 @@ class OrderAccessTest extends IntegrationTestCase
         $this->catlabApi->orderStatus = 'ACCEPTED';
         $this->get('/orders/' . $second->id . '/sync?sig=' . $first->syncSignature())->assertStatus(403);
         $this->assertEquals(Order::STATE_PENDING, $second->fresh()->state);
+    }
+
+    // -- legacy (pre-signature) orders --------------------------------------
+
+    /**
+     * Accounts stores the notify URL once, at order creation, and fires it
+     * fire-and-forget on every status change (refunds included). Orders that
+     * were created before the callback carried a signature therefore still
+     * call orders/{id}/sync unsigned -- and a 403 there silently loses the
+     * refund. Such orders are grandfathered while their event is upcoming.
+     */
+    private function backdateToBeforeSignedCallbacks(Order $order): void
+    {
+        $order->created_at = Carbon::parse(Order::UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE)->subDay();
+        $order->save();
+    }
+
+    public function testLegacyOrderAcceptsUnsignedSyncWhileEventIsUpcoming()
+    {
+        list ($order) = $this->pendingOrder();
+        $this->backdateToBeforeSignedCallbacks($order);
+
+        $this->catlabApi->orderStatus = 'ACCEPTED';
+        $this->get("/orders/{$order->id}/sync")->assertStatus(200);
+
+        $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    public function testLegacyOrderRefusesUnsignedSyncOnceEventIsFinished()
+    {
+        list ($order) = $this->pendingOrder();
+        $this->backdateToBeforeSignedCallbacks($order);
+        $order->event->eventDates()->update([
+            'startDate' => Carbon::now()->subDays(2),
+            'endDate' => Carbon::now()->subDays(2)->addHours(4),
+        ]);
+
+        $this->catlabApi->orderStatus = 'ACCEPTED';
+        $this->get("/orders/{$order->id}/sync")->assertStatus(403);
+
+        $this->assertEquals(Order::STATE_PENDING, $order->fresh()->state, 'a finished event no longer accepts unsigned syncs');
+    }
+
+    public function testAnOrderCreatedAfterSignedCallbacksStillRequiresTheSignature()
+    {
+        list ($order) = $this->pendingOrder();
+        $this->assertTrue($order->created_at >= Carbon::parse(Order::UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE));
+
+        $this->catlabApi->orderStatus = 'ACCEPTED';
+        $this->get("/orders/{$order->id}/sync")->assertStatus(403);
+        $this->assertEquals(Order::STATE_PENDING, $order->fresh()->state);
     }
 
     // -- Order::synchronize() -----------------------------------------------

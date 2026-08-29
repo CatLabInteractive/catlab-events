@@ -140,8 +140,13 @@ class OrderController extends Controller
 
         // Accounts' notify callback: no session possible, so the URL we
         // handed to accounts carries a per-order signature (see
-        // EventController::processRegister / Order::syncSignature).
-        abort_unless($order->verifySyncSignature(\Request::get('sig')), 403);
+        // EventController::processRegister / Order::syncSignature). Orders
+        // registered before that URL was signed are grandfathered while
+        // their event is upcoming (Order::acceptsUnsignedSync).
+        abort_unless(
+            $order->verifySyncSignature(\Request::get('sig')) || $order->acceptsUnsignedSync(),
+            403
+        );
 
         $order->synchronize();
 
