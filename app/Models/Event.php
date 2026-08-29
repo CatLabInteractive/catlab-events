@@ -397,7 +397,15 @@ class Event extends Model implements EuklesModel
         $availableTickets = 0;
         foreach ($this->eventDates as $eventDate) {
             /** @var EventDate $eventDate */
-            $availableTickets += $eventDate->countAvailableTickets($includePending);
+            $available = $eventDate->countAvailableTickets($includePending);
+
+            // A date without max_tickets is unlimited (null), which makes the
+            // whole event unlimited; summing it as 0 read as "sold out".
+            if ($available === null) {
+                return null;
+            }
+
+            $availableTickets += $available;
         }
         return $availableTickets;
     }
@@ -514,7 +522,13 @@ class Event extends Model implements EuklesModel
             return false;
         }
 
-        return $this->countAvailableTickets() <= self::LAST_TICKET_WARNING;
+        $availableTickets = $this->countAvailableTickets();
+        if ($availableTickets === null) {
+            // A finite ticket category next to an unlimited date: still unlimited.
+            return false;
+        }
+
+        return $availableTickets <= self::LAST_TICKET_WARNING;
     }
 
     /**

@@ -80,9 +80,6 @@ class RenderingTest extends IntegrationTestCase
         $event = $this->createEvent($this->createOrganisation());
         $event->requires_team = true;
         $event->save();
-        // Event::countAvailableTickets() sums the dates' counts, and a date
-        // without max_tickets contributes null (= 0), which reads as sold out.
-        $event->eventDates()->update([ 'max_tickets' => 100 ]);
         $category = $this->createTicketCategory($event, 10.0);
 
         $user = $this->createUser();
