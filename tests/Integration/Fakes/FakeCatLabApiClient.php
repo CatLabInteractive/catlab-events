@@ -63,7 +63,7 @@ class FakeCatLabApiClient extends ApiClient
             throw $this->sendEmailException;
         }
 
-        $this->sendEmailCalls[] = ['subject' => $subject, 'target' => $target];
+        $this->sendEmailCalls[] = ['subject' => $subject, 'body' => $body, 'target' => $target];
 
         return true;
     }

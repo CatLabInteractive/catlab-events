@@ -58,6 +58,51 @@ abstract class SendEmail
     }
 
     /**
+     * A ticket came free and an admin invited someone off the waiting list.
+     *
+     * Sent as the recipient (like sendConfirmationEmail) rather than as the
+     * admin: accounts rate-limits mail per user, so a mass invite spreads
+     * across each invitee's own quota instead of burning the admin's.
+     *
+     * @param Event $event
+     * @param User $user
+     * @param string $url
+     * @return bool whether the mail actually went out
+     */
+    public function sendWaitingListInvitationEmail(Event $event, User $user, string $url)
+    {
+        if (empty($user->email)) {
+            return false;
+        }
+
+        $view = \View::make('emails.tickets.waitingListInvitation', [
+            'event' => $event,
+            'user' => $user,
+            'url' => $url
+        ]);
+
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
+
+        try {
+            $apiClient->sendEmail(
+                'Wachtlijst ' . $event->name,
+                $view->render(),
+                $user->email
+            );
+        } catch (GuzzleException $e) {
+            \Log::warning('Waiting list invitation mail could not be sent', [
+                'event' => $event->id,
+                'user' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param Order $order
      * @param User $user
      */

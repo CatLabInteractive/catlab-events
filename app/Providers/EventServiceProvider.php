@@ -23,6 +23,7 @@
 namespace App\Providers;
 
 use App\Events\GroupMemberJoined;
+use App\Events\InvitedFromWaitingList;
 use App\Events\OrderCancelled;
 use App\Events\OrderConfirmed;
 use App\Events\PreparingOrder;
@@ -30,6 +31,7 @@ use App\Listeners\EuklesEventSubscriber;
 use App\Listeners\SendCancelConfirmation;
 use App\Listeners\SendConfirmationEmail;
 use App\Listeners\SendConfirmationEmailAfterGroupJoin;
+use App\Listeners\SendWaitingListInvitation;
 use CatLab\Accounts\Client\SocialiteProvider\CatLabExtendSocialite;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -59,6 +61,10 @@ class EventServiceProvider extends ServiceProvider
 
         GroupMemberJoined::class => [
             SendConfirmationEmailAfterGroupJoin::class
+        ],
+
+        InvitedFromWaitingList::class => [
+            SendWaitingListInvitation::class
         ],
 
         PreparingOrder::class => [
