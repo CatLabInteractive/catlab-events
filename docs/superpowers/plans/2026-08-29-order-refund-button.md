@@ -85,12 +85,17 @@ class OrdersRefundTokenTest extends IntegrationRequestCase
 
     private function createOrder(): \Neuron\Net\Response
     {
+        // IntegrationRequestCase::request() has no 'json' option: build the
+        // body and content-type explicitly.
         return $this->request('POST', '/api/1.0/users/' . $this->userId . '/orders', [
-            'headers' => [ 'Authorization' => 'Basic ' . base64_encode($this->clientId . ':test-secret') ],
-            'json' => [
+            'body' => json_encode([
                 'items' => [
                     [ 'name' => 'Ticket', 'amount' => 1, 'price' => 10.0, 'vat' => 0.0 ],
                 ],
+            ]),
+            'headers' => [
+                'Content-type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->clientId . ':test-secret'),
             ],
         ]);
     }
@@ -330,9 +335,14 @@ class OrdersRefundApiTest extends IntegrationRequestCase
         $clientId = $clientId ?: $this->clientId;
         $orderId = $orderId ?: (string) $this->orderId;
 
+        // IntegrationRequestCase::request() has no 'json' option: build the
+        // body and content-type explicitly.
         return $this->request('POST', '/api/1.0/orders/' . $orderId . '/refund', [
-            'headers' => [ 'Authorization' => 'Basic ' . base64_encode($clientId . ':test-secret') ],
-            'json' => $body,
+            'body' => json_encode($body),
+            'headers' => [
+                'Content-type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($clientId . ':test-secret'),
+            ],
         ]);
     }
 
@@ -604,6 +614,11 @@ class OrdersRefundThrottleTest extends IntegrationRequestCase
 
         $userId = Fixtures::user();
         $this->profileId = Fixtures::personalProfile($userId);
+        // The InvoicePaymentGateway used by Fixtures::payment() below is only
+        // offered to vat-deductible, invoice-capable profiles (see
+        // PaymentGateways::getGateways); without this, Payment::refund()
+        // cannot resolve the gateway by class name and throws.
+        Fixtures::billingDetails($this->profileId);
     }
 
     /**
@@ -636,8 +651,11 @@ class OrdersRefundThrottleTest extends IntegrationRequestCase
     private function refund(int $orderId, string $token): \Neuron\Net\Response
     {
         return $this->request('POST', '/api/1.0/orders/' . $orderId . '/refund', [
-            'headers' => [ 'Authorization' => 'Basic ' . base64_encode($this->clientId . ':test-secret') ],
-            'json' => [ 'refundToken' => $token, 'amount' => 5.0, 'reason' => 'test' ],
+            'body' => json_encode([ 'refundToken' => $token, 'amount' => 5.0, 'reason' => 'test' ]),
+            'headers' => [
+                'Content-type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($this->clientId . ':test-secret'),
+            ],
         ]);
     }
 
@@ -702,8 +720,11 @@ class OrdersRefundThrottleTest extends IntegrationRequestCase
         ]);
 
         $response = $this->request('POST', '/api/1.0/orders/' . $otherOrderId . '/refund', [
-            'headers' => [ 'Authorization' => 'Basic ' . base64_encode($otherClient . ':test-secret') ],
-            'json' => [ 'refundToken' => 'othertoken0123456789abcd', 'amount' => 5.0, 'reason' => 'test' ],
+            'body' => json_encode([ 'refundToken' => 'othertoken0123456789abcd', 'amount' => 5.0, 'reason' => 'test' ]),
+            'headers' => [
+                'Content-type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($otherClient . ':test-secret'),
+            ],
         ]);
 
         $this->assertSame(200, $response->getStatus() ?: 200);

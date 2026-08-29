@@ -166,8 +166,19 @@ reports the true state, and asks the admin to verify in accounts if that is
 still inconclusive. Reporting a false failure invites a second click, and
 for a money action that is the expensive mistake.
 
-Retries are safe regardless: `Payment::refund()` returns early when the
-order is already refunded.
+Retries are safe, but not for the reason first assumed. `Payment::refund()`
+returning early on an already-refunded order only covers the case where the
+refund fully completed. It is not transactional: it calls the gateway first,
+then writes the `TYPE_REFUND` payment row, then sets `REFUNDED`. If anything in
+between fails, the money is gone and the order still reads `ACCEPTED` — and the
+admin, told by this very section to check accounts, would see `ACCEPTED` and
+click refund again.
+
+The refund endpoint therefore rejects an order that already carries an accepted
+`TYPE_REFUND` payment, with a 409, before reaching the gateway. That state is
+exactly what a half-completed refund leaves behind and is otherwise unreachable.
+Events maps that 409 to "no longer refundable" and re-syncs, which is the
+correct outcome.
 
 | Outcome | Message |
 |---|---|
