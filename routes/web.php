@@ -91,6 +91,9 @@ Route::group([
             Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
             Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
 
+            Route::get('orders/{order}/refund', 'Admin\RefundController@refund');
+            Route::post('orders/{order}/refund', 'Admin\RefundController@processRefund');
+
             Route::get('events/{id}/export/members', 'Admin\EventController@exportMembers');
             Route::get('events/{id}/export/sales', 'Admin\EventController@exportSales');
             Route::get('events/{id}/export/clearing', 'Admin\EventController@exportClearing');

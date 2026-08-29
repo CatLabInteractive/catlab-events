@@ -824,6 +824,11 @@ class EventController extends Controller
             // it once, here: no GET endpoint hands it back.
             if (isset($orderData['refundToken'])) {
                 $order->refund_token = $orderData['refundToken'];
+            } else {
+                \Log::warning('Paid order created without a refund token; it will not be refundable from the admin panel', [
+                    'order' => $order->id,
+                    'catlabOrder' => $orderData['id']
+                ]);
             }
 
             $order->save();
