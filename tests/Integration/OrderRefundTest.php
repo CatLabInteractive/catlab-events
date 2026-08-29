@@ -3,8 +3,10 @@
 namespace Tests\Integration;
 
 use App\Models\Order;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request as Psr7Request;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
 /**
@@ -258,5 +260,135 @@ class OrderRefundTest extends IntegrationTestCase
         $this->assertStringNotContainsStringIgnoringCase('mislukt', $message);
         $this->assertStringNotContainsStringIgnoringCase('failed', $message);
         $this->assertStringContainsStringIgnoringCase('accounts', $message);
+    }
+
+    /**
+     * 429: accounts' rate limit on refunds. The admin should not be told to
+     * retry immediately -- that would just trip the limit again.
+     */
+    public function testAThrottledRefundSaysToTryAgainLater()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Too many refunds',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(429, [], '{"error":"Too many refunds, try again later."}')
+        );
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $this->assertStringContainsString('te veel terugbetalingen', session('message'));
+        // No re-sync on this path: nothing was attempted on accounts' side.
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * 409: accounts refuses because the order can no longer be refunded
+     * (already refunded, cancelled, amount mismatch, ...). The re-sync that
+     * follows must pick up the true state.
+     */
+    public function testANoLongerRefundableOrderReportsAndResyncs()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Order is not refundable.',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(409, [], '{"error":"Order is not refundable."}')
+        );
+        // Accounts already considers it refunded; the re-sync must pick that up.
+        $this->catlabApi->orderStatus = 'REFUNDED';
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $this->assertStringContainsString('niet meer terugbetaald', session('message'));
+        $this->assertSame(Order::STATE_REFUNDED, $order->fresh()->state);
+    }
+
+    /**
+     * The complementary case to
+     * testATimeoutThatPersistsThroughTheResyncNeverReportsFailure(): here
+     * refundOrder() throws but the following getOrder() (via synchronize())
+     * still answers, so the re-sync succeeds and discovers the refund
+     * actually went through on accounts' side. This must be reported as
+     * uncertainty, never as failure -- a false failure invites a second
+     * click on a path where money moves.
+     */
+    public function testATimeoutThatResyncsSuccessfullyReportsUncertaintyNotFailure()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('POST', 'orders/4242/refund')
+        );
+        // The refund did go through on the other side, and this time the
+        // re-sync call itself succeeds in finding that out.
+        $this->catlabApi->orderStatus = 'REFUNDED';
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $message = session('message');
+        $this->assertStringContainsString('mogelijk wel doorgegaan', $message);
+        $this->assertStringNotContainsStringIgnoringCase('mislukt', $message);
+        $this->assertStringNotContainsStringIgnoringCase('failed', $message);
+        // The re-sync found the truth.
+        $this->assertSame(Order::STATE_REFUNDED, $order->fresh()->state);
+    }
+
+    /**
+     * A response in the 400/403/422 family: accounts rejected the request
+     * outright, before it ever reached the gateway. Unlike the 5xx/timeout
+     * path this is not ambiguous -- nothing moved, so the message must not
+     * hedge the way the unknown-outcome message does, and there is nothing
+     * new to re-sync.
+     */
+    public function testAnUnmappedClientErrorIsReportedAsDefinitelyRefused()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Unprocessable entity',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(422, [], '{"error":"Validation failed."}')
+        );
+        // If this branch re-synced, this would flip the order to REFUNDED.
+        // Asserting it stays ACCEPTED below proves it does not.
+        $this->catlabApi->orderStatus = 'REFUNDED';
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $message = session('message');
+        $this->assertStringContainsString('niets terugbetaald', $message);
+        $this->assertStringContainsString('422', $message);
+        $this->assertStringNotContainsString('mogelijk wel doorgegaan', $message);
+        // No re-sync on this path.
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
     }
 }
