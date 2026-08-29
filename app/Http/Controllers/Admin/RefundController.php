@@ -110,7 +110,19 @@ class RefundController extends Controller
             return $back->with('message', 'Deze order kan hier niet terugbetaald worden.');
         }
 
-        $orderData = $order->getOrderData(true);
+        // An accounts outage here means nothing has been attempted yet: no
+        // money at risk, but the admin still deserves a flash message
+        // instead of a 500.
+        try {
+            $orderData = $order->getOrderData(true);
+        } catch (GuzzleException $e) {
+            \Log::warning('Could not load live order data before refund', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'error' => $e->getMessage()
+            ]);
+            return $back->with('message', 'De order kon niet opgehaald worden bij accounts. Er is niets terugbetaald.');
+        }
 
         $reference = isset($orderData['reference']) ? $orderData['reference'] : null;
 
@@ -125,14 +137,42 @@ class RefundController extends Controller
 
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($order->user);
 
+        \Log::info('Refunding order', [
+            'order' => $order->id,
+            'catlab_order_id' => $order->catlab_order_id,
+            'amount' => $amount,
+            'admin' => \Auth::id(),
+        ]);
+
         try {
-            $apiClient->refundOrder($order->catlab_order_id, $order->refund_token, $amount, $reason ?: 'events admin');
+            $result = $apiClient->refundOrder($order->catlab_order_id, $order->refund_token, $amount, $reason ?: 'events admin');
         } catch (GuzzleException $e) {
-            return $back->with('message', $this->describeFailure($order, $e));
+            return $back->with('message', $this->describeFailure($order, $e, $amount));
         }
 
-        // Read the state back from accounts rather than assuming it.
-        $order->synchronize();
+        \Log::info('Order refund succeeded', [
+            'order' => $order->id,
+            'catlab_order_id' => $order->catlab_order_id,
+            'status' => isset($result['status']) ? $result['status'] : null,
+        ]);
+
+        // The money has already moved at this point: a failure to read the
+        // state back must never turn a successful refund into a 500. Report
+        // success regardless, with a note if the re-sync itself failed.
+        try {
+            $order->synchronize();
+        } catch (\Throwable $e) {
+            \Log::error('Order refund succeeded but the state re-sync failed', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'error' => $e->getMessage()
+            ]);
+            return $back->with(
+                'message',
+                'Order ' . $reference . ' is terugbetaald, maar de status kon niet opnieuw opgehaald worden. '
+                    . 'Controleer de order in accounts.'
+            );
+        }
 
         return $back->with('message', 'Order ' . $reference . ' is terugbetaald.');
     }
@@ -142,18 +182,24 @@ class RefundController extends Controller
      *
      * A timeout is the dangerous one: the refund may well have gone
      * through, so we must not report failure and invite a second click. We
-     * re-sync and report whatever accounts actually says.
+     * re-sync and report whatever accounts actually says -- and since
+     * accounts is by definition unreachable or struggling on that path,
+     * the re-sync itself must not be allowed to 500 either.
      *
      * @param Order $order
      * @param GuzzleException $e
+     * @param float|null $amount the amount that was sent, for the log line
      * @return string
      */
-    private function describeFailure(Order $order, GuzzleException $e)
+    private function describeFailure(Order $order, GuzzleException $e, $amount = null)
     {
         $status = $e instanceof BadResponseException ? $e->getResponse()->getStatusCode() : null;
 
         \Log::warning('Order refund failed', [
             'order' => $order->id,
+            'catlab_order_id' => $order->catlab_order_id,
+            'amount' => $amount,
+            'admin' => \Auth::id(),
             'status' => $status,
             'error' => $e->getMessage()
         ]);
@@ -163,17 +209,79 @@ class RefundController extends Controller
         }
 
         if ($status === 409) {
-            $order->synchronize();
-            return 'Deze order kon niet meer terugbetaald worden. De status is opnieuw opgehaald.';
+            return $this->reportRejectedByAccounts($order);
         }
 
         if ($status === 404 || $status === 401) {
             return 'De terugbetaling werd geweigerd. Controleer de order in accounts.';
         }
 
-        // No response at all: timeout, connection error. The refund may have
-        // happened. Never report failure here.
-        $order->synchronize();
+        // No response at all (timeout, connection error) or a 5xx from
+        // accounts itself: whether the refund actually happened is
+        // genuinely unknown.
+        if ($status === null || $status >= 500) {
+            return $this->reportUnknownOutcome($order);
+        }
+
+        // A response came back with a status this endpoint's documented
+        // guard chain (401/404/409/429) does not cover -- e.g. 400/403/422.
+        // Accounts rejected the request outright before touching the
+        // gateway, so unlike the branch above there is no ambiguity: nothing
+        // moved, and there is nothing new to re-sync.
+        return 'De terugbetaling werd geweigerd door accounts (status ' . $status . '). Er is niets terugbetaald.';
+    }
+
+    /**
+     * 409: accounts says this order can no longer be refunded (already
+     * refunded, cancelled, amount mismatch, no payment, ...). Re-sync so the
+     * order list reflects that -- but a failed re-sync must not turn this
+     * into a 500.
+     *
+     * @param Order $order
+     * @return string
+     */
+    private function reportRejectedByAccounts(Order $order)
+    {
+        try {
+            $order->synchronize();
+        } catch (\Throwable $e) {
+            \Log::error('Order refund rejected by accounts, and the state re-sync failed', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'error' => $e->getMessage()
+            ]);
+            return 'Deze order kon niet meer terugbetaald worden. De status kon niet opnieuw opgehaald worden, '
+                . 'controleer de order in accounts.';
+        }
+
+        return 'Deze order kon niet meer terugbetaald worden. De status is opnieuw opgehaald.';
+    }
+
+    /**
+     * No usable response (timeout / connection error) or a 5xx from
+     * accounts: whether the refund actually happened is genuinely unknown.
+     * Re-sync so we can report the real state where possible, but a failed
+     * re-sync must never turn into a 500 that reads as "this call itself
+     * failed" -- that is exactly the false failure this whole path exists
+     * to avoid.
+     *
+     * @param Order $order
+     * @return string
+     */
+    private function reportUnknownOutcome(Order $order)
+    {
+        try {
+            $order->synchronize();
+        } catch (\Throwable $e) {
+            \Log::error('Order refund outcome unknown, and the state re-sync failed', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'error' => $e->getMessage()
+            ]);
+
+            return 'Onbekend resultaat: de terugbetaling is mogelijk wel doorgegaan, maar de status kon niet '
+                . 'opnieuw opgehaald worden. Controleer de order in accounts.';
+        }
 
         // Accounts refuses a second refund of an order that already carries an
         // accepted refund, so retrying is normally caught rather than charged

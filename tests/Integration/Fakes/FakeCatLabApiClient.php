@@ -17,6 +17,17 @@ class FakeCatLabApiClient extends ApiClient
     /** @var \Throwable|null thrown by refundOrder() to simulate accounts failing (409, 429, timeout, ...) */
     public $refundOrderException = null;
 
+    /**
+     * @var \Throwable|null thrown by getOrder() when called without
+     * `$expanded` -- i.e. by Order::synchronize() -- to simulate accounts
+     * staying unreachable through the re-sync that follows a failed
+     * refundOrder() call, rather than conveniently recovering in between.
+     * The expanded lookup (the live reference/amount check made before the
+     * refund is attempted) is left alone, same as a real outage that starts
+     * only once the refund call itself goes out.
+     */
+    public $getOrderException = null;
+
     public function __construct()
     {
         parent::__construct(null);
@@ -35,6 +46,10 @@ class FakeCatLabApiClient extends ApiClient
 
     public function getOrder($id, $expanded = false)
     {
+        if ($this->getOrderException && !$expanded) {
+            throw $this->getOrderException;
+        }
+
         $order = [
             'id' => $id,
             'status' => $this->orderStatus,

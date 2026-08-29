@@ -3,6 +3,8 @@
 namespace Tests\Integration;
 
 use App\Models\Order;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request as Psr7Request;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
 /**
@@ -216,5 +218,45 @@ class OrderRefundTest extends IntegrationTestCase
             ]);
 
         $this->assertSame(1, $order->event->fresh()->countAvailableTickets(true));
+    }
+
+    /**
+     * The realistic outage: accounts stays unreachable through the re-sync
+     * that follows the failed refund call, not just for the refund call
+     * itself. A version of this that only threw from refundOrder() (and let
+     * the following getOrder() "recover") would pass even with an unguarded
+     * synchronize() call in the timeout branch -- it would never actually
+     * exercise that unguarded call. This one does: it must never 500, and
+     * it must never claim the refund failed, because it may well not have.
+     */
+    public function testATimeoutThatPersistsThroughTheResyncNeverReportsFailure()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('POST', 'orders/4242/refund')
+        );
+        $this->catlabApi->getOrderException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('GET', 'orders/4242')
+        );
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $response->assertSessionHas('message');
+
+        $message = session('message');
+        $this->assertNotNull($message, 'a flash message should have been set');
+        $this->assertStringNotContainsStringIgnoringCase('mislukt', $message);
+        $this->assertStringNotContainsStringIgnoringCase('failed', $message);
+        $this->assertStringContainsStringIgnoringCase('accounts', $message);
     }
 }
