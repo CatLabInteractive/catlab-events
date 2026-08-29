@@ -38,7 +38,8 @@ class EventDate extends Model implements EuklesModel
     protected $fillable = [
         'startDate',
         'endDate',
-        'doorsDate'
+        'doorsDate',
+        'max_tickets'
     ];
 
     /**

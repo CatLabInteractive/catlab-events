@@ -22,12 +22,11 @@ class EventCapacityTest extends IntegrationTestCase
         $event = $this->createEvent($this->createOrganisation());
         $event->eventDates()->delete();
         foreach ($capacities as $i => $capacity) {
-            $date = $event->eventDates()->create([
+            $event->eventDates()->create([
                 'startDate' => Carbon::now()->addDays(30 + $i),
                 'endDate' => Carbon::now()->addDays(30 + $i)->addHours(4),
+                'max_tickets' => $capacity,
             ]);
-            $date->max_tickets = $capacity; // not mass-assignable
-            $date->save();
         }
         $this->createTicketCategory($event, 10.0);
 
