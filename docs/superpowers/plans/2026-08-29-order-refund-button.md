@@ -1162,7 +1162,7 @@ Append to `tests/Integration/OrderRefundTest.php` (inside the class):
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
 
@@ -1181,7 +1181,7 @@ Append to `tests/Integration/OrderRefundTest.php` (inside the class):
         $order->save();
 
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
 
@@ -1200,7 +1200,7 @@ Append to `tests/Integration/OrderRefundTest.php` (inside the class):
         $order->save();
 
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
 
@@ -1214,7 +1214,7 @@ Append to `tests/Integration/OrderRefundTest.php` (inside the class):
 
         // Global `admin` flag, but the active organisation is a different one.
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($this->createOrganisation()->id);
+        $admin->organisations()->attach($this->createOrganisation()->id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund")->assertStatus(404);
     }
@@ -1445,8 +1445,12 @@ Create `resources/views/admin/orders/refund.blade.php`:
 In `routes/web.php`, inside the admin group (after the `uitdb` routes, ~line 92):
 
 ```php
-            Route::get('orders/{order}/refund', 'Admin\RefundController@refund');
-            Route::post('orders/{order}/refund', 'Admin\RefundController@processRefund');
+            // The parameter MUST be {id}: Charon's ResourceAction always builds
+            // action(..., ['id' => $model->id]), so an {order} placeholder throws
+            // UrlGenerationException for every row of the admin order list.
+            // Admin\EventController's exports use the same {id} convention.
+            Route::get('orders/{id}/refund', 'Admin\RefundController@refund');
+            Route::post('orders/{id}/refund', 'Admin\RefundController@processRefund');
 ```
 
 - [ ] **Step 6: Add the table action**
@@ -1523,7 +1527,7 @@ Append to `tests/Integration/OrderRefundTest.php`:
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->actingAs($admin)
             ->post("/admin/orders/{$order->id}/refund", [
@@ -1547,7 +1551,7 @@ Append to `tests/Integration/OrderRefundTest.php`:
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->actingAs($admin)
             ->post("/admin/orders/{$order->id}/refund", [
@@ -1567,7 +1571,7 @@ Append to `tests/Integration/OrderRefundTest.php`:
         $eventDate->save();
 
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->actingAs($admin)
             ->post("/admin/orders/{$order->id}/refund", [
@@ -1731,7 +1735,7 @@ use GuzzleHttp\Psr7\Response as GuzzleResponse;
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->catlabApi->refundOrderException = new BadResponseException(
             'Too many refunds',
@@ -1754,7 +1758,7 @@ use GuzzleHttp\Psr7\Response as GuzzleResponse;
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->catlabApi->refundOrderException = new BadResponseException(
             'Order is not refundable.',
@@ -1778,7 +1782,7 @@ use GuzzleHttp\Psr7\Response as GuzzleResponse;
     {
         $order = $this->createRefundableOrder();
         $admin = $this->createAdmin();
-        $admin->organisations()->attach($order->event->organisation_id);
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
 
         $this->catlabApi->refundOrderException = new ConnectException(
             'Connection timed out',
