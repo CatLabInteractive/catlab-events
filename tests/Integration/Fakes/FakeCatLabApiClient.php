@@ -10,6 +10,12 @@ class FakeCatLabApiClient extends ApiClient
     public $sendEmailCalls = [];
     public $orderStatus = 'PENDING';
     public $nextOrderId = 4242;
+    public $refundOrderCalls = [];
+    public $nextRefundToken = 'faketoken0123456789abcd';
+    public $refundStatus = 'REFUNDED';
+
+    /** @var \Throwable|null thrown by refundOrder() to simulate accounts failing (409, 429, timeout, ...) */
+    public $refundOrderException = null;
 
     public function __construct()
     {
@@ -23,6 +29,7 @@ class FakeCatLabApiClient extends ApiClient
         return [
             'id' => $this->nextOrderId,
             'payUrl' => 'https://pay.example.com/order/' . $this->nextOrderId,
+            'refundToken' => $this->nextRefundToken,
         ];
     }
 
@@ -63,5 +70,23 @@ class FakeCatLabApiClient extends ApiClient
         $this->sendEmailCalls[] = ['subject' => $subject, 'target' => $target];
 
         return true;
+    }
+
+    public function refundOrder($orderId, $refundToken, $amount, $reason = 'api')
+    {
+        if ($this->refundOrderException) {
+            throw $this->refundOrderException;
+        }
+
+        $this->refundOrderCalls[] = [
+            'orderId' => $orderId,
+            'refundToken' => $refundToken,
+            'amount' => $amount,
+            'reason' => $reason,
+        ];
+
+        $this->orderStatus = $this->refundStatus;
+
+        return [ 'id' => $orderId, 'status' => $this->refundStatus ];
     }
 }

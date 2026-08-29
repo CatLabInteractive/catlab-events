@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d13d08c1880b583ceb5b63485bfd939d",
+    "content-hash": "f61dc68cee6a98167f212282819ff707",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -637,20 +637,21 @@
         },
         {
             "name": "catlabinteractive/laravel-catlab-accounts",
-            "version": "v4.1.0",
+            "version": "v4.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-catlab-accounts.git",
-                "reference": "2c0367eb59a65edcd9a0c880a55c78c3df47aafe"
+                "reference": "71b53d4cb4ad9b53f45002f3d50c556f12fbb4ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/2c0367eb59a65edcd9a0c880a55c78c3df47aafe",
-                "reference": "2c0367eb59a65edcd9a0c880a55c78c3df47aafe",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/71b53d4cb4ad9b53f45002f3d50c556f12fbb4ea",
+                "reference": "71b53d4cb4ad9b53f45002f3d50c556f12fbb4ea",
                 "shasum": ""
             },
             "require": {
-                "socialiteproviders/manager": "~4.1.0"
+                "php": ">=8.1",
+                "socialiteproviders/manager": "^4.8"
             },
             "type": "library",
             "autoload": {
@@ -671,9 +672,9 @@
             "description": "Oauth-Openid client for the catlab authentication api for Ll",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-catlab-accounts/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.1.0"
+                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.3.0"
             },
-            "time": "2026-08-27T20:53:44+00:00"
+            "time": "2026-08-29T17:45:35+00:00"
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
@@ -5262,26 +5263,26 @@
         },
         {
             "name": "socialiteproviders/manager",
-            "version": "v4.1.0",
+            "version": "v4.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SocialiteProviders/Manager.git",
-                "reference": "4e63afbd26dc45ff263591de2a0970436a6a0bf9"
+                "reference": "8180ec14bef230ec2351cff993d5d2d7ca470ef4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SocialiteProviders/Manager/zipball/4e63afbd26dc45ff263591de2a0970436a6a0bf9",
-                "reference": "4e63afbd26dc45ff263591de2a0970436a6a0bf9",
+                "url": "https://api.github.com/repos/SocialiteProviders/Manager/zipball/8180ec14bef230ec2351cff993d5d2d7ca470ef4",
+                "reference": "8180ec14bef230ec2351cff993d5d2d7ca470ef4",
                 "shasum": ""
             },
             "require": {
-                "illuminate/support": "^6.0 || ^7.0 || ^8.0 || ^9.0",
-                "laravel/socialite": "~4.0 || ~5.0",
-                "php": "^7.2 || ^8.0"
+                "illuminate/support": "^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0",
+                "laravel/socialite": "^5.5",
+                "php": "^8.1"
             },
             "require-dev": {
                 "mockery/mockery": "^1.2",
-                "phpunit/phpunit": "^6.0 || ^9.0"
+                "phpunit/phpunit": "^9.0"
             },
             "type": "library",
             "extra": {
@@ -5332,7 +5333,7 @@
                 "issues": "https://github.com/socialiteproviders/manager/issues",
                 "source": "https://github.com/socialiteproviders/manager"
             },
-            "time": "2022-01-23T22:40:23+00:00"
+            "time": "2025-02-24T19:33:30+00:00"
         },
         {
             "name": "spatie/laravel-referer",

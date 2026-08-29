@@ -820,6 +820,12 @@ class EventController extends Controller
             $order->catlab_order_id = $orderData['id'];
             $order->pay_url = $orderData['payUrl'];
 
+            // Second factor for refunding this order later. Accounts returns
+            // it once, here: no GET endpoint hands it back.
+            if (isset($orderData['refundToken'])) {
+                $order->refund_token = $orderData['refundToken'];
+            }
+
             $order->save();
 
         } catch (\Exception $e) {

@@ -13,7 +13,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "catlabinteractive/central-storage-client": "~1.0.3",
         "catlabinteractive/eukles-client": "~1.0.8",
-        "catlabinteractive/laravel-catlab-accounts": "~4.1",
+        "catlabinteractive/laravel-catlab-accounts": "^4.3",
         "catlabinteractive/laravel-charon-frontend": "~1.7.0",
         "catlabinteractive/laravel-table": "^1.0.2",
         "doctrine/dbal": "~2.5",
