@@ -42,14 +42,14 @@ class EventDate extends Model implements EuklesModel
     ];
 
     /**
-     * The attributes that should be mutated to dates.
+     * The attributes that should be cast.
      *
      * @var array
      */
-    protected $dates = [
-        'startDate',
-        'endDate',
-        'doorsDate'
+    protected $casts = [
+        'startDate' => 'datetime',
+        'endDate' => 'datetime',
+        'doorsDate' => 'datetime',
     ];
 
     /**

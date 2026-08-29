@@ -52,9 +52,9 @@
                                     <ul>
                                         @foreach($nextEvent->eventDates->sortBy('startDate') as $eventDate)
                                             @if($eventDate->hasFiniteTickets() && $eventDate->isSoldOut())
-                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }} (Uitverkocht)</li>
+                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->translatedFormat('l j F Y')) }} (Uitverkocht)</li>
                                             @else
-                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->formatLocalized('%A %-d %B %Y')) }}</li>
+                                                <li>{{ \Illuminate\Support\Str::ucfirst($eventDate->startDate->translatedFormat('l j F Y')) }}</li>
                                             @endif
                                         @endforeach
                                     </ul>
@@ -239,7 +239,7 @@
                             <div class="row">
                                 <div class="col-md-3 hero-small-date text-center">
                                     <h3>{{ $v->startDate->format('d') }}</h3>
-                                    <h4>{{ $v->startDate->formatLocalized('%B %Y') }}</h4>
+                                    <h4>{{ $v->startDate->translatedFormat('F Y') }}</h4>
                                 </div>
                                 <div class="col-md-9 hero-small-date-content">
                                     <h2 class="banner-title">

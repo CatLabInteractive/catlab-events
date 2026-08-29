@@ -72,17 +72,6 @@ class Event extends Model implements EuklesModel
         'event_type'
     ];
 
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
-    ];
-
     public function getUrl()
     {
         return action('EventController@view', [ $this->id, Str::slug($this->name) ]);
@@ -225,7 +214,7 @@ class Event extends Model implements EuklesModel
             $dates = $this->eventDates->pluck('startDate');
             return StringHelper::datesToDescription($dates);
         } elseif ($this->startDate) {
-            return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
+            return ucfirst($this->startDate->translatedFormat('l')) . ' ' . $this->startDate->translatedFormat('j F Y');
         } else {
             return 'FOUT! Nog geen datum ingesteld.';
         }
@@ -1184,7 +1173,7 @@ class Event extends Model implements EuklesModel
             $cheapest = $prices->first();
 
             if ($cheapest->end_date) {
-                $out = 'Bestel voor ' . $cheapest->end_date->formatLocalized('%A %d %B %Y, %H:%M') . '. ';
+                $out = 'Bestel voor ' . $cheapest->end_date->translatedFormat('l d F Y, H:i') . '. ';
             }
         }
 

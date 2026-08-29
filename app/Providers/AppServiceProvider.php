@@ -50,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
             // set redirect url
             config(['services.catlab.redirect' => config('app.url') . '/login/callback']);
 
-            setlocale(LC_TIME, config('app.locale'));
             \Carbon\Carbon::setLocale(mb_substr(config('app.locale'), 0, 2));
         }
     }

@@ -34,7 +34,7 @@ class OrdersController extends ResourceController
             static::RESOURCE_DEFINITION,
             'organisations/{' . self::PARENT_RESOURCE_ID . '}/orders',
             'orders',
-            'OrderController',
+            'OrdersController',
             [
                 'id' => self::RESOURCE_ID,
                 'parentId' => self::PARENT_RESOURCE_ID

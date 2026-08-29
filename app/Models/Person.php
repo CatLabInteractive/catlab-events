@@ -42,8 +42,6 @@ class Person extends Model
 
     use SoftDeletes;
 
-    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
-
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */

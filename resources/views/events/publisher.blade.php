@@ -24,7 +24,7 @@
                 $caption = <<<EOT
                     <h2>{$nextEvent->name}</h2>
                     <h4>
-                        {$nextEvent->startDate->formatLocalized('%-d %B, H:i')}, {$nextEvent->venue->city}.<br>
+                        {$nextEvent->startDate->translatedFormat('j F, H:i')}, {$nextEvent->venue->city}.<br>
 
                         @if($nextEvent->team_size)
                             Tickets: vanaf {!! $nextEvent->getFormattedPublishedPrice(true) !!} per team (max {{$nextEvent->team_size}} spelers)
@@ -38,7 +38,7 @@ EOT;
                     $caption = <<<EOT
                         <h2>{$nextEvent->name}</h2>
                         <h4>
-                            {$nextEvent->startDate->formatLocalized('%-d %B, H:i')}, {$nextEvent->venue->city}.<br>
+                            {$nextEvent->startDate->translatedFormat('j F, H:i')}, {$nextEvent->venue->city}.<br>
                             Tickets: UITVERKOCHT!
                         </h4>
 EOT;
@@ -124,7 +124,7 @@ EOT;
 
                             <?php if ($countdownEvent) { ?>
                             <a href="{{ $countdownEvent->getUrl() }}">{{ $countdownEvent->name }}</a>,<br>
-                            {{ $countdownEvent->startDate->formatLocalized('%d %B') }},
+                            {{ $countdownEvent->startDate->translatedFormat('d F') }},
                             <a href="{{ action('EventController@fromVenue', $countdownEvent->venue->id) }}">{{ $countdownEvent->venue->name }}</a>,
                             {{ $countdownEvent->venue->city }}
                             <?php } else { ?>
