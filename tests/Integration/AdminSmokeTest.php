@@ -40,7 +40,6 @@ class AdminSmokeTest extends IntegrationTestCase
         $this->actingAs($admin)->get('/admin/organisations')->assertStatus(403);
 
         foreach ([
-            '/admin/events',
             '/admin/venues',
             '/admin/people',
             '/admin/orders',
@@ -49,6 +48,12 @@ class AdminSmokeTest extends IntegrationTestCase
         ] as $url) {
             $this->actingAs($admin)->get($url)->assertStatus(200);
         }
+
+        // The index table actually lists the data.
+        $response = $this->actingAs($admin)->get('/admin/events');
+        $response->assertStatus(200);
+        $response->assertSee($event->name);
+        $response->assertSee('/admin/events/' . $event->id);
     }
 
     public function testAdminCrudFormsAndDetailPagesRender()
