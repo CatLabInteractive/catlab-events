@@ -320,6 +320,52 @@ class OrderRefundTest extends IntegrationTestCase
     }
 
     /**
+     * The 409 sibling of
+     * testATimeoutThatPersistsThroughTheResyncNeverReportsFailure(): accounts
+     * rejects the refund AND the re-sync that reportRejectedByAccounts()
+     * attempts afterwards also fails. That re-sync is inside its own
+     * try/catch precisely so a struggling accounts cannot turn a rejected
+     * refund into a 500 here -- this proves the guard holds rather than
+     * just looking right.
+     */
+    public function testANoLongerRefundableOrderWhoseResyncAlsoFailsDegradesGracefully()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Order is not refundable.',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(409, [], '{"error":"Order is not refundable."}')
+        );
+        // The re-sync inside reportRejectedByAccounts() calls getOrder()
+        // without $expanded; this fires only there, not for the earlier
+        // expanded reference/amount check made before the refund attempt.
+        $this->catlabApi->getOrderException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('GET', 'orders/4242')
+        );
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $message = session('message');
+        $this->assertNotNull($message, 'a flash message should have been set');
+        $this->assertSame(
+            'Deze order kon niet meer terugbetaald worden. De status kon niet opnieuw opgehaald worden, '
+                . 'controleer de order in accounts.',
+            $message
+        );
+        // Nothing was re-synced: the order's local state is untouched.
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
      * The complementary case to
      * testATimeoutThatPersistsThroughTheResyncNeverReportsFailure(): here
      * refundOrder() throws but the following getOrder() (via synchronize())
