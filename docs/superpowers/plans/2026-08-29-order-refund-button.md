@@ -899,11 +899,11 @@ cd ~/Workbench/laravel-catlab-accounts
 git add src/ApiClient.php
 git commit -m "Add refundOrder() for the accounts order refund endpoint"
 git push origin HEAD
-git tag v4.2.0
-git push origin v4.2.0
+git tag v4.3.0
+git push origin v4.3.0
 ```
 
-**STOP: the tag must be pushed before Phase 3** — events resolves this package from GitHub tags (`composer.lock` currently pins `v4.1.0`).
+**STOP: the tag must be pushed before Phase 3** — events resolves this package from GitHub tags (`composer.lock` currently pins `v4.1.0`). Use **v4.3.0**: v4.2.0 already exists for unrelated Laravel 10-12 work and has no `refundOrder()`.
 
 ---
 
@@ -932,11 +932,13 @@ Work in `~/Workbench/catlab-events` on the branch created for this plan:
 In `composer.json`, change the accounts client constraint:
 
 ```json
-        "catlabinteractive/laravel-catlab-accounts": "~4.2",
+        "catlabinteractive/laravel-catlab-accounts": "^4.3",
 ```
 
 Run: `docker exec catlab-events composer update catlabinteractive/laravel-catlab-accounts --no-interaction`
-Expected: resolves `v4.2.0`.
+Expected: resolves `v4.3.0`. It must NOT resolve v4.2.0 — that tag already
+existed for unrelated Laravel 10-12 work and has no `refundOrder()`, so a `~4.2`
+constraint would install cleanly and then fail at runtime.
 
 - [ ] **Step 2: Write the failing test**
 
@@ -1677,9 +1679,14 @@ and the method after `refund()`:
         // happened. Never report failure here.
         $order->synchronize();
 
+        // Accounts refuses a second refund of an order that already carries an
+        // accepted refund, so retrying is normally caught rather than charged
+        // twice. It is not a guarantee -- if the gateway processed the refund
+        // but accounts never recorded it, nothing on this side can tell.
         return 'Onbekend resultaat: de terugbetaling is mogelijk wel doorgegaan. '
-            . 'De status is opnieuw opgehaald; controleer de order in accounts als ze nog op '
-            . $order->fresh()->state . ' staat.';
+            . 'De status is opnieuw opgehaald; ze staat nu op ' . $order->fresh()->state . '. '
+            . 'Een tweede poging wordt geweigerd als de eerste toch is doorgegaan, '
+            . 'maar controleer de order in accounts als het onduidelijk blijft.';
     }
 ```
 
@@ -1816,7 +1823,7 @@ cd ~/Workbench/catlab-events
 git add tests/Integration/OrderRefundTest.php app/Http/Controllers/Admin/RefundController.php
 git commit -m "Cover the refund failure paths, including that a timeout is not a failure"
 git push -u origin feature/order-refund-button
-gh pr create --base master --title "Order refund button" --body "Adds a refund button to the events admin panel, backed by the new accounts refund endpoint. Requires accounts deployed and laravel-catlab-accounts v4.2.0. See docs/superpowers/specs/2026-08-29-order-refund-button-design.md. Needs php artisan migrate."
+gh pr create --base master --title "Order refund button" --body "Adds a refund button to the events admin panel, backed by the new accounts refund endpoint. Requires accounts deployed and laravel-catlab-accounts v4.3.0. See docs/superpowers/specs/2026-08-29-order-refund-button-design.md. Needs php artisan migrate."
 ```
 
 ---
@@ -1824,7 +1831,7 @@ gh pr create --base master --title "Order refund button" --body "Adds a refund b
 ## Deployment checklist
 
 1. `catlab-accounts` merged and deployed, `php commands/migrate.php` run.
-2. `laravel-catlab-accounts` `v4.2.0` tagged and pushed.
+2. `laravel-catlab-accounts` `v4.3.0` tagged and pushed.
 3. `catlab-events` merged, `php artisan migrate` run.
 4. Verify on production with one real low-value order before announcing the button: it should refund, free the seat, and mail the buyer the cancellation.
 
