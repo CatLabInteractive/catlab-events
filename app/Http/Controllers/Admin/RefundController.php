@@ -24,6 +24,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\Request;
 
 /**
  * Class RefundController
@@ -88,6 +91,98 @@ class RefundController extends Controller
             'reference' => isset($orderData['reference']) ? $orderData['reference'] : null,
             'amount' => isset($orderData['price']) ? $orderData['price'] : null
         ]);
+    }
+
+    /**
+     * Actually refund. Money moves on the accounts side.
+     *
+     * @param Request $request
+     * @param $orderId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function processRefund(Request $request, $orderId)
+    {
+        $order = $this->getOrderInOrganisation($orderId);
+
+        $back = redirect(action('Admin\OrderController@index'));
+
+        if (!self::isRefundable($order)) {
+            return $back->with('message', 'Deze order kan hier niet terugbetaald worden.');
+        }
+
+        $orderData = $order->getOrderData(true);
+
+        $reference = isset($orderData['reference']) ? $orderData['reference'] : null;
+
+        // Re-checked here, not just in the browser: disabling the button in
+        // JS is a convenience, never the control.
+        if (!$reference || trim((string) $request->input('reference')) !== $reference) {
+            return $back->with('message', 'De referentie klopte niet. Er is niets terugbetaald.');
+        }
+
+        $amount = isset($orderData['price']) ? $orderData['price'] : null;
+        $reason = mb_substr((string) $request->input('reason'), 0, 255);
+
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($order->user);
+
+        try {
+            $apiClient->refundOrder($order->catlab_order_id, $order->refund_token, $amount, $reason ?: 'events admin');
+        } catch (GuzzleException $e) {
+            return $back->with('message', $this->describeFailure($order, $e));
+        }
+
+        // Read the state back from accounts rather than assuming it.
+        $order->synchronize();
+
+        return $back->with('message', 'Order ' . $reference . ' is terugbetaald.');
+    }
+
+    /**
+     * Turn a failed refund call into something the admin can act on.
+     *
+     * A timeout is the dangerous one: the refund may well have gone
+     * through, so we must not report failure and invite a second click. We
+     * re-sync and report whatever accounts actually says.
+     *
+     * @param Order $order
+     * @param GuzzleException $e
+     * @return string
+     */
+    private function describeFailure(Order $order, GuzzleException $e)
+    {
+        $status = $e instanceof BadResponseException ? $e->getResponse()->getStatusCode() : null;
+
+        \Log::warning('Order refund failed', [
+            'order' => $order->id,
+            'status' => $status,
+            'error' => $e->getMessage()
+        ]);
+
+        if ($status === 429) {
+            return 'Er zijn te veel terugbetalingen gebeurd in korte tijd. Probeer het over een uur opnieuw.';
+        }
+
+        if ($status === 409) {
+            $order->synchronize();
+            return 'Deze order kon niet meer terugbetaald worden. De status is opnieuw opgehaald.';
+        }
+
+        if ($status === 404 || $status === 401) {
+            return 'De terugbetaling werd geweigerd. Controleer de order in accounts.';
+        }
+
+        // No response at all: timeout, connection error. The refund may have
+        // happened. Never report failure here.
+        $order->synchronize();
+
+        // Accounts refuses a second refund of an order that already carries an
+        // accepted refund, so retrying is normally caught rather than charged
+        // twice. It is not a guarantee -- if the gateway processed the refund
+        // but accounts never recorded it, nothing on this side can tell.
+        return 'Onbekend resultaat: de terugbetaling is mogelijk wel doorgegaan. '
+            . 'De status is opnieuw opgehaald; ze staat nu op ' . $order->fresh()->state . '. '
+            . 'Een tweede poging wordt geweigerd als de eerste toch is doorgegaan, '
+            . 'maar controleer de order in accounts als het onduidelijk blijft.';
     }
 
     /**

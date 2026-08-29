@@ -158,4 +158,63 @@ class OrderRefundTest extends IntegrationTestCase
         $response->assertSee('gratis ticket');
         $response->assertDontSee('Terugbetalen</button>', false);
     }
+
+    public function testRefundingCallsAccountsAndSyncsTheOrder()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'klant kon niet komen'
+            ])
+            ->assertRedirect('/admin/orders');
+
+        $this->assertCount(1, $this->catlabApi->refundOrderCalls);
+        $call = $this->catlabApi->refundOrderCalls[0];
+        $this->assertSame(4242, $call['orderId']);
+        $this->assertSame('faketoken0123456789abcd', $call['refundToken']);
+        $this->assertSame(10.0, $call['amount']);
+        $this->assertSame('klant kon niet komen', $call['reason']);
+
+        // State is read back from accounts, not assumed.
+        $this->assertSame(Order::STATE_REFUNDED, $order->fresh()->state);
+    }
+
+    public function testAWrongTypedReferenceRefundsNothing()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-9999',
+                'reason' => 'oeps'
+            ]);
+
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    public function testRefundingFreesTheSeat()
+    {
+        $order = $this->createRefundableOrder();
+        $eventDate = $order->event->eventDates()->first();
+        $eventDate->max_tickets = 1;
+        $eventDate->save();
+
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $this->assertSame(1, $order->event->fresh()->countAvailableTickets(true));
+    }
 }
