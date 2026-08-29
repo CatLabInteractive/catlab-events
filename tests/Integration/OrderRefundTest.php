@@ -437,4 +437,42 @@ class OrderRefundTest extends IntegrationTestCase
         // No re-sync on this path.
         $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
     }
+
+    /**
+     * 401/404: accounts refuses the refund outright -- an auth problem or a
+     * gone/unknown order on accounts' side. Both status codes share this one
+     * branch, so one test covers it; the message is deliberately terse and,
+     * unlike the unmapped-4xx message just above, does not name a status
+     * code, so it is asserted here in full rather than by substring -- a
+     * substring like "geweigerd" or "niets terugbetaald" also appears in
+     * sibling guard messages and would not prove this exact branch ran.
+     */
+    public function testAnUnauthorizedOrGoneRefundIsReportedAsRefusedWithNoResync()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Not found',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(404, [], '{"error":"Order not found."}')
+        );
+        // If this branch re-synced, this would flip the order to REFUNDED.
+        // Asserting it stays ACCEPTED below proves it does not.
+        $this->catlabApi->orderStatus = 'REFUNDED';
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $this->assertSame(
+            'De terugbetaling werd geweigerd. Controleer de order in accounts.',
+            session('message')
+        );
+        // No re-sync on this path.
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
 }
