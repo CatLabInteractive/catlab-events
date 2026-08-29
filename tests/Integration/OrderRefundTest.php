@@ -124,4 +124,38 @@ class OrderRefundTest extends IntegrationTestCase
 
         $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund")->assertStatus(404);
     }
+
+    public function testTheAdminOrderListShowsTheRefundLink()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $response = $this->actingAs($admin)->get('/admin/orders');
+
+        // Regression guard: the table renders a refund action for every row
+        // via ResourceAction::getUrl(), which builds the URL from the route
+        // parameter named 'id'. A mismatched route parameter name (e.g.
+        // {order}) throws UrlGenerationException here, 500ing this page for
+        // any organisation with at least one order.
+        $response->assertStatus(200);
+        $response->assertSee(action('Admin\RefundController@refund', [ 'id' => $order->id ]), false);
+    }
+
+    public function testAFreeOrderWithoutACatlabOrderExplainsItIsAFreeTicket()
+    {
+        $order = $this->createRefundableOrder(0.0);
+        $order->catlab_order_id = null;
+        $order->refund_token = null;
+        $order->save();
+
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
+
+        $response->assertStatus(200);
+        $response->assertSee('gratis ticket');
+        $response->assertDontSee('Terugbetalen</button>', false);
+    }
 }
