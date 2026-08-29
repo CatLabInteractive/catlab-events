@@ -75,21 +75,67 @@ class RefundController extends Controller
         $order = $this->getOrderInOrganisation($orderId);
 
         if (!self::isRefundable($order)) {
-            return view('admin.orders.refund', [
-                'order' => $order,
-                'refundable' => false,
-                'reference' => null,
-                'amount' => null
-            ]);
+            return $this->notRefundableView($order);
         }
 
-        $orderData = $order->getOrderData(true);
+        // This action renders on every order row, so an accounts outage
+        // here must not 500 the page -- every click would otherwise be a
+        // Whoops page instead of the explanation the design requires. The
+        // identical call in processRefund() is guarded the same way.
+        try {
+            $orderData = $order->getOrderData(true);
+        } catch (GuzzleException $e) {
+            \Log::warning('Could not load live order data for the refund confirmation page', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'error' => $e->getMessage()
+            ]);
+            return $this->notRefundableView($order, 'Accounts is momenteel niet bereikbaar. Probeer het later opnieuw.');
+        }
+
+        $amount = isset($orderData['price']) ? $orderData['price'] : null;
+
+        // A missing live price would print "€ 0,00" on a screen that says
+        // "Dit is definitief." Accounts' amount binding would reject an
+        // actual refund at that amount, so no money is at risk -- but a
+        // false amount on this specific screen is not acceptable regardless.
+        // A live price of exactly 0.0 is not "missing" and is left alone.
+        if ($amount === null) {
+            \Log::warning('Accounts returned no live price for the refund confirmation page', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+            ]);
+            return $this->notRefundableView($order, 'De actuele prijs kon niet opgehaald worden bij accounts.');
+        }
 
         return view('admin.orders.refund', [
             'order' => $order,
             'refundable' => true,
             'reference' => isset($orderData['reference']) ? $orderData['reference'] : null,
-            'amount' => isset($orderData['price']) ? $orderData['price'] : null
+            'amount' => $amount,
+            'unavailableReason' => null
+        ]);
+    }
+
+    /**
+     * The not-refundable rendering of the confirm page. `$reason`, when
+     * given, overrides the reasons the view otherwise derives from the
+     * order itself (state / no catlab order / predates the refund token) --
+     * used for an accounts outage or a missing live price, neither of which
+     * the view can tell from the order alone.
+     *
+     * @param Order $order
+     * @param string|null $reason
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    private function notRefundableView(Order $order, $reason = null)
+    {
+        return view('admin.orders.refund', [
+            'order' => $order,
+            'refundable' => false,
+            'reference' => null,
+            'amount' => null,
+            'unavailableReason' => $reason
         ]);
     }
 
@@ -148,6 +194,23 @@ class RefundController extends Controller
             $result = $apiClient->refundOrder($order->catlab_order_id, $order->refund_token, $amount, $reason ?: 'events admin');
         } catch (GuzzleException $e) {
             return $back->with('message', $this->describeFailure($order, $e, $amount));
+        } catch (\Throwable $e) {
+            // Not a GuzzleException: e.g. ApiClient::refundOrder() decoding
+            // the response body only *after* a successful HTTP 200 and
+            // throwing a plain \LogicException if that decode fails -- at
+            // the exact moment the money has already moved -- or the client
+            // failing to build the request at all because
+            // services.catlab.client_id/client_secret are unset. Either way
+            // whether the refund actually happened is as unknown as a
+            // timeout, so this must never read as a definite failure.
+            \Log::error('Order refund call raised a non-Guzzle error; outcome unknown', [
+                'order' => $order->id,
+                'catlab_order_id' => $order->catlab_order_id,
+                'amount' => $amount,
+                'admin' => \Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            return $back->with('message', $this->reportUnknownOutcome($order));
         }
 
         \Log::info('Order refund succeeded', [
@@ -216,10 +279,12 @@ class RefundController extends Controller
             return 'De terugbetaling werd geweigerd. Controleer de order in accounts.';
         }
 
-        // No response at all (timeout, connection error) or a 5xx from
-        // accounts itself: whether the refund actually happened is
-        // genuinely unknown.
-        if ($status === null || $status >= 500) {
+        // No response at all (timeout, connection error), a 5xx from
+        // accounts itself, or a timeout status code emitted by an
+        // intermediary rather than accounts' own guard chain (408, or
+        // nginx's 499): whether the refund actually happened is genuinely
+        // unknown.
+        if ($status === null || $status >= 500 || $status === 408 || $status === 499) {
             return $this->reportUnknownOutcome($order);
         }
 
@@ -294,10 +359,15 @@ class RefundController extends Controller
     }
 
     /**
-     * The order, or 404. Scoped to the acting admin's active organisation:
-     * `admin` is a global flag, so without this an admin of one
-     * organisation could refund another's order. This one really is a 404 --
-     * the order is none of this admin's business.
+     * The order, or 404. Scoped to the acting admin's active organisation,
+     * and to an admin role within it: `admin` is a global flag, so without
+     * the organisation check an admin of one organisation could refund
+     * another's order. getActiveOrganisation() itself returns any
+     * organisation the user is attached to at *any* pivot role, so the
+     * role is re-checked here via Organisation::isAdmin() -- the same check
+     * every other order path in the panel authorizes through (OrderPolicy).
+     * This one really is a 404 -- the order is none of this admin's
+     * business.
      *
      * @param $orderId
      * @return Order
@@ -308,7 +378,9 @@ class RefundController extends Controller
         $order = Order::findOrFail($orderId);
 
         $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$order->event || !$organisation || $order->event->organisation_id !== $organisation->id) {
+        if (!$order->event || !$organisation
+            || (int) $order->event->organisation_id !== (int) $organisation->id
+            || !$organisation->isAdmin(\Auth::user())) {
             abort(404);
         }
 

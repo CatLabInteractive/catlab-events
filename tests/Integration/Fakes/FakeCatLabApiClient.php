@@ -28,6 +28,21 @@ class FakeCatLabApiClient extends ApiClient
      */
     public $getOrderException = null;
 
+    /**
+     * @var \Throwable|null thrown by getOrder() when called *with*
+     * `$expanded` -- i.e. by the refund confirmation page (GET) and by
+     * processRefund()'s pre-flight reference/amount check (POST) -- to
+     * simulate accounts being unreachable for that call specifically,
+     * independently of $getOrderException above.
+     */
+    public $getOrderExpandedException = null;
+
+    /**
+     * @var float|null the live price getOrder() reports. Set to null to
+     * simulate accounts returning no price for the order.
+     */
+    public $price = 10.0;
+
     public function __construct()
     {
         parent::__construct(null);
@@ -46,6 +61,10 @@ class FakeCatLabApiClient extends ApiClient
 
     public function getOrder($id, $expanded = false)
     {
+        if ($expanded && $this->getOrderExpandedException) {
+            throw $this->getOrderExpandedException;
+        }
+
         if ($this->getOrderException && !$expanded) {
             throw $this->getOrderException;
         }
@@ -53,7 +72,7 @@ class FakeCatLabApiClient extends ApiClient
         $order = [
             'id' => $id,
             'status' => $this->orderStatus,
-            'price' => 10.0,
+            'price' => $this->price,
             'reference' => 'TEST-' . $id,
         ];
 

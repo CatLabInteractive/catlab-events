@@ -8,7 +8,9 @@
 
         <p class="alert alert-info">
             Deze order kan hier niet terugbetaald worden.
-            @if($order->state !== \App\Models\Order::STATE_ACCEPTED)
+            @if(!empty($unavailableReason))
+                {{ $unavailableReason }}
+            @elseif($order->state !== \App\Models\Order::STATE_ACCEPTED)
                 De order staat op <code>{{ $order->state }}</code>.
             @elseif(!$order->catlab_order_id)
                 Er is geen betaling aan gekoppeld (gratis ticket).
@@ -51,7 +53,7 @@
         </tr>
     </table>
 
-    <form action="{{ action('Admin\RefundController@processRefund', [ $order->id ]) }}" method="post">
+    <form action="{{ action('Admin\RefundController@processRefund', [ $order->id ]) }}" method="post" id="refund-form">
         {{ csrf_field() }}
 
         <div class="form-group" style="max-width: 400px;">
@@ -72,12 +74,21 @@
 
     <script>
         (function () {
-            var expected = {!! json_encode($reference) !!};
+            var expected = {!! \Illuminate\Support\Js::from($reference) !!};
             var input = document.getElementById('reference');
             var button = document.getElementById('refund-submit');
+            var form = document.getElementById('refund-form');
 
             input.addEventListener('input', function () {
                 button.disabled = input.value.trim() !== expected;
+            });
+
+            // A double-click on a slow request would otherwise fire two
+            // POSTs, both passing the server's isRefundable() re-check. This
+            // is a convenience only -- the authoritative guard stays
+            // server-side.
+            form.addEventListener('submit', function () {
+                button.disabled = true;
             });
         })();
     </script>

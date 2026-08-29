@@ -185,6 +185,10 @@ class OrderRefundTest extends IntegrationTestCase
 
         // State is read back from accounts, not assumed.
         $this->assertSame(Order::STATE_REFUNDED, $order->fresh()->state);
+
+        // The design's test plan requires the cancellation mail too, not
+        // just the state sync and the freed seat.
+        $this->assertCount(1, $this->catlabApi->sendEmailCalls);
     }
 
     public function testAWrongTypedReferenceRefundsNothing()
@@ -474,5 +478,224 @@ class OrderRefundTest extends IntegrationTestCase
         );
         // No re-sync on this path.
         $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * ApiClient::refundOrder() decodes the response body only *after* a
+     * successful HTTP 200, and throws a plain \LogicException (not a
+     * GuzzleException) if that decode fails -- at the exact moment the
+     * money has already moved. Before the fix this escaped the
+     * GuzzleException-only catch and 500ed the request right when the admin
+     * most needed a hedged answer, not a crash. This proves the widened
+     * catch routes it through the same reportUnknownOutcome() path as a
+     * timeout.
+     */
+    public function testANonGuzzleFailureAfterASuccessfulCallIsHedgedNotA500()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        // Simulates ApiClient::refundOrder() failing to decode a 200 body.
+        $this->catlabApi->refundOrderException = new \LogicException(
+            'Could not decode refund order json api request: not json'
+        );
+        // Nothing actually changed on accounts' side; the re-sync should
+        // find that and leave the order alone.
+        $this->catlabApi->orderStatus = Order::STATE_ACCEPTED;
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $message = session('message');
+        $this->assertNotNull($message, 'a flash message should have been set');
+        $this->assertStringNotContainsStringIgnoringCase('mislukt', $message);
+        $this->assertStringNotContainsStringIgnoringCase('failed', $message);
+        $this->assertStringContainsStringIgnoringCase('mogelijk wel doorgegaan', $message);
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * 408 (or nginx's 499) is a timeout status code an intermediary emits,
+     * not part of accounts' own guard chain. It must be hedged the same as
+     * a connection-level timeout, not reported through the unmapped-4xx
+     * branch's definite "Er is niets terugbetaald.", which is the one
+     * message here that would invite a dangerous second click.
+     */
+    public function testATimeoutStatusCodeIsHedgedNotDefinitelyRefused()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->refundOrderException = new BadResponseException(
+            'Request Timeout',
+            new Psr7Request('POST', 'orders/4242/refund'),
+            new Psr7Response(408, [], '{"error":"Request Timeout"}')
+        );
+        $this->catlabApi->orderStatus = Order::STATE_ACCEPTED;
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $message = session('message');
+        $this->assertStringContainsStringIgnoringCase('mogelijk wel doorgegaan', $message);
+        $this->assertStringNotContainsString('niets terugbetaald', $message);
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * getActiveOrganisation() returns any organisation the user is attached
+     * to at *any* pivot role, not just an admin one. A global admin flag
+     * combined with a non-admin membership of the order's organisation must
+     * still be refused: every other order path in the panel authorizes
+     * through Organisation::isAdmin(), and this one must not be a notch
+     * weaker.
+     */
+    public function testAUserAttachedAtANonAdminRoleGets404EvenWithGlobalAdminFlag()
+    {
+        $order = $this->createRefundableOrder();
+
+        $admin = $this->createAdmin();
+        // Not Organisation::ROLE_ADMIN (10) -- any other pivot role.
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => 1 ]);
+
+        $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund")->assertStatus(404);
+    }
+
+    /**
+     * An accounts outage while loading the live reference/amount must not
+     * 500 the confirm page: the action renders on every order row, so
+     * during an outage every click would otherwise be a Whoops page instead
+     * of the explanation the design requires.
+     */
+    public function testTheConfirmPageExplainsAnAccountsOutageInsteadOf500ing()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->getOrderExpandedException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('GET', 'orders/4242?expanded=1')
+        );
+
+        $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
+
+        $response->assertStatus(200);
+        $response->assertSee('niet bereikbaar');
+        $response->assertDontSee('Terugbetalen</button>', false);
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
+    }
+
+    /**
+     * processRefund()'s pre-flight getOrderData(true) catch was previously
+     * untested: FakeCatLabApiClient only let getOrder() throw when called
+     * *without* $expanded (i.e. via synchronize()'s re-sync), never on the
+     * expanded call this pre-flight check itself makes. This exercises that
+     * catch directly, and doubles as coverage for the GET confirm page fix
+     * above via the shared $getOrderExpandedException fixture.
+     */
+    public function testAPreflightAccountsFailureBlocksTheRefundWithoutAttemptingIt()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->getOrderExpandedException = new ConnectException(
+            'Connection timed out',
+            new Psr7Request('GET', 'orders/4242?expanded=1')
+        );
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $this->assertStringContainsString('niets terugbetaald', session('message'));
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * The POST-side !isRefundable() guard was previously exercised only via
+     * the GET confirmation page. This proves the server re-checks it on the
+     * POST too, independently of what the GET page (or the disabled button)
+     * shows.
+     */
+    public function testAPostToACancelledOrderRefundsNothing()
+    {
+        $order = $this->createRefundableOrder();
+        $order->state = Order::STATE_CANCELLED;
+        $order->save();
+
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ]);
+
+        $response->assertRedirect('/admin/orders');
+        $this->assertStringContainsString('kan hier niet terugbetaald', session('message'));
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
+        $this->assertSame(Order::STATE_CANCELLED, $order->fresh()->state);
+    }
+
+    /**
+     * The organisation-scoping 404 was previously exercised only via GET.
+     * This proves the POST path is scoped the same way, and that nothing is
+     * attempted on accounts before the 404 is thrown.
+     */
+    public function testAPostFromAnotherOrganisationGets404AndRefundsNothing()
+    {
+        $order = $this->createRefundableOrder();
+
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($this->createOrganisation()->id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->actingAs($admin)
+            ->post("/admin/orders/{$order->id}/refund", [
+                'reference' => 'TEST-4242',
+                'reason' => 'test'
+            ])
+            ->assertStatus(404);
+
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
+        $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * A missing live price must not print "€ 0,00" on the "Dit is
+     * definitief" screen. Accounts' amount binding would reject an actual
+     * refund at that (false) amount, so no money is at risk -- but a false
+     * amount on this specific screen is not acceptable regardless.
+     */
+    public function testAMissingLivePriceIsTreatedAsNotRefundable()
+    {
+        $order = $this->createRefundableOrder();
+        $admin = $this->createAdmin();
+        $admin->organisations()->attach($order->event->organisation_id, [ 'role' => \App\Models\Organisation::ROLE_ADMIN ]);
+
+        $this->catlabApi->price = null;
+
+        $response = $this->actingAs($admin)->get("/admin/orders/{$order->id}/refund");
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Terugbetalen</button>', false);
+        $response->assertDontSee('0,00');
+        $this->assertCount(0, $this->catlabApi->refundOrderCalls);
     }
 }
