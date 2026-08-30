@@ -20,47 +20,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Providers;
+namespace App\Listeners;
 
-use Illuminate\Support\ServiceProvider;
+use App\Events\InvitedFromWaitingList;
+use Carbon\Carbon;
 
 /**
- * Class AppServiceProvider
- * @package App\Providers
+ * Class SendWaitingListInvitation
+ * @package App\Listeners
  */
-class AppServiceProvider extends ServiceProvider
+class SendWaitingListInvitation extends SendEmail
 {
     /**
-     * Bootstrap any application services.
+     * Handle the event.
      *
+     * @param InvitedFromWaitingList $e
      * @return void
      */
-    public function boot()
+    public function handle(InvitedFromWaitingList $e)
     {
-        if (isset($_SERVER['HTTP_HOST'])) {
+        $sent = $this->sendWaitingListInvitationEmail($e->event, $e->user, $e->url);
 
-            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];
-            $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
-
-            // set app url
-            $rootUrl = $protocol . '://' . $host;
-
-            config(['app.url' => $rootUrl]);
-
-            // set redirect url
-            config(['services.catlab.redirect' => config('app.url') . '/login/callback']);
-
-            \Carbon\Carbon::setLocale(mb_substr(config('app.locale'), 0, 2));
+        if (!$sent) {
+            // invitation_sent_at stays null, which is what the admin panel
+            // reads back to report which invitations did not make it out.
+            return;
         }
-    }
 
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
+        $e->event
+            ->waitingList()
+            ->updateExistingPivot($e->user->id, [ 'invitation_sent_at' => Carbon::now() ]);
     }
 }

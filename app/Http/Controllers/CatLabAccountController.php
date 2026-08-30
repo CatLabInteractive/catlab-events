@@ -22,7 +22,7 @@
 
 namespace App\Http\Controllers;
 
-use CatLab\Accounts\Client\ApiClient;
+use App\Services\CatLabApiClientFactory;
 use Request;
 
 /**
@@ -40,7 +40,7 @@ class CatLabAccountController extends Controller
     {
         $user = \Auth::getUser();
 
-        $client = new ApiClient($user);
+        $client = app(CatLabApiClientFactory::class)->forUser($user);
 
         $parameters = Request::query();
         if (!isset($parameters['return'])) {
@@ -51,7 +51,15 @@ class CatLabAccountController extends Controller
             $parameters['lang'] = mb_substr(\App::getLocale(), 0, 2);
         }
 
-        $url = $client->getAccountLink('/' . $path, $parameters);
+        // The link carries a single-use login token minted at accounts
+        // (laravel-catlab-accounts >= 4.1, accounts issue #100); when that
+        // cannot be minted there is no safe link to send the user to.
+        try {
+            $url = $client->getAccountLink('/' . $path, $parameters);
+        } catch (\RuntimeException $e) {
+            \Log::error($e);
+            abort(503, 'CatLab Accounts is momenteel niet bereikbaar. Probeer het zo meteen opnieuw.');
+        }
         return redirect($url);
     }
 }

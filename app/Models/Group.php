@@ -36,17 +36,6 @@ class Group extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     use SoftDeletes;
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function members()

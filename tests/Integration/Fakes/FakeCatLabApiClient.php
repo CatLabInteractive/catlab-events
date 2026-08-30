@@ -43,6 +43,10 @@ class FakeCatLabApiClient extends ApiClient
      */
     public $price = 10.0;
 
+    public $accountLinkCalls = [];
+    /** @var \Throwable|null thrown by getAccountLink() when set */
+    public $accountLinkException;
+
     public function __construct()
     {
         parent::__construct(null);
@@ -101,7 +105,7 @@ class FakeCatLabApiClient extends ApiClient
             throw $this->sendEmailException;
         }
 
-        $this->sendEmailCalls[] = ['subject' => $subject, 'target' => $target];
+        $this->sendEmailCalls[] = ['subject' => $subject, 'body' => $body, 'target' => $target];
 
         return true;
     }
@@ -122,5 +126,15 @@ class FakeCatLabApiClient extends ApiClient
         $this->orderStatus = $this->refundStatus;
 
         return [ 'id' => $orderId, 'status' => $this->refundStatus ];
+    }
+
+    public function getAccountLink($path, $parameters = [])
+    {
+        if ($this->accountLinkException) {
+            throw $this->accountLinkException;
+        }
+        $this->accountLinkCalls[] = ['path' => $path, 'parameters' => $parameters];
+
+        return 'https://accounts.example.test' . $path . '?' . http_build_query($parameters + ['authcode' => 'fake-login-token']);
     }
 }

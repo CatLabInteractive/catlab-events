@@ -29,6 +29,7 @@ use CatLab\Eukles\Client\Interfaces\EuklesModel;
 use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -45,15 +46,15 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     const STATE_REFUNDED = 'REFUNDED';
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
+     * Accounts stores an order's notify URL once, at creation, and GETs it
+     * fire-and-forget on every status change (refunds included). Orders
+     * created before the callback carried a signature (security audit
+     * 2026-08-27, deployed from master on that date) still call
+     * orders/{id}/sync unsigned; a 403 there silently loses the refund.
+     * Those orders are grandfathered until their event has finished.
+     * Must be >= the production deploy date of the signed callback.
      */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+    const UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE = '2026-08-28 00:00:00';
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -187,6 +188,21 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     public function verifySyncSignature(?string $signature): bool
     {
         return $this->verifySignature('sync', $signature);
+    }
+
+    /**
+     * May accounts' notify callback hit orders/{id}/sync without a signature?
+     * Only for orders whose stored notify URL predates the signature (see
+     * UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE), and only while the event is
+     * still upcoming: once it has finished there is nothing left to sync.
+     */
+    public function acceptsUnsignedSync(): bool
+    {
+        if (!$this->created_at || $this->created_at >= new Carbon(self::UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE)) {
+            return false;
+        }
+
+        return $this->event && !$this->event->isFinished();
     }
 
     /** Gates orders/{id}/thanks, the payment return URL (often opened on another device). */

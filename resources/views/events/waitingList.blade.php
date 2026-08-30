@@ -42,7 +42,7 @@
 
             <div class="alert alert-success">
                 <p>
-                    Je staat op de wachtlijst sinds {{ $waitingListItem->pivot->created_at->formatLocalized('%A %d %B %Y, %H:%M') }}.<br />
+                    Je staat op de wachtlijst sinds {{ $waitingListItem->pivot->created_at->translatedFormat('l d F Y, H:i') }}.<br />
                     Indien er tickets vrij komen sturen we je een mailtje.
                 </p>
             </div>
@@ -61,7 +61,7 @@
 
     @if($adminLink)
         <a href="{{$adminLink}}" class="btn btn-default">Lijst bekijken</a>
-        <a href="{{action('WaitingListController@massGenerateAccessTokens', [ $event->id ])}}" class="btn btn-default">Mass code list</a>
+        <a href="{{action('Admin\WaitingListController@massInvite', [ $event->id ])}}" class="btn btn-default">Meerdere uitnodigen</a>
     @endif
 
 @endsection

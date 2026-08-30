@@ -7,9 +7,10 @@
 @section('content')
 
     <h2>File upload</h2>
-    {{ Form::open([ 'url' => action('Admin\AssetController@upload'), 'files' => true ]) }}
-    {{ Form::file('file') }}
-    {{ Form::submit('Upload') }}
-    {{ Form::close() }}
+    <form method="POST" action="{{ action('Admin\AssetController@upload') }}" accept-charset="UTF-8" enctype="multipart/form-data">
+        @csrf
+        <input type="file" name="file" id="file">
+        <input type="submit" value="Upload">
+    </form>
 
 @endsection

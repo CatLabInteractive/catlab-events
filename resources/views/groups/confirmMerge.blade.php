@@ -14,13 +14,14 @@
 
     <p><strong>Deze actie kan niet ongedaan gemaakt worden.</strong></p>
 
-    {{ Form::open([ 'action' => [ 'GroupController@processMergeGroup', $group->id ] ]) }}
+    <form method="POST" action="{{ action('GroupController@processMergeGroup', $group->id) }}" accept-charset="UTF-8">
+        @csrf
 
-    {{ Form::hidden('id', $otherGroup->id) }}
+        <input type="hidden" name="id" value="{{ $otherGroup->id }}">
 
-    <a href="{{ action('GroupController@show', $group->id) }}" class="btn btn-default">Toch maar niet</a>
-    {{ Form::submit('Samenvoegen', array('class' => 'btn btn-primary')) }}
+        <a href="{{ action('GroupController@show', $group->id) }}" class="btn btn-default">Toch maar niet</a>
+        <input type="submit" value="Samenvoegen" class="btn btn-primary">
 
-    {{ Form::close() }}
+    </form>
 
 @endsection

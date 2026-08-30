@@ -12,7 +12,7 @@
         <p>
             Er zijn nog geen tickets beschikbaar voor <strong>{{ $event->name }}</strong>.
             @if($startDate)
-                <br />De ticketverkoop start op {{ $startDate->formatLocalized('%A %d %B %Y, %H:%M') }}.
+                <br />De ticketverkoop start op {{ $startDate->translatedFormat('l d F Y, H:i') }}.
             @endif
         </p>
     </div>
@@ -22,7 +22,7 @@
     @if($startDate)
         <p>
             Door je nu al te registreren maak je het meeste kans om een ticket te bemachtigen,
-            zo verlies je op {{ $startDate->formatLocalized('%A %-d %B') }} geen enkel moment en
+            zo verlies je op {{ $startDate->translatedFormat('l j F') }} geen enkel moment en
             heb je in geen tijd een ticket in handen. Wij sturen je een dag voor de start van de ticketverkoop
             een herinneringsmailtje.
         </p>
@@ -31,7 +31,7 @@
             <p>
                 <strong>Een plaats op de pre-registratielijst geeft geen voorrang op de normale
                     inschrijvingsprocedure.</strong> Wil je er graag bij zijn, zorg er dan voor dat je om
-                {{ $startDate->formatLocalized('%H:%M') }} aan je computer zit en ingelogd bent.
+                {{ $startDate->translatedFormat('H:i') }} aan je computer zit en ingelogd bent.
                 Toch geen ticket kunnen bemachtigen? Wie op deze lijst staat komt ook meteen in de wachtlijst terecht.
                 Geannuleerde of extra tickets worden eerst via de wachtlijst aangeboden, in volgorde van inschrijfdatum.
             </p>
@@ -52,7 +52,7 @@
 
         <div class="alert alert-success">
             <p>
-                Je staat op de pre-registratielijst sinds {{ $waitingListItem->pivot->created_at->formatLocalized('%A %d %B %Y, %H:%M') }}.
+                Je staat op de pre-registratielijst sinds {{ $waitingListItem->pivot->created_at->translatedFormat('l d F Y, H:i') }}.
             </p>
         </div>
 

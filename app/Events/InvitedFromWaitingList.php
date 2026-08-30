@@ -20,47 +20,50 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Providers;
+namespace App\Events;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Event;
+use App\Models\User;
+use Illuminate\Queue\SerializesModels;
 
 /**
- * Class AppServiceProvider
- * @package App\Providers
+ * Class InvitedFromWaitingList
+ *
+ * An admin invited someone from the waiting list to buy a ticket: an access
+ * token has been generated, the invitation mail has not gone out yet.
+ *
+ * @package App\Events
  */
-class AppServiceProvider extends ServiceProvider
+class InvitedFromWaitingList
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        if (isset($_SERVER['HTTP_HOST'])) {
-
-            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];
-            $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
-
-            // set app url
-            $rootUrl = $protocol . '://' . $host;
-
-            config(['app.url' => $rootUrl]);
-
-            // set redirect url
-            config(['services.catlab.redirect' => config('app.url') . '/login/callback']);
-
-            \Carbon\Carbon::setLocale(mb_substr(config('app.locale'), 0, 2));
-        }
-    }
+    use SerializesModels;
 
     /**
-     * Register any application services.
-     *
-     * @return void
+     * @var Event
      */
-    public function register()
+    public $event;
+
+    /**
+     * @var User
+     */
+    public $user;
+
+    /**
+     * The url that lets $user register with their waiting list access token.
+     * @var string
+     */
+    public $url;
+
+    /**
+     * InvitedFromWaitingList constructor.
+     * @param Event $event
+     * @param User $user
+     * @param string $url
+     */
+    public function __construct(Event $event, User $user, string $url)
     {
-        //
+        $this->event = $event;
+        $this->user = $user;
+        $this->url = $url;
     }
 }

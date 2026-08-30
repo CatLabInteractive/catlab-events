@@ -94,6 +94,12 @@ Route::group([
             Route::get('orders/{id}/refund', 'Admin\RefundController@refund');
             Route::post('orders/{id}/refund', 'Admin\RefundController@processRefund');
 
+            Route::get('events/{event}/waitinglist', 'Admin\WaitingListController@index');
+            Route::get('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@invite');
+            Route::post('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@sendInvite');
+            Route::get('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@massInvite');
+            Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
+
             Route::get('events/{id}/export/members', 'Admin\EventController@exportMembers');
             Route::get('events/{id}/export/sales', 'Admin\EventController@exportSales');
             Route::get('events/{id}/export/clearing', 'Admin\EventController@exportClearing');
@@ -145,10 +151,6 @@ Route::group([
 
     Route::post('events/{event}/register/{ticketCategoryId}', 'EventController@confirmRegister');
     Route::post('events/{event}/register/{ticketCategoryId}/process', 'EventController@processRegister');
-
-    Route::get('events/{event}/waitinglist/view', 'WaitingListController@viewList')->middleware([ 'admin' ]);
-    Route::get('events/{event}/waitinglist/generate/{user}', 'WaitingListController@generateAccessToken')->middleware([ 'admin' ]);
-    Route::get('events/{event}/waitinglist/mass-generate', 'WaitingListController@massGenerateAccessTokens')->middleware([ 'admin' ]);
 
     Route::get('orders', 'OrderController@index');
     Route::get('orders/{id}', 'OrderController@view');
