@@ -38,6 +38,8 @@ class CompetitionResourceDefinition extends BaseResourceDefinition
         $this->identifier('id');
 
         $this->field('name')
+            ->sortable()
+            ->filterable()
             ->required()
             ->visible(true)
             ->writeable(true, true);

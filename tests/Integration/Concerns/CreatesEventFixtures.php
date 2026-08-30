@@ -5,6 +5,7 @@ namespace Tests\Integration\Concerns;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\TicketCategory;
+use App\Models\Venue;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -55,6 +56,20 @@ trait CreatesEventFixtures
         $category->save();
 
         return $category;
+    }
+
+    protected function createVenue(User $user): Venue
+    {
+        $venue = new Venue();
+        $venue->user()->associate($user);
+        $venue->name = 'Test venue';
+        $venue->address = 'Teststraat 1';
+        $venue->postalCode = '9000';
+        $venue->city = 'Gent';
+        $venue->country = 'BE';
+        $venue->save();
+
+        return $venue;
     }
 
     protected function createUser(): User

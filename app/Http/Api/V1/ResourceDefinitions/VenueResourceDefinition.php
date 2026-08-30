@@ -38,6 +38,8 @@ class VenueResourceDefinition extends BaseResourceDefinition
         $this->identifier('id');
 
         $this->field('name')
+            ->sortable()
+            ->filterable()
             ->required()
             ->visible(true)
             ->writeable(true, true);
@@ -57,6 +59,8 @@ class VenueResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true);
 
         $this->field('city')
+            ->sortable()
+            ->filterable()
             ->required()
             ->visible(true)
             ->writeable(true, true);

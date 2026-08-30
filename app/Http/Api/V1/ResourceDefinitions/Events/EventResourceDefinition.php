@@ -51,6 +51,7 @@ class EventResourceDefinition extends BaseResourceDefinition
 
         // Name
         $this->field('name')
+            ->sortable()
             ->visible(true)
             ->filterable()
             ->writeable(true, true)
@@ -66,6 +67,7 @@ class EventResourceDefinition extends BaseResourceDefinition
 
         // url
         $this->field('event_url')
+            ->sortable()
             ->visible()
             ->filterable()
             ->writeable(true, true)

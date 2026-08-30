@@ -45,6 +45,7 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
 
         // Name
         $this->field('name')
+            ->sortable()
             ->visible(true)
             ->filterable()
             ->writeable(true, true)
@@ -53,6 +54,7 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->min(3);
 
         $this->field('price')
+            ->sortable()
             ->visible(true)
             ->writeable(true, true)
             ->required()

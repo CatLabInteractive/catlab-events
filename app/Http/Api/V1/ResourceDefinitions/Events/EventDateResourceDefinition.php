@@ -46,12 +46,14 @@ class EventDateResourceDefinition extends BaseResourceDefinition
 
         // Start date
         $this->field('startDate')
+            ->sortable()
             ->visible(true)
             ->writeable()
             ->required()
             ->datetime();
 
         $this->field('endDate')
+            ->sortable()
             ->visible(true)
             ->writeable()
             ->required()

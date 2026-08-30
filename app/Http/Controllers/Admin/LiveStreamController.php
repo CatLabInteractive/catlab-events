@@ -24,14 +24,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exceptions\LivestreamNotFoundException;
 use App\Http\Api\V1\Controllers\Base\ResourceController;
-use App\Http\Controllers\Controller;
+use App\Http\Api\V1\ResourceDefinitions\Events\EventResourceDefinition;
 use App\Models\LiveStream;
 use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\Context as ContextContract;
 use CatLab\Charon\Interfaces\ResourceDefinition;
-use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\Laravel\Table\Table;
 use Illuminate\Http\Request;
@@ -40,16 +38,14 @@ use Illuminate\Http\Request;
  * Class LiveStreamController
  * @package App\Http\Controllers\Admin
  */
-class LiveStreamController extends Controller implements FrontCrudControllerContract
+class LiveStreamController extends BaseAdminController
 {
-    use FrontCrudController;
-
-    /**
-     * EventController constructor.
-     */
     public function __construct()
     {
-        $this->setLayout('layouts.admin');
+        parent::__construct();
+
+        // Lets the "event" column link to the event's own page.
+        $this->setChildController(EventResourceDefinition::class, EventController::class);
     }
 
     /**

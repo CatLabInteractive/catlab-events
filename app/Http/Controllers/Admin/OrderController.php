@@ -24,12 +24,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Api\V1\Controllers\Base\ResourceController;
-use App\Http\Controllers\Controller;
+use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
 use App\Models\Order;
 use App\Models\TicketCategory;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Models\Properties\RelationshipField;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\Laravel\Table\Table;
 use CatLab\Charon\Collections\ResourceCollection;
@@ -37,15 +36,14 @@ use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\Charon\Interfaces\Context as ContextContract;
 use Illuminate\Http\Request;
 
-class OrderController extends Controller
+class OrderController extends BaseAdminController
 {
-    use FrontCrudController {
-        index as frontIndex;
-    }
-
     public function __construct()
     {
-        $this->setLayout('layouts.admin');
+        parent::__construct();
+
+        // Lets the "ticketCategory" column link to the category's own page.
+        $this->setChildController(TicketCategoryResourceDefinition::class, TicketCategoryController::class);
     }
 
     /**
@@ -54,8 +52,12 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $request->query->set('sort', '!id');
-        return $this->frontIndex($request);
+        // Newest first, unless the user picked a sort from a column header.
+        if (!$request->query->has('sort')) {
+            $request->query->set('sort', '!id');
+        }
+
+        return parent::index($request);
     }
 
     /**

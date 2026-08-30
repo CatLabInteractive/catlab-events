@@ -26,6 +26,7 @@ class OrderResourceDefinition extends ResourceDefinition
             ->visible(true);
 
         $this->field('created_at')
+            ->sortable()
             ->transformer(DateTransformer::class)
             ->display('date')
             ->visible(true);

@@ -27,84 +27,100 @@
                       height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
-    <header>
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-        <a class="navbar-brand" href="{{ Auth::guest() ? url('/') : action('Admin\EventController@index') }}">Admin panel</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <button class="sidebar-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open'); document.querySelector('.sidebar-overlay').classList.toggle('open');">
+        &#9776;
+    </button>
 
-        <div class="collapse navbar-collapse" id="adminNavbar">
-            <ul class="navbar-nav mr-auto">
+    <div class="sidebar-overlay" onclick="document.querySelector('.admin-sidebar').classList.remove('open'); this.classList.remove('open');"></div>
 
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\OrganisationController@edit', [ Auth::user()->getActiveOrganisation()->id ]) }}">Organisation</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\EventController@index') }}">Events</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\VenueController@index') }}">Venues</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\CompetitionController@index') }}">Competitions</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\SeriesController@index') }}">Series</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\PeopleController@index') }}">People</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\LiveStreamController@index') }}">Livestreams</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\UitDbController@index') }}">UitDB</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\AssetController@index') }}">Assets</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ action('Admin\OrderController@index') }}">Orders</a></li>
-            </ul>
+    <div class="admin-wrapper">
+        <nav class="admin-sidebar">
+            <div class="sidebar-brand">
+                <a href="{{ Auth::guest() ? url('/') : action('Admin\EventController@index') }}">Admin panel</a>
+            </div>
 
-            <!-- Right Side Of Navbar -->
-            <ul class="nav navbar-nav navbar-right">
-                <!-- Authentication Links -->
-                @if (Auth::guest())
-                    <li class="nav-item"><a href="{{ route('login') }}">Login</a></li>
-                    <li class="nav-item"><a href="{{ route('register') }}">Register</a></li>
-                @else
-                    <li class="nav-item dropdown">
+            @if (Auth::guest())
+                <ul class="sidebar-nav">
+                    <li><a href="{{ route('login') }}">Login</a></li>
+                    <li><a href="{{ route('register') }}">Register</a></li>
+                </ul>
+            @else
+                @php($navItem = fn (string $path, string $url, string $label) =>
+                    '<li' . (request()->is('admin/' . $path, 'admin/' . $path . '/*') ? ' class="active"' : '') .
+                    '><a href="' . e($url) . '">' . e($label) . '</a></li>')
 
-                        <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown" role="button" aria-expanded="false">
-                            {{ Auth::user()->getActiveOrganisation()->name }} <span class="caret"></span>
-                        </a>
+                <ul class="sidebar-nav sidebar-section sidebar-section-programme">
+                    <li class="sidebar-heading">Programme</li>
+                    {!! $navItem('events', action('Admin\EventController@index'), 'Events') !!}
+                    {!! $navItem('series', action('Admin\SeriesController@index'), 'Series') !!}
+                    {!! $navItem('competitions', action('Admin\CompetitionController@index'), 'Competitions') !!}
+                </ul>
 
-                        <ul class="dropdown-menu" role="menu">
+                <ul class="sidebar-nav sidebar-section">
+                    <li class="sidebar-heading">Venues &amp; people</li>
+                    {!! $navItem('venues', action('Admin\VenueController@index'), 'Venues') !!}
+                    {!! $navItem('people', action('Admin\PeopleController@index'), 'People') !!}
+                </ul>
 
-                            @foreach(Auth::user()->organisations()->get() as $organisation)
-                                <li>
-                                    @if($organisation->id !== Auth::user()->getActiveOrganisation()->id)
-                                        <a class="dropdown-item" href="{{ action('Admin\EventController@index', [ 'switchOrganisations' => $organisation->id ]) }}">
-                                            {{ $organisation->name }}
-                                        </a>
-                                    @endif
-                                </li>
-                            @endforeach
+                <ul class="sidebar-nav sidebar-section">
+                    <li class="sidebar-heading">Sales</li>
+                    {!! $navItem('orders', action('Admin\OrderController@index'), 'Orders') !!}
+                </ul>
 
-                            <li>
-                                <a class="dropdown-item" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                    Logout
-                                </a>
+                <ul class="sidebar-nav sidebar-section">
+                    <li class="sidebar-heading">Media</li>
+                    {!! $navItem('livestreams', action('Admin\LiveStreamController@index'), 'Livestreams') !!}
+                    {!! $navItem('assets', action('Admin\AssetController@index'), 'Assets') !!}
+                </ul>
 
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                    {{ csrf_field() }}
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                @endif
-            </ul>
-        </div>
-    </nav>
-    </header>
+                <ul class="sidebar-nav sidebar-section">
+                    <li class="sidebar-heading">Settings</li>
+                    @if(Auth::user()->getActiveOrganisation())
+                        {!! $navItem('organisations', action('Admin\OrganisationController@edit', [ Auth::user()->getActiveOrganisation()->id ]), 'Organisation') !!}
+                    @endif
+                    {!! $navItem('uitdb', action('Admin\UitDbController@index'), 'UitDB') !!}
+                </ul>
 
-    <main role="main">
+                <div class="sidebar-footer">
+                    @php($activeOrganisation = Auth::user()->getActiveOrganisation())
+                    @if($activeOrganisation)
+                        <div class="sidebar-organisation-select">
+                            <label for="organisation-selector">Organisation</label>
+                            <select id="organisation-selector" class="form-control" onchange="if(this.value) window.location.href=this.value;">
+                                @foreach(Auth::user()->organisations()->get() as $organisation)
+                                    <option value="{{ action('Admin\EventController@index', [ 'switchOrganisations' => $organisation->id ]) }}"
+                                        @if($organisation->id === $activeOrganisation->id) selected @endif>
+                                        {{ $organisation->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
-        <section class="container-fluid">
+                    <ul class="sidebar-nav">
+                        <li>
+                            <a href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                Logout
+                            </a>
 
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                {{ csrf_field() }}
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            @endif
+        </nav>
+
+        <main class="admin-content" role="main">
             @if (Session::has('message'))
                 <div class="alert alert-info">{{ Session::get('message') }}</div>
             @endif
 
             @yield('content')
-        </section>
-
-    </main>
+        </main>
+    </div>
 
     <!-- Scripts -->
     <script src="{{ asset('js/admin.js') }}"></script>
