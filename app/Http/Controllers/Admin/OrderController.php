@@ -30,6 +30,11 @@ use App\Models\TicketCategory;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Models\Properties\RelationshipField;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
+use CatLab\Laravel\Table\Table;
+use CatLab\Charon\Collections\ResourceCollection;
+use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Charon\Interfaces\Context as ContextContract;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -51,6 +56,30 @@ class OrderController extends Controller
     {
         $request->query->set('sort', '!id');
         return $this->frontIndex($request);
+    }
+
+    /**
+     * @param Request $request
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
+     */
+    public function getTableForResourceCollection(
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        $table = $this->traitGetTableForResourceCollection($request, $collection, $resourceDefinition, $context);
+
+        $table->modelAction(
+            (new ResourceAction('Admin\RefundController@refund', 'Terugbetalen'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+        );
+
+        return $table;
     }
 
     /**

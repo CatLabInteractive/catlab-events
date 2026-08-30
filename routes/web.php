@@ -91,6 +91,9 @@ Route::group([
             Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
             Route::get('uitdb/connect/next', 'Admin\UitDbController@afterLink');
 
+            Route::get('orders/{id}/refund', 'Admin\RefundController@refund');
+            Route::post('orders/{id}/refund', 'Admin\RefundController@processRefund');
+
             Route::get('events/{event}/waitinglist', 'Admin\WaitingListController@index');
             Route::get('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@invite');
             Route::post('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@sendInvite');

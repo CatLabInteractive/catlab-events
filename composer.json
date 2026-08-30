@@ -17,7 +17,7 @@
         "catlabinteractive/central-storage-client": "~1.0.3",
         "catlabinteractive/charon-laravel": "^1.12",
         "catlabinteractive/eukles-client": "^1.0.12",
-        "catlabinteractive/laravel-catlab-accounts": "^4.2",
+        "catlabinteractive/laravel-catlab-accounts": "^4.3",
         "catlabinteractive/laravel-charon-frontend": "^1.10",
         "catlabinteractive/laravel-table": "^1.1",
         "fab1en/rocket-chat-rest-client": "dev-master",
