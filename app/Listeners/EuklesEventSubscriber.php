@@ -25,6 +25,7 @@ namespace App\Listeners;
 use App\Events\DonationCancelled;
 use App\Events\DonationReceived;
 use App\Events\GroupMemberJoined;
+use App\Events\InvitedFromWaitingList;
 use App\Events\OrderCancelled;
 use App\Events\OrderConfirmed;
 use App\Events\PreparingOrder;
@@ -234,6 +235,25 @@ class EuklesEventSubscriber
     }
 
     /**
+     * @param InvitedFromWaitingList $e
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function onInvitedFromWaitingList(InvitedFromWaitingList $e)
+    {
+        // No link/unlink here: the user stays on the waiting list until they
+        // actually order, at which point event.order.confirmed takes over.
+        \Eukles::trackEvent(
+            \Eukles::createEvent(
+                'event.waitinglist.invite',
+                [
+                    'user' => $e->user,
+                    'event' => $e->event
+                ]
+            )
+        );
+    }
+
+    /**
      * Register the listeners for the subscriber.
      *
      * @param  \Illuminate\Events\Dispatcher  $events
@@ -252,5 +272,6 @@ class EuklesEventSubscriber
         $events->listen(DonationReceived::class, EuklesEventSubscriber::class . '@onDonationReceived');
         $events->listen(GroupMemberJoined::class, EuklesEventSubscriber::class . '@onGroupJoin');
         $events->listen(SubscribedToWaitingList::class, EuklesEventSubscriber::class . '@onSubscribedToWaitingList');
+        $events->listen(InvitedFromWaitingList::class, EuklesEventSubscriber::class . '@onInvitedFromWaitingList');
     }
 }

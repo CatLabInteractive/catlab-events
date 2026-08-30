@@ -131,6 +131,12 @@ class EventController extends Controller
             );
         }
 
+        $table->modelAction(
+            (new ResourceAction('Admin\WaitingListController@index', 'Wachtlijst', 'event'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+        );
+
         return $table;
     }
 
