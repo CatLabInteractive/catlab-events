@@ -698,16 +698,16 @@
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v1.10.0",
+            "version": "v1.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "ecdb4f49175c917493ace16cbaad68cbf8f3435d"
+                "reference": "b9fa134f5af1bc724aa040893856a5bcb35f9b3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/ecdb4f49175c917493ace16cbaad68cbf8f3435d",
-                "reference": "ecdb4f49175c917493ace16cbaad68cbf8f3435d",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/b9fa134f5af1bc724aa040893856a5bcb35f9b3d",
+                "reference": "b9fa134f5af1bc724aa040893856a5bcb35f9b3d",
                 "shasum": ""
             },
             "require": {
@@ -739,9 +739,9 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.10.0"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.10.1"
             },
-            "time": "2026-08-28T09:56:09+00:00"
+            "time": "2026-08-30T20:53:31+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",
