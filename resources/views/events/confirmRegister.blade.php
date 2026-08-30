@@ -6,18 +6,16 @@
 
 @section('register-content')
 
-    <?php
-        $properties = [
-            'class' => 'form-control'
-        ];
-    ?>
-
     <h2 class="intro-title">{{ $event->name }}</h2>
     <h3 class="intro-sub-title">{{ $event->getOrderLabel() }}</h3>
 
     @if(!$errors->isEmpty())
         <div class="alert alert-warning">
-            {{ Html::ul($errors->all()) }}
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -38,7 +36,7 @@
         <p>De betaling verloopt via de beveiligde betaalterminal van <a href="{{ config('app.owner.url') }}" target="_blank">{{ config('app.owner.name') }}</a>.</p>
 
         <p>
-            {{ Form::submit('Naar de betaalterminal', array('class' => 'btn')) }}
+            <input type="submit" value="Naar de betaalterminal" class="btn">
         </p>
     </div>
     -->
@@ -57,10 +55,10 @@
         <div class="alert alert-info">
             <h4>UiTPAS</h4>
 
-            {{ Form::open(array('url' => $uitpasAction, 'method' => 'get')) }}
+            <form method="GET" action="{{ $uitpasAction }}" accept-charset="UTF-8">
 
             @if($group)
-                {{ Form::hidden('groupId', $group->id) }}
+                <input type="hidden" name="groupId" value="{{ $group->id }}">
             @endif
 
             <p>
@@ -71,19 +69,20 @@
             </p>
 
             <div class="form-group">
-                {{ Form::text('uitpas', $uitpas, [ 'class' => 'form-control', 'placeholder' => 'Schrijf hier je UiTPAS kaartnummer' ]) }}
+                <input type="text" name="uitpas" value="{{ old('uitpas', $uitpas) }}" class="form-control" placeholder="Schrijf hier je UiTPAS kaartnummer">
             </div>
 
-            <p>{{ Form::submit('UiTPAS tarief toepassen', array('class' => 'btn btn-info')) }}</p>
-            {{ Form::close()}}
+            <p><input type="submit" value="UiTPAS tarief toepassen" class="btn btn-info"></p>
+            </form>
 
         </div>
     @endif
 
 
-    {{ Form::open(array('url' => $action)) }}
+    <form method="POST" action="{{ $action }}" accept-charset="UTF-8">
+    @csrf
     @foreach($input as $k => $v)
-        {{ Form::hidden($k, $v) }}
+        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
     @endforeach
 
     <div class="invoice">
@@ -161,11 +160,11 @@
     </div>
 
     @if($ticketCategory->isFree())
-        <p>{{ Form::submit('Inschrijven', array('class' => 'btn btn-primary')) }}</p>
+        <p><input type="submit" value="Inschrijven" class="btn btn-primary"></p>
     @else
-        <p>{{ Form::submit('Betalen', array('class' => 'btn btn-primary')) }}</p>
+        <p><input type="submit" value="Betalen" class="btn btn-primary"></p>
     @endif
 
-    {{ Form::close() }}
+    </form>
 
 @endsection

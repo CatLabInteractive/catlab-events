@@ -72,17 +72,6 @@ class Event extends Model implements EuklesModel
         'event_type'
     ];
 
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
-    ];
-
     public function getUrl()
     {
         return action('EventController@view', [ $this->id, Str::slug($this->name) ]);
@@ -225,7 +214,7 @@ class Event extends Model implements EuklesModel
             $dates = $this->eventDates->pluck('startDate');
             return StringHelper::datesToDescription($dates);
         } elseif ($this->startDate) {
-            return ucfirst($this->startDate->formatLocalized('%A'))  . ' ' . $this->startDate->formatLocalized('%-d %B %Y');
+            return ucfirst($this->startDate->translatedFormat('l')) . ' ' . $this->startDate->translatedFormat('j F Y');
         } else {
             return 'FOUT! Nog geen datum ingesteld.';
         }
@@ -408,7 +397,15 @@ class Event extends Model implements EuklesModel
         $availableTickets = 0;
         foreach ($this->eventDates as $eventDate) {
             /** @var EventDate $eventDate */
-            $availableTickets += $eventDate->countAvailableTickets($includePending);
+            $available = $eventDate->countAvailableTickets($includePending);
+
+            // A date without max_tickets is unlimited (null), which makes the
+            // whole event unlimited; summing it as 0 read as "sold out".
+            if ($available === null) {
+                return null;
+            }
+
+            $availableTickets += $available;
         }
         return $availableTickets;
     }
@@ -525,7 +522,13 @@ class Event extends Model implements EuklesModel
             return false;
         }
 
-        return $this->countAvailableTickets() <= self::LAST_TICKET_WARNING;
+        $availableTickets = $this->countAvailableTickets();
+        if ($availableTickets === null) {
+            // A finite ticket category next to an unlimited date: still unlimited.
+            return false;
+        }
+
+        return $availableTickets <= self::LAST_TICKET_WARNING;
     }
 
     /**
@@ -1184,7 +1187,7 @@ class Event extends Model implements EuklesModel
             $cheapest = $prices->first();
 
             if ($cheapest->end_date) {
-                $out = 'Bestel voor ' . $cheapest->end_date->formatLocalized('%A %d %B %Y, %H:%M') . '. ';
+                $out = 'Bestel voor ' . $cheapest->end_date->translatedFormat('l d F Y, H:i') . '. ';
             }
         }
 

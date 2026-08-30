@@ -57,17 +57,6 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     const UNSIGNED_SYNC_FOR_ORDERS_CREATED_BEFORE = '2026-08-28 00:00:00';
 
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
-    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function event()

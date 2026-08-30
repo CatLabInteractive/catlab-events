@@ -6,12 +6,6 @@
 
 @section('register-content')
 
-    <?php
-    $properties = [
-        'class' => 'form-control'
-    ];
-    ?>
-
     <h2 class="intro-title">{{ $event->name }}</h2>
     <h3 class="intro-sub-title">{{ $event->getOrderLabel() }}</h3>
 
@@ -29,7 +23,11 @@
 
         @if(!$errors->isEmpty())
             <div class="alert alert-warning">
-                {{ Html::ul($errors->all()) }}
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @elseif(organisation()->getContactOptionsText())
             <div class="alert alert-warning">
@@ -45,18 +43,23 @@
             Je kan ook steeds een <a href="{{ $groupAddUrl }}">nieuw team aanmaken</a>.
         </p>
 
-        {{ Form::open(array('url' => $action)) }}
+        <form method="POST" action="{{ $action }}" accept-charset="UTF-8">
+            @csrf
 
-        <div class="form-group">
+            <div class="form-group">
 
-            {{ Form::label('group', 'Team') }}
-            {{ Form::select('group', $groups, old('group'), $properties) }}
+                <label for="group">Team</label>
+                <select name="group" id="group" class="form-control">
+                    @foreach($groups as $value => $label)
+                        <option value="{{ $value }}" @selected((string)old('group') === (string)$value)>{{ $label }}</option>
+                    @endforeach
+                </select>
 
-        </div>
+            </div>
 
-        {{ Form::submit('Registreren', array('class' => 'btn btn-primary')) }}
+            <input type="submit" value="Registreren" class="btn btn-primary">
 
-        {{ Form::close() }}
+        </form>
 
     @endif
 

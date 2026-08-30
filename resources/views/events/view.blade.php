@@ -240,7 +240,7 @@
                             <tr>
                                 <th>#</th>
                                 @foreach($eventDateAttendees['eventDates'] as $v)
-                                    <th>{{ ucfirst($v['date']->formatLocalized('%A %-d %B')) }}</th>
+                                    <th>{{ ucfirst($v['date']->translatedFormat('l j F')) }}</th>
                                 @endforeach
                             </tr>
 

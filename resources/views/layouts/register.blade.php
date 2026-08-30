@@ -18,14 +18,14 @@
                     @if(count($_eventDates) === 1)
                         <div class="col-md-3 hero-small-date text-center">
                             <h3>{{ $_eventDates[0]->startDate->format('d') }}</h3>
-                            <h4>{{ $_eventDates[0]->startDate->formatLocalized('%B %Y') }}</h4>
+                            <h4>{{ $_eventDates[0]->startDate->translatedFormat('F Y') }}</h4>
                         </div>
                         <div class="col-md-9 hero-small-date-content">
                     @else
                         @foreach($_eventDates as $eventDate)
                             <div class="col-md-{{ ceil(12 / count($_eventDates)) }} hero-small-date text-center">
                                 <h3>{{ $eventDate->startDate->format('d') }}</h3>
-                                <h4>{{ $eventDate->startDate->formatLocalized('%B %Y') }}</h4>
+                                <h4>{{ $eventDate->startDate->translatedFormat('F Y') }}</h4>
                             </div>
                         @endforeach
                         <div class="col-md-12 hero-small-date-content">

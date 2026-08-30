@@ -11,12 +11,13 @@
         <div class="alert alert-danger">
             <strong>Oh nee!</strong> De betaling is mislukt. <br />
 
-            {{ Form::open(array('url' => $retryFormAction)) }}
-            @foreach($retryFormInput as $k => $v)
-                {{ Form::hidden($k, $v) }}
-            @endforeach
-            {{ Form::submit('Probeer het opnieuw', array('class' => 'btn btn-danger')) }}
-            {{ Form::close() }}
+            <form method="POST" action="{{ $retryFormAction }}" accept-charset="UTF-8">
+                @csrf
+                @foreach($retryFormInput as $k => $v)
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endforeach
+                <input type="submit" value="Probeer het opnieuw" class="btn btn-danger">
+            </form>
 
         </div>
     @elseif($order->isPending())

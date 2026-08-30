@@ -14,12 +14,6 @@
         groep om jou eerst uit te nodigen.
     </p>
 
-    <?php
-    $properties = [
-        'class' => 'form-control'
-    ];
-    ?>
-
     <h3>Samenvoegen</h3>
     @if(count($otherGroups) === 0)
 
@@ -27,17 +21,22 @@
 
     @else
 
-        {{ Form::open([ 'action' => [ 'GroupController@mergeGroup', $group->id ] ]) }}
+        <form method="POST" action="{{ action('GroupController@mergeGroup', $group->id) }}" accept-charset="UTF-8">
+        @csrf
         <p>Kies het team waarmee je {{ $group->name }} wilt samenvoegen.</p>
 
         <div class="form-group">
-            {{ Form::label('id', $group->name . ' samenvoegen met') }}
-            {{ Form::select('id', $otherGroups, null, $properties) }}
+            <label for="id">{{ $group->name . ' samenvoegen met' }}</label>
+            <select name="id" id="id" class="form-control">
+                @foreach($otherGroups as $value => $label)
+                    <option value="{{ $value }}" @selected((string)old('id') === (string)$value)>{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
 
-        {{ Form::submit('Samenvoegen', array('class' => 'btn btn-primary')) }}
+        <input type="submit" value="Samenvoegen" class="btn btn-primary">
 
-        {{ Form::close() }}
+        </form>
 
     @endif
 

@@ -1,36 +1,38 @@
 {
     "name": "catlabinteractive/events",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "type": "project",
     "require": {
-        "php": ">=8.0",
+        "php": "^8.2",
         "ext-json": "*",
         "ext-simplexml": "*",
         "airbrake/phpbrake": "^1.0",
-        "barryvdh/laravel-debugbar": "^3.2",
+        "barryvdh/laravel-debugbar": "^4.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "catlabinteractive/central-storage-client": "~1.0.3",
-        "catlabinteractive/eukles-client": "~1.0.8",
-        "catlabinteractive/laravel-catlab-accounts": "~4.1",
-        "catlabinteractive/laravel-charon-frontend": "~1.7.0",
-        "catlabinteractive/laravel-table": "^1.0.2",
-        "doctrine/dbal": "~2.5",
+        "catlabinteractive/charon-laravel": "^1.12",
+        "catlabinteractive/eukles-client": "^1.0.12",
+        "catlabinteractive/laravel-catlab-accounts": "^4.2",
+        "catlabinteractive/laravel-charon-frontend": "^1.10",
+        "catlabinteractive/laravel-table": "^1.1",
         "fab1en/rocket-chat-rest-client": "dev-master",
         "guzzlehttp/oauth-subscriber": "^0.8.1",
-        "laravel/framework": "^9.52",
+        "laravel/framework": "^12.0",
         "laravel/tinker": "^2.9",
-        "laravel/ui": "^3.4",
-        "laravelcollective/html": "^6.0.0",
+        "laravel/ui": "^4.0",
         "league/oauth1-client": "^1.8",
         "paynl/sdk": "^1.5",
         "spatie/laravel-referer": "^1.4"
     },
     "require-dev": {
-        "fzaninotto/faker": "~1.4",
+        "fakerphp/faker": "^1.23",
         "mockery/mockery": "^1.6",
-        "phpunit/phpunit": "~8.0"
+        "phpunit/phpunit": "^11.0"
     },
     "autoload": {
         "classmap": [
@@ -57,33 +59,15 @@
         ],
         "post-update-cmd": [
             "Illuminate\\Foundation\\ComposerScripts::postUpdate"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
         ]
     },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
-        "optimize-autoloader": true,
-        "policy": {
-            "advisories": {
-                "ignore-id": {
-                    "PKSA-8qx3-n5y5-vvnd": {
-                        "reason": "GHSA-78fx-h6xr-vch4 (CVE-2025-27515), only fixed in Laravel 10.48.29+, tracked by the Laravel upgrade issue #52. Install-time only, composer audit still reports it.",
-                        "on-audit": false
-                    },
-                    "PKSA-3r5d-mb8f-1qw9": {
-                        "reason": "GHSA-5vg9-5847-vvmq, only fixed in Laravel 12.60+, tracked by the Laravel upgrade issue #52. Install-time only, composer audit still reports it.",
-                        "on-audit": false
-                    },
-                    "PKSA-mdq4-51ck-6kdq": {
-                        "reason": "GHSA-5vg9-5847-vvmq (CVE-2026-48019), only fixed in Laravel 12.60+, tracked by the Laravel upgrade issue #52. Install-time only, composer audit still reports it.",
-                        "on-audit": false
-                    },
-                    "PKSA-m5cs-t1y6-qpcs": {
-                        "reason": "GHSA-crmm-hgp2-wgrp, only fixed in Laravel 12.61.1+, tracked by the Laravel upgrade issue #52. Install-time only, composer audit still reports it.",
-                        "on-audit": false
-                    }
-                }
-            }
-        }
+        "optimize-autoloader": true
     }
 }

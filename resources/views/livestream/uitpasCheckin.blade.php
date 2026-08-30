@@ -8,7 +8,8 @@
 
     <h1>{{ $livestream->title }}</h1>
 
-    {{ Form::open() }}
+    <form method="POST" action="{{ url()->current() }}" accept-charset="UTF-8">
+        @csrf
 
     @if($success)
         <p style="color: green;">{{ $success }}</p>
@@ -29,11 +30,11 @@
             Geef je code in om punten te sparen.
         </p>
 
-        {{ Form::label('uitpasNumber', 'UiTPAS Nummer', [ 'class' => 'form-input' ]) }}<br />
-        {{ Form::text('uitpasNumber', old('uitpasNumber'), [ 'class' => 'form-input' ]) }}<br />
-        {{ Form::submit('Verzenden') }}
+        <label for="uitpasNumber" class="form-input">UiTPAS Nummer</label><br />
+        <input type="text" name="uitpasNumber" id="uitpasNumber" value="{{ old('uitpasNumber') }}" class="form-input"><br />
+        <input type="submit" value="Verzenden">
 
-        {{ Form::close() }}
+    </form>
 
     @endif
 
