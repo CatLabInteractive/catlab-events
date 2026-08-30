@@ -76,6 +76,29 @@ class AdminSmokeTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * The order detail page renders a table for every relationship on the
+     * resource. Order has an expanded single ticketCategory relationship, so
+     * this page asks whether the current user may *create* a TicketCategory --
+     * with OrderController's own authorize parameters.
+     */
+    public function testOrderDetailPageRenders()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $category = $this->createTicketCategory($event, 10.0);
+        $admin = $this->adminOf($organisation);
+
+        $order = new \App\Models\Order();
+        $order->event()->associate($event);
+        $order->user()->associate($admin);
+        $order->ticketCategory()->associate($category);
+        $order->state = \App\Models\Order::STATE_ACCEPTED;
+        $order->save();
+
+        $this->actingAs($admin)->get('/admin/orders/' . $order->id)->assertStatus(200);
+    }
+
     public function testNonAdminsAreSentAwayFromTheAdminArea()
     {
         $this->createOrganisation();
