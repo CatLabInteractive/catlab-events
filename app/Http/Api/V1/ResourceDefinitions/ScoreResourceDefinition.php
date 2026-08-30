@@ -44,9 +44,11 @@ class ScoreResourceDefinition extends BaseResourceDefinition
         ;
 
         $this->field('score')
+            ->sortable()
             ->visible(true);
 
         $this->field('position')
+            ->sortable()
             ->visible(true);
 
         $this->relationship('event', EventResourceDefinition::class)

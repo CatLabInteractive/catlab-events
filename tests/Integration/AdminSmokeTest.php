@@ -99,6 +99,124 @@ class AdminSmokeTest extends IntegrationTestCase
         $this->actingAs($admin)->get('/admin/orders/' . $order->id)->assertStatus(200);
     }
 
+    /**
+     * laravel-charon-frontend enables sorting and filtering on every index
+     * table; the controls only appear for fields the resource definition
+     * marks sortable()/filterable(). Guards the declarations, not the package.
+     */
+    public function testIndexTablesExposeSortingAndFiltering()
+    {
+        $organisation = $this->createOrganisation();
+        $this->createEvent($organisation);
+        $admin = $this->adminOf($organisation);
+
+        $response = $this->actingAs($admin)->get('/admin/events');
+        $response->assertStatus(200);
+
+        // The filter bar, with an input for the filterable "name" field.
+        $response->assertSee('table-filters', false);
+        $response->assertSee('id="table-filter-name"', false);
+
+        // A sortable "name" column header links to charon's sort parameter.
+        $response->assertSee('sort=name', false);
+    }
+
+    /**
+     * Sorting turns into an ORDER BY on the field's own name, so a sortable()
+     * declaration on anything that isn't a real column (an accessor, a dotted
+     * path) blows up only when someone clicks the header. Walk them.
+     */
+    public function testSortingAndFilteringActuallyRun()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $venue = $this->createVenue($admin);
+
+        $event = $this->createEvent($organisation);
+        $event->venue()->associate($venue);
+        $event->save();
+        $category = $this->createTicketCategory($event, 10.0);
+
+        foreach ([
+            '/admin/events?sort=name',
+            '/admin/events?sort=!name',
+            '/admin/venues?sort=name',
+            '/admin/venues?sort=city',
+            '/admin/people?sort=first_name',
+            '/admin/people?sort=last_name',
+            '/admin/livestreams?sort=title',
+            '/admin/series?sort=name',
+            '/admin/series?sort=slug',
+            '/admin/competitions?sort=name',
+            '/admin/orders?sort=date',
+            '/admin/events/' . $event->id . '/ticketCategories?sort=name',
+            '/admin/events/' . $event->id . '/ticketCategories?sort=price',
+            '/admin/events/' . $event->id . '/eventDates?sort=startDate',
+            '/admin/events/' . $event->id . '/eventDates?sort=endDate',
+        ] as $url) {
+            $this->actingAs($admin)->get($url)->assertStatus(200);
+        }
+
+        // Filtering narrows the collection rather than erroring out.
+        $this->actingAs($admin)->get('/admin/venues?name=Test venue')
+            ->assertStatus(200)
+            ->assertSee('Test venue');
+
+        $this->actingAs($admin)->get('/admin/venues?name=Nothing matches this')
+            ->assertStatus(200)
+            ->assertDontSee('Test venue');
+
+        // A blank filter input must not filter on the empty string.
+        $this->actingAs($admin)->get('/admin/venues?name=')
+            ->assertStatus(200)
+            ->assertSee('Test venue');
+
+        $this->assertNotNull($category->id);
+    }
+
+    /**
+     * Relationship cells render as links to the related resource's own admin
+     * page, labelled by the resource rather than shown as a raw identifier.
+     * Event::venue is visible on the detail page, not the index. The link
+     * only appears because EventController registers VenueController as the
+     * child controller for VenueResourceDefinition.
+     */
+    public function testRelationshipCellsLinkToTheRelatedResource()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $venue = $this->createVenue($admin);
+
+        $event = $this->createEvent($organisation);
+        $event->venue()->associate($venue);
+        $event->save();
+
+        $response = $this->actingAs($admin)->get('/admin/events/' . $event->id);
+        $response->assertStatus(200);
+        $response->assertSee('/admin/venues/' . $venue->id . '">Test venue</a>', false);
+    }
+
+    public function testAdminLayoutRendersTheGroupedSidebar()
+    {
+        $organisation = $this->createOrganisation();
+        $this->createEvent($organisation);
+        $admin = $this->adminOf($organisation);
+
+        $response = $this->actingAs($admin)->get('/admin/events');
+        $response->assertStatus(200);
+
+        $response->assertSee('admin-sidebar', false);
+        $response->assertSee('admin-content', false);
+
+        // Grouped nav headings.
+        $response->assertSee('Programme', false);
+        $response->assertSee('Sales', false);
+
+        // The organisation switcher moved into the sidebar footer.
+        $response->assertSee('sidebar-footer', false);
+        $response->assertSee($organisation->name, false);
+    }
+
     public function testNonAdminsAreSentAwayFromTheAdminArea()
     {
         $this->createOrganisation();

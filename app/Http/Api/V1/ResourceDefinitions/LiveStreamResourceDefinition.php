@@ -43,6 +43,8 @@ class LiveStreamResourceDefinition extends BaseResourceDefinition
             ->visible();
 
         $this->field('title')
+            ->sortable()
+            ->filterable()
             ->string()
             ->visible(true)
             ->writeable()

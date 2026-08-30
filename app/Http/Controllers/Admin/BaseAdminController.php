@@ -20,28 +20,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Http\Api\V1\ResourceDefinitions;
+namespace App\Http\Controllers\Admin;
 
-use CatLab\CentralStorage\Client\Models\Asset;
-use CatLab\Charon\Models\ResourceDefinition;
+use App\Http\Controllers\Controller;
+use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
+use CatLab\CharonFrontend\Controllers\FrontCrudController;
 
 /**
- * Class AssetResourceDefinition
- * @package App\Http\Api\V1\ResourceDefinitions
+ * Shared base for the admin CRUD controllers: carries the FrontCrudController
+ * trait and the admin layout, so the controllers themselves only declare what
+ * is actually theirs (their api controller, their child controllers, their
+ * extra table actions).
+ *
+ * @package App\Http\Controllers\Admin
  */
-class AssetResourceDefinition extends BaseResourceDefinition
+abstract class BaseAdminController extends Controller implements FrontCrudControllerContract
 {
+    use FrontCrudController;
+
     public function __construct()
     {
-        parent::__construct(Asset::class);
-
-        $this->identifier('id');
-
-        $this->field('name')
-            ->sortable()
-            ->filterable()
-            ->required()
-            ->visible(true)
-            ->writeable(true, true);
+        $this->setLayout('layouts.admin');
     }
 }

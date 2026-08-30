@@ -4,6 +4,18 @@
 
 @import '~bootstrap';
 
+// Admin chrome
+$admin-body-bg: #f5f8fa;
+$admin-border-color: darken($admin-body-bg, 10%);
+$admin-text-color: #636b6f;
+$admin-accent: #3097d1;
+
+$sidebar-width: 220px;
+$sidebar-bg: #2c3e50;
+$sidebar-text: #ecf0f1;
+$sidebar-hover-bg: #34495e;
+$sidebar-active-bg: $admin-accent;
+
 .invoice tr.total {
   border-top: 2px solid black;
   font-weight: bold;
@@ -12,4 +24,253 @@
 .transactionFee {
   color: gray;
   font-size: 90%;
+}
+
+// Admin sidebar layout
+.admin-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: $sidebar-width;
+  background-color: $sidebar-bg;
+  color: $sidebar-text;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+
+  .sidebar-brand {
+    padding: 18px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    a {
+      color: #fff;
+      text-decoration: none;
+
+      &:hover,
+      &:focus {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+  }
+
+  .sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    .sidebar-heading {
+      padding: 12px 20px 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba($sidebar-text, 0.5);
+      font-weight: 600;
+    }
+
+    li a {
+      display: block;
+      padding: 10px 20px;
+      color: rgba($sidebar-text, 0.8);
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s;
+      font-size: 14px;
+
+      &:hover,
+      &:focus {
+        background-color: $sidebar-hover-bg;
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+
+    li.active a {
+      background-color: $sidebar-active-bg;
+      color: #fff;
+    }
+  }
+
+  // Each navigation group is visually separated from the next.
+  .sidebar-section {
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  // The programme pages are where the work happens: a subtly different
+  // background and an accent bar on the left set them apart from the
+  // supporting and configuration pages below.
+  .sidebar-section-programme {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-left: 3px solid $admin-accent;
+
+    .sidebar-heading {
+      color: rgba($admin-accent, 0.9);
+    }
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+
+    .sidebar-organisation-select {
+      padding: 10px 20px;
+
+      label {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba($sidebar-text, 0.5);
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      select {
+        width: 100%;
+        height: auto;
+        background-color: $sidebar-hover-bg;
+        color: $sidebar-text;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+        padding: 6px 10px;
+        font-size: 13px;
+        cursor: pointer;
+
+        &:focus {
+          border-color: $admin-accent;
+          outline: none;
+        }
+
+        option {
+          background-color: $sidebar-bg;
+          color: $sidebar-text;
+        }
+      }
+    }
+  }
+}
+
+.admin-content {
+  flex: 1;
+  margin-left: $sidebar-width;
+  padding: 20px 30px;
+  min-width: 0;
+}
+
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1100;
+  background-color: $sidebar-bg;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 18px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    background-color: $sidebar-hover-bg;
+    outline: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .admin-content {
+    margin-left: 0;
+  }
+
+  .sidebar-toggle {
+    display: block;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+
+    &.open {
+      display: block;
+    }
+  }
+}
+
+// Admin tables: filter bar. The markup comes from catlabinteractive/laravel-table
+// and is written for Bootstrap 3, so .input-group-addon and .glyphicon have no
+// styling of their own here (Bootstrap 4 dropped both) and are dressed by hand.
+.table-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  background-color: #fff;
+  border: 1px solid $admin-border-color;
+  border-radius: 3px;
+
+  .form-group {
+    margin: 0;
+  }
+
+  .input-group {
+    width: auto;
+  }
+
+  .input-group-addon {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: lighten($admin-text-color, 20%);
+    background-color: $admin-body-bg;
+    border: 1px solid $admin-border-color;
+    border-right: 0;
+    border-radius: 3px 0 0 3px;
+    white-space: nowrap;
+  }
+
+  .form-control {
+    min-width: 160px;
+    border-color: $admin-border-color;
+    border-radius: 0 3px 3px 0;
+    box-shadow: none;
+  }
+
+  // Bootstrap 4 has no glyphicons; the labels next to them carry the meaning.
+  .glyphicon {
+    display: none;
+  }
+
+  .table-filter-actions {
+    display: flex;
+    gap: 6px;
+  }
 }

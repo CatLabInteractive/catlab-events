@@ -22,15 +22,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventDate;
 use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\Context as ContextContract;
 use CatLab\Charon\Interfaces\ResourceDefinition;
-use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\Laravel\Table\Table;
 use GuzzleHttp\Client;
@@ -40,18 +37,8 @@ use Illuminate\Http\Request;
  * Class TicketCategoryController
  * @package App\Http\Controllers\Admin
  */
-class EventDateController extends Controller implements FrontCrudControllerContract
+class EventDateController extends BaseAdminController
 {
-    use FrontCrudController;
-
-    /**
-     * EventController constructor.
-     */
-    public function __construct()
-    {
-        $this->setLayout('layouts.admin');
-    }
-
     /**
      * @param $path
      * @param $controller

@@ -43,6 +43,7 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
 
         // Name
         $this->field('name')
+            ->sortable()
             ->visible(true)
             ->filterable()
             ->writeable(true, true)

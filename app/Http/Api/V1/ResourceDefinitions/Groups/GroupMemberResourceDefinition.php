@@ -45,6 +45,7 @@ class GroupMemberResourceDefinition extends BaseResourceDefinition
 
         // Name
         $this->field('name')
+            ->sortable()
             ->visible(true)
             ->filterable()
             ->writeable(true, false)
@@ -54,6 +55,7 @@ class GroupMemberResourceDefinition extends BaseResourceDefinition
 
         // Email address
         $this->field('email')
+            ->filterable()
             ->writeable(true, false)
             ->required()
             ->string();

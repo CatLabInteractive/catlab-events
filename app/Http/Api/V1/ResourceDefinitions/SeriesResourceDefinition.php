@@ -38,10 +38,14 @@ class SeriesResourceDefinition extends BaseResourceDefinition
         $this->identifier('id');
 
         $this->field('slug')
+            ->sortable()
+            ->filterable()
             ->visible(true, true)
             ->writeable(true, true);
 
         $this->field('name')
+            ->sortable()
+            ->filterable()
             ->visible(true, true)
             ->writeable(true, true);
 

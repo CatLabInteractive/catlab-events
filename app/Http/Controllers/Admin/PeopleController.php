@@ -23,28 +23,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Api\V1\Controllers\Base\ResourceController;
-use App\Http\Controllers\Controller;
 use CatLab\Charon\Enums\Action;
-use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use Illuminate\Http\Request;
 
 /**
  * Class VenueController
  * @package App\Http\Controllers\Admin
  */
-class PeopleController extends Controller implements FrontCrudControllerContract
+class PeopleController extends BaseAdminController
 {
-    use FrontCrudController;
-
-    /**
-     * EventController constructor.
-     */
-    public function __construct()
-    {
-        $this->setLayout('layouts.admin');
-    }
-
     /**
      * @return ResourceController
      */

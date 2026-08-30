@@ -22,9 +22,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Api\V1\ResourceDefinitions\CompetitionResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\Events\EventDateResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\Events\TicketCategoryResourceDefinition;
-use App\Http\Controllers\Controller;
+use App\Http\Api\V1\ResourceDefinitions\LiveStreamResourceDefinition;
+use App\Http\Api\V1\ResourceDefinitions\PersonResourceDefinition;
+use App\Http\Api\V1\ResourceDefinitions\SeriesResourceDefinition;
+use App\Http\Api\V1\ResourceDefinitions\VenueResourceDefinition;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -33,7 +37,6 @@ use App\Models\TicketCategory;
 use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\ResourceDefinition;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use CatLab\Charon\Interfaces\Context as ContextContract;
 use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\Laravel\Table\Table;
@@ -46,12 +49,8 @@ use PDF;
  * Class EventController
  * @package App\Http\Controllers\Admin
  */
-class EventController extends Controller
+class EventController extends BaseAdminController
 {
-    use FrontCrudController {
-        index as frontIndex;
-    }
-
     /**
      * @param $path
      * @param $controller
@@ -62,14 +61,19 @@ class EventController extends Controller
         self::traitRoutes($path, $controller, $modelId);
     }
 
-    /**
-     * EventController constructor.
-     */
     public function __construct()
     {
-        $this->setLayout('layouts.admin');
+        parent::__construct();
+
+        // Relationship columns on the event tables link to the related
+        // resource's own admin page.
         $this->setChildController(TicketCategoryResourceDefinition::class, TicketCategoryController::class);
         $this->setChildController(EventDateResourceDefinition::class, EventDateController::class);
+        $this->setChildController(VenueResourceDefinition::class, VenueController::class);
+        $this->setChildController(CompetitionResourceDefinition::class, CompetitionController::class);
+        $this->setChildController(SeriesResourceDefinition::class, SeriesController::class);
+        $this->setChildController(LiveStreamResourceDefinition::class, LiveStreamController::class);
+        $this->setChildController(PersonResourceDefinition::class, PeopleController::class);
     }
 
     /**
@@ -97,8 +101,12 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
-        $request->query->set('sort', '!id');
-        return $this->frontIndex($request);
+        // Newest first, unless the user picked a sort from a column header.
+        if (!$request->query->has('sort')) {
+            $request->query->set('sort', '!id');
+        }
+
+        return parent::index($request);
     }
 
     /**

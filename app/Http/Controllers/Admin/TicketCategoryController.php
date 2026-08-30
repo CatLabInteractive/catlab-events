@@ -22,31 +22,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventDate;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Models\Properties\RelationshipField;
-use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
-use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use Illuminate\Http\Request;
 
 /**
  * Class TicketCategoryController
  * @package App\Http\Controllers\Admin
  */
-class TicketCategoryController extends Controller implements FrontCrudControllerContract
+class TicketCategoryController extends BaseAdminController
 {
-    use FrontCrudController;
-
-    /**
-     * EventController constructor.
-     */
-    public function __construct()
-    {
-        $this->setLayout('layouts.admin');
-    }
-
     /**
      * @return \App\Http\Api\V1\Controllers\Events\TicketCategoryController
      */
