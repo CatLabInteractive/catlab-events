@@ -25,6 +25,7 @@ namespace App\Http\Controllers;
 use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Interfaces\Context;
 use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Charon\Models\RESTResource;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\Laravel\Table\Table;
 use Illuminate\Http\Request;
@@ -58,5 +59,17 @@ class ScoreController implements FrontCrudControllerContract
         );
 
         return $table;
+    }
+
+    /**
+     * Scores have no show page of their own, so relationship cells that point
+     * at a score don't link anywhere.
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string|null
+     */
+    public function getShowUrl(Request $request, RESTResource $resource): ?string
+    {
+        return null;
     }
 }
