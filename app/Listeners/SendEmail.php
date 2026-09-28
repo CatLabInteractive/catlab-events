@@ -67,25 +67,38 @@ abstract class SendEmail
      * @param Event $event
      * @param User $user
      * @param string $url
+     * @param string|null $subject edited by an admin, null for the default
+     * @param string|null $content edited by an admin, null for the default template
      * @return bool whether the mail actually went out
      */
-    public function sendWaitingListInvitationEmail(Event $event, User $user, string $url)
-    {
+    public function sendWaitingListInvitationEmail(
+        Event $event,
+        User $user,
+        string $url,
+        ?string $subject = null,
+        ?string $content = null
+    ) {
         if (empty($user->email)) {
             return false;
         }
 
-        $view = \View::make('emails.tickets.waitingListInvitation', [
-            'event' => $event,
-            'user' => $user,
-            'url' => $url
-        ]);
+        if ($content !== null) {
+            $view = \View::make('emails.tickets.customContent', [
+                'content' => $content
+            ]);
+        } else {
+            $view = \View::make('emails.tickets.waitingListInvitation', [
+                'event' => $event,
+                'user' => $user,
+                'url' => $url
+            ]);
+        }
 
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
         try {
             $apiClient->sendEmail(
-                'Wachtlijst ' . $event->name,
+                $subject ?: \App\Events\InvitedFromWaitingList::defaultSubject($event),
                 $view->render(),
                 $user->email
             );

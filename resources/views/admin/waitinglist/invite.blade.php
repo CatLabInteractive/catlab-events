@@ -46,7 +46,17 @@
 
         <p style="margin-top: 15px;">
             <button type="submit" class="btn btn-success">Verstuur uitnodiging</button>
+            <button type="submit" class="btn btn-primary"
+                    formaction="{{ action('Admin\WaitingListController@generateInvite', [ $event->id, $user->id ]) }}">
+                Genereer zonder versturen
+            </button>
             <a class="btn btn-secondary" href="{{ action('Admin\WaitingListController@index', [ $event->id ]) }}">Annuleer</a>
+        </p>
+        <p>
+            <small class="text-muted">
+                "Genereer zonder versturen" maakt de persoonlijke link aan en toont de mail zodat je de tekst
+                kan aanpassen voor je hem verstuurt, of hem kan kopiëren naar je eigen mailprogramma.
+            </small>
         </p>
     </form>
 

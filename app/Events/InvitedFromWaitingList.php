@@ -55,15 +55,59 @@ class InvitedFromWaitingList
     public $url;
 
     /**
+     * Subject the admin wrote, or null for the default subject.
+     * @var string|null
+     */
+    public $subject;
+
+    /**
+     * Mail content (HTML, without the mail layout) the admin wrote, or null
+     * for the default template.
+     * @var string|null
+     */
+    public $content;
+
+    /**
      * InvitedFromWaitingList constructor.
      * @param Event $event
      * @param User $user
      * @param string $url
+     * @param string|null $subject
+     * @param string|null $content
      */
-    public function __construct(Event $event, User $user, string $url)
+    public function __construct(Event $event, User $user, string $url, ?string $subject = null, ?string $content = null)
     {
         $this->event = $event;
         $this->user = $user;
         $this->url = $url;
+        $this->subject = $subject;
+        $this->content = $content;
+    }
+
+    /**
+     * @param Event $event
+     * @return string
+     */
+    public static function defaultSubject(Event $event)
+    {
+        return 'Wachtlijst ' . $event->name;
+    }
+
+    /**
+     * The default invitation text, without the surrounding mail layout, as
+     * the starting point for an admin who wants to edit it.
+     *
+     * @param Event $event
+     * @param User $user
+     * @param string $url
+     * @return string
+     */
+    public static function renderDefaultContent(Event $event, User $user, string $url)
+    {
+        return \View::make('emails.tickets.waitingListInvitation', [
+            'event' => $event,
+            'user' => $user,
+            'url' => $url
+        ])->renderSections()['content'];
     }
 }

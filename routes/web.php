@@ -97,6 +97,8 @@ Route::group([
             Route::get('events/{event}/waitinglist', 'Admin\WaitingListController@index');
             Route::get('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@invite');
             Route::post('events/{event}/waitinglist/invite/{user}', 'Admin\WaitingListController@sendInvite');
+            Route::post('events/{event}/waitinglist/invite/{user}/generate', 'Admin\WaitingListController@generateInvite');
+            Route::get('events/{event}/waitinglist/invite/{user}/edit', 'Admin\WaitingListController@editInvite');
             Route::get('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@massInvite');
             Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
 
