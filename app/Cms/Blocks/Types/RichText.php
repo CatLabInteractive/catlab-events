@@ -20,33 +20,42 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Providers;
+namespace App\Cms\Blocks\Types;
 
-use App\Cms\Blocks\BlockRegistry;
-use App\Cms\HtmlSanitizer;
-use Illuminate\Support\ServiceProvider;
+use App\Cms\Blocks\BlockType;
 
 /**
- * Container bindings for the CMS (pages and blog).
+ * Free rich text (sanitised HTML).
  *
- * Class CmsServiceProvider
- * @package App\Providers
+ * Class RichText
+ * @package App\Cms\Blocks\Types
  */
-class CmsServiceProvider extends ServiceProvider
+class RichText extends BlockType
 {
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function type(): string
     {
-        $this->app->singleton(HtmlSanitizer::class, function () {
-            return HtmlSanitizer::fromConfig();
-        });
+        return 'rich_text';
+    }
 
-        $this->app->singleton(BlockRegistry::class, function () {
-            return new BlockRegistry(config('cms.blocks', []));
-        });
+    public function label(): string
+    {
+        return 'Tekst';
+    }
+
+    public function rules(): array
+    {
+        return [
+            'html' => [ 'nullable', 'string', 'max:' . (2 * 1024 * 1024) ],
+        ];
+    }
+
+    public function htmlFields(): array
+    {
+        return [ 'html' ];
+    }
+
+    public function defaults(): array
+    {
+        return [ 'html' => '' ];
     }
 }

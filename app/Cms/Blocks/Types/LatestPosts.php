@@ -20,33 +20,47 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-namespace App\Providers;
+namespace App\Cms\Blocks\Types;
 
-use App\Cms\Blocks\BlockRegistry;
-use App\Cms\HtmlSanitizer;
-use Illuminate\Support\ServiceProvider;
+use App\Cms\Blocks\BlockContext;
+use App\Cms\Blocks\BlockType;
 
 /**
- * Container bindings for the CMS (pages and blog).
+ * The latest blog posts. Renders nothing until the blog exists (phase 3 of
+ * the CMS plan fills `posts`).
  *
- * Class CmsServiceProvider
- * @package App\Providers
+ * Class LatestPosts
+ * @package App\Cms\Blocks\Types
  */
-class CmsServiceProvider extends ServiceProvider
+class LatestPosts extends BlockType
 {
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function type(): string
     {
-        $this->app->singleton(HtmlSanitizer::class, function () {
-            return HtmlSanitizer::fromConfig();
-        });
+        return 'latest_posts';
+    }
 
-        $this->app->singleton(BlockRegistry::class, function () {
-            return new BlockRegistry(config('cms.blocks', []));
-        });
+    public function label(): string
+    {
+        return 'Laatste blogberichten';
+    }
+
+    public function rules(): array
+    {
+        return [
+            'title' => [ 'nullable', 'string', 'max:120' ],
+            'limit' => [ 'required', 'integer', 'between:1,6' ],
+        ];
+    }
+
+    public function defaults(): array
+    {
+        return [ 'title' => '', 'limit' => 3 ];
+    }
+
+    public function prepare(array $data, BlockContext $context): ?array
+    {
+        $data['posts'] = [];
+
+        return $data;
     }
 }

@@ -29,7 +29,19 @@ return [
     /**
      * Block type registry: type => class extending App\Cms\Blocks\BlockType.
      */
-    'blocks' => [],
+    'blocks' => [
+        'hero' => \App\Cms\Blocks\Types\Hero::class,
+        'rich_text' => \App\Cms\Blocks\Types\RichText::class,
+        'text_image' => \App\Cms\Blocks\Types\TextImage::class,
+        'cards' => \App\Cms\Blocks\Types\Cards::class,
+        'logo_grid' => \App\Cms\Blocks\Types\LogoGrid::class,
+        'reviews' => \App\Cms\Blocks\Types\Reviews::class,
+        'cta' => \App\Cms\Blocks\Types\Cta::class,
+        'video' => \App\Cms\Blocks\Types\Video::class,
+        'upcoming_events' => \App\Cms\Blocks\Types\UpcomingEvents::class,
+        'latest_posts' => \App\Cms\Blocks\Types\LatestPosts::class,
+        'faq' => \App\Cms\Blocks\Types\Faq::class,
+    ],
 
     /**
      * Maximum number of blocks on one page translation.

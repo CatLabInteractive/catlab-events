@@ -14,7 +14,7 @@
                 @if(count($v->eventDates) > 0)
                     @foreach ($v->eventDates->sortBy('startDate') as $eventDate)
                         @if($eventDate->startDate)
-                            <a href="{{ $v->series->getUrl($v) }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
+                            <a href="{{ $v->series ? $v->series->getUrl($v) : $v->getUrl() }}">{{ $eventDate->startDate->format('d/m/Y H:i') }}</a>
                             <br />
                         @endif
                     @endforeach
