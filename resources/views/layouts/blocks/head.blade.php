@@ -6,6 +6,8 @@
     <link rel="canonical" href="{{ $canonicalUrl }}" />
 @endif
 
+@stack('head')
+
 <!-- Mobile Specific Metas
 ================================================== -->
 
@@ -25,7 +27,7 @@
     @endif
 
     <link rel="sitemap" type="application/xml" title="{{organisation()->name}} Sitemap" href="/sitemap.xml" />
-    <meta property="og:title" content="{{ organisation()->name }}" />
+    <meta property="og:title" content="{{ $ogTitle ?? organisation()->name }}" />
 @endif
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">

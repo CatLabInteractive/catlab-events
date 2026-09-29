@@ -27,12 +27,13 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
-
         // Organisation::getRepresentedOrganisation() is memoised per process
-        // from $_SERVER['HTTP_HOST']; start every test from a clean slate.
+        // from $_SERVER['HTTP_HOST'] (and AppServiceProvider reads it while
+        // booting); start every test from a clean slate.
         unset($_SERVER['HTTP_HOST']);
         Organisation::resetRepresentedOrganisation();
+
+        parent::setUp();
 
         $this->catlabApi = new FakeCatLabApiClient();
         $this->app->instance(
@@ -42,5 +43,13 @@ abstract class IntegrationTestCase extends TestCase
 
         $this->eukles = new FakeEuklesClient();
         $this->app->instance(EuklesClientInterface::class, $this->eukles);
+    }
+
+    protected function tearDown(): void
+    {
+        unset($_SERVER['HTTP_HOST']);
+        Organisation::resetRepresentedOrganisation();
+
+        parent::tearDown();
     }
 }

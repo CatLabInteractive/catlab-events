@@ -98,6 +98,15 @@ class EventController extends Controller
             return redirect('admin');
         }
 
+        // The organisation's CMS home page (organisations.home_page_id), if
+        // one is selected and published. Only on /, not on /events.
+        if ($request->path() === '/') {
+            $home = PageController::homeFor($organisation, config('cms.default_locale'));
+            if ($home) {
+                return app(PageController::class)->render($request, $home);
+            }
+        }
+
         // Do we have an event that happens in the next 48 hours?
         $upcomingEvents = $organisation
             ->events()

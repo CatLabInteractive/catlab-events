@@ -180,3 +180,11 @@ Route::get('sitemap.xml', 'SitemapController@sitemap');
 
 // routes
 \App\Http\Controllers\ReferenceController::routes();
+
+// ---------------------------------------------------------------------------
+// CMS (pages, blog). MUST stay last: the page route is a catch-all and any
+// route registered after it is shadowed. New top-level paths also belong in
+// config/cms.php 'reserved_slugs' (ReservedSlugsTest enforces both).
+// ---------------------------------------------------------------------------
+\App\Http\Controllers\PageController::routes();
+Route::fallback('RedirectController@fallback');
