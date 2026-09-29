@@ -38,8 +38,9 @@ Branch `feature/cms-foundation`. After this phase a page can only be created by 
 - Create: `database/migrations/2026_10_01_100000_create_pages_tables.php`
 - Create: `database/migrations/2026_10_01_100100_create_posts_tables.php`
 - Create: `database/migrations/2026_10_01_100200_create_cms_redirects_table.php`
+- Create: `database/migrations/2026_10_01_100300_add_home_page_id_to_organisations.php` (nullable FK to `pages`, `nullOnDelete`)
 - Create: `app/Models/Page.php`, `app/Models/PageTranslation.php`, `app/Models/Post.php`, `app/Models/PostTranslation.php`, `app/Models/CmsRedirect.php`
-- Modify: `app/Models/Organisation.php` (add `pages()`, `posts()`, `cmsRedirects()` relations; add `resetRepresentedOrganisation()` test helper next to `getRepresentedOrganisation()` at line 272)
+- Modify: `app/Models/Organisation.php` (add `pages()`, `posts()`, `cmsRedirects()`, `homePage()` relations; add `resetRepresentedOrganisation()` test helper next to `getRepresentedOrganisation()` at line 272)
 - Test: `tests/Integration/Cms/CmsSchemaTest.php`, `tests/Unit/Cms/PagePathTest.php`
 
 **Interfaces:**
@@ -52,7 +53,7 @@ Branch `feature/cms-foundation`. After this phase a page can only be created by 
 ```php
 protected $casts = [ 'blocks' => 'array', 'is_published' => 'bool', 'published_at' => 'datetime' ];
 
-/** parent path + '/' + slug; '' for the home page. Cascades to children in the same locale. */
+/** parent path + '/' + slug. Cascades to children in the same locale. */
 public function rebuildPath(): void
 {
     $parent = $this->page->parent ? $this->page->parent->translation($this->locale) : null;
@@ -123,7 +124,7 @@ public function assetFields(): array { return ['image_id']; }
 - [ ] **Step 3: Views.** Bootstrap 4 markup consistent with `series/view.blade.php` and `blocks/eventtable.blade.php` (reuse the latter via `@include('blocks.eventtable', ['events' => $data['events']])`). `rich_text` prints `{!! $data['html'] !!}` inside `<div class="cms-prose">`. Images through `$asset->getUrl(['width' => …])` with `loading="lazy"`.
 - [ ] **Step 4: GREEN.** Commit `"CMS: block registry, eleven block types and renderer"`.
 
-### Task 1.4: Locale middleware, public routes, page rendering, home takeover
+### Task 1.4: Locale middleware, public routes, page rendering, per-organisation home page
 
 **Files:**
 - Create: `app/Http/Middleware/SetCmsLocale.php`; Modify: `app/Http/Kernel.php` (`'cms.locale'` route middleware)
@@ -133,7 +134,7 @@ public function assetFields(): array { return ['image_id']; }
 - Test: `tests/Integration/Cms/PageRoutingTest.php`, `tests/Integration/Cms/HomePageTest.php`, `tests/Integration/Cms/BlockRenderingTest.php`, `tests/Integration/Cms/ReservedSlugsTest.php`, `tests/Integration/Concerns/CreatesCmsFixtures.php`
 
 **Interfaces:**
-- Produces: routes as in the spec; `PageController::homeFor(Organisation, string $locale): ?PageTranslation`; `CreatesCmsFixtures::createPage(Organisation, string $path, array $blocks = [], string $locale = 'nl', bool $published = true): Page`, `createOrganisationDomain(Organisation, string $host)`, `actAsHost(string $host)` (sets `$_SERVER['HTTP_HOST']` and calls `resetRepresentedOrganisation()`).
+- Produces: routes as in the spec; `PageController::homeFor(Organisation, string $locale): ?PageTranslation` (reads `organisations.home_page_id`, returns its published translation for the locale or null); `CreatesCmsFixtures::createPage(Organisation, string $path, array $blocks = [], string $locale = 'nl', bool $published = true): Page`, `createOrganisationDomain(Organisation, string $host)`, `actAsHost(string $host)` (sets `$_SERVER['HTTP_HOST']` and calls `resetRepresentedOrganisation()`).
 
 - [ ] **Step 1: Failing tests** per the spec's `PageRoutingTest` / `HomePageTest` / `BlockRenderingTest` rows. `ReservedSlugsTest`: collects the first segment of every URI in `Route::getRoutes()` (excluding parameters and the CMS routes themselves, identified by controller class) and asserts each is in `config('cms.reserved_slugs')`.
 - [ ] **Step 2: Routes** — append to `routes/web.php`:
@@ -158,6 +159,8 @@ if ($organisation && ($home = PageController::homeFor($organisation, config('cms
     return app(PageController::class)->render($request, $home);
 }
 ```
+
+`PageController@show` 301s to the locale root when the resolved page is the organisation's `home_page_id`; `PageController@home` (`/en`, `/fr`) 404s when `homeFor()` returns null.
 - [ ] **Step 5: Views.** `cms/page.blade.php` extends `layouts/home`, `@section('title')`, `@section('description')`, `@push('head')` with canonical + alternates + OG, `@section('jsonld-content')` with `WebPage`. `head.blade.php` gains `@stack('head')` after the canonical block (leave the existing `$canonicalUrl` handling; CMS pages pass none and push their own).
 - [ ] **Step 6: GREEN**, full integration suite, `php artisan route:cache` succeeds. Commit `"CMS: locale middleware, public page routes and rendering"`.
 
@@ -177,12 +180,13 @@ Branch `feature/cms-admin-pages`.
 
 **Files:**
 - Create: `app/Policies/PagePolicy.php` (copy the shape of `SeriesPolicy`: `index/create(User, Organisation)`, `view/edit/destroy(User, Page)` via `organisation->isAdmin`); Modify: `app/Providers/AuthServiceProvider.php` (`$policies`)
-- Create: `app/Http/Controllers/Admin/PageController.php` (`index`, `create`, `store`, `edit`, `update`, `destroy`, `destroyTranslation`, `createTranslation`)
+- Create: `app/Http/Controllers/Admin/PageController.php` (`index`, `create`, `store`, `edit`, `update`, `destroy`, `destroyTranslation`, `createTranslation`, `setHome`)
+- Modify: `app/Http/Api/V1/ResourceDefinitions/OrganisationResourceDefinition.php` (writeable `home_page_id` "Startpagina" field, validated to a page of the same organisation)
 - Create: `resources/views/admin/cms/pages/index.blade.php`
 - Modify: `routes/web.php` (inside the `admin` group, near line 86: `Route::get('pages', 'Admin\PageController@index')` etc., plain routes, no `::routes()` since this is not a Charon controller), `resources/views/layouts/admin.blade.php` ("Website" sidebar section with Pages)
 - Test: `tests/Integration/Cms/AdminPagesTest.php` (index cases), extend `tests/Integration/AdminSmokeTest.php` with `/admin/pages`
 
-- [ ] **Step 1: Failing tests**: anonymous → login redirect; logged-in non-admin → `IsAdmin` redirect to `/`; admin of organisation A sees A's pages and not B's; index shows locale badges.
+- [ ] **Step 1: Failing tests**: anonymous → login redirect; logged-in non-admin → `IsAdmin` redirect to `/`; admin of organisation A sees A's pages and not B's; index shows locale badges; "Stel in als startpagina" sets `organisations.home_page_id` and shows the "Startpagina" badge; setting another organisation's page is a 404; deleting the selected home page is refused.
 - [ ] **Step 2: Implement.** `getPageInOrganisation($id)` helper mirroring `getEventInOrganisation()`. Index builds a tree from `Page::forOrganisation()->with('translations')->orderBy('sort_order')`.
 - [ ] **Step 3: GREEN.** Commit `"Admin: pages index"`.
 
@@ -191,7 +195,7 @@ Branch `feature/cms-admin-pages`.
 **Files:**
 - Create: `resources/views/admin/cms/pages/edit.blade.php`, `resources/views/admin/cms/pages/_translation_form.blade.php`, `resources/views/admin/cms/blocks/{hero,rich_text,text_image,cards,logo_grid,reviews,cta,video,upcoming_events,latest_posts,faq}.blade.php` (each renders its fields for index `{{ $i }}`; also used inside `<template>` with `__INDEX__` placeholders)
 - Create: `resources/assets/js/cms-editor.js`; Modify: `webpack.mix.js` (add to the `admin.js` bundle; copy `node_modules/tinymce` to `public/js/tinymce`), `package.json` (`tinymce@^6`)
-- Create: `app/Http/Requests/Admin/PageTranslationRequest.php` (FormRequest: page fields + translation fields + `BlockValidator::rules()`; `slug` rules: `regex:/^[a-z0-9\-]*$/`, top-level not in reserved slugs, home checkbox forces `''`; `locale` in `config('cms.locales')`)
+- Create: `app/Http/Requests/Admin/PageTranslationRequest.php` (FormRequest: page fields + translation fields + `BlockValidator::rules()`; `slug` rules: `regex:/^[a-z0-9\-]*$/`, top-level not in reserved slugs, never empty; `locale` in `config('cms.locales')`)
 - Modify: `app/Http/Controllers/Admin/PageController.php` (`store`, `update`, `createTranslation`, `destroyTranslation`, `copyTranslation`)
 - Test: `tests/Integration/Cms/AdminPagesTest.php` (form cases), extend `AdminSmokeTest` with `/admin/pages/create` and `/admin/pages/{id}/edit/nl`
 
@@ -317,15 +321,15 @@ Branch `chore/quizfabriek-cutover` for the code bits; the rest is operations. Do
 
 ### Task 6.1: Code
 
-- [ ] Decide open questions 1 and 2. If a separate GTM container is needed: migration `organisations.gtm_container_id`, `layouts/blocks/gtag.blade.php` reads it, `OrganisationResourceDefinition` exposes it (writeable admin field).
+- [ ] Canonical host is `www.quizfabriek.be`; cookie consent stays the existing CatLab one (CookieYes is dropped). If a separate GTM container is needed: migration `organisations.gtm_container_id`, `layouts/blocks/gtag.blade.php` reads it, `OrganisationResourceDefinition` exposes it (writeable admin field).
 - [ ] Update the default OG image and description fallbacks in `resources/views/layouts/blocks/seo.blade.php` to read `organisation()` fields rather than the hard-coded `www.quizfabriek.be` URL (the old WordPress host will 301 into the app; the image must exist as an asset).
 - [ ] `readme.md` "Domains" list: add `quizfabriek.be`, `www.quizfabriek.be`; document `wordpress:import` and the canonical flag.
 - [ ] Commit `"Quizfabriek cutover: OG defaults from organisation, docs"`.
 
 ### Task 6.2: Operations checklist
 
-- [ ] Insert `organisation_domains` rows for `quizfabriek.be` and `www.quizfabriek.be` (organisation = Quizfabriek), `is_canonical = 1` on the chosen one. Add both to `VALID_DOMAINS` and the TLS certificate; confirm the reverse proxy forwards `X-Forwarded-Host`/`Proto` (`AppServiceProvider::boot()` relies on them).
-- [ ] Publish the nine Dutch page translations and the home page (slug `''`). Check `/` on `tickets.quizfabriek.be` now shows the CMS home and `/events` still works.
+- [ ] Insert `organisation_domains` rows for `quizfabriek.be` and `www.quizfabriek.be` (organisation = Quizfabriek), `is_canonical = 1` on `www.quizfabriek.be`. Add both to `VALID_DOMAINS` and the TLS certificate; confirm the reverse proxy forwards `X-Forwarded-Host`/`Proto` (`AppServiceProvider::boot()` relies on them).
+- [ ] Publish the nine Dutch page translations and the home page, and select the home page as the organisation's "Startpagina" (`home_page_id`). Check `/` on `tickets.quizfabriek.be` now shows the CMS home and `/events` still works.
 - [ ] Fill remaining `cms_redirects` from the phase 4 list; confirm `/?p=<id>` and one `wp-content/uploads` URL redirect.
 - [ ] Lower the DNS TTL a day ahead; switch `quizfabriek.be` / `www` A/AAAA records to the Laravel host.
 - [ ] Verify from outside: home, nine pages, three posts, `/sitemap.xml`, `/en/…` 404 (no translations yet is fine), `tickets.quizfabriek.be/e/…` → 301 to the canonical host, a full ticket purchase, `/admin`.

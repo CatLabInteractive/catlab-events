@@ -130,8 +130,8 @@ Indexes: `(organisation_id, parent_id, sort_order)`.
 | `page_id` | FK `pages.id` | |
 | `organisation_id` | FK `organisations.id` | denormalised copy of the page's organisation so the path can be unique per tenant and locale |
 | `locale` | string(5) | `nl`, `en`, `fr` (validated against `config('cms.locales')`) |
-| `slug` | string(191) | own segment only; `''` for the home page |
-| `path` | string(191) | materialised full path: parent's `path` + `/` + `slug`, `''` for home. Rebuilt for the subtree whenever a slug or parent changes |
+| `slug` | string(191) | own segment only (the home page keeps a normal slug; see `organisations.home_page_id`) |
+| `path` | string(191) | materialised full path: parent's `path` + `/` + `slug`. Rebuilt for the subtree whenever a slug or parent changes |
 | `title` | string | H1 and default `<title>` |
 | `blocks` | json | ordered list of blocks, see Block system |
 | `meta_title` | string nullable | overrides `<title>` |
@@ -192,12 +192,26 @@ translation `is_published`.
 
 Indexes: unique `(organisation_id, from_path)`.
 
+### `organisations.home_page_id`
+
+Decided: the homepage is chosen explicitly per organisation. New nullable
+column `organisations.home_page_id` (FK `pages.id`, `nullOnDelete`). When it
+is set and the page has a published translation in the requested locale,
+`/` (or `/en`, `/fr`) renders that translation; the page's own path 301s to
+the locale root so there is one URL per home. When it is `NULL`, `/` keeps
+the existing `EventController@index` behaviour and `/en`, `/fr` 404.
+Deleting the page clears the column. The admin picks it from a "Startpagina"
+select on the organisation (writeable field in
+`OrganisationResourceDefinition`) and via a "Stel in als startpagina" action
+on the pages index.
+
 ### `organisation_domains.is_canonical`
 
 One new nullable boolean on the existing table (`2020_04_22_173612_add_organisation_domains_table.php`).
 When an organisation has a canonical domain, requests for any of its
-other domains are 301'd there (see Cutover). No other schema change to
-existing tables. `organisations.blog_url` / `blog_rss_url` stay but stop
+other domains are 301'd there (see Cutover). For Quizfabriek the canonical
+domain is `www.quizfabriek.be` (decided). Apart from this and
+`organisations.home_page_id`, no schema change to existing tables. `organisations.blog_url` / `blog_rss_url` stay but stop
 being read once posts exist.
 
 ### Models
@@ -258,10 +272,12 @@ Route::prefix('{locale}')->where(['locale' => 'en|fr'])
 minus the default; hard-coded here for readability.)
 
 The Dutch home page is not a new route: `EventController@index` (the
-existing `/`) first asks `PageController::homeFor(organisation(), 'nl')`.
-If that organisation has a published Dutch home translation it is
-rendered, otherwise the existing series/calendar behaviour runs. Other
-organisations on this install keep their current homepage untouched.
+existing `/`) first asks `PageController::homeFor(organisation(), 'nl')`,
+which reads `organisations.home_page_id`. If it is set and that page has a
+published Dutch translation, the translation is rendered; otherwise the
+existing series/calendar behaviour runs. Organisations that never set a
+home page keep their current homepage untouched. `PageController@show`
+301s a request for the home page's own path to the locale root.
 
 ### Precedence
 
@@ -545,9 +561,10 @@ screens.
 - **Page edit** (`/admin/pages/{page}/edit/{locale}`): as described under
   Admin form. Actions: save, save & preview (`?preview=1` on the public
   URL), publish / unpublish, delete translation, delete page (only when
-  it has no children). Home page: slug fixed to `''` (checkbox "Dit is de
-  startpagina" that sets slug empty; only one per organisation per locale,
-  enforced by the unique index on `path`).
+  it has no children). The page chosen as `organisations.home_page_id` shows a
+  "Startpagina" badge; the index has a "Stel in als startpagina" action
+  and the organisation edit form a "Startpagina" select (both write
+  `home_page_id`). The home page cannot be deleted while it is selected.
 - **Posts index** (`/admin/posts`): newest first, title, date, locale
   badges, published state. **Post edit** (`/admin/posts/{post}/edit/{locale}`):
   published date, featured image, and per locale slug, title, excerpt,
@@ -592,9 +609,9 @@ logic in `App\Cms\Import\WordPressImporter` so it is testable with
   HTML, sanitised, which flattens it to headings/paragraphs/images) as a
   single `rich_text` block in an **unpublished** Dutch translation. This is
   raw material for editors, not a port: the real pages are rebuilt from
-  blocks in the admin before cutover. The home page (`front page` from
-  `/wp-json/wp/v2/settings` is not public; use `--home=quizfabriek-home`
-  or whichever slug the assessment identifies) gets slug `''`.
+  blocks in the admin before cutover. The WordPress home page is imported like any other page
+  (the `front page` setting is not public, so `--home=<slug>` names it);
+  with `--home`, the command sets `organisations.home_page_id` to it.
 - **Redirects**: read `/post-sitemap.xml` and `/page-sitemap.xml`, and for
   every URL that does not resolve to an imported page/post path print it,
   so the remaining map (`/category/…`, `/feed/`, `/author/…`) can be
@@ -693,7 +710,7 @@ validator, the path builder and the WordPress mapping.
 | `HtmlSanitizerTest` (unit) | `<script>`, `onerror`, `javascript:` hrefs, `style`, foreign iframes and images from other hosts are stripped; YouTube iframes, our asset images, `wp-block-*` classes survive; `h1` → `h2`; `target=_blank` gets `rel=noopener` |
 | `BlockValidatorTest` (unit) | unknown type rejected; per-type rules applied at the right index; unknown data keys dropped; max blocks; `SafeUrl` accepts `/calendar`, `mailto:`, `tel:`, `https://` and rejects `javascript:` |
 | `PageRoutingTest` | `/over-ons` 200 for nl; `/en/about-us` 200 when published; `/fr/…` 404 when no translation; unpublished 404, but 200 with `?preview=1` as org admin and `noindex`; `/events`, `/calendar`, `/s/1/x` still hit their controllers with pages of the same slug in the DB; trailing slash serves the page; another organisation's domain 404s for this organisation's page |
-| `HomePageTest` | `/` renders the CMS home when the organisation has a published nl home, else the existing series page; `/en` renders the English home |
+| `HomePageTest` | `/` renders the page in `organisations.home_page_id` when it has a published nl translation, else the existing series page; `/en` renders its English translation or 404s; the home page's own path 301s to `/`; another organisation without `home_page_id` still gets the series page; deleting the page nulls the column |
 | `BlockRenderingTest` | every registered block renders from a fixture page (one page containing all types, the `AdminSmokeTest` idea); an unknown type in stored JSON is skipped; `upcoming_events` lists this organisation's published upcoming events only and honours `event_type=package`; `latest_posts` lists published posts only |
 | `PostRoutingTest` | `/2019/03/14/slug` 200; wrong date 301s to the canonical; unpublished / future `published_at` 404; `/blog` paginates; `/en/blog` lists only posts with an English translation |
 | `AdminPagesTest` | non-admin → redirect (`IsAdmin`); admin of another organisation → 404; create page + nl translation; add en translation; reserved top-level slug rejected; duplicate path rejected; block validation errors re-render the form; saving sanitises `rich_text`; slug rename cascades `path` to children; sitemap cache forgotten |
@@ -726,12 +743,12 @@ production between phases, with WordPress still serving `quizfabriek.be`.
    canonical-domain middleware, `cms` lang files.
 6. **Cutover** (an afternoon, reversible by DNS):
    - Add `quizfabriek.be` and `www.quizfabriek.be` as `OrganisationDomain`
-     rows for Quizfabriek; mark `www.quizfabriek.be` (or the bare domain,
-     decide with the current WordPress canonical) `is_canonical`.
+     rows for Quizfabriek; mark `www.quizfabriek.be` `is_canonical` (decided).
    - Add both to `VALID_DOMAINS` (only consulted by the no-op middleware,
      but keep it consistent) and to the TLS certificate.
-   - Publish the Dutch home page, so `/` switches from the series page to
-     the CMS home for this organisation only.
+   - Publish the Dutch home page and select it as the organisation's
+     "Startpagina", so `/` switches from the series page to the CMS home for
+     this organisation only.
    - Point DNS at the Laravel host. `tickets.quizfabriek.be` starts
      301-ing to the canonical domain with the same path through the new
      `CanonicalDomain` middleware; the cookie-consent cross-domain list in
@@ -771,24 +788,16 @@ production between phases, with WordPress still serving `quizfabriek.be`.
 
 ## Open questions
 
-1. **Canonical host**: `quizfabriek.be` or `www.quizfabriek.be`? WordPress
-   currently canonicalises to `www.quizfabriek.be` (the OG image in
-   `seo.blade.php` uses it). The `is_canonical` flag makes this a data
-   choice, but Search Console and the certificate need the answer.
-2. **Cookie consent and GTM.** `head.blade.php` loads CatLab's own
-   cookie-consent and `layouts/blocks/gtag.blade.php` handles analytics;
-   WordPress used CookieYes and GTM4WP. Proposal: keep the Laravel setup
-   and drop CookieYes; if the marketing GTM container differs from the one
-   in the admin layout (`GTM-5PVSCV7`), add an `organisations.gtm_container_id`
-   column. Needs the container ids.
+1. ~~Canonical host~~ **Decided:** `www.quizfabriek.be`.
+2. **Cookie consent — decided:** keep the existing CatLab cookie consent
+   (`head.blade.php`) and drop CookieYes. Still open: if the marketing GTM
+   container differs from the one in the admin layout (`GTM-5PVSCV7`), add
+   an `organisations.gtm_container_id` column. Needs the container id.
 3. **Blog index URL.** `/blog` is proposed (English word, works in all
    three locales). Did WordPress have a posts page (`/blog/`, `/nieuws/`)?
    If so it becomes a redirect row.
-4. **Home page for other organisations.** The design keeps
-   `EventController@index` for organisations without a CMS home. Should
-   the admin be able to switch the home explicitly instead
-   (`organisations.home_page_id`)? The implicit rule is simpler and is what
-   the plan implements.
+4. ~~Home page selection~~ **Decided:** explicit per organisation via
+   `organisations.home_page_id` (see Data model).
 5. **Asset ownership.** The `assets` table has only `user_id`. The image
    picker lists assets uploaded by admins of the active organisation; a
    cleaner `assets.organisation_id` column is a small migration that
