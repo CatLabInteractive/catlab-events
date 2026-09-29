@@ -49,6 +49,17 @@ class AssetController extends Controller
             }
 
             $asset = \CentralStorage::store($file);
+
+            // Assets are scoped to organisations (the CMS picker lists only
+            // the active organisation's images).
+            $organisation = \Auth::user() ? \Auth::user()->getActiveOrganisation() : null;
+            if ($organisation) {
+                $asset->organisation_id = $organisation->id;
+            }
+            if (\Auth::user()) {
+                $asset->user_id = \Auth::id();
+            }
+
             $asset->save();
         }
 

@@ -328,3 +328,49 @@ $sidebar-active-bg: $admin-accent;
     text-align: left;
   }
 }
+
+// CMS page editor: image fields and the image picker (cms-editor.js).
+.cms-image-preview {
+  max-width: 160px;
+  max-height: 90px;
+  object-fit: cover;
+  border: 1px solid $gray-300;
+}
+
+.cms-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-gap: 0.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  button {
+    padding: 0;
+    border: 2px solid transparent;
+    background: $gray-100;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      border-color: theme-color('primary');
+      outline: none;
+    }
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+  }
+
+  span {
+    display: block;
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}

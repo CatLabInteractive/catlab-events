@@ -88,6 +88,7 @@ Route::group([
 
             // CMS pages (custom editor, not a Charon admin controller)
             \App\Http\Controllers\Admin\PageController::routes();
+            \App\Http\Controllers\Admin\CmsAssetController::routes();
 
             Route::get('uitdb', 'Admin\UitDbController@index');
             Route::get('uitdb/connect', 'Admin\UitDbController@link');

@@ -11,8 +11,13 @@
  *   .cms-repeater[data-repeater][data-max]  a list of rows inside a block
  *     .cms-repeater-rows > .cms-repeater-row
  *     > template[data-repeater-template]   a fresh row, with __ROW__
- *   [data-cms-action="up|down|remove|add-block|add-row"]
+ *   [data-cms-action="up|down|remove|add-block|add-row|pick-image|clear-image"]
  *   textarea.cms-html                      rich text (TinyMCE)
+ *   .cms-image-field                       an image (assets.id): [data-cms-image-input],
+ *                                          [data-cms-image-preview], [data-cms-image-empty]
+ *   [data-cms-image-picker]                the picker modal (list, search, upload)
+ *   form[data-cms-upload-url]              POST admin/cms/upload -> { id, location, thumbnail }
+ *   form[data-cms-assets-url]              GET admin/cms/assets?q= -> { data: [ ... ] }
  */
 (function () {
     'use strict';
@@ -77,6 +82,203 @@
     }
 
     // ---------------------------------------------------------------------
+    // Uploads
+    // ---------------------------------------------------------------------
+
+    function csrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    function readJson(response) {
+        return response.json().catch(function () {
+            return {};
+        }).then(function (body) {
+            if (!response.ok) {
+                throw new Error(body.message || ('Er ging iets mis (' + response.status + ').'));
+            }
+            return body;
+        });
+    }
+
+    /**
+     * Upload an image to the organisation's assets.
+     * @return Promise<{ id, location, thumbnail, name }>
+     */
+    function uploadImage(editor, file, filename) {
+        var data = new FormData();
+        data.append('file', file, filename || file.name);
+
+        return window.fetch(editor.getAttribute('data-cms-upload-url'), {
+            method: 'POST',
+            body: data,
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' }
+        }).then(readJson);
+    }
+
+    function listImages(editor, query) {
+        var url = editor.getAttribute('data-cms-assets-url') + (query ? '?q=' + encodeURIComponent(query) : '');
+
+        return window.fetch(url, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        }).then(readJson);
+    }
+
+    // ---------------------------------------------------------------------
+    // Image fields and the picker
+    // ---------------------------------------------------------------------
+
+    function setImage(field, asset) {
+        var input = field.querySelector('[data-cms-image-input]');
+        var preview = field.querySelector('[data-cms-image-preview]');
+        var empty = field.querySelector('[data-cms-image-empty]');
+        var clear = field.querySelector('[data-cms-action="clear-image"]');
+
+        input.value = asset ? asset.id : '';
+        preview.src = asset ? asset.thumbnail : '';
+        preview.classList.toggle('d-none', !asset);
+        if (empty) {
+            empty.classList.toggle('d-none', !!asset);
+        }
+        if (clear) {
+            clear.classList.toggle('d-none', !asset);
+        }
+    }
+
+    var picker = {
+        modal: null,
+        editor: null,
+        field: null,
+        searchTimer: null
+    };
+
+    function pickerElement(name) {
+        return picker.modal.querySelector('[data-cms-picker-' + name + ']');
+    }
+
+    function pickerMessage(error, status) {
+        var errorBox = pickerElement('error');
+        var statusBox = pickerElement('status');
+
+        errorBox.textContent = error || '';
+        errorBox.classList.toggle('d-none', !error);
+        statusBox.textContent = status || '';
+        statusBox.classList.toggle('d-none', !status);
+    }
+
+    function choose(asset) {
+        if (picker.field) {
+            setImage(picker.field, asset);
+        }
+        closePicker();
+    }
+
+    function renderImages(assets) {
+        var grid = pickerElement('grid');
+        grid.innerHTML = '';
+
+        assets.forEach(function (asset) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.title = asset.name || '';
+
+            var img = document.createElement('img');
+            img.src = asset.thumbnail;
+            img.alt = '';
+            img.loading = 'lazy';
+
+            var name = document.createElement('span');
+            name.textContent = asset.name || ('#' + asset.id);
+
+            button.appendChild(img);
+            button.appendChild(name);
+            button.addEventListener('click', function () {
+                choose(asset);
+            });
+
+            grid.appendChild(button);
+        });
+
+        pickerMessage(null, assets.length ? null : 'Geen afbeeldingen gevonden. Upload er een.');
+    }
+
+    function loadImages() {
+        var query = pickerElement('search').value.trim();
+        pickerMessage(null, 'Afbeeldingen laden…');
+
+        listImages(picker.editor, query).then(function (body) {
+            renderImages(body.data || []);
+        }, function (error) {
+            pickerMessage(error.message, null);
+        });
+    }
+
+    function openPicker(editor, field) {
+        picker.modal = picker.modal || document.querySelector('[data-cms-image-picker]');
+        if (!picker.modal) {
+            return;
+        }
+
+        picker.editor = editor;
+        picker.field = field;
+        pickerElement('search').value = '';
+        loadImages();
+
+        if (window.jQuery && window.jQuery.fn.modal) {
+            window.jQuery(picker.modal).modal('show');
+        } else {
+            picker.modal.style.display = 'block';
+            picker.modal.classList.add('show');
+        }
+    }
+
+    function closePicker() {
+        if (!picker.modal) {
+            return;
+        }
+
+        if (window.jQuery && window.jQuery.fn.modal) {
+            window.jQuery(picker.modal).modal('hide');
+        } else {
+            picker.modal.style.display = 'none';
+            picker.modal.classList.remove('show');
+        }
+    }
+
+    function initPicker() {
+        var modal = document.querySelector('[data-cms-image-picker]');
+        if (!modal || modal.getAttribute('data-cms-ready')) {
+            return;
+        }
+        modal.setAttribute('data-cms-ready', '1');
+        picker.modal = modal;
+
+        pickerElement('search').addEventListener('input', function () {
+            window.clearTimeout(picker.searchTimer);
+            picker.searchTimer = window.setTimeout(loadImages, 250);
+        });
+
+        var upload = pickerElement('upload');
+        upload.addEventListener('change', function () {
+            var file = upload.files && upload.files[0];
+            if (!file || !picker.editor) {
+                return;
+            }
+
+            pickerMessage(null, 'Uploaden…');
+            uploadImage(picker.editor, file).then(function (asset) {
+                upload.value = '';
+                choose(asset);
+            }, function (error) {
+                upload.value = '';
+                pickerMessage(error.message, null);
+            });
+        });
+    }
+
+    // ---------------------------------------------------------------------
     // Rich text
     // ---------------------------------------------------------------------
 
@@ -99,6 +301,16 @@
             relative_urls: false,
             link_default_target: '',
             content_css: '/css/app.css',
+            // Pasted and inserted images go to the organisation's assets.
+            automatic_uploads: true,
+            images_file_types: 'jpg,jpeg,png,gif,webp',
+            images_upload_handler: function (blobInfo) {
+                return uploadImage(editor, blobInfo.blob(), blobInfo.filename()).then(function (asset) {
+                    return asset.location;
+                }, function (error) {
+                    throw { message: error.message, remove: true };
+                });
+            },
             body_class: 'cms-prose',
             media_alt_source: false,
             media_poster: false,
@@ -231,6 +443,14 @@
                 }
                 break;
 
+            case 'pick-image':
+                openPicker(editor, button.closest('.cms-image-field'));
+                break;
+
+            case 'clear-image':
+                setImage(button.closest('.cms-image-field'), null);
+                break;
+
             case 'remove':
                 if (item && window.confirm(item.matches('.cms-block') ? 'Deze sectie verwijderen?' : 'Deze rij verwijderen?')) {
                     removeEditors(item);
@@ -257,6 +477,7 @@
             }
         });
 
+        initPicker();
         reindex(editor);
         initEditors(editor, editor);
     }
