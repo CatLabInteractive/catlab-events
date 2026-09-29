@@ -63,8 +63,12 @@ class SendCancelConfirmation extends SendEmail
                     $this->sendCancellationEmail($order, $member->user);
                 }
             }
-        } else {
+        } elseif ($order->user) {
             $this->sendCancellationEmail($order, $order->user);
+        }
+
+        if ($order->is_vip && $order->vip_email) {
+            $this->sendCancellationEmail($order, null, $order->vip_email);
         }
     }
 }

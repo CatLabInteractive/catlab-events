@@ -17,10 +17,17 @@ abstract class SendEmail
     /**
      * @param Order $order
      * @param Event $event
-     * @param User $user
+     * @param User|null $user
+     * @param string|null $email overrides the user's address; VIP orders have
+     *   no user and are mailed at the address the admin entered instead.
      */
-    public function sendConfirmationEmail(Order $order, Event $event, User $user)
+    public function sendConfirmationEmail(Order $order, Event $event, ?User $user, $email = null)
     {
+        $recipient = $email ?: ($user ? $user->email : null);
+        if (empty($recipient)) {
+            return;
+        }
+
         /** @var Group $group */
         $group = $order->group;
 
@@ -50,7 +57,7 @@ abstract class SendEmail
             $apiClient->sendEmail(
                 $event->name . ': We zijn er bij!',
                 $view->render(),
-                $user->email
+                $recipient
             );
         } catch (GuzzleException $e) {
             \Log::error($e);
@@ -104,15 +111,21 @@ abstract class SendEmail
 
     /**
      * @param Order $order
-     * @param User $user
+     * @param User|null $user
+     * @param string|null $email set for VIP orders, which have no user
      */
-    public function sendCancellationEmail(Order $order, User $user)
+    public function sendCancellationEmail(Order $order, ?User $user, $email = null)
     {
         /** @var Group $group */
         $group = $order->group;
 
-        if (empty($user->email)) {
-            return;
+        if ($email === null) {
+            if (!$user || empty($user->email)) {
+                return;
+            }
+
+            // Historically sent to the buyer's address, not the member's.
+            $email = $order->user ? $order->user->email : $user->email;
         }
 
         $attributes = [
@@ -123,15 +136,13 @@ abstract class SendEmail
 
         $view = \View::make('emails/tickets/cancellation', $attributes);
 
-        /** @var User $user */
-        $user = $order->user;
-        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($order->user);
 
         try {
             $apiClient->sendEmail(
                 $order->event->name . ': We zijn er niet bij :(',
                 $view->render(),
-                $user->email
+                $email
             );
         } catch (GuzzleException $e) {
             \Log::error($e);

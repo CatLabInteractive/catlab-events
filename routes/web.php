@@ -100,6 +100,10 @@ Route::group([
             Route::get('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@massInvite');
             Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
 
+            Route::get('events/{event}/vip', 'Admin\VipRegistrationController@index');
+            Route::post('events/{event}/vip', 'Admin\VipRegistrationController@store');
+            Route::post('events/{event}/vip/{order}/cancel', 'Admin\VipRegistrationController@cancel');
+
             Route::get('events/{id}/export/members', 'Admin\EventController@exportMembers');
             Route::get('events/{id}/export/sales', 'Admin\EventController@exportSales');
             Route::get('events/{id}/export/clearing', 'Admin\EventController@exportClearing');

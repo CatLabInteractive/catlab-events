@@ -134,6 +134,32 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
+     * Registered by an admin for a guest without an account.
+     * @return bool
+     */
+    public function isVip()
+    {
+        return (bool) $this->is_vip;
+    }
+
+    /**
+     * Who this order is for: the team, the VIP guest, or the buyer.
+     * @return string|null
+     */
+    public function getAttendeeName()
+    {
+        if ($this->group) {
+            return $this->group->name;
+        }
+
+        if ($this->isVip()) {
+            return $this->vip_name;
+        }
+
+        return $this->user ? $this->user->getDisplayName() : null;
+    }
+
+    /**
      * Is canceled?
      * @return bool
      */
@@ -344,13 +370,12 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function getEuklesAttributes()
     {
-        $data = $this->getOrderData(true);
-
-        $price = $data['price'];
+        // Free tickets and VIP registrations never get an accounts order.
+        $data = $this->getOrderData(true) ?: [];
 
         return [
-            'reference' => $data['reference'],
-            'price' => $price,
+            'reference' => isset($data['reference']) ? $data['reference'] : null,
+            'price' => isset($data['price']) ? $data['price'] : 0,
             'domain' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '',
             'receipt' => isset($data['receipt']) ? $data['receipt'] : null,
             'playLink' => $this->play_link

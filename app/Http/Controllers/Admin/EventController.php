@@ -145,6 +145,12 @@ class EventController extends BaseAdminController
                 ->setQueryParameters($this->getShowQueryParameters($request))
         );
 
+        $table->modelAction(
+            (new ResourceAction('Admin\VipRegistrationController@index', 'VIP', 'event'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+        );
+
         return $table;
     }
 
@@ -224,6 +230,24 @@ class EventController extends BaseAdminController
                 }
             }
 
+            // VIP guests have no account; include the address the admin entered.
+            $vipOrders = $event->orders()
+                ->accepted()
+                ->where('is_vip', '=', true)
+                ->whereNotNull('vip_email')
+                ->where('ticket_category_id', '=', $ticketCategory->id)
+                ->get();
+
+            foreach ($vipOrders as $order) {
+                /** @var Order $order */
+                $out[] = [
+                    $ticketCategory->id,
+                    $ticketCategory->name,
+                    $order->vip_email,
+                    $order->group ? $event->getAttendeeName($order->group) : null,
+                    $order->vip_name
+                ];
+            }
         }
 
         return $this->outputCsv(
@@ -328,8 +352,8 @@ class EventController extends BaseAdminController
                 'Reference' => $data ? $data['reference'] : '',
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
                 'Ticket Category' => $order->ticketCategory->name,
-                'Group name' => $order->group ? $event->getAttendeeName($order->group) : null,
-                'Email address' => $order->user ? $order->user->email : null,
+                'Group name' => $order->group ? $event->getAttendeeName($order->group) : ($order->isVip() ? $order->vip_name : null),
+                'Email address' => $order->user ? $order->user->email : $order->vip_email,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];
 
