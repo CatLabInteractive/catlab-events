@@ -28,8 +28,8 @@ class OrderResourceDefinition extends ResourceDefinition
         $this->field('state')
             ->visible(true);
 
-        $this->field('is_vip')
-            ->display('vip')
+        $this->field('is_guest')
+            ->display('guest')
             ->visible(true);
 
         $this->field('created_at')

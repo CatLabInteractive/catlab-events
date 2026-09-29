@@ -29,24 +29,24 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 
 /**
- * Class VipRegistrationController
+ * Class GuestRegistrationController
  *
  * Registering guests (famous attendees, sponsors, press) straight from the
- * admin panel, without asking them to create an account first. A VIP
+ * admin panel, without asking them to create an account first. A guest
  * registration is a regular accepted order with no user and no accounts
- * order behind it, flagged `is_vip`. On team events it gets a team of its
+ * order behind it, flagged `is_guest`. On team events it gets a team of its
  * own (with no members), so it shows up in attendee lists and scores like
  * any other team.
  *
- * Admins may register a VIP even when the event is sold out: that is
- * usually the point of a VIP ticket. The seat still counts as sold.
+ * Admins may register a guest even when the event is sold out: that is
+ * usually the point of a guest ticket. The seat still counts as sold.
  *
  * @package App\Http\Controllers\Admin
  */
-class VipRegistrationController extends Controller
+class GuestRegistrationController extends Controller
 {
     /**
-     * The form, plus every VIP registration made for this event so far.
+     * The form, plus every guest registration made for this event so far.
      *
      * @param $eventId
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -56,12 +56,12 @@ class VipRegistrationController extends Controller
         $event = $this->getEventInOrganisation($eventId);
 
         $orders = $event->orders()
-            ->where('is_vip', '=', true)
+            ->where('is_guest', '=', true)
             ->with([ 'group', 'ticketCategory' ])
             ->orderBy('id')
             ->get();
 
-        return view('admin.vip.index', [
+        return view('admin.guests.index', [
             'event' => $event,
             'ticketCategories' => $event->getTicketCategoriesChronologically(),
             'orders' => $orders,
@@ -70,7 +70,7 @@ class VipRegistrationController extends Controller
     }
 
     /**
-     * Register a VIP.
+     * Register a guest.
      *
      * @param Request $request
      * @param $eventId
@@ -102,19 +102,19 @@ class VipRegistrationController extends Controller
             $order->group()->associate($group);
         }
 
-        $order->is_vip = true;
-        $order->vip_name = $name;
-        $order->vip_email = $request->input('email') ?: null;
-        $order->vip_notes = $request->input('notes') ?: null;
+        $order->is_guest = true;
+        $order->guest_name = $name;
+        $order->guest_email = $request->input('email') ?: null;
+        $order->guest_notes = $request->input('notes') ?: null;
         $order->save();
 
-        \Log::info('VIP registration created', [
+        \Log::info('Guest registration created', [
             'order' => $order->id,
             'event' => $event->id,
             'admin' => \Auth::id(),
         ]);
 
-        $back = redirect(action('Admin\VipRegistrationController@index', [ $event->id ]));
+        $back = redirect(action('Admin\GuestRegistrationController@index', [ $event->id ]));
 
         // Confirming fetches the play link and sends the confirmation mail.
         // The registration itself is saved either way, so a failing external
@@ -122,7 +122,7 @@ class VipRegistrationController extends Controller
         try {
             $order->changeState(Order::STATE_ACCEPTED);
         } catch (\Throwable $e) {
-            \Log::error('VIP registration saved, but confirming it failed', [
+            \Log::error('Guest registration saved, but confirming it failed', [
                 'order' => $order->id,
                 'error' => $e->getMessage()
             ]);
@@ -134,11 +134,11 @@ class VipRegistrationController extends Controller
             );
         }
 
-        return $back->with('message', $name . ' is ingeschreven als VIP.');
+        return $back->with('message', $name . ' is ingeschreven als gast.');
     }
 
     /**
-     * Cancel a VIP registration.
+     * Cancel a guest registration.
      *
      * @param $eventId
      * @param $orderId
@@ -150,10 +150,10 @@ class VipRegistrationController extends Controller
 
         /** @var Order $order */
         $order = $event->orders()
-            ->where('is_vip', '=', true)
+            ->where('is_guest', '=', true)
             ->findOrFail($orderId);
 
-        $back = redirect(action('Admin\VipRegistrationController@index', [ $event->id ]));
+        $back = redirect(action('Admin\GuestRegistrationController@index', [ $event->id ]));
 
         if ($order->isCancelled()) {
             return $back->with('message', 'Deze inschrijving was al geannuleerd.');

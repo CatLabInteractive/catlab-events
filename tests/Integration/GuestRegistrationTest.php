@@ -9,10 +9,10 @@ use App\Models\User;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
 /**
- * Admins register VIP guests (or VIP teams) from the admin panel, without
+ * Admins register guests (or guest teams) from the admin panel, without
  * the guest ever creating an account: an accepted order with no user.
  */
-class VipRegistrationTest extends IntegrationTestCase
+class GuestRegistrationTest extends IntegrationTestCase
 {
     use CreatesEventFixtures;
 
@@ -27,23 +27,23 @@ class VipRegistrationTest extends IntegrationTestCase
         return $admin;
     }
 
-    public function testTheVipPageRendersAndIsLinkedFromTheEventList()
+    public function testTheGuestsPageRendersAndIsLinkedFromTheEventList()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
         $category = $this->createTicketCategory($event, 10.0);
         $admin = $this->adminOf($organisation);
 
-        $response = $this->actingAs($admin)->get("/admin/events/{$event->id}/vip");
+        $response = $this->actingAs($admin)->get("/admin/events/{$event->id}/guests");
         $response->assertStatus(200);
         $response->assertSee($category->name);
 
         $this->actingAs($admin)->get('/admin/events')
             ->assertStatus(200)
-            ->assertSee(action('Admin\VipRegistrationController@index', [ $event->id ]), false);
+            ->assertSee(action('Admin\GuestRegistrationController@index', [ $event->id ]), false);
     }
 
-    public function testAVipGuestIsRegisteredWithoutAnAccount()
+    public function testAGuestIsRegisteredWithoutAnAccount()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
@@ -51,22 +51,22 @@ class VipRegistrationTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip", [
+            ->post("/admin/events/{$event->id}/guests", [
                 'name' => 'Famous Person',
                 'email' => 'famous@example.com',
                 'notes' => 'Via the sponsor',
                 'ticketCategory' => $category->id
             ])
-            ->assertRedirect(action('Admin\VipRegistrationController@index', [ $event->id ]));
+            ->assertRedirect(action('Admin\GuestRegistrationController@index', [ $event->id ]));
 
         $order = Order::query()->first();
         $this->assertNotNull($order);
         $this->assertSame(Order::STATE_ACCEPTED, $order->state);
-        $this->assertTrue($order->isVip());
+        $this->assertTrue($order->isGuest());
         $this->assertNull($order->user_id);
         $this->assertNull($order->group_id);
         $this->assertSame('Famous Person', $order->getAttendeeName());
-        $this->assertSame('Via the sponsor', $order->vip_notes);
+        $this->assertSame('Via the sponsor', $order->guest_notes);
 
         // Nothing is paid: no accounts order, but the guest does get the
         // regular confirmation mail at the address the admin entered.
@@ -74,12 +74,12 @@ class VipRegistrationTest extends IntegrationTestCase
         $this->assertCount(1, $this->catlabApi->sendEmailCalls);
         $this->assertSame('famous@example.com', $this->catlabApi->sendEmailCalls[0]['target']);
 
-        $this->actingAs($admin)->get("/admin/events/{$event->id}/vip")
+        $this->actingAs($admin)->get("/admin/events/{$event->id}/guests")
             ->assertStatus(200)
             ->assertSee('Famous Person');
     }
 
-    public function testAVipTeamGetsATeamThatAttendsTheEvent()
+    public function testAGuestTeamGetsATeamThatAttendsTheEvent()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
@@ -89,7 +89,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip", [
+            ->post("/admin/events/{$event->id}/guests", [
                 'name' => 'The Famous Five',
                 'ticketCategory' => $category->id
             ])
@@ -105,14 +105,14 @@ class VipRegistrationTest extends IntegrationTestCase
         $this->assertCount(0, $this->catlabApi->sendEmailCalls);
     }
 
-    public function testCancellingAVipRegistration()
+    public function testCancellingAGuestRegistration()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
         $category = $this->createTicketCategory($event, 10.0);
         $admin = $this->adminOf($organisation);
 
-        $this->actingAs($admin)->post("/admin/events/{$event->id}/vip", [
+        $this->actingAs($admin)->post("/admin/events/{$event->id}/guests", [
             'name' => 'Famous Person',
             'email' => 'famous@example.com',
             'ticketCategory' => $category->id
@@ -120,7 +120,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $order = Order::query()->first();
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip/{$order->id}/cancel")
+            ->post("/admin/events/{$event->id}/guests/{$order->id}/cancel")
             ->assertRedirect();
 
         $this->assertSame(Order::STATE_CANCELLED, $order->fresh()->state);
@@ -128,7 +128,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $this->assertSame('famous@example.com', $this->catlabApi->sendEmailCalls[1]['target']);
     }
 
-    public function testOnlyVipOrdersCanBeCancelledHere()
+    public function testOnlyGuestOrdersCanBeCancelledHere()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
@@ -143,7 +143,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $order->save();
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip/{$order->id}/cancel")
+            ->post("/admin/events/{$event->id}/guests/{$order->id}/cancel")
             ->assertStatus(404);
 
         $this->assertSame(Order::STATE_ACCEPTED, $order->fresh()->state);
@@ -157,7 +157,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip", [ 'ticketCategory' => $category->id ])
+            ->post("/admin/events/{$event->id}/guests", [ 'ticketCategory' => $category->id ])
             ->assertSessionHasErrors('name');
 
         $this->assertSame(0, Order::query()->count());
@@ -172,7 +172,7 @@ class VipRegistrationTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
 
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip", [
+            ->post("/admin/events/{$event->id}/guests", [
                 'name' => 'Famous Person',
                 'ticketCategory' => $otherCategory->id
             ])
@@ -187,9 +187,9 @@ class VipRegistrationTest extends IntegrationTestCase
         $category = $this->createTicketCategory($event, 10.0);
         $admin = $this->adminOf($this->createOrganisation());
 
-        $this->actingAs($admin)->get("/admin/events/{$event->id}/vip")->assertStatus(404);
+        $this->actingAs($admin)->get("/admin/events/{$event->id}/guests")->assertStatus(404);
         $this->actingAs($admin)
-            ->post("/admin/events/{$event->id}/vip", [
+            ->post("/admin/events/{$event->id}/guests", [
                 'name' => 'Famous Person',
                 'ticketCategory' => $category->id
             ])
@@ -198,14 +198,14 @@ class VipRegistrationTest extends IntegrationTestCase
         $this->assertSame(0, Order::query()->count());
     }
 
-    public function testAVipOrderShowsInTheAdminOrderList()
+    public function testAGuestOrderShowsInTheAdminOrderList()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
         $category = $this->createTicketCategory($event, 10.0);
         $admin = $this->adminOf($organisation);
 
-        $this->actingAs($admin)->post("/admin/events/{$event->id}/vip", [
+        $this->actingAs($admin)->post("/admin/events/{$event->id}/guests", [
             'name' => 'Famous Person',
             'ticketCategory' => $category->id
         ]);

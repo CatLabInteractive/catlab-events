@@ -18,7 +18,7 @@ abstract class SendEmail
      * @param Order $order
      * @param Event $event
      * @param User|null $user
-     * @param string|null $email overrides the user's address; VIP orders have
+     * @param string|null $email overrides the user's address; guest orders have
      *   no user and are mailed at the address the admin entered instead.
      */
     public function sendConfirmationEmail(Order $order, Event $event, ?User $user, $email = null)
@@ -112,7 +112,7 @@ abstract class SendEmail
     /**
      * @param Order $order
      * @param User|null $user
-     * @param string|null $email set for VIP orders, which have no user
+     * @param string|null $email set for guest orders, which have no user
      */
     public function sendCancellationEmail(Order $order, ?User $user, $email = null)
     {

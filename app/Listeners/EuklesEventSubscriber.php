@@ -106,7 +106,7 @@ class EuklesEventSubscriber
         // Track on ze eukles.
         $euklesEvent = \Eukles::createEvent('event.order.confirmed', $attributes);
 
-        // VIP registrations are made by an admin and have no user.
+        // Guest registrations are made by an admin and have no user.
         if ($order->user) {
             $euklesEvent->unlink($order->user, 'registering', $order->event);
         }

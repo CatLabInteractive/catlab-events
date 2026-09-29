@@ -3,7 +3,7 @@
 @section('content')
 
     <h2>{{ $event->name }}</h2>
-    <h3>VIP inschrijvingen</h3>
+    <h3>Gasten</h3>
 
     <p>
         Schrijf gasten in zonder dat ze een account moeten aanmaken. Ze krijgen
@@ -22,7 +22,7 @@
 
     @if($soldOut)
         <p class="alert alert-warning">
-            Dit event is uitverkocht. Een VIP inschrijving komt er bovenop.
+            Dit event is uitverkocht. Een gast komt er bovenop.
         </p>
     @endif
 
@@ -31,7 +31,7 @@
             Dit event heeft nog geen ticketcategorieën. Maak er eerst een aan.
         </p>
     @else
-        <form action="{{ action('Admin\VipRegistrationController@store', [ $event->id ]) }}" method="post" style="max-width: 500px;">
+        <form action="{{ action('Admin\GuestRegistrationController@store', [ $event->id ]) }}" method="post" style="max-width: 500px;">
             {{ csrf_field() }}
 
             <div class="form-group">
@@ -84,8 +84,8 @@
                 <tr>
                     <td>{{ $order->getAttendeeName() }}</td>
                     <td>{{ $order->ticketCategory ? $order->ticketCategory->name : '' }}</td>
-                    <td>{{ $order->vip_email }}</td>
-                    <td>{{ $order->vip_notes }}</td>
+                    <td>{{ $order->guest_email }}</td>
+                    <td>{{ $order->guest_notes }}</td>
                     <td>
                         {{ $order->state }}
                         @if($order->play_link)
@@ -94,8 +94,8 @@
                     </td>
                     <td>
                         @if(!$order->isCancelled())
-                            <form action="{{ action('Admin\VipRegistrationController@cancel', [ $event->id, $order->id ]) }}" method="post"
-                                  onsubmit="return confirm('Deze VIP inschrijving annuleren?');">
+                            <form action="{{ action('Admin\GuestRegistrationController@cancel', [ $event->id, $order->id ]) }}" method="post"
+                                  onsubmit="return confirm('Deze gast annuleren?');">
                                 {{ csrf_field() }}
                                 <button type="submit" class="btn btn-danger btn-sm">Annuleren</button>
                             </form>

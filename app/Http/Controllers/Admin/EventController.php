@@ -146,7 +146,7 @@ class EventController extends BaseAdminController
         );
 
         $table->modelAction(
-            (new ResourceAction('Admin\VipRegistrationController@index', 'VIP', 'event'))
+            (new ResourceAction('Admin\GuestRegistrationController@index', 'Gasten', 'event'))
                 ->setRouteParameters($this->getShowRouteParameters($request))
                 ->setQueryParameters($this->getShowQueryParameters($request))
         );
@@ -230,22 +230,22 @@ class EventController extends BaseAdminController
                 }
             }
 
-            // VIP guests have no account; include the address the admin entered.
-            $vipOrders = $event->orders()
+            // Guests have no account; include the address the admin entered.
+            $guestOrders = $event->orders()
                 ->accepted()
-                ->where('is_vip', '=', true)
-                ->whereNotNull('vip_email')
+                ->where('is_guest', '=', true)
+                ->whereNotNull('guest_email')
                 ->where('ticket_category_id', '=', $ticketCategory->id)
                 ->get();
 
-            foreach ($vipOrders as $order) {
+            foreach ($guestOrders as $order) {
                 /** @var Order $order */
                 $out[] = [
                     $ticketCategory->id,
                     $ticketCategory->name,
-                    $order->vip_email,
+                    $order->guest_email,
                     $order->group ? $event->getAttendeeName($order->group) : null,
-                    $order->vip_name
+                    $order->guest_name
                 ];
             }
         }
@@ -352,8 +352,8 @@ class EventController extends BaseAdminController
                 'Reference' => $data ? $data['reference'] : '',
                 'Date' => $order->created_at->format('Y-m-d H:i:s'),
                 'Ticket Category' => $order->ticketCategory->name,
-                'Group name' => $order->group ? $event->getAttendeeName($order->group) : ($order->isVip() ? $order->vip_name : null),
-                'Email address' => $order->user ? $order->user->email : $order->vip_email,
+                'Group name' => $order->group ? $event->getAttendeeName($order->group) : ($order->isGuest() ? $order->guest_name : null),
+                'Email address' => $order->user ? $order->user->email : $order->guest_email,
                 'Total paid' => $toMoney ? toMoney($total) : $total
             ];
 

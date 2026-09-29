@@ -137,13 +137,13 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      * Registered by an admin for a guest without an account.
      * @return bool
      */
-    public function isVip()
+    public function isGuest()
     {
-        return (bool) $this->is_vip;
+        return (bool) $this->is_guest;
     }
 
     /**
-     * Who this order is for: the team, the VIP guest, or the buyer.
+     * Who this order is for: the team, the guest, or the buyer.
      * @return string|null
      */
     public function getAttendeeName()
@@ -152,8 +152,8 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
             return $this->group->name;
         }
 
-        if ($this->isVip()) {
-            return $this->vip_name;
+        if ($this->isGuest()) {
+            return $this->guest_name;
         }
 
         return $this->user ? $this->user->getDisplayName() : null;
@@ -370,7 +370,7 @@ class Order extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
      */
     public function getEuklesAttributes()
     {
-        // Free tickets and VIP registrations never get an accounts order.
+        // Free tickets and guest registrations never get an accounts order.
         $data = $this->getOrderData(true) ?: [];
 
         return [
