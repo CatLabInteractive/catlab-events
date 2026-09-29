@@ -274,3 +274,57 @@ $sidebar-active-bg: $admin-accent;
     gap: 6px;
   }
 }
+
+// Admin tables: row actions. laravel-table draws actions with an icon (Edit,
+// Delete) as small buttons and puts the rest in a dropdown behind a "more"
+// button; keep them on one line and vertically centred with the row.
+.table td.table-actions {
+  width: 1%;
+  vertical-align: middle;
+
+  .table-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.4rem;
+    line-height: 1;
+    border-color: $admin-border-color;
+    background-color: #fff;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: $admin-text-color;
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background-color: $admin-accent;
+      border-color: $admin-accent;
+    }
+  }
+
+  .btn-outline-danger {
+    color: theme-color('danger');
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background-color: theme-color('danger');
+      border-color: theme-color('danger');
+    }
+  }
+
+  .table-actions-menu {
+    vertical-align: top;
+  }
+
+  .dropdown-menu {
+    font-size: 0.9rem;
+    text-align: left;
+  }
+}
