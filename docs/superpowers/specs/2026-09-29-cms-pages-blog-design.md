@@ -581,12 +581,70 @@ screens.
   and `PostPolicy` are registered in `AuthServiceProvider::$policies` for
   consistency with the other models, and the controllers call
   `$this->authorize()`.
-- These are **custom controllers** (`Admin\PageController`,
-  `Admin\PostController`, `Admin\RedirectController`), not Charon
-  `FrontCrudController`s: a JSON block list with nested repeaters has no
-  representation in a `ResourceDefinition`, and the API layer
-  (`app/Http/Api/V1`) has no reason to expose pages. Redirects could be a
-  Charon resource; it is kept custom to stay in one style (open question 7).
+- The page and post editors are **custom controllers**
+  (`Admin\PageController`, `Admin\PostController`) because the block
+  editor UI (repeaters, TinyMCE, image picker) does not fit
+  `FrontCrudController`'s generated forms. They do **not** own any write
+  logic: both they and the Charon API (next section) call the same
+  `App\Cms\PageWriter` / `App\Cms\PostWriter` services, so validation,
+  sanitisation, path rebuilding and cache busting are identical on every
+  write path. Redirects are a flat resource, so their admin screen is a
+  normal Charon `Admin\RedirectController` (`::routes('cmsRedirects', ...)`)
+  on top of the API resource (decided with the API requirement; closes open
+  question 7).
+
+## Charon API
+
+Decided: all CMS content is editable through the Charon API
+(`app/Http/Api/V1`), with the same resources, validation and
+authorisation as the admin. Registered in `app/Http/Api/V1/routes.php`
+next to the existing controllers, so they appear in the Swagger
+description (`/docs`) automatically.
+
+| Resource | Route (`/api/v1/...`) | Controller pattern |
+|---|---|---|
+| Pages | `organisations/{organisation}/pages` | `ChildCrudController`, like `SeriesController` |
+| Page translations | `pages/{page}/translations` | `ChildCrudController`, like `Events\TicketCategoryController` |
+| Posts | `organisations/{organisation}/posts` | `ChildCrudController` |
+| Post translations | `posts/{post}/translations` | `ChildCrudController` |
+| Redirects | `organisations/{organisation}/cmsRedirects` | `ChildCrudController` |
+| Home page | `home_page_id` on the existing `OrganisationResourceDefinition` (writeable, must be a page of the same organisation) | existing |
+
+- **Resource definitions** in `app/Http/Api/V1/ResourceDefinitions/Cms/`:
+  `PageResourceDefinition` (parent, sort_order, show_in_menu, and a
+  visible `translations` relationship, expandable), 
+  `PageTranslationResourceDefinition` (locale, slug, path read-only, title,
+  meta, og image, is_published, published_at read-only, `blocks`),
+  `PostResourceDefinition`, `PostTranslationResourceDefinition` (body
+  instead of blocks), `CmsRedirectResourceDefinition`. The translation
+  URL (`getUrl()`) is exposed read-only as `url`.
+- **`blocks` over the API** is the same JSON list that is stored
+  (`[{"type": "...", "data": {...}}]`). Charon has no nested-object field
+  type, so the field is declared as a string carrying JSON and decoded in
+  the controller's `beforeSaveEntity()`; if the installed Charon version
+  supports an `object`/`array` field with raw JSON in and out, use that
+  instead (verify in `vendor/catlabinteractive/charon` during Task 2.4).
+  Either way the payload goes through `BlockValidator` and the sanitiser
+  inside `PageWriter`; a validation error is thrown as a Charon
+  `ResourceValidationException` so API clients get the standard 422 shape.
+- **Authorisation**: the API group already requires `auth`
+  (`routes.php`, the OAuth `full` scope). `PagePolicy`, `PostPolicy` and
+  `CmsRedirectPolicy` implement `index/create/view/edit/destroy` like
+  `SeriesPolicy` (organisation admin only), and Charon calls them through
+  the existing `ResourceController` base. Reading unpublished content
+  through the API is admin-only as well; the public site never uses the
+  API.
+- **Assets**: images referenced by `image_id` / `og_image_id` are uploaded
+  through the existing asset flow; if the API has no asset upload
+  endpoint yet, add `POST organisations/{organisation}/assets`
+  (multipart, same validation as the admin upload) so an API client can
+  create a page with images end to end.
+- **Tests**: `tests/Integration/Cms/Api/*` create, update, publish and
+  delete pages, translations, posts and redirects through `/api/v1/...`
+  as an organisation admin; a non-admin and an admin of another
+  organisation get 403/404; invalid blocks and a `<script>` in rich text
+  return 422 / are stripped; `home_page_id` pointing at another
+  organisation's page is rejected.
 
 ## WordPress import
 
@@ -806,7 +864,8 @@ production between phases, with WordPress still serving `quizfabriek.be`.
 6. **External images in rich text.** The sanitiser proposal only keeps
    images hosted on our central storage (plus YouTube/Vimeo iframes).
    Pasting a hot-linked image would silently drop it. Acceptable?
-7. **Redirect admin as a Charon resource** instead of a custom controller
+7. ~~Redirect admin as a Charon resource~~ **Decided:** yes, as part of the
+   Charon API requirement. (Original question: Charon resource instead of a custom controller
    would give sorting/filtering for free but mix two styles inside one
    admin section. Custom is proposed.
 8. **`organisations.footer_html`** is admin-entered HTML printed raw. Out

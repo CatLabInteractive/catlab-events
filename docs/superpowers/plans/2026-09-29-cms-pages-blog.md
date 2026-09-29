@@ -217,6 +217,21 @@ Branch `feature/cms-admin-pages`.
 - [ ] **Step 2: Implement** (`$request->validate(['file' => 'required|image|max:10240'])`, `\CentralStorage::store($file)`, `$asset->user()->associate(Auth::user())` if the model has it, JSON response). Decide the asset scoping from open question 5 (default: assets whose `user_id` is an admin of the active organisation).
 - [ ] **Step 3: GREEN.** Commit `"Admin: image upload and picker for the page editor"`.
 
+### Task 2.4: Charon API for pages and page translations
+
+**Files:**
+- Create: `app/Cms/PageWriter.php` (create/update/delete page and translation: `BlockValidator`, sanitiser, `rebuildPath()`, cache busting); Modify: `app/Http/Controllers/Admin/PageController.php` to call it instead of writing models directly
+- Create: `app/Http/Api/V1/ResourceDefinitions/Cms/{PageResourceDefinition,PageTranslationResourceDefinition}.php`
+- Create: `app/Http/Api/V1/Controllers/Cms/{PageController,PageTranslationController}.php` (`ChildCrudController`; `beforeSaveEntity()` delegates to `PageWriter`, decodes `blocks`, maps `BlockValidationException` to `ResourceValidationException`)
+- Modify: `app/Http/Api/V1/routes.php` (register both), `app/Http/Api/V1/ResourceDefinitions/OrganisationResourceDefinition.php` (writeable `home_page_id`, same-organisation validator)
+- Maybe create: `app/Http/Api/V1/Controllers/AssetController.php` (`POST organisations/{organisation}/assets`) if no API upload exists
+- Test: `tests/Integration/Cms/Api/PagesApiTest.php`, `tests/Integration/Cms/Api/PageTranslationsApiTest.php`
+
+- [ ] **Step 1: Check Charon.** In `vendor/catlabinteractive/charon`, look for a field type that accepts raw JSON objects; otherwise use a string field with JSON (spec, Charon API section).
+- [ ] **Step 2: Failing tests** per the spec's API test list (CRUD as org admin, 403/404 for others, 422 on invalid blocks, `<script>` stripped, `home_page_id` of another organisation rejected, `/api/v1/description.json` lists the new paths).
+- [ ] **Step 3: Implement** `PageWriter` first, switch the admin controller to it (admin tests must stay green), then the API controllers.
+- [ ] **Step 4: GREEN.** Commit `"API: pages and page translations through Charon"`.
+
 ---
 
 # Phase 3 — Blog posts
@@ -248,6 +263,17 @@ Branch `feature/cms-posts`.
 - [ ] **Step 1: Failing tests**: create a post (date, featured image id, nl slug/title/excerpt/body), body sanitised, publish toggle, add fr translation, duplicate `(locale, slug)` rejected, other organisation's post 404.
 - [ ] **Step 2: Implement** on the pattern of the pages controller; the body textarea uses the same TinyMCE init (`textarea.cms-html`).
 - [ ] **Step 3: GREEN.** Commit `"Admin: blog post editor"`.
+
+### Task 3.3: Charon API for posts and post translations
+
+**Files:**
+- Create: `app/Cms/PostWriter.php` (shared with `Admin\PostController`, which is switched to it)
+- Create: `app/Http/Api/V1/ResourceDefinitions/Cms/{PostResourceDefinition,PostTranslationResourceDefinition}.php`, `app/Http/Api/V1/Controllers/Cms/{PostController,PostTranslationController}.php`
+- Modify: `app/Http/Api/V1/routes.php`
+- Test: `tests/Integration/Cms/Api/PostsApiTest.php`
+
+- [ ] **Step 1: Failing tests**: CRUD as org admin; body sanitised; duplicate `(locale, slug)` → 422; other organisation 404.
+- [ ] **Step 2: Implement**, then GREEN. Commit `"API: posts and post translations through Charon"`.
 
 ---
 
@@ -295,7 +321,9 @@ Branch `feature/cms-seo-cutover-prep`.
 **Files:**
 - Modify: `app/Http/Controllers/RedirectController.php` (`fallback`: `cms_redirects` → `?p=` shortlink → `config('cms.gone')` 410 → 404), `app/Http/Controllers/PageController.php` (miss path uses the same resolver)
 - Create: `app/Cms/Redirects.php` (`resolve(Organisation, string $path): ?RedirectResponse`)
-- Create: `app/Http/Controllers/Admin/RedirectController.php` (`index`, `store`, `destroy`), `resources/views/admin/cms/redirects/index.blade.php`; Modify: `routes/web.php`, `layouts/admin.blade.php`
+- Create: `app/Http/Api/V1/ResourceDefinitions/Cms/CmsRedirectResourceDefinition.php`, `app/Http/Api/V1/Controllers/Cms/CmsRedirectController.php` (`ChildCrudController` under `organisations/{organisation}/cmsRedirects`), `app/Policies/CmsRedirectPolicy.php`; Modify: `app/Http/Api/V1/routes.php`
+- Create: `app/Http/Controllers/Admin/RedirectController.php` as a Charon `BaseAdminController` on that resource (`::routes('cmsRedirects', 'Admin\RedirectController', 'cmsRedirect')`); Modify: `routes/web.php`, `layouts/admin.blade.php`
+- Test: add `tests/Integration/Cms/Api/RedirectsApiTest.php`
 - Modify: `resources/views/admin/cms/pages/_translation_form.blade.php` + `Admin\PageController@update` ("maak een redirect van het oude adres" checkbox, checked by default when a published slug changes; writes the row for the old path and, recursively, for the children's old paths)
 - Test: `tests/Integration/Cms/RedirectTest.php`, `AdminPagesTest` (rename creates redirects)
 
