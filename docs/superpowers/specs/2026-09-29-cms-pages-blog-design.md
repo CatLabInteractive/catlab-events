@@ -790,9 +790,10 @@ production between phases, with WordPress still serving `quizfabriek.be`.
 
 1. ~~Canonical host~~ **Decided:** `www.quizfabriek.be`.
 2. **Cookie consent — decided:** keep the existing CatLab cookie consent
-   (`head.blade.php`) and drop CookieYes. Still open: if the marketing GTM
-   container differs from the one in the admin layout (`GTM-5PVSCV7`), add
-   an `organisations.gtm_container_id` column. Needs the container id.
+   (`head.blade.php`) and drop CookieYes. Analytics: reuse the tickets
+   site's existing tag setup (`layouts/blocks/gtag.blade.php`, included by
+   the `home` layout the CMS pages extend); no new GTM column. GTM4WP goes
+   away with WordPress.
 3. **Blog index URL.** `/blog` is proposed (English word, works in all
    three locales). Did WordPress have a posts page (`/blog/`, `/nieuws/`)?
    If so it becomes a redirect row.

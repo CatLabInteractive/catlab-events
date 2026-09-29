@@ -321,7 +321,7 @@ Branch `chore/quizfabriek-cutover` for the code bits; the rest is operations. Do
 
 ### Task 6.1: Code
 
-- [ ] Canonical host is `www.quizfabriek.be`; cookie consent stays the existing CatLab one (CookieYes is dropped). If a separate GTM container is needed: migration `organisations.gtm_container_id`, `layouts/blocks/gtag.blade.php` reads it, `OrganisationResourceDefinition` exposes it (writeable admin field).
+- [ ] Canonical host is `www.quizfabriek.be`; cookie consent stays the existing CatLab one (CookieYes is dropped). Analytics reuses the existing `layouts/blocks/gtag.blade.php` (no new column); confirm the CMS pages include it through `layouts/home`.
 - [ ] Update the default OG image and description fallbacks in `resources/views/layouts/blocks/seo.blade.php` to read `organisation()` fields rather than the hard-coded `www.quizfabriek.be` URL (the old WordPress host will 301 into the app; the image must exist as an asset).
 - [ ] `readme.md` "Domains" list: add `quizfabriek.be`, `www.quizfabriek.be`; document `wordpress:import` and the canonical flag.
 - [ ] Commit `"Quizfabriek cutover: OG defaults from organisation, docs"`.
