@@ -39,7 +39,13 @@ class SendWaitingListInvitation extends SendEmail
      */
     public function handle(InvitedFromWaitingList $e)
     {
-        $sent = $this->sendWaitingListInvitationEmail($e->event, $e->user, $e->url);
+        $sent = $this->sendWaitingListInvitationEmail(
+            $e->event,
+            $e->user,
+            $e->url,
+            $e->subject,
+            $e->content
+        );
 
         if (!$sent) {
             // invitation_sent_at stays null, which is what the admin panel

@@ -112,6 +112,70 @@ class WaitingListInvitationTest extends IntegrationTestCase
         $this->assertCount(1, $this->eukles->tracked);
     }
 
+    public function testGeneratingWithoutSendingCreatesTheLinkButMailsNothing()
+    {
+        $user = $this->addToWaitingList();
+
+        $this->actingAs($this->admin)
+            ->post("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}/generate")
+            ->assertRedirect("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}/edit");
+
+        $pivot = $this->pivotFor($user);
+        $this->assertNotNull($pivot->access_token);
+        $this->assertNull($pivot->invitation_sent_at);
+        $this->assertCount(0, $this->catlabApi->sendEmailCalls);
+        $this->assertCount(0, $this->eukles->tracked);
+
+        $response = $this->actingAs($this->admin)
+            ->get("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}/edit");
+
+        $response->assertStatus(200);
+        $response->assertSee('wt=' . $pivot->access_token, false);
+        $response->assertSee('Wachtlijst ' . $this->event->name, false);
+        $response->assertSee('Er is een ticket vrijgekomen!', false);
+    }
+
+    public function testEditPageDoesNotHandOutALinkByItself()
+    {
+        $user = $this->addToWaitingList();
+
+        $this->actingAs($this->admin)
+            ->get("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}/edit")
+            ->assertRedirect("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}");
+
+        $this->assertNull($this->pivotFor($user)->access_token);
+    }
+
+    public function testSendingAnEditedInvitationMailsTheEditedText()
+    {
+        $user = $this->addToWaitingList();
+
+        $this->actingAs($this->admin)
+            ->post("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}/generate");
+
+        $token = $this->pivotFor($user)->access_token;
+
+        $this->actingAs($this->admin)
+            ->post("/admin/events/{$this->event->id}/waitinglist/invite/{$user->id}", [
+                'subject' => 'Nog een plekje vrij!',
+                'content' => '<p>Aangepaste tekst <a href="https://example.test/?wt=' . $token . '">link</a></p>'
+            ])
+            ->assertRedirect("/admin/events/{$this->event->id}/waitinglist");
+
+        $pivot = $this->pivotFor($user);
+        $this->assertSame($token, $pivot->access_token);
+        $this->assertNotNull($pivot->invitation_sent_at);
+
+        $this->assertCount(1, $this->catlabApi->sendEmailCalls);
+        $mail = $this->catlabApi->sendEmailCalls[0];
+        $this->assertSame($user->email, $mail['target']);
+        $this->assertSame('Nog een plekje vrij!', $mail['subject']);
+        $this->assertStringContainsString('Aangepaste tekst', $mail['body']);
+        $this->assertStringNotContainsString('Er is een ticket vrijgekomen!', $mail['body']);
+
+        $this->assertCount(1, $this->eukles->tracked);
+    }
+
     public function testFailedMailLeavesTheInvitationMarkedUnsent()
     {
         $user = $this->addToWaitingList();

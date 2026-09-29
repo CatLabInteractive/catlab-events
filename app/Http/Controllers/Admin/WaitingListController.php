@@ -97,19 +97,83 @@ class WaitingListController extends Controller
             'user' => $user,
             'url' => $url,
             'body' => $this->renderInvitationMail($event, $user, $url),
-            'subject' => 'Wachtlijst ' . $event->name
+            'subject' => InvitedFromWaitingList::defaultSubject($event)
         ]);
     }
 
     /**
-     * Generate the access token and mail the invitation.
+     * Generate the access token without mailing anything, so the admin can
+     * rewrite the mail before it goes out (or send it themselves).
      *
      * @param $eventId
      * @param $userId
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function sendInvite($eventId, $userId)
+    public function generateInvite($eventId, $userId)
     {
+        $event = $this->getEvent($eventId);
+        $user = $this->getWaitingListEntry($event, $userId);
+
+        if ($user === null) {
+            return redirect(action('Admin\WaitingListController@index', [ $event->id ]))
+                ->with('message', 'Deze gebruiker staat niet op de wachtlijst.');
+        }
+
+        $this->generatePivotAccessToken($user);
+
+        return redirect(action('Admin\WaitingListController@editInvite', [ $event->id, $user->id ]));
+    }
+
+    /**
+     * The generated invitation as editable text. Sends nothing.
+     *
+     * @param $eventId
+     * @param $userId
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     */
+    public function editInvite($eventId, $userId)
+    {
+        $event = $this->getEvent($eventId);
+        $user = $this->getWaitingListEntry($event, $userId);
+
+        if ($user === null) {
+            return redirect(action('Admin\WaitingListController@index', [ $event->id ]))
+                ->with('message', 'Deze gebruiker staat niet op de wachtlijst.');
+        }
+
+        if (!$user->pivot->access_token) {
+            // Only generateInvite() hands out tokens; this page must not.
+            return redirect(action('Admin\WaitingListController@invite', [ $event->id, $user->id ]));
+        }
+
+        $url = $this->getAccessTokenUrl($event, $user->pivot->access_token);
+
+        return view('admin.waitinglist.edit', [
+            'event' => $event,
+            'user' => $user,
+            'url' => $url,
+            'subject' => InvitedFromWaitingList::defaultSubject($event),
+            'content' => InvitedFromWaitingList::renderDefaultContent($event, $user, $url)
+        ]);
+    }
+
+    /**
+     * Generate the access token and mail the invitation. When the admin
+     * edited the mail first, the edited subject and content go out instead
+     * of the default template.
+     *
+     * @param Request $request
+     * @param $eventId
+     * @param $userId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function sendInvite(Request $request, $eventId, $userId)
+    {
+        $this->validate($request, [
+            'subject' => 'required_with:content|nullable|string|max:255',
+            'content' => 'required_with:subject|nullable|string'
+        ]);
+
         $event = $this->getEvent($eventId);
         $user = $this->getWaitingListEntry($event, $userId);
 
@@ -119,7 +183,7 @@ class WaitingListController extends Controller
             return $back->with('message', 'Deze gebruiker staat niet op de wachtlijst.');
         }
 
-        if ($this->sendInvitation($event, $user)) {
+        if ($this->sendInvitation($event, $user, $request->input('subject'), $request->input('content'))) {
             return $back->with('message', 'Uitnodiging verstuurd naar ' . $user->email . '.');
         }
 
@@ -209,16 +273,20 @@ class WaitingListController extends Controller
      *
      * @param Event $event
      * @param User $user
+     * @param string|null $subject edited subject, null for the default
+     * @param string|null $content edited mail content, null for the default template
      * @return bool whether the invitation mail went out
      */
-    private function sendInvitation(Event $event, User $user)
+    private function sendInvitation(Event $event, User $user, ?string $subject = null, ?string $content = null)
     {
         $this->generatePivotAccessToken($user);
 
         event(new InvitedFromWaitingList(
             $event,
             $user,
-            $this->getAccessTokenUrl($event, $user->pivot->access_token)
+            $this->getAccessTokenUrl($event, $user->pivot->access_token),
+            $subject,
+            $content
         ));
 
         // The listener stamps invitation_sent_at only when accounts accepted
