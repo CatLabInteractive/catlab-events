@@ -54,6 +54,10 @@
      */
     function reindex(editor) {
         var container = editor.querySelector('[data-cms-blocks]');
+        if (!container) {
+            // A form without blocks (the post editor): nothing to number.
+            return;
+        }
 
         children(container, '.cms-block').forEach(function (block, i) {
             block.querySelectorAll('[name]').forEach(function (field) {

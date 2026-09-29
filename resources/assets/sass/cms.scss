@@ -224,3 +224,53 @@
     }
   }
 }
+
+// Blog: post cards (index, latest_posts block, series page) and post pages.
+.cms-post-card {
+  height: 100%;
+
+  .latest-post-media img {
+    width: 100%;
+    object-fit: cover;
+    aspect-ratio: 3 / 2;
+  }
+}
+
+.cms-post-meta {
+  color: #777;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.cms-read-more {
+  font-weight: bold;
+}
+
+.cms-post {
+  .cms-post-back {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+  }
+
+  .cms-post-image {
+    margin: 0 0 30px;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  .cms-prose {
+    max-width: 760px;
+  }
+
+  .cms-post-translations {
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #777;
+  }
+}
+
+.cms-pagination {
+  margin-top: 20px;
+}

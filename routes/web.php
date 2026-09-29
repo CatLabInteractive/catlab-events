@@ -86,8 +86,9 @@ Route::group([
             Route::get('assets', 'Admin\AssetController@index');
             Route::post('assets', 'Admin\AssetController@upload');
 
-            // CMS pages (custom editor, not a Charon admin controller)
+            // CMS pages and blog posts (custom editors, not Charon admin controllers)
             \App\Http\Controllers\Admin\PageController::routes();
+            \App\Http\Controllers\Admin\PostController::routes();
             \App\Http\Controllers\Admin\CmsAssetController::routes();
 
             Route::get('uitdb', 'Admin\UitDbController@index');
