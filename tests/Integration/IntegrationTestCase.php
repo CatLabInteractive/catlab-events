@@ -2,6 +2,7 @@
 
 namespace Tests\Integration;
 
+use App\Models\Organisation;
 use App\Services\CatLabApiClientFactory;
 use CatLab\Eukles\Client\Interfaces\EuklesClient as EuklesClientInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +28,11 @@ abstract class IntegrationTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Organisation::getRepresentedOrganisation() is memoised per process
+        // from $_SERVER['HTTP_HOST']; start every test from a clean slate.
+        unset($_SERVER['HTTP_HOST']);
+        Organisation::resetRepresentedOrganisation();
 
         $this->catlabApi = new FakeCatLabApiClient();
         $this->app->instance(
