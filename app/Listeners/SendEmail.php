@@ -47,8 +47,12 @@ abstract class SendEmail
             $view = \View::make('emails.tickets.confirmation', $attributes);
         }
 
-        /** @var User $user */
-        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
+        $sender = $this->getSender($user, $order);
+        if (!$sender) {
+            return;
+        }
+
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($sender);
 
         // Sent with the product's client credentials (laravel-catlab-accounts
         // >= 4.1, accounts issue #99), so a member whose accounts token has
@@ -149,7 +153,12 @@ abstract class SendEmail
 
         $view = \View::make('emails/tickets/cancellation', $attributes);
 
-        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($order->user);
+        $sender = $this->getSender($order->user, $order);
+        if (!$sender) {
+            return;
+        }
+
+        $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($sender);
 
         try {
             $apiClient->sendEmail(
@@ -160,5 +169,32 @@ abstract class SendEmail
         } catch (GuzzleException $e) {
             \Log::error($e);
         }
+    }
+
+    /**
+     * The accounts user a ticket mail is sent as. Accounts' mail route is
+     * users/{id}/mail (product credentials, but always on behalf of a user,
+     * who becomes the reply-to), so a mail without any user cannot go out.
+     *
+     * Guest orders have no user: they are mailed on behalf of the admin who
+     * is registering or cancelling the guest, which also makes the admin the
+     * reply-to address.
+     *
+     * @param User|null $user
+     * @param Order $order
+     * @return User|null
+     */
+    protected function getSender(?User $user, Order $order)
+    {
+        $sender = $user ?: \Auth::getUser();
+
+        if (!$sender) {
+            \Log::warning('Ticket mail not sent: no accounts user to send it as', [
+                'order' => $order->id
+            ]);
+            return null;
+        }
+
+        return $sender;
     }
 }

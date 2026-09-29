@@ -74,6 +74,11 @@ class GuestRegistrationTest extends IntegrationTestCase
         $this->assertCount(1, $this->catlabApi->sendEmailCalls);
         $this->assertSame('famous@example.com', $this->catlabApi->sendEmailCalls[0]['target']);
 
+        // Accounts only mails on behalf of a user (users/{id}/mail), and the
+        // guest has none: it goes out as the admin registering them.
+        $this->assertNotNull($this->catlabApi->sendEmailCalls[0]['user']);
+        $this->assertSame($admin->id, $this->catlabApi->sendEmailCalls[0]['user']->id);
+
         $this->actingAs($admin)->get("/admin/events/{$event->id}/guests")
             ->assertStatus(200)
             ->assertSee('Famous Person');
@@ -126,6 +131,7 @@ class GuestRegistrationTest extends IntegrationTestCase
         $this->assertSame(Order::STATE_CANCELLED, $order->fresh()->state);
         $this->assertCount(2, $this->catlabApi->sendEmailCalls);
         $this->assertSame('famous@example.com', $this->catlabApi->sendEmailCalls[1]['target']);
+        $this->assertSame($admin->id, $this->catlabApi->sendEmailCalls[1]['user']->id);
     }
 
     public function testOnlyGuestOrdersCanBeCancelledHere()
