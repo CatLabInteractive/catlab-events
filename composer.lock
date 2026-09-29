@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "48292ecf5f86f2a2971bd8786e418dae",
+    "content-hash": "d459d4a5426965a71b91c9c08fb4e726",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -698,21 +698,21 @@
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v1.10.1",
+            "version": "v1.10.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "b9fa134f5af1bc724aa040893856a5bcb35f9b3d"
+                "reference": "1d7708eb10328e3636ef7fa561a840f043572d8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/b9fa134f5af1bc724aa040893856a5bcb35f9b3d",
-                "reference": "b9fa134f5af1bc724aa040893856a5bcb35f9b3d",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/1d7708eb10328e3636ef7fa561a840f043572d8a",
+                "reference": "1d7708eb10328e3636ef7fa561a840f043572d8a",
                 "shasum": ""
             },
             "require": {
                 "catlabinteractive/charon-laravel": "^1.9",
-                "catlabinteractive/laravel-table": "^1.1",
+                "catlabinteractive/laravel-table": "^1.3",
                 "laravel/framework": "^9.0 || ^10.0 || ^11.0 || ^12.0",
                 "php": ">=8.1"
             },
@@ -739,22 +739,22 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.10.1"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v1.10.3"
             },
-            "time": "2026-08-30T20:53:31+00:00"
+            "time": "2026-09-29T10:43:15+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",
-            "version": "v1.1.1",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-table.git",
-                "reference": "38e85528b617bef1b7386bdf711d0dd6d1018394"
+                "reference": "be971aab86d30c0daaf11f832957e8da47e5534b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/38e85528b617bef1b7386bdf711d0dd6d1018394",
-                "reference": "38e85528b617bef1b7386bdf711d0dd6d1018394",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/be971aab86d30c0daaf11f832957e8da47e5534b",
+                "reference": "be971aab86d30c0daaf11f832957e8da47e5534b",
                 "shasum": ""
             },
             "require": {
@@ -785,9 +785,9 @@
             "description": "Laravel html table builder.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-table/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.1.1"
+                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.3.0"
             },
-            "time": "2026-08-28T15:10:41+00:00"
+            "time": "2026-09-29T10:36:42+00:00"
         },
         {
             "name": "catlabinteractive/requirements",
