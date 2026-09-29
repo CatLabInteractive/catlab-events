@@ -53,6 +53,11 @@ $routes->group(
         \App\Http\Api\V1\Controllers\LiveStreamController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\OrdersController::setRoutes($routes);
 
+        // CMS (pages; writes go through App\Cms\PageWriter)
+        \App\Http\Api\V1\Controllers\Cms\PageController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\Cms\PageTranslationController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\AssetController::setRoutes($routes);
+
     }
 );
 

@@ -119,12 +119,48 @@ class PageWriter
      */
     public function updatePage(Page $page, array $attributes): Page
     {
-        return $this->transaction($page->organisation, function () use ($page, $attributes) {
-            $this->fillPage($page, $attributes);
+        $this->fillPage($page, $attributes);
+
+        return $this->savePage($page);
+    }
+
+    /**
+     * Validate and save a page whose fields are already set on the model
+     * (new or existing; the API fills the model through Charon first).
+     * @param Page $page
+     * @return Page
+     * @throws ValidationException
+     */
+    public function savePage(Page $page): Page
+    {
+        return $this->transaction($page->organisation, function () use ($page) {
             $this->preparePage($page);
             $page->save();
 
             return $page;
+        });
+    }
+
+    /**
+     * Validate and save a translation whose fields are already set on the
+     * model (the API fills it through Charon first). The page must be set.
+     * @param PageTranslation $translation
+     * @return PageTranslation
+     * @throws ValidationException
+     */
+    public function saveFilledTranslation(PageTranslation $translation): PageTranslation
+    {
+        $page = $translation->page;
+
+        return $this->transaction($page ? $page->organisation : null, function () use ($translation, $page) {
+            $this->prepareTranslation($translation);
+            $translation->save();
+
+            if ($page) {
+                $page->unsetRelation('translations');
+            }
+
+            return $translation;
         });
     }
 
