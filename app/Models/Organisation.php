@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Cms\HtmlSanitizer;
 use App\Exceptions\NoOrganisationsFoundException;
 use App\Tools\StringHelper;
 use Carbon\Carbon;
@@ -50,6 +51,20 @@ class Organisation extends Model
      * @var Organisation|null
      */
     private static $representedOrganisation;
+
+    /**
+     * footer_html is printed unescaped on every page: sanitise it on every
+     * write (admin, API, tinker) with the same rules as CMS rich text.
+     */
+    protected static function booted()
+    {
+        static::saving(function (Organisation $organisation) {
+            if ($organisation->isDirty('footer_html') && $organisation->footer_html !== null) {
+                $clean = app(HtmlSanitizer::class)->sanitize($organisation->footer_html);
+                $organisation->footer_html = $clean === '' ? null : $clean;
+            }
+        });
+    }
 
     /**
      * @return Organisation
