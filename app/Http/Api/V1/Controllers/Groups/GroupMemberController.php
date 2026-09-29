@@ -126,7 +126,11 @@ class GroupMemberController extends ResourceController
                 'inviteUrl' => action('GroupController@viewInvitation', [ $entity->id, $entity->token ])
             ];
 
-            $view = \View::make('emails/groups/invite', $attributes);
+            $mail = app(\App\Services\EmailTemplates::class)->render(
+                organisation(),
+                \App\Services\EmailTemplates::GROUP_INVITE,
+                $attributes
+            );
 
             // The invitation goes out through accounts, which rate-limits
             // mail per user (20/h) and answers 429; a timeout or outage
@@ -135,8 +139,8 @@ class GroupMemberController extends ResourceController
             // inviter sees why and can simply try again later.
             try {
                 $apiClient->sendEmail(
-                    'Uitnodiging ' . $entity->group->name,
-                    $view->render(),
+                    $mail['subject'],
+                    $mail['body'],
                     $entity->email
                 );
             } catch (GuzzleException $e) {

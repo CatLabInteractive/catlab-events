@@ -102,6 +102,13 @@ Route::group([
             Route::get('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@massInvite');
             Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
 
+            Route::get('emails', 'Admin\EmailTemplateController@index');
+            Route::get('emails/{type}', 'Admin\EmailTemplateController@show');
+            Route::match([ 'get', 'post' ], 'emails/{type}/preview', 'Admin\EmailTemplateController@preview');
+            Route::get('emails/{type}/edit', 'Admin\EmailTemplateController@edit');
+            Route::post('emails/{type}', 'Admin\EmailTemplateController@update');
+            Route::post('emails/{type}/reset', 'Admin\EmailTemplateController@reset');
+
             Route::get('events/{event}/guests', 'Admin\GuestRegistrationController@index');
             Route::post('events/{event}/guests', 'Admin\GuestRegistrationController@store');
             Route::post('events/{event}/guests/{order}/cancel', 'Admin\GuestRegistrationController@cancel');
