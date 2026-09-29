@@ -45,6 +45,7 @@ class AdminSmokeTest extends IntegrationTestCase
             '/admin/orders',
             '/admin/livestreams',
             '/admin/assets',
+            '/admin/pages',
         ] as $url) {
             $this->actingAs($admin)->get($url)->assertStatus(200);
         }

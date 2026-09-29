@@ -23,8 +23,15 @@
 namespace App\Http\Api\V1\Controllers;
 
 use App\Http\Api\V1\Controllers\Base\ResourceController;
+use App\Cms\PageWriter;
 use App\Http\Api\V1\ResourceDefinitions\OrganisationResourceDefinition;
+use App\Models\Organisation;
 use CatLab\Charon\Collections\RouteCollection;
+use CatLab\Requirements\Collections\MessageCollection;
+use CatLab\Requirements\Exceptions\ResourceValidationException;
+use CatLab\Requirements\Models\Message;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 /**
  * Class EventController
@@ -35,7 +42,9 @@ class OrganisationController extends ResourceController
     const RESOURCE_DEFINITION = OrganisationResourceDefinition::class;
     const RESOURCE_ID = 'organisation';
 
-    use \CatLab\Charon\Laravel\Controllers\CrudController;
+    use \CatLab\Charon\Laravel\Controllers\CrudController {
+        beforeSaveEntity as traitBeforeSaveEntity;
+    }
 
     /**
      * @param RouteCollection $routes
@@ -50,5 +59,31 @@ class OrganisationController extends ResourceController
                 'id' => self::RESOURCE_ID
             ]
         )->tag('organisation');
+    }
+
+    /**
+     * The home page must be one of the organisation's own pages.
+     * @param Request $request
+     * @param Model $entity
+     * @param bool $isNew
+     * @return Model
+     * @throws ResourceValidationException
+     */
+    protected function beforeSaveEntity(Request $request, Model $entity, $isNew = false)
+    {
+        $entity = $this->traitBeforeSaveEntity($request, $entity, $isNew);
+
+        /** @var Organisation $entity */
+        if ($entity->isDirty('home_page_id')) {
+            if (!$entity->home_page_id) {
+                $entity->home_page_id = null;
+            } elseif (!app(PageWriter::class)->isPageOfOrganisation($entity, $entity->home_page_id)) {
+                $messages = new MessageCollection();
+                $messages->add(new Message('De startpagina moet een pagina van deze organisatie zijn.', null, 'home_page_id'));
+                throw ResourceValidationException::make($messages);
+            }
+        }
+
+        return $entity;
     }
 }

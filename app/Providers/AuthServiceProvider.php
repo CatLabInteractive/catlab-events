@@ -29,6 +29,7 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\LiveStream;
 use App\Models\Order;
+use App\Models\Page;
 use App\Models\Organisation;
 use App\Models\Person;
 use App\Models\Series;
@@ -42,6 +43,7 @@ use App\Policies\GroupPolicy;
 use App\Policies\LiveStreamPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\PagePolicy;
 use App\Policies\PersonPolicy;
 use App\Policies\SeriesPolicy;
 use App\Policies\TicketCategoriesPolicy;
@@ -73,6 +75,7 @@ class AuthServiceProvider extends ServiceProvider
         LiveStream::class       => LiveStreamPolicy::class,
         EventDate::class        => EventDatePolicy::class,
         Order::class            => OrderPolicy::class,
+        Page::class             => PagePolicy::class,
 
     ];
 

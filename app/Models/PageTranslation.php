@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Cms\BlockValidator;
 use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
@@ -82,6 +83,13 @@ class PageTranslation extends Model
 
             if ($translation->blocks === null) {
                 $translation->blocks = [];
+            }
+
+            // Defence in depth: App\Cms\PageWriter validates and normalises
+            // blocks, but whatever the write path, rich text is never stored
+            // unsanitised.
+            if ($translation->isDirty('blocks')) {
+                $translation->blocks = app(BlockValidator::class)->sanitise($translation->blocks);
             }
 
             if ($translation->is_published && !$translation->published_at) {

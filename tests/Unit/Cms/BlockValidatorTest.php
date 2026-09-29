@@ -24,7 +24,7 @@ class BlockValidatorTest extends TestCase
 
     private function errors(array $blocks): array
     {
-        return Validator::make([ 'blocks' => $blocks ], $this->validator->rules($blocks))
+        return Validator::make([ 'blocks' => $blocks ], $this->validator->rules($blocks, 1))
             ->errors()
             ->toArray();
     }
@@ -144,5 +144,37 @@ class BlockValidatorTest extends TestCase
         $this->assertArrayNotHasKey('evil', $out[0]['data']);
         $this->assertSame('Welkom', $out[0]['data']['title']);
         $this->assertSame([ [ 'label' => 'x', 'url' => '/x', 'style' => 'primary' ] ], $out[0]['data']['buttons']);
+    }
+
+    public function testNormaliseCastsFormStringsToIntegersAndBooleans()
+    {
+        $out = $this->validator->normalise([
+            [ 'id' => 'a1b2c3', 'type' => 'upcoming_events', 'data' => [
+                'limit' => '6', 'event_type' => 'all', 'show_sold_out' => '0', 'title' => '12',
+            ] ],
+            [ 'id' => 'a1b2c4', 'type' => 'hero', 'data' => [ 'title' => 'x', 'align' => 'left', 'image_id' => null ] ],
+        ]);
+
+        $this->assertSame(6, $out[0]['data']['limit']);
+        $this->assertFalse($out[0]['data']['show_sold_out']);
+        // Plain strings stay strings.
+        $this->assertSame('12', $out[0]['data']['title']);
+        $this->assertNull($out[1]['data']['image_id']);
+    }
+
+    public function testSanitiseOnlyTouchesHtmlFields()
+    {
+        $blocks = [
+            [ 'id' => 'a1b2c3', 'type' => 'rich_text', 'data' => [ 'html' => '<p>ok</p><script>x</script>', 'extra' => '<b>kept</b>' ] ],
+            [ 'id' => 'a1b2c4', 'type' => 'marquee', 'data' => [ 'html' => '<script>unknown type, left alone</script>' ] ],
+            'not a block',
+        ];
+
+        $out = $this->validator->sanitise($blocks);
+
+        $this->assertSame('<p>ok</p>', $out[0]['data']['html']);
+        $this->assertSame('<b>kept</b>', $out[0]['data']['extra']);
+        $this->assertSame($blocks[1], $out[1]);
+        $this->assertSame('not a block', $out[2]);
     }
 }

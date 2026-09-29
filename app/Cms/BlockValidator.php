@@ -24,6 +24,7 @@ namespace App\Cms;
 
 use App\Cms\Blocks\BlockRegistry;
 use App\Cms\Blocks\BlockType;
+use App\Rules\OrganisationAsset;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -59,11 +60,13 @@ class BlockValidator
     /**
      * Rules for validating [ 'blocks' => $blocks ]: the list itself, every
      * block's type and id, then each known block's type rules prefixed with
-     * blocks.{i}.data.
+     * blocks.{i}.data. Asset fields must reference an asset of
+     * $organisationId.
      * @param array $blocks
+     * @param int $organisationId
      * @return array
      */
-    public function rules(array $blocks): array
+    public function rules(array $blocks, int $organisationId): array
     {
         $rules = [
             'blocks' => [ 'array', 'max:' . config('cms.max_blocks', 40) ],
@@ -88,7 +91,7 @@ class BlockValidator
                 $fieldRules = is_string($fieldRules) ? explode('|', $fieldRules) : $fieldRules;
 
                 if (in_array($field, $type->assetFields(), true)) {
-                    $fieldRules = array_merge($fieldRules, [ 'exists:assets,id' ]);
+                    $fieldRules = array_merge($fieldRules, [ new OrganisationAsset($organisationId) ]);
                 }
 
                 $rules[$prefix . $field] = $fieldRules;
@@ -101,19 +104,21 @@ class BlockValidator
     /**
      * Validate and normalise in one go.
      * @param array $blocks
+     * @param int $organisationId
      * @return array Normalised blocks.
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validate(array $blocks): array
+    public function validate(array $blocks, int $organisationId): array
     {
-        Validator::make([ 'blocks' => $blocks ], $this->rules($blocks))->validate();
+        Validator::make([ 'blocks' => $blocks ], $this->rules($blocks, $organisationId))->validate();
         return $this->normalise($blocks);
     }
 
     /**
      * Keep only registered blocks and, inside `data`, only the keys the
-     * type's rules mention; sanitise the type's html fields. Run after
-     * validation, before storing.
+     * type's rules mention; cast integer and boolean fields (form input is
+     * all strings); sanitise the type's html fields. Run after validation,
+     * before storing.
      * @param array $blocks
      * @return array
      */
@@ -134,6 +139,13 @@ class BlockValidator
             $data = is_array($block['data'] ?? null) ? $block['data'] : [];
             $data = $this->filterKeys($data, $this->keyTree($type));
 
+            foreach ($type->rules() as $field => $fieldRules) {
+                $cast = $this->castFor($fieldRules);
+                if ($cast) {
+                    $data = $this->castPath($data, explode('.', $field), $cast);
+                }
+            }
+
             foreach ($type->htmlFields() as $field) {
                 $data = $this->sanitizePath($data, explode('.', $field));
             }
@@ -146,6 +158,98 @@ class BlockValidator
         }
 
         return $out;
+    }
+
+    /**
+     * Sanitise the html fields of every known block and leave everything else
+     * untouched. PageTranslation runs this whenever blocks are saved, so no
+     * write path (tinker, a future importer, a bug) can store unsanitised
+     * rich text; full validation and normalisation stay with PageWriter.
+     * @param mixed $blocks
+     * @return mixed
+     */
+    public function sanitise($blocks)
+    {
+        if (!is_array($blocks)) {
+            return $blocks;
+        }
+
+        foreach ($blocks as $index => $block) {
+            if (!is_array($block) || !is_string($block['type'] ?? null) || !is_array($block['data'] ?? null)) {
+                continue;
+            }
+
+            $type = $this->registry->get($block['type']);
+            if (!$type) {
+                continue;
+            }
+
+            foreach ($type->htmlFields() as $field) {
+                $block['data'] = $this->sanitizePath($block['data'], explode('.', $field));
+            }
+
+            $blocks[$index] = $block;
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * 'int', 'bool' or null, from a field's validation rules.
+     * @param mixed $fieldRules
+     * @return string|null
+     */
+    private function castFor($fieldRules): ?string
+    {
+        $fieldRules = is_string($fieldRules) ? explode('|', $fieldRules) : (array) $fieldRules;
+
+        if (in_array('integer', $fieldRules, true)) {
+            return 'int';
+        }
+
+        if (in_array('boolean', $fieldRules, true)) {
+            return 'bool';
+        }
+
+        return null;
+    }
+
+    /**
+     * @param mixed $data
+     * @param string[] $path
+     * @param string $cast
+     * @return mixed
+     */
+    private function castPath($data, array $path, string $cast)
+    {
+        if (count($path) === 0) {
+            if ($data === null || $data === '') {
+                return null;
+            }
+
+            if ($cast === 'int') {
+                return is_numeric($data) ? (int) $data : $data;
+            }
+
+            $bool = filter_var($data, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            return $bool === null ? $data : $bool;
+        }
+
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        $segment = array_shift($path);
+
+        if ($segment === '*') {
+            foreach ($data as $key => $item) {
+                $data[$key] = $this->castPath($item, $path, $cast);
+            }
+        } elseif (array_key_exists($segment, $data)) {
+            $data[$segment] = $this->castPath($data[$segment], $path, $cast);
+        }
+
+        return $data;
     }
 
     /**

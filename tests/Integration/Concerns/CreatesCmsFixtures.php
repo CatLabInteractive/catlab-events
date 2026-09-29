@@ -6,6 +6,8 @@ use App\Models\Organisation;
 use App\Models\OrganisationDomain;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Models\User;
+use CatLab\CentralStorage\Client\Models\Asset;
 
 /**
  * Builds CMS rows (pages, translations, domains) for the integration tests.
@@ -91,5 +93,42 @@ trait CreatesCmsFixtures
     {
         $_SERVER['HTTP_HOST'] = $host;
         Organisation::resetRepresentedOrganisation();
+    }
+
+    /**
+     * A site admin (IsAdmin middleware) who also administers $organisation
+     * (organisation role 10, what the policies and admin controllers check).
+     */
+    protected function createOrganisationAdmin(Organisation $organisation): User
+    {
+        $admin = new User();
+        $admin->name = 'Organisation admin';
+        $admin->email = uniqid('admin', true) . '@example.com';
+        $admin->password = bcrypt('secret');
+        $admin->save();
+
+        $admin->admin = true;
+        $admin->save();
+
+        $organisation->users()->attach($admin, [ 'role' => 10 ]);
+
+        return $admin;
+    }
+
+    /**
+     * An image asset row, owned by $organisation (null: a legacy asset
+     * without an organisation).
+     */
+    protected function createOrganisationAsset(?Organisation $organisation, string $name = 'foto.jpg'): Asset
+    {
+        $asset = new Asset();
+        $asset->name = $name;
+        $asset->mimetype = 'image/jpeg';
+        $asset->type = 'image';
+        $asset->asset_key = uniqid('asset', true);
+        $asset->organisation_id = $organisation ? $organisation->id : null;
+        $asset->save();
+
+        return $asset;
     }
 }

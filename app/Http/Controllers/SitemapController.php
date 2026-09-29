@@ -24,6 +24,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competition;
 use App\Models\Event;
+use App\Models\Organisation;
 use App\Models\Series;
 use App\Models\Venue;
 use Carbon\Carbon;
@@ -43,15 +44,28 @@ class SitemapController
     const CACHE_TTL = 3600;
 
     /**
+     * One cached sitemap per organisation (each domain gets its own), so a
+     * CMS save only has to forget its own organisation's entry.
+     * @param Organisation|null $organisation
+     * @return string
+     */
+    public static function cacheKey(?Organisation $organisation): string
+    {
+        return self::CACHE_KEY . ':' . ($organisation ? $organisation->id : 0);
+    }
+
+    /**
      * @return \Illuminate\Http\Response
      */
     public function sitemap()
     {
+        $cacheKey = self::cacheKey(organisation());
+
         if (\Request::get('nocache')) {
-            \Cache::forget(self::CACHE_KEY);
+            \Cache::forget($cacheKey);
         }
 
-        $urls = \Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+        $urls = \Cache::remember($cacheKey, self::CACHE_TTL, function () {
             return $this->buildUrls();
         });
 
