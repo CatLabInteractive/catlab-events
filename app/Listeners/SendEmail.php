@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\EmailTemplates;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
@@ -39,12 +40,20 @@ abstract class SendEmail
             'ticketCategory' => $order->ticketCategory
         ];
 
+        $templates = app(EmailTemplates::class);
+
         if ($event->confirmation_email && view()->exists($event->confirmation_email)) {
-            $view = \View::make($event->confirmation_email, $attributes);
-        } elseif ($order->play_link) {
-            $view = \View::make('emails.tickets.confirmationPlayLink', $attributes);
+            // A template picked for this one event wins over the organisation's.
+            $mail = [
+                'subject' => $templates->renderSubject($event->organisation, EmailTemplates::CONFIRMATION, $attributes),
+                'body' => \View::make($event->confirmation_email, $attributes)->render()
+            ];
         } else {
-            $view = \View::make('emails.tickets.confirmation', $attributes);
+            $mail = $templates->render(
+                $event->organisation,
+                $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
+                $attributes
+            );
         }
 
         $sender = $this->getSender($user, $order);
@@ -59,8 +68,8 @@ abstract class SendEmail
         // long expired still gets the mail.
         try {
             $apiClient->sendEmail(
-                $event->name . ': We zijn er bij!',
-                $view->render(),
+                $mail['subject'],
+                $mail['body'],
                 $recipient
             );
         } catch (GuzzleException $e) {
@@ -93,24 +102,24 @@ abstract class SendEmail
             return false;
         }
 
+        $mail = app(EmailTemplates::class)->render(
+            $event->organisation,
+            EmailTemplates::WAITING_LIST_INVITATION,
+            \App\Events\InvitedFromWaitingList::getMailAttributes($event, $user, $url)
+        );
+
         if ($content !== null) {
-            $view = \View::make('emails.tickets.customContent', [
+            $mail['body'] = \View::make('emails.tickets.customContent', [
                 'content' => $content
-            ]);
-        } else {
-            $view = \View::make('emails.tickets.waitingListInvitation', [
-                'event' => $event,
-                'user' => $user,
-                'url' => $url
-            ]);
+            ])->render();
         }
 
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
 
         try {
             $apiClient->sendEmail(
-                $subject ?: \App\Events\InvitedFromWaitingList::defaultSubject($event),
-                $view->render(),
+                $subject ?: $mail['subject'],
+                $mail['body'],
                 $user->email
             );
         } catch (GuzzleException $e) {
@@ -151,7 +160,11 @@ abstract class SendEmail
             'group' => $group
         ];
 
-        $view = \View::make('emails/tickets/cancellation', $attributes);
+        $mail = app(EmailTemplates::class)->render(
+            $order->event->organisation,
+            EmailTemplates::CANCELLATION,
+            $attributes
+        );
 
         $sender = $this->getSender($order->user, $order);
         if (!$sender) {
@@ -162,8 +175,8 @@ abstract class SendEmail
 
         try {
             $apiClient->sendEmail(
-                $order->event->name . ': We zijn er niet bij :(',
-                $view->render(),
+                $mail['subject'],
+                $mail['body'],
                 $email
             );
         } catch (GuzzleException $e) {

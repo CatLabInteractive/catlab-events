@@ -78,6 +78,7 @@
                     @if(Auth::user()->getActiveOrganisation())
                         {!! $navItem('organisations', action('Admin\OrganisationController@edit', [ Auth::user()->getActiveOrganisation()->id ]), 'Organisation') !!}
                     @endif
+                    {!! $navItem('emails', action('Admin\EmailTemplateController@index'), 'E-mails') !!}
                     {!! $navItem('uitdb', action('Admin\UitDbController@index'), 'UitDB') !!}
                 </ul>
 

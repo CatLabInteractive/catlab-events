@@ -139,6 +139,14 @@ class Organisation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function emailTemplates()
+    {
+        return $this->hasMany(EmailTemplate::class);
+    }
+
+    /**
      * @param User $user
      * @return bool
      */
