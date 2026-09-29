@@ -38,9 +38,9 @@ class BlockRegistryTest extends TestCase
 
     public function testEveryTypeHasAView()
     {
-        // The admin form partials (formView()) arrive with the editor (phase 2).
         foreach ($this->app->make(BlockRegistry::class)->all() as $key => $type) {
             $this->assertTrue(View::exists($type->view()), $type->view());
+            $this->assertTrue(View::exists($type->formView()), $type->formView());
         }
     }
 
