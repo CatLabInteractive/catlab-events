@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Cms\Blog;
 use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
 use CatLab\Charon\Laravel\Database\Model;
@@ -51,6 +52,22 @@ class Post extends Model
     protected $casts = [
         'published_at' => 'datetime',
     ];
+
+    /**
+     *
+     */
+    protected static function booted()
+    {
+        // The cached post lists (latest_posts, navigation) must see the change.
+        $forget = function (Post $post) {
+            if ($post->organisation_id) {
+                app(Blog::class)->forgetCaches((int) $post->organisation_id);
+            }
+        };
+        static::saved($forget);
+        static::deleted($forget);
+        static::restored($forget);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

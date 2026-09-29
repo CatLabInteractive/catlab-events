@@ -1,14 +1,20 @@
-{{-- Renders nothing until there are posts (the blog arrives in a later phase). --}}
+{{-- Renders nothing when the organisation has no visible posts in this locale. --}}
 @if(count($data['posts']) > 0)
     <section id="b-{{ $block['id'] }}" class="cms-block cms-latest-posts">
         <div class="container">
             @include('cms.blocks._heading', [ 'text' => $data['title'] ?? '' ])
 
-            <ul class="cms-posts">
+            <div class="row cms-posts">
                 @foreach($data['posts'] as $post)
-                    <li><a href="{{ $post['url'] }}">{{ $post['title'] }}</a></li>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        @include('cms.blog._card', [ 'post' => $post, 'locale' => $data['locale'], 'headingLevel' => 3 ])
+                    </div>
                 @endforeach
-            </ul>
+            </div>
+
+            <p class="cms-latest-posts-more">
+                <a href="{{ \App\Cms\Blog::indexUrl($data['locale']) }}">{{ __('cms.blog', [], $data['locale']) }} &rarr;</a>
+            </p>
         </div>
     </section>
 @endif

@@ -22,6 +22,8 @@
 
 namespace App\Models;
 
+use App\Cms\Blog;
+use App\Cms\HtmlSanitizer;
 use Carbon\Carbon;
 use CatLab\Charon\Laravel\Database\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -67,7 +69,26 @@ class PostTranslation extends Model
             if ($translation->post) {
                 $translation->organisation_id = $translation->post->organisation_id;
             }
+
+            if ($translation->body === null) {
+                $translation->body = '';
+            }
+
+            // Defence in depth: App\Cms\PostWriter sanitises the body, but
+            // whatever the write path, it is never stored unsanitised.
+            if ($translation->isDirty('body')) {
+                $translation->body = app(HtmlSanitizer::class)->sanitize($translation->body);
+            }
         });
+
+        // The cached post lists (latest_posts, navigation) must see the change.
+        $forget = function (PostTranslation $translation) {
+            if ($translation->organisation_id) {
+                app(Blog::class)->forgetCaches((int) $translation->organisation_id);
+            }
+        };
+        static::saved($forget);
+        static::deleted($forget);
     }
 
     /**

@@ -22,6 +22,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Cms\Blog;
 use App\Cms\BlockRenderer;
 use App\Cms\Blocks\BlockContext;
 use App\Cms\Redirects;
@@ -72,6 +73,12 @@ class PageController extends Controller
      */
     protected static function localisedRoutes()
     {
+        Route::get('blog', 'PageController@blogIndex');
+
+        // Before the page catch-all, which would otherwise take these paths.
+        Route::get('{year}/{month}/{day}/{slug}', 'PostController@show')
+            ->where([ 'year' => '[0-9]{4}', 'month' => '[0-9]{2}', 'day' => '[0-9]{2}', 'slug' => '[a-z0-9\-]+' ]);
+
         Route::get('{path}', 'PageController@show')->where('path', '[a-z0-9\-]+(?:/[a-z0-9\-]+)*');
     }
 
@@ -151,6 +158,50 @@ class PageController extends Controller
         }
 
         return $this->render($request, $translation, $preview);
+    }
+
+    /**
+     * /blog (and /{locale}/blog): the organisation's visible posts in the
+     * locale, newest first, paginated.
+     * @param Request $request
+     * @param Blog $blog
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function blogIndex(Request $request, Blog $blog)
+    {
+        $organisation = $this->getOrganisation();
+        if (!$organisation) {
+            abort(404);
+        }
+
+        $locale = app()->getLocale();
+
+        $posts = $blog->visible($organisation, $locale)
+            ->paginate((int) config('cms.posts_per_page', 12))
+            ->withPath(Blog::indexUrl($locale));
+
+        if ($posts->currentPage() > 1 && $posts->currentPage() > $posts->lastPage()) {
+            abort(404);
+        }
+
+        // hreflang: the blog index of every locale that has posts.
+        $alternates = [];
+        foreach (config('cms.locales') as $alternateLocale) {
+            if ($alternateLocale === $locale ? $posts->total() > 0 : $blog->hasPosts($organisation, $alternateLocale)) {
+                $alternates[$alternateLocale] = Blog::indexUrl($alternateLocale);
+            }
+        }
+
+        $canonicalUrl = $posts->currentPage() > 1 ? $posts->url($posts->currentPage()) : Blog::indexUrl($locale);
+
+        return view('cms.blog.index', [
+            'organisation' => $organisation,
+            'posts' => $posts,
+            'alternates' => $alternates,
+            'canonicalUrl' => $canonicalUrl,
+            'ogTitle' => __('cms.blog'),
+            'preview' => false,
+        ]);
     }
 
     /**

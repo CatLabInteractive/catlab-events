@@ -39,7 +39,7 @@
 <meta name="theme-color" content="#000000">
 
 <meta property="fb:app_id" content="1124345767614916" />
-<meta property="og:type" content="website" />
+<meta property="og:type" content="{{ $ogType ?? 'website' }}" />
 <meta property="og:url" content="{{ \Request::url() }}" />
 
 <link rel="stylesheet" href="https://cookies.catlab.eu/cookie-consent.css"/>

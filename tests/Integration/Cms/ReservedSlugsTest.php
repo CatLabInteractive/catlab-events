@@ -3,6 +3,7 @@
 namespace Tests\Integration\Cms;
 
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\RedirectController;
 use Illuminate\Routing\Route;
 use Tests\Integration\IntegrationTestCase;
@@ -20,6 +21,7 @@ class ReservedSlugsTest extends IntegrationTestCase
         $action = $route->getActionName();
 
         return str_starts_with($action, PageController::class . '@')
+            || str_starts_with($action, PostController::class . '@')
             || str_starts_with($action, RedirectController::class . '@');
     }
 

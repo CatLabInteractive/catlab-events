@@ -6,6 +6,9 @@ use App\Models\Organisation;
 use App\Models\OrganisationDomain;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Models\Post;
+use App\Models\PostTranslation;
+use Carbon\Carbon;
 use App\Models\User;
 use CatLab\CentralStorage\Client\Models\Asset;
 
@@ -130,5 +133,54 @@ trait CreatesCmsFixtures
         $asset->save();
 
         return $asset;
+    }
+
+    /**
+     * A blog post with one translation. $publishedAt drives the dated URL.
+     */
+    protected function createPost(
+        Organisation $organisation,
+        string $slug,
+        ?Carbon $publishedAt,
+        string $body = '<p>Body</p>',
+        string $locale = 'nl',
+        bool $published = true
+    ): Post {
+        $post = new Post();
+        $post->organisation()->associate($organisation);
+        $post->published_at = $publishedAt;
+        $post->save();
+
+        $this->createPostTranslation($post, $locale, $slug, $body, $published);
+
+        return $post;
+    }
+
+    /**
+     * Add a translation to an existing post.
+     */
+    protected function createPostTranslation(
+        Post $post,
+        string $locale,
+        string $slug,
+        string $body = '<p>Body</p>',
+        bool $published = true,
+        ?string $title = null,
+        ?string $author = null
+    ): PostTranslation {
+        $translation = new PostTranslation();
+        $translation->post()->associate($post);
+        $translation->locale = $locale;
+        $translation->slug = $slug;
+        $translation->title = $title ?? ('Post ' . $slug . ' (' . $locale . ')');
+        $translation->excerpt = 'Excerpt of ' . $slug;
+        $translation->author = $author;
+        $translation->body = $body;
+        $translation->is_published = $published;
+        $translation->save();
+
+        $post->unsetRelation('translations');
+
+        return $translation;
     }
 }

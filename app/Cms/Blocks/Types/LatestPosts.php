@@ -22,12 +22,14 @@
 
 namespace App\Cms\Blocks\Types;
 
+use App\Cms\Blog;
 use App\Cms\Blocks\BlockContext;
 use App\Cms\Blocks\BlockType;
 
 /**
- * The latest blog posts. Renders nothing until the blog exists (phase 3 of
- * the CMS plan fills `posts`).
+ * The organisation's latest visible blog posts in the page's locale (cached
+ * per organisation and locale by App\Cms\Blog). Renders nothing when there
+ * are none.
  *
  * Class LatestPosts
  * @package App\Cms\Blocks\Types
@@ -59,7 +61,8 @@ class LatestPosts extends BlockType
 
     public function prepare(array $data, BlockContext $context): ?array
     {
-        $data['posts'] = [];
+        $data['posts'] = app(Blog::class)->latest($context->organisation, $context->locale, (int) ($data['limit'] ?? 3));
+        $data['locale'] = $context->locale;
 
         return $data;
     }
