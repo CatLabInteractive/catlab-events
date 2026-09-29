@@ -18,6 +18,7 @@
     "resolve-url-loader": "^5.0.0",
     "sass": "~1.99.0",
     "sass-loader": "^16.0.8",
+    "tinymce": "^6.8.6",
     "webpack": "~5.106.0"
   },
   "overrides": {

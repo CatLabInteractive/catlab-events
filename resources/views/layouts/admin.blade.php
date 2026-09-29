@@ -68,6 +68,12 @@
                 </ul>
 
                 <ul class="sidebar-nav sidebar-section">
+                    <li class="sidebar-heading">Website</li>
+                    {!! $navItem('pages', action('Admin\PageController@index'), 'Pagina\'s') !!}
+                    {!! $navItem('posts', action('Admin\PostController@index'), 'Blogberichten') !!}
+                </ul>
+
+                <ul class="sidebar-nav sidebar-section">
                     <li class="sidebar-heading">Media</li>
                     {!! $navItem('livestreams', action('Admin\LiveStreamController@index'), 'Livestreams') !!}
                     {!! $navItem('assets', action('Admin\AssetController@index'), 'Assets') !!}
@@ -123,6 +129,7 @@
     </div>
 
     <!-- Scripts -->
+    @stack('scripts')
     <script src="{{ asset('js/admin.js') }}"></script>
 </body>
 </html>

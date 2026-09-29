@@ -4,6 +4,8 @@
         <meta property="og:image" content="{{ $series->header->getUrl([ 'width' => 1200, 'height' => 630 ]) }}" />
     @elseif(isset($nextEvent) && $nextEvent->series && $nextEvent->series->header)
         <meta property="og:image" content="{{ $nextEvent->series->header->getUrl([ 'width' => 1200, 'height' => 630 ]) }}" />
+    @elseif(!empty($ogImageUrl))
+        <meta property="og:image" content="{{ $ogImageUrl }}" />
     @else
         <meta property="og:image" content="https://www.quizfabriek.be/images/share/QuizWitz-Backstay-event.jpg" />
     @endif

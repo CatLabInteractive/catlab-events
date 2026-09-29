@@ -22,6 +22,7 @@
 
 namespace App\Models;
 
+use App\Cms\HtmlSanitizer;
 use App\Exceptions\NoOrganisationsFoundException;
 use App\Tools\StringHelper;
 use Carbon\Carbon;
@@ -46,17 +47,44 @@ class Organisation extends Model
     private $userRoleCache = [];
 
     /**
+     * Memoised per process by getRepresentedOrganisation().
+     * @var Organisation|null
+     */
+    private static $representedOrganisation;
+
+    /**
+     * footer_html is printed unescaped on every page: sanitise it on every
+     * write (admin, API, tinker) with the same rules as CMS rich text.
+     */
+    protected static function booted()
+    {
+        static::saving(function (Organisation $organisation) {
+            if ($organisation->isDirty('footer_html') && $organisation->footer_html !== null) {
+                $clean = app(HtmlSanitizer::class)->sanitize($organisation->footer_html);
+                $organisation->footer_html = $clean === '' ? null : $clean;
+            }
+        });
+    }
+
+    /**
      * @return Organisation
      */
     public static function getRepresentedOrganisation()
     {
-        static $representedOrganisation;
-
-        if (!isset($representedOrganisation)) {
-            $representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST'] ?? '');
+        if (!isset(self::$representedOrganisation)) {
+            self::$representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST'] ?? '');
         }
 
-        return $representedOrganisation;
+        return self::$representedOrganisation;
+    }
+
+    /**
+     * Forget the memoised organisation so the next call resolves it from
+     * $_SERVER['HTTP_HOST'] again. Tests only.
+     */
+    public static function resetRepresentedOrganisation()
+    {
+        self::$representedOrganisation = null;
     }
 
     /**
@@ -136,6 +164,39 @@ class Organisation extends Model
     public function livestreams()
     {
         return $this->hasMany(LiveStream::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pages()
+    {
+        return $this->hasMany(Page::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function cmsRedirects()
+    {
+        return $this->hasMany(CmsRedirect::class);
+    }
+
+    /**
+     * The CMS page rendered at / (and /en, /fr) instead of the series page.
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function homePage()
+    {
+        return $this->belongsTo(Page::class, 'home_page_id');
     }
 
     /**

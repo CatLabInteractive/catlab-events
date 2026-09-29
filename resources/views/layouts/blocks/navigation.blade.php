@@ -69,7 +69,10 @@
                     @if(organisation()->competitions()->count() > 0)
                         <li><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
                     @endif
-                    @if(organisation()->blog_url)
+                    @php($localBlogUrl = app(\App\Cms\Blog::class)->navigationUrl(organisation(), $cmsLocale ?? null))
+                    @if($localBlogUrl)
+                        <li><a href="{{ $localBlogUrl }}">{{ __('cms.blog') }}</a></li>
+                    @elseif(organisation()->blog_url)
                         <li><a href="{{ organisation()->blog_url }}"><i class="fa fa-external-link"></i> Blog</a></li>
                     @endif
                     <!--<li><a href="https://www.quizploeg.com/"><i class="fa fa-external-link"></i> Quizzer zkt ploeg</a></li>-->

@@ -47,5 +47,19 @@ mix
     .js([
         'resources/assets/js/admin.js'
     ], 'public/js/admin.js')
+    // TinyMCE 6 (MIT) for the CMS page editor, self-hosted: no CDN, no API
+    // key. Only the minified build and what cms-editor.js loads from it.
+    .copy('node_modules/tinymce/tinymce.min.js', 'public/js/tinymce')
+    .copy('node_modules/tinymce/license.txt', 'public/js/tinymce')
+    .copyDirectory('node_modules/tinymce/icons', 'public/js/tinymce/icons')
+    .copyDirectory('node_modules/tinymce/models', 'public/js/tinymce/models')
+    .copyDirectory('node_modules/tinymce/themes', 'public/js/tinymce/themes')
+    .copyDirectory('node_modules/tinymce/skins', 'public/js/tinymce/skins')
+    .copyDirectory('node_modules/tinymce/plugins/link', 'public/js/tinymce/plugins/link')
+    .copyDirectory('node_modules/tinymce/plugins/image', 'public/js/tinymce/plugins/image')
+    .copyDirectory('node_modules/tinymce/plugins/lists', 'public/js/tinymce/plugins/lists')
+    .copyDirectory('node_modules/tinymce/plugins/table', 'public/js/tinymce/plugins/table')
+    .copyDirectory('node_modules/tinymce/plugins/media', 'public/js/tinymce/plugins/media')
+    .copyDirectory('node_modules/tinymce/plugins/code', 'public/js/tinymce/plugins/code')
     .version()
 ;

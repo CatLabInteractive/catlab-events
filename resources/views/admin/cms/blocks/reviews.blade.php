@@ -1,0 +1,2 @@
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Titel', 'name' => $name . '[title]', 'value' => $data['title'] ?? '', 'error' => $error . '.title', 'max' => 120 ] ])
+@include('admin.cms.blocks._repeater', [ 'repeater' => [ 'key' => 'items', 'label' => 'Recensies', 'name' => $name, 'error' => $error, 'rows' => $data['items'] ?? [], 'max' => 30, 'row' => 'admin.cms.blocks._review_row', 'add' => 'Recensie toevoegen' ] ])
