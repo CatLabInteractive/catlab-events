@@ -25,11 +25,13 @@
         <tr>
             <th>Link</th>
             <td>
-                <code>{{ $url }}</code>
-                @if(!$user->pivot->access_token)
+                @if($user->pivot->access_token)
+                    <code>{{ $url }}</code>
+                @else
+                    <em>Link nog niet aangemaakt</em>
                     <br />
                     <small class="text-muted">
-                        De persoonlijke code wordt pas aangemaakt op het moment dat je verstuurt.
+                        De persoonlijke link wordt pas aangemaakt op het moment dat je verstuurt of genereert.
                     </small>
                 @endif
             </td>

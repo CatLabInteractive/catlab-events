@@ -84,6 +84,7 @@ class WaitingListInvitationTest extends IntegrationTestCase
 
         $response->assertStatus(200);
         $response->assertSee($user->email);
+        $response->assertSee('Link nog niet aangemaakt');
 
         $this->assertCount(0, $this->catlabApi->sendEmailCalls);
         $this->assertCount(0, $this->eukles->tracked);
