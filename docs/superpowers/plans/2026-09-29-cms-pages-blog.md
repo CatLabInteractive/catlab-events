@@ -21,9 +21,7 @@
 - Admin copy is Dutch (as in `admin/guests/index.blade.php`). Public chrome strings go through `resources/lang/{nl,en,fr}/cms.php`.
 - PHPUnit 11: attributes or docblocks both fine; the existing suite uses plain `test*` methods, follow that.
 - `vendor/` is not committed; verify package APIs (`CentralStorage::store()`, the facade accessor, Charon frontend) in the container when a task touches them.
-- Commit trailer:
-  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>` and
-  `Claude-Session: https://claude.ai/code/session_01K4HSjKihM37h2veThmPykf`
+- Commit trailers: use the attribution trailers of the session doing the work.
 
 ---
 
@@ -78,13 +76,15 @@ public function getUrl(): string
 - Modify: `composer.json` (require `symfony/html-sanitizer`)
 - Create: `app/Cms/HtmlSanitizer.php`
 - Create: `app/Rules/SafeUrl.php`
-- Test: `tests/Unit/Cms/HtmlSanitizerTest.php`, `tests/Unit/Cms/SafeUrlTest.php`
+- Modify: `config/cms.php` (`allowed_image_hosts` from env `CMS_ALLOWED_IMAGE_HOSTS`, plus the central storage host)
+- Modify: `app/Http/Api/V1/ResourceDefinitions/OrganisationResourceDefinition.php` / the organisation save hook (sanitise `footer_html` on write); Create: migration `2026_10_01_100500_sanitise_organisation_footer_html.php` (one-off clean of stored values)
+- Test: `tests/Unit/Cms/HtmlSanitizerTest.php`, `tests/Unit/Cms/SafeUrlTest.php`, `tests/Integration/OrganisationFooterSanitiseTest.php`
 
 **Interfaces:**
 - Produces: `App\Cms\HtmlSanitizer::sanitize(string $html): string` (container singleton, config from `config('cms.sanitizer')`), `App\Rules\SafeUrl` (Laravel validation rule).
 
 - [ ] **Step 1: Failing tests.** Cases from the spec's testing table: script/onerror/javascript:/style/foreign iframe/foreign img stripped; YouTube (`www.youtube-nocookie.com`, `www.youtube.com`) iframe kept; asset image on `config('centralstorage.front')` host kept (set the config in the test); `wp-block-gallery` class kept, `elementor-widget` class dropped; `<h1>` becomes `<h2>`; `target="_blank"` gains `rel="noopener noreferrer"`; relative `href="/calendar"`, `mailto:`, `tel:` kept. `SafeUrlTest`: accepts `/x`, `#top`, `https://…`, `mailto:a@b`, `tel:+32…`; rejects `javascript:…`, `data:…`, `ftp://`, `//evil`.
-- [ ] **Step 2: Implement** with `Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig`: `allowElement()` per spec, `allowAttribute('class', ...)` then a `preg_replace_callback` pass that keeps only the allowed class prefixes (the Symfony sanitizer has no class filter; do it after sanitising, on the output DOM via `DOMDocument`, or accept a whitelist regex on the string — pick DOM, it is safer), `h1` → `h2` via `DOMDocument` before sanitising, `allowedLinkSchemes`, `allowRelativeLinks`, `allowedMediaHosts`, `forceHttpsUrls(false)`, `withMaxInputLength(2 * 1024 * 1024)`. Verify in the container that Symfony treats `iframe[src]` as a media attribute (it does in `HtmlSanitizer\Reference\W3CReference`); if not, filter iframe hosts in the same DOM pass.
+- [ ] **Step 2: Implement** with `Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig`: `allowElement()` per spec, `allowAttribute('class', ...)` then a `preg_replace_callback` pass that keeps only the allowed class prefixes (the Symfony sanitizer has no class filter; do it after sanitising, on the output DOM via `DOMDocument`, or accept a whitelist regex on the string — pick DOM, it is safer), `h1` → `h2` via `DOMDocument` before sanitising, `allowedLinkSchemes`, `allowRelativeLinks`, `allowedMediaHosts`, `forceHttpsUrls(false)`, `withMaxInputLength(2 * 1024 * 1024)`. Verify in the container that Symfony treats `iframe[src]` as a media attribute (it does in `HtmlSanitizer\Reference\W3CReference`); if not, filter iframe hosts in the same DOM pass. Images and iframes have different host lists (images: central storage + `cms.allowed_image_hosts`; iframes: the video hosts), so filter at least one of them in the DOM pass. Tests: an `<img>` on an approved external host survives, one on an unknown host is dropped; `footer_html` with `<script>` is stripped when saved through the admin/API.
 - [ ] **Step 3: GREEN.** Commit `"CMS: HTML sanitiser and SafeUrl rule"`.
 
 ### Task 1.3: Block registry, block types and renderer
@@ -214,7 +214,7 @@ Branch `feature/cms-admin-pages`.
 - Test: `tests/Integration/Cms/AdminUploadTest.php`
 
 - [ ] **Step 1: Failing tests**: anonymous POST → redirect; admin uploads a PNG (`UploadedFile::fake()->image()`) → 200 JSON `{id, location}` and an `assets` row; a `.php` upload → 422; `GET admin/cms/assets` lists images only.
-- [ ] **Step 2: Implement** (`$request->validate(['file' => 'required|image|max:10240'])`, `\CentralStorage::store($file)`, `$asset->user()->associate(Auth::user())` if the model has it, JSON response). Decide the asset scoping from open question 5 (default: assets whose `user_id` is an admin of the active organisation).
+- [ ] **Step 2: Implement** (`$request->validate(['file' => 'required|image|max:10240'])`, `\CentralStorage::store($file)`, `$asset->user()->associate(Auth::user())` if the model has it, JSON response). Set `assets.organisation_id` to the active organisation on upload (migration `2026_10_01_100400_add_organisation_id_to_assets.php`, nullable FK); the picker lists only that organisation's assets; block/post validation rejects an `image_id` from another organisation.
 - [ ] **Step 3: GREEN.** Commit `"Admin: image upload and picker for the page editor"`.
 
 ### Task 2.4: Charon API for pages and page translations
@@ -242,7 +242,7 @@ Branch `feature/cms-posts`.
 
 **Files:**
 - Create: `app/Http/Controllers/PostController.php` (`show`), Modify: `app/Http/Controllers/PageController.php` (`blogIndex`)
-- Create: `resources/views/cms/blog/index.blade.php`, `resources/views/cms/blog/show.blade.php`, `resources/views/cms/blog/_card.blade.php`
+- Create: `resources/views/cms/blog/index.blade.php`, `resources/views/cms/blog/show.blade.php`, `resources/views/cms/blog/_card.blade.php` (byline: `$post->author ?: organisation()->name`, also used as `BlogPosting.author` in JSON-LD)
 - Modify: `app/Cms/Blocks/Types/LatestPosts.php` + view (real query, cached 5 min per organisation + locale), `resources/views/layouts/blocks/blog.blade.php` (rewrite: latest local posts, drop `Feeds`; keep the include in `series/view.blade.php:334`; block renders nothing when the organisation has no posts), `resources/views/layouts/blocks/navigation.blade.php` (the "Blog" item links to `/blog` when the organisation has published posts, else `organisation()->blog_url` as today)
 - Create: `resources/lang/{nl,en,fr}/cms.php` (`blog`, `read_more`, `published_on`, `older_posts`, `newer_posts`, `no_posts`, `in_other_languages`)
 - Test: `tests/Integration/Cms/PostRoutingTest.php`, `tests/Integration/Cms/LocaleTest.php`; extend `CreatesCmsFixtures` with `createPost(Organisation, string $slug, Carbon $publishedAt, string $body, string $locale = 'nl', bool $published = true): Post`
@@ -289,13 +289,13 @@ Branch `feature/wordpress-import`.
 - Create: `tests/Integration/Cms/WordPressImportTest.php` + fixtures `tests/Integration/Cms/fixtures/wp-{posts,pages,media}.json` (two posts with a gallery + YouTube embed, one page tree incl. a `-nieuw` draft, one media item)
 - Test also: `tests/Unit/Cms/ContentRewriterTest.php`
 
-- [ ] **Step 1: Failing tests** from the spec's `WordPressImportTest` row, using `Http::fake([...])` and `FakeCentralStorage`. Assert: `posts.wp_post_id` set, `published_at` equals the WP `date` interpreted in Europe/Brussels, body contains the asset URL and no `wp-content/uploads`, `cms_redirects` has `wp-content/uploads/2019/03/foto.jpg`, second run changes nothing (`assertDatabaseCount`), `-nieuw` skipped, page tree parent set and translation unpublished with one `rich_text` block, `--dry-run` writes nothing.
+- [ ] **Step 1: Failing tests** from the spec's `WordPressImportTest` row, using `Http::fake([...])` and `FakeCentralStorage`. Assert: `posts.wp_post_id` set, `posts.author` filled from the embedded WP author name (`?_embed`), imported assets carry `organisation_id`, `published_at` equals the WP `date` interpreted in Europe/Brussels, body contains the asset URL and no `wp-content/uploads`, `cms_redirects` has `wp-content/uploads/2019/03/foto.jpg`, second run changes nothing (`assertDatabaseCount`), `-nieuw` skipped, page tree parent set and translation unpublished with one `rich_text` block, `--dry-run` writes nothing.
 - [ ] **Step 2: Implement.** Pagination via the `X-WP-TotalPages` header. Log dropped elements per post (compare tag counts before/after sanitising) and print them at the end. Retries on media download (3, backoff). Everything inside one transaction per post.
 - [ ] **Step 3: GREEN.** Commit `"wordpress:import — posts, pages and media from the WP REST API"`.
 
 ### Task 4.2: Run the import on production (operations, not code)
 
-- [ ] `php artisan wordpress:import --organisation=<Quizfabriek id> --posts --dry-run`, review the mapping, then without `--dry-run`. Then `--pages`. Then `--redirects` and hand the printed unmapped URL list to whoever fills the redirect table (phase 5 admin) — most are `/category/…` and `/feed/`.
+- [ ] `php artisan wordpress:import --organisation=<Quizfabriek id> --posts --dry-run`, review the mapping, then without `--dry-run`. Then `--pages`. Then `--redirects` and hand the printed unmapped URL list to whoever fills the redirect table (phase 5 admin) — most are `/category/…`; `/feed/` URLs get a 301 to `/blog`.
 - [ ] Spot-check three posts on `tickets.quizfabriek.be/2019/…` (they render there already; canonical will move at cutover).
 - [ ] Editors rebuild the nine pages from the imported `rich_text` drafts using blocks; keep them **unpublished** except for previewing.
 
@@ -313,7 +313,7 @@ Branch `feature/cms-seo-cutover-prep`.
 - Test: extend `tests/Integration/SitemapTest.php`, create `tests/Integration/Cms/SeoTest.php`
 
 - [ ] **Step 1: Failing tests** per the spec's `SeoTest` and `SitemapTest` rows. The sitemap test must also prove that organisation B's host does not get organisation A's page URLs (uses `actAsHost`).
-- [ ] **Step 2: Implement.** Decide open question 9 before touching the event entries; the CMS entries are scoped regardless.
+- [ ] **Step 2: Implement.** Scope the existing event entries per organisation as well (decided), and assert it in `SitemapTest`.
 - [ ] **Step 3: GREEN.** Commit `"CMS: sitemap entries, hreflang, language switcher and menu"`.
 
 ### Task 5.2: Redirects: fallback route, 410 list, admin screen, rename helper
@@ -339,7 +339,7 @@ Branch `feature/cms-seo-cutover-prep`.
 
 - [ ] **Step 1: Failing tests**: with domains `example.test` (canonical) and `tickets.example.test`, `GET http://tickets.example.test/over-ons?x=1` → 301 `https://example.test/over-ons?x=1` (scheme from `X-Forwarded-Proto`, else the request's); `/status` untouched; `live.example.test` untouched (the livestream host convention in `Organisation::getFromDomainOrFirst()`); POST untouched; an organisation without a canonical domain untouched.
 - [ ] **Step 2: Implement** (GET/HEAD only, skip `status`, skip hosts starting with `live.`, compare against `organisation()->canonicalDomain()`).
-- [ ] **Step 3: GREEN.** Commit `"Per-organisation canonical domain redirect"`. Leave `ValidDomain` as is unless open question 11 says delete.
+- [ ] **Step 3: GREEN.** Commit `"Per-organisation canonical domain redirect"`. Delete `app/Http/Middleware/ValidDomain.php` and its `Kernel` registration in the same commit (decided; it never redirected).
 
 ---
 
@@ -368,8 +368,5 @@ Branch `chore/quizfabriek-cutover` for the code bits; the rest is operations. Do
 
 # Optional follow-ups (not scheduled)
 
-- `/blog/feed` RSS output (open question 10).
-- Sanitise `organisations.footer_html` (open question 8).
-- Delete `ValidDomain` (open question 11).
 - Translations of the ticketing pages, now that `SetCmsLocale` and the lang files exist.
 - A `FaqPage` JSON-LD emitter for the `faq` block.

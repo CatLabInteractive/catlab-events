@@ -1,7 +1,7 @@
 # CMS pages and blog (WordPress merge)
 
 **Date:** 2026-09-29
-**Status:** Designed, awaiting the open questions at the end
+**Status:** Designed; open questions answered 2026-09-29
 **Repos:** `catlab-events`
 **Investigation:** `/mnt/project-files/wordpress-merge/assessment.md` (option A, decisions of 2026-09-29)
 
@@ -48,8 +48,8 @@ Concretely:
   form with a block list (add, remove, move up/down) and a rich-text editor
   inside text fields. Good enough for nine pages that change a few times a
   year.
-- Comments, categories, tags, authors, RSS consumption. (Producing a feed is
-  optional; see open questions.)
+- Comments, categories, tags, author accounts/profiles, RSS consumption
+  and RSS output (decided: no feed; WordPress `/feed/` URLs 301 to `/blog`).
 - A generic page cache. The site is small; queries are cheap.
 - Replacing the theme. Blocks are styled with the existing Bootstrap 4 theme
   (`resources/assets/sass/style.css`) plus one new `cms.scss`.
@@ -170,6 +170,7 @@ Indexes: `(organisation_id, published_at)`, unique `(organisation_id, wp_post_id
 | `slug` | string(191) | |
 | `title` | string | |
 | `excerpt` | text nullable | plain text, shown in lists and used as meta description |
+| `author` | string(191) nullable | free text byline (decided); when empty the post shows the organisation name. Imported from the WordPress author's display name |
 | `body` | mediumText | **sanitised** HTML (see Rich text) |
 | `meta_title`, `meta_description` | nullable | |
 | `is_published` | bool default false | |
@@ -510,15 +511,21 @@ Allow-list (`config/cms.php` → `sanitizer`):
 - Media: `allowedMediaSchemes = [https]`, `allowedMediaHosts` = the central
   storage front host (`config('centralstorage.front')` / `CENTRALSTORAGE_FRONT`),
   `www.youtube-nocookie.com`, `www.youtube.com`, `player.vimeo.com`.
-  So an `<iframe>` survives only when it points at those hosts and an
-  `<img>` only when it is one of our assets (or an absolute https image
-  the editor pasted; open question 6).
+  plus the approved external image hosts in `config('cms.allowed_image_hosts')`
+  (env `CMS_ALLOWED_IMAGE_HOSTS`, comma separated; decided: external images
+  are allowed from approved domains only). So an `<iframe>` survives only
+  when it points at the video hosts and an `<img>` only when it is one of
+  our assets or on an approved host; any other `<img>` is dropped. The
+  same list validates image URLs in blocks and over the API.
 - Max input length 2 MB; the result is what gets stored.
 
 Only a sanitised field is ever printed with `{!! !!}`, and only inside the
 block/post views. `organisations.footer_html` (printed raw in
-`layouts/blocks/footer.blade.php:110`) predates this and is out of scope,
-noted below.
+`layouts/blocks/footer.blade.php:110`) is brought under the same rule
+(decided): it is sanitised with the same sanitiser whenever it is written
+(admin and API, through `OrganisationResourceDefinition` / the organisation
+controller's save hook), and a one-off migration sanitises the stored
+values.
 
 ## Media
 
@@ -531,8 +538,12 @@ noted below.
   `POST admin/cms/upload` (TinyMCE and the block image pickers; validates
   `image|max:10240`, returns `{ "id": 42, "location": "<url>" }`) and
   `GET admin/cms/assets?q=` (JSON list of the organisation's recent images
-  for the picker; `assets.user_id` is the only ownership we have, so the
-  list is "uploaded by admins of this organisation", see open question 5).
+  for the picker). Decided: assets are scoped to organisations. New
+  nullable column `assets.organisation_id` (FK), set on every upload from
+  the admin, the API and the import; the picker and the API list only the
+  active organisation's assets, and block/post validation rejects an
+  `image_id` of another organisation. Existing rows stay `NULL` (only
+  visible where they are already referenced).
 - Inline images in rich text are stored as absolute central-storage URLs
   inside the HTML (there is no reference table; deleting an asset that a
   post uses is the admin's problem, as it is for series headers today).
@@ -729,8 +740,9 @@ logic in `App\Cms\Import\WordPressImporter` so it is testable with
   `<xhtml:link rel="alternate" hreflang>` entries (view gains the
   `xmlns:xhtml` namespace). The cache key becomes
   `laravel.sitemap:{organisation_id}` (today's single key serves the first
-  host's sitemap to every domain, see open question 9), and saving a page
-  or post forgets it.
+  host's sitemap to every domain), and saving a page or post forgets it.
+  Decided: the existing event entries are scoped per organisation too, so
+  each domain's sitemap lists only its own events, pages and posts.
 - `robots.txt` stays `Allow: /`; drafts are never linked and previews are
   `noindex`.
 
@@ -857,30 +869,11 @@ production between phases, with WordPress still serving `quizfabriek.be`.
    If so it becomes a redirect row.
 4. ~~Home page selection~~ **Decided:** explicit per organisation via
    `organisations.home_page_id` (see Data model).
-5. **Asset ownership.** The `assets` table has only `user_id`. The image
-   picker lists assets uploaded by admins of the active organisation; a
-   cleaner `assets.organisation_id` column is a small migration that
-   touches the shared central-storage model. Do that now, or later?
-6. **External images in rich text.** The sanitiser proposal only keeps
-   images hosted on our central storage (plus YouTube/Vimeo iframes).
-   Pasting a hot-linked image would silently drop it. Acceptable?
-7. ~~Redirect admin as a Charon resource~~ **Decided:** yes, as part of the
-   Charon API requirement. (Original question: Charon resource instead of a custom controller
-   would give sorting/filtering for free but mix two styles inside one
-   admin section. Custom is proposed.
-8. **`organisations.footer_html`** is admin-entered HTML printed raw. Out
-   of scope here; should the same sanitiser be applied to it in the
-   security-hardening follow-up?
-9. **Sitemap cache is global today** (`SitemapController::CACHE_KEY`), and
-   `Event::published()` there is not scoped to an organisation, so every
-   domain serves the same sitemap. The plan scopes the cache key and the
-   new CMS entries per organisation; scoping the existing event entries
-   too is a behaviour change for the other domains — do it in the same PR?
-10. **Feed output.** The WordPress site exposed `/feed/`. Nobody is known
-    to consume it; the plan lists an optional `/blog/feed` (RSS) task at
-    the end. Skip unless someone asks?
-11. **`ValidDomain` middleware** is dead code (`$hos`). Delete it in the
-    cutover PR, or leave it?
-12. **Author display** on posts: the organisation name, or a per-post
-    free-text author (WordPress had a single author)? Proposal: none, just
-    the date.
+5. ~~Asset ownership~~ **Decided:** add `assets.organisation_id` and scope assets per organisation (see Media).
+6. ~~External images~~ **Decided:** allowed from approved domains (`config('cms.allowed_image_hosts')`).
+7. ~~Redirect admin as a Charon resource~~ **Decided:** yes (see Charon API).
+8. ~~`organisations.footer_html`~~ **Decided:** sanitised on write, existing values cleaned by migration.
+9. ~~Sitemap scoping~~ **Decided:** scope the event entries per organisation as well.
+10. ~~Feed output~~ **Decided:** no feed; `/feed/` 301s to `/blog`.
+11. ~~`ValidDomain`~~ **Decided:** delete it (with the `CanonicalDomain` middleware PR).
+12. ~~Author display~~ **Decided:** free-text `posts.author`, falling back to the organisation name.
