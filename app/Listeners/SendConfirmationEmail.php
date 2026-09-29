@@ -64,8 +64,14 @@ class SendConfirmationEmail extends SendEmail
                         $this->sendConfirmationEmail($order, $order->event, $member->user);
                     }
                 }
-            } else {
+            } elseif ($order->user) {
                 $this->sendConfirmationEmail($order, $order->event, $order->user);
+            }
+
+            // Guest registrations have no account to mail; the admin may have
+            // entered an address for the guest instead.
+            if ($order->is_guest && $order->guest_email) {
+                $this->sendConfirmationEmail($order, $order->event, null, $order->guest_email);
             }
         } catch (LogicException $e) {
             \Log::error($e->getMessage());
