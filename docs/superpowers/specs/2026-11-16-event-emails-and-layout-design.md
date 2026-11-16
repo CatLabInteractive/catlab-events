@@ -159,8 +159,8 @@ The new default layout, top to bottom:
 ```
 
 - Thijs approved the look of the mockup at https://claude.ai/artifact/9VzZiTAwzJM6NAfKn7aymz.
-  Follow it: logo centered above the card, a 4px accent line on top of the card, 15px body
-  text, and a card that fills the screen width on a phone.
+  Follow it. The logo is centered above the card, and the card has a 4px accent line on top.
+  Body text is 15px. On a phone, the card fills the screen width.
 - Table-based HTML with inline styles, so that it holds in Outlook and Gmail. It works on a phone.
 - No remote images other than the organisation logo. The background image that the current
   layout loads over http from a third-party mail service goes away.
