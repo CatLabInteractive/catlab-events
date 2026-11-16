@@ -117,16 +117,61 @@ class OrderController extends Controller
             $retryFormInput['uitpas'] = \Request::session()->get('uitpas_card_number');
         }
 
+        $event = $order->event;
+        $ticketCategory = $order->ticketCategory;
+        $eventDates = $ticketCategory->eventDates->sortBy('startDate')->values();
+
+        $livestreamUrl = null;
+        if ($order->isAccepted()) {
+            $livestreamUrl = $event->getIdentifiedLiveStreamUrl($order->group);
+        }
+
         return view(
             'orders/thanks',
             [
                 'order' => $order,
+                'event' => $event,
+                'ticketCategory' => $ticketCategory,
+                'eventDates' => $eventDates,
+                'firstDate' => $eventDates->first(),
+                'isPackage' => $event->isPackage() || $event->isQuizWitzCampaign(),
+                'livestreamUrl' => $livestreamUrl,
+                'email' => $order->user ? $order->user->email : null,
+                'calendarUrl' => action('OrderController@calendar', [ $order->id, 'sig' => $order->thanksSignature() ]),
                 'trackConversion' => $trackConversion,
                 'redirectUrl' => $order->getThanksUrl(),
                 'retryFormAction' => $retryFormAction,
                 'retryFormInput' => $retryFormInput
             ]
         );
+    }
+
+    /**
+     * Download the order's dates as an .ics file (linked from the thanks page).
+     * Same access rule as the thanks page: owner / group member / admin, or the
+     * signed thanks URL.
+     *
+     * @param $orderId
+     * @return \Illuminate\Http\Response
+     */
+    public function calendar($orderId)
+    {
+        /** @var Order $order */
+        $order = Order::findOrFail($orderId);
+
+        abort_unless(
+            \Gate::allows('view', $order) || $order->verifyThanksSignature(\Request::get('sig')),
+            403
+        );
+        abort_unless($order->isAccepted(), 404);
+
+        $content = app(\App\Services\OrderCalendar::class)->render($order);
+        $filename = \Illuminate\Support\Str::slug($order->event->name) ?: 'quiz';
+
+        return response($content, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '.ics"',
+        ]);
     }
 
     /**
