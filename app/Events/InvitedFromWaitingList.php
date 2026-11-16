@@ -24,6 +24,7 @@ namespace App\Events;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Services\EmailTemplates;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -85,17 +86,27 @@ class InvitedFromWaitingList
     }
 
     /**
+     * The subject that goes out when the admin did not edit it: the
+     * organisation's own version of the invitation, or the default.
+     *
      * @param Event $event
+     * @param User $user
+     * @param string $url
      * @return string
      */
-    public static function defaultSubject(Event $event)
+    public static function defaultSubject(Event $event, User $user, string $url)
     {
-        return 'Wachtlijst ' . $event->name;
+        return app(EmailTemplates::class)->render(
+            $event->organisation,
+            EmailTemplates::WAITING_LIST_INVITATION,
+            self::getMailAttributes($event, $user, $url)
+        )['subject'];
     }
 
     /**
-     * The default invitation text, without the surrounding mail layout, as
-     * the starting point for an admin who wants to edit it.
+     * The invitation text that goes out when the admin did not edit it,
+     * without the surrounding mail layout, as the starting point for an
+     * admin who wants to edit it.
      *
      * @param Event $event
      * @param User $user
@@ -104,10 +115,34 @@ class InvitedFromWaitingList
      */
     public static function renderDefaultContent(Event $event, User $user, string $url)
     {
-        return \View::make('emails.tickets.waitingListInvitation', [
+        $templates = app(EmailTemplates::class);
+        $attributes = self::getMailAttributes($event, $user, $url);
+
+        $template = $templates->getOverride($event->organisation, EmailTemplates::WAITING_LIST_INVITATION);
+        if ($template) {
+            return $templates->renderContent(
+                $event->organisation,
+                EmailTemplates::WAITING_LIST_INVITATION,
+                $attributes,
+                $template->content
+            );
+        }
+
+        return \View::make('emails.tickets.waitingListInvitation', $attributes)->renderSections()['content'];
+    }
+
+    /**
+     * @param Event $event
+     * @param User $user
+     * @param string $url
+     * @return array
+     */
+    public static function getMailAttributes(Event $event, User $user, string $url)
+    {
+        return [
             'event' => $event,
             'user' => $user,
             'url' => $url
-        ])->renderSections()['content'];
+        ];
     }
 }

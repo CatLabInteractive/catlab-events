@@ -27,6 +27,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\EmailTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -97,7 +98,7 @@ class WaitingListController extends Controller
             'user' => $user,
             'url' => $url,
             'body' => $this->renderInvitationMail($event, $user, $url),
-            'subject' => InvitedFromWaitingList::defaultSubject($event)
+            'subject' => InvitedFromWaitingList::defaultSubject($event, $user, $url)
         ]);
     }
 
@@ -152,7 +153,7 @@ class WaitingListController extends Controller
             'event' => $event,
             'user' => $user,
             'url' => $url,
-            'subject' => InvitedFromWaitingList::defaultSubject($event),
+            'subject' => InvitedFromWaitingList::defaultSubject($event, $user, $url),
             'content' => InvitedFromWaitingList::renderDefaultContent($event, $user, $url)
         ]);
     }
@@ -417,11 +418,11 @@ class WaitingListController extends Controller
      */
     private function renderInvitationMail(Event $event, User $user, string $url)
     {
-        return \View::make('emails.tickets.waitingListInvitation', [
-            'event' => $event,
-            'user' => $user,
-            'url' => $url
-        ])->render();
+        return app(EmailTemplates::class)->render(
+            $event->organisation,
+            EmailTemplates::WAITING_LIST_INVITATION,
+            InvitedFromWaitingList::getMailAttributes($event, $user, $url)
+        )['body'];
     }
 
     /**
