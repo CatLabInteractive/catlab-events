@@ -301,5 +301,5 @@ ssh dokku@fra001.apps.catlab.eu enter catlab-events web php artisan tinker --exe
 ### Task 8: Finish
 
 - [ ] **Step 1: Run the full integration suite and the Unit suite.** Expected: all PASS.
-- [ ] **Step 2: Render one real confirmation and one waiting list mail** through the admin preview with the docker webserver (`http://localhost:8095/admin/emails/confirmation/preview`). Take screenshots at desktop and phone width and compare them with the mockup.
+- [ ] **Step 2: Render one real registration mail and one waiting list mail** through the admin preview with the docker webserver (`http://localhost:8095/admin/emails/confirmation/preview`). Take screenshots at desktop and phone width and compare them with the mockup.
 - [ ] **Step 3: Push the branch and open a PR to `master`.** The description lists the Task 0 result, the new admin pages, and the screenshots.
