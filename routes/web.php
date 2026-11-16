@@ -170,6 +170,7 @@ Route::group([
 // often opened on another device); both carry a per-order signature.
 Route::get('orders/{id}/sync', 'OrderController@sync');
 Route::get('orders/{id}/thanks', 'OrderController@thanks');
+Route::get('orders/{id}/calendar.ics', 'OrderController@calendar');
 
 Route::get('documents/nl/privacy', 'DocumentController@privacy');
 Route::get('documents/nl/tos', 'DocumentController@tos');
