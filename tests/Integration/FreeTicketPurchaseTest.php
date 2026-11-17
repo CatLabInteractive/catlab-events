@@ -30,6 +30,8 @@ class FreeTicketPurchaseTest extends IntegrationTestCase
         // No payment API involved; confirmation email requested via the API.
         $this->assertCount(0, $this->catlabApi->createOrderCalls);
         $this->assertCount(1, $this->catlabApi->sendEmailCalls);
+        // Sent in the organisation's name.
+        $this->assertSame('Test organisation', $this->catlabApi->sendEmailCalls[0]['fromName']);
 
         // Order confirmation is tracked via the faked Eukles client.
         $this->assertNotEmpty($this->eukles->tracked);

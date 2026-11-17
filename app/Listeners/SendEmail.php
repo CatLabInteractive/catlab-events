@@ -65,7 +65,8 @@ abstract class SendEmail
             $apiClient->sendEmail(
                 $mail['subject'],
                 $mail['body'],
-                $recipient
+                $recipient,
+                mailFromName($event->organisation)
             );
         } catch (GuzzleException $e) {
             \Log::error($e);
@@ -114,7 +115,8 @@ abstract class SendEmail
             $apiClient->sendEmail(
                 $subject ?: $mail['subject'],
                 $mail['body'],
-                $user->email
+                $user->email,
+                mailFromName($event->organisation)
             );
         } catch (GuzzleException $e) {
             \Log::warning('Waiting list invitation mail could not be sent', [
@@ -171,7 +173,8 @@ abstract class SendEmail
             $apiClient->sendEmail(
                 $mail['subject'],
                 $mail['body'],
-                $email
+                $email,
+                mailFromName($order->event->organisation)
             );
         } catch (GuzzleException $e) {
             \Log::error($e);
