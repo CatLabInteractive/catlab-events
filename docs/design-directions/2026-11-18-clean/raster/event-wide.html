@@ -1,0 +1,146 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Woonkamerquiz · Raster</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+
+:root{--bg:#ffffff;--ink:#111214;--mut:#6b6c70;--line:#dcdcdc;--soft:#f3f3f1;--blue:#1f5fbf;--red:#d7262e;--logo:#78be5a;
+  --f:'Schibsted Grotesk',system-ui,sans-serif;--g:24px}
+body{background:var(--bg);color:var(--ink);font:400 18px/1.55 var(--f);font-feature-settings:'tnum' 0}
+.wrap{max-width:1320px;margin:0 auto;padding:0 32px}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--g)}
+/* quadrant mark: four answers, one chosen */
+.q4{display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;width:var(--s,16px);height:var(--s,16px);vertical-align:-2px;flex:0 0 auto}
+.q4 i{background:var(--ink)}
+.q4 i.on{background:var(--blue)}
+.q4 i.off{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+/* header */
+.top{border-bottom:1px solid var(--ink)}
+.top .wrap{display:flex;align-items:center;height:76px;gap:28px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:800;font-size:19px;letter-spacing:-.01em}
+.logo img{width:36px}
+.top nav{display:flex;gap:28px;margin-left:auto;font-weight:500;font-size:16px}
+.top nav a{text-decoration:none;display:flex;gap:6px;align-items:baseline;padding:4px 0;border-bottom:2px solid transparent}
+.top nav a.on{border-bottom-color:var(--ink)}
+.top nav a span{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.top nav a.me{color:var(--blue)}
+.menu{display:none;margin-left:auto;background:none;border:0;font:600 16px var(--f);color:var(--ink);padding:8px 0;align-items:center;gap:10px}
+/* hero */
+.hero{padding:44px 0 72px}
+.crumb{grid-column:1/-1;display:flex;gap:10px;align-items:center;font-size:16px;font-weight:500;color:var(--mut);margin:0 0 18px}
+.crumb a{color:var(--ink);text-decoration:none}
+.hero h1{grid-column:1/-1;font-weight:800;font-size:clamp(64px,10.4vw,168px);line-height:.88;letter-spacing:-.045em;margin:0 0 48px;margin-left:-.05em}
+.info{grid-column:1/5;border-top:1px solid var(--ink);padding-top:16px;display:flex;flex-direction:column}
+.fact{margin:0 0 40px;font-size:18px}
+.price{margin-bottom:16px}
+.price small{display:block;font-size:15px;color:var(--mut)}
+.price strong{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.03em}
+.btn{display:flex;align-items:center;justify-content:space-between;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:19px;height:60px;padding:0 20px;border:0;cursor:pointer;width:100%;transition:background .15s}
+.btn:hover{background:var(--ink)}
+.btn svg,.go svg{width:22px;height:22px;flex:0 0 auto}
+.sub{font-size:15px;color:var(--mut);margin:12px 0 0}
+.poster{grid-column:6/-1;display:block;align-self:start;text-decoration:none}
+.poster img{width:100%;height:auto}
+.hero.tall .info{grid-column:1/6}
+.hero.tall .poster{grid-column:8/-1}
+.cap{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-top:10px}
+/* body */
+.sec{border-top:1px solid var(--ink);padding:18px 0 72px}
+.sec-h{grid-column:1/4;font-weight:700;font-size:18px;margin:0;display:flex;gap:12px;align-items:baseline}
+.sec-h span{color:var(--mut);font-weight:500;font-variant-numeric:tabular-nums}
+.sec-b{grid-column:4/-1}
+.lead{font-size:28px;line-height:1.3;letter-spacing:-.015em;font-weight:500;margin:0 0 28px;max-width:30ch}
+.cols{columns:2;column-gap:var(--g)}
+.cols p{margin:0 0 16px;break-inside:avoid}
+.know{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px var(--g);list-style:none;padding:0;margin:0;counter-reset:k}
+.know li{counter-increment:k;font-size:17px}
+.know li::before{content:counter(k);display:block;font-weight:800;font-size:44px;line-height:1;letter-spacing:-.03em;color:var(--blue);margin-bottom:12px}
+.know strong{display:block;font-weight:700}
+.cred{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--g)}
+.cred dt{font-size:15px;color:var(--mut);margin-bottom:6px}
+.cred dd{margin:0;font-weight:500}
+.cred a{text-decoration:none;display:block}
+.cred a:hover{color:var(--blue)}
+.tix{display:grid;grid-template-columns:1fr 1fr;gap:var(--g)}
+.tk{display:grid;grid-template-rows:auto 1fr auto;border-top:4px solid var(--ink);padding-top:16px;text-decoration:none}
+.tk:hover{border-top-color:var(--blue)}
+.tk .n{display:flex;justify-content:space-between;align-items:start;gap:12px;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.01em}
+.tk .n b{font-weight:800;font-size:32px;letter-spacing:-.03em;white-space:nowrap}
+.tk p{margin:8px 0 20px;color:var(--mut);font-size:16px}
+.tk .go{display:flex;justify-content:space-between;align-items:center;font-weight:600;color:var(--blue);border-top:1px solid var(--line);padding-top:12px}
+/* footer */
+.foot{border-top:1px solid var(--ink);padding:24px 0 56px}
+.foot .mark{grid-column:1/5}
+.foot .mark .q4{--s:88px;gap:6px}
+.foot .mark p{margin:20px 0 0;font-size:15px;color:var(--mut);max-width:28ch}
+.foot h4{font-size:15px;font-weight:500;color:var(--mut);margin:0 0 10px}
+.foot ul{list-style:none;margin:0;padding:0;line-height:1.9;font-weight:500}
+.foot a{text-decoration:none}.foot a:hover{color:var(--blue)}
+.foot .c1{grid-column:7/9}.foot .c2{grid-column:9/11}.foot .c3{grid-column:11/13}
+.legal{grid-column:1/-1;margin-top:48px;font-size:14px;color:var(--mut);display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:14px}
+.buybar{display:none}
+@media (max-width:900px){
+  :root{--g:16px}
+  .wrap{padding:0 20px}
+  .top .wrap{height:60px}.logo img{width:30px}.logo{font-size:17px}
+  .top nav{display:none}.menu{display:flex}
+  .hero{padding:22px 0 44px}
+  .crumb{font-size:14px;margin-bottom:10px}
+  .hero h1{font-size:min(64px,calc((100vw - 40px) / 7.75));margin-bottom:22px}
+  .info,.hero.tall .info{grid-column:1/-1;padding-top:12px}
+  .fact{font-size:16px;margin-bottom:18px}
+  .pr-row{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end}
+  .price{margin:0}.price strong{font-size:40px}
+  .btn{height:56px}
+  .sub{display:none}
+  .poster,.hero.tall .poster{grid-column:1/-1;margin-top:32px}
+  .hero.tall .poster{max-width:300px}
+  .sec{padding:14px 0 48px}
+  .sec-h{grid-column:1/-1;margin-bottom:18px}
+  .sec-b{grid-column:1/-1}
+  .lead{font-size:22px}
+  .cols{columns:1}
+  .know{grid-template-columns:1fr 1fr;gap:28px 16px}
+  .know li::before{font-size:34px}
+  .cred{grid-template-columns:1fr 1fr;row-gap:20px}
+  .tix{grid-template-columns:1fr}
+  .tk{min-height:0}
+  .foot .mark,.foot .c1,.foot .c2,.foot .c3{grid-column:1/-1;margin-bottom:28px}
+  .foot .mark .q4{--s:56px;gap:4px}
+  .legal{flex-direction:column;gap:6px;margin-top:8px}
+}
+</style></head><body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#"><img src="../../assets/logo.png" alt="">De Quizfabriek</a>
+  <nav><a href="#" class="">Quizavond<span>3</span></a><a href="#" class="on">Woonkamerquiz<span>1</span></a><a href="#" class="">Quizpakket<span>2</span></a><a href="#" class="">Kalender</a><a class="me" href="#">Mijn tickets</a></nav>
+  <button class="menu">Menu <span class="q4" style=--s:14px><i class=""></i><i class="on"></i><i class=""></i><i class=""></i></span></button>
+</div></header>
+<main>
+<section class="hero "><div class="wrap grid">
+  <p class="crumb"><span class="q4" style=--s:14px><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></span><a href="#">Woonkamerquiz</a> / Quizpakket</p>
+  <h1>Woonkamerquiz</h1>
+  <div class="info">
+    <p class="fact">Quizpakket, speel wanneer je wil.</p>
+    <div class="pr-row"><div class="price" data-price><small>Tickets vanaf</small><strong>€ 6,00</strong></div>
+    <a class="btn" href="#" data-cta>Bestellen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a></div>
+    <p class="sub">Je krijgt meteen een link. Speel wanneer je wil.</p>
+  </div>
+  <a class="poster" href="#"><img src="../../assets/wide.jpg" width="1600" height="900" alt="Poster Woonkamerquiz"><span class="cap"><span>Affiche</span><span>Vergroten ↗</span></span></a>
+</div></section>
+<section class="sec"><div class="wrap grid"><h2 class="sec-h"><span>01</span>Over de quiz</h2><div class="sec-b">
+  <p class="lead">Het Quizfabriek quizpakket is terug van nooit echt weggeweest! Quizzen waar je maar wil, wanneer je maar wil, met wie je maar wil.</p><div class="cols"><p>🛋️ Je komt terecht in onze gezellige woonkamer waar Kim en Wietse je entertainen met gevarieerde vragen en plezierige breinbrekers, uiteraard met de nodige kwinkslag!</p><p>🙋 De vragen in deze quiz zijn bewust toegankelijk gehouden, met een grote focus op sfeer en plezier. Zo is de quiz geschikt voor werkelijk iedereen: van jong tot oud of van ervaren quizzer tot nieuweling!</p><p>📲 Je start de quiz op via een laptop of computer (die je op je tv kan aansluiten) en beantwoordt de vragen met je eigen smartphone, simpelweg door de QR-code te scannen. En zo ben je meteen vertrokken voor een uurtje quizplezier!</p></div></div></div></section>
+<section class="sec" id="tickets"><div class="wrap grid"><h2 class="sec-h"><span>02</span>Tickets</h2><div class="sec-b"><div class="tix"><a class="tk" href="#"><div class="n">Quizpakket<b>€ 6,00</b></div><p>Eén link, speel binnen 72 uur na activatie.</p><span class="go">Bestellen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span></a><a class="tk" href="#"><div class="n">Quizpakket + bedrijfslicentie<b>€ 25,00</b></div><p>Speel de quiz met je collega's, op het werk.</p><span class="go">Bestellen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span></a></div></div></div></section>
+<section class="sec"><div class="wrap grid"><h2 class="sec-h"><span>03</span>Goed om te weten</h2><div class="sec-b"><ol class="know"><li><strong>Speel wanneer het jou past</strong>Na je aankoop krijg je een link die je zelf activeert op het moment dat je de quiz wil spelen.</li><li><strong>Pauzeren mag</strong>Speel de quiz op je eigen tempo.</li><li><strong>Alleen of met een groep</strong>Speel solo of in ploegjes, met maximaal twintig smartphones.</li><li><strong>Voor elk wat wils</strong>Van klassieke quizonderwerpen tot onverwachte thema's.</li><li><strong>Het hele jaar door</strong>Winters en gezellig, maar ook perfect te spelen buiten de feestdagen.</li></ol></div></div></section>
+<section class="sec"><div class="wrap grid"><h2 class="sec-h"><span>04</span>Credits</h2><div class="sec-b"><dl class="cred"><div><dt>Eindredactie</dt><dd><a href=#>Wietse Heremans</a></dd></div><div><dt>Auteurs</dt><dd><a href=#>Wietse Heremans</a><a href=#>Mathias Mathieu</a><a href=#>Tim Penninck</a></dd></div><div><dt>Presentatoren</dt><dd><a href=#>Wietse Heremans</a><a href=#>Kim Masselin</a></dd></div><div><dt>Regie & techniek</dt><dd><a href=#>Thijs Van der Schaeghe</a><a href=#>Wietse Heremans</a><a href=#>Mathias Mathieu</a></dd></div></dl></div></div></section>
+</main>
+<footer class="foot"><div class="wrap grid">
+  <div class="mark"><span class="q4"><i class=""></i><i class="on"></i><i class=""></i><i class=""></i></span><p>Quizavonden, quizpakketten en quizzen op maat. Gent, sinds 2015.</p></div>
+  <div class="c1"><h4>Quizzen</h4><ul><li><a href="#">Quizavond</a></li><li><a href="#">Woonkamerquiz</a></li><li><a href="#">Quizpakket</a></li><li><a href="#">Kalender</a></li></ul></div>
+  <div class="c2"><h4>Jij</h4><ul><li><a href="#">Mijn tickets</a></li><li><a href="#">Mijn account</a></li></ul></div>
+  <div class="c3"><h4>Contact</h4><ul><li><a href="#">hallo@quizfabriek.be</a></li><li><a href="#">quizfabriek.be</a></li></ul></div>
+  <div class="legal"><span>© 2016–26 De Quizfabriek</span><span>Privacy · Voorwaarden · Ticketsysteem door CatLab Interactive</span></div>
+</div></footer>
+</body></html>

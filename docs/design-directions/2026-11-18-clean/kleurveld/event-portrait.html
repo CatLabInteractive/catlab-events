@@ -1,0 +1,141 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Woonkamerquiz · Kleurveld</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+
+:root{--bg:#efeeea;--ink:#1e2430;--mut:#646a76;--line:#d7d4cd;--white:#fbfaf8;
+  --a:#e27d74;--b:#8cbf98;--c:#efb661;--d:#7ea6d8;--series:var(--a);--f:'Jost',system-ui,sans-serif}
+body{background:var(--bg);color:var(--ink);font:400 18px/1.6 var(--f)}
+.wrap{max-width:1280px;margin:0 auto;padding:0 40px}
+.dots{display:inline-flex;gap:5px}.dots i{width:10px;height:10px;border-radius:50%}
+.dots i:nth-child(1){background:var(--a)}.dots i:nth-child(2){background:var(--b)}.dots i:nth-child(3){background:var(--c)}.dots i:nth-child(4){background:var(--d)}
+/* header */
+.top .wrap{display:flex;align-items:center;height:84px;gap:32px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:500;font-size:20px}
+.logo img{width:38px}
+.top nav{margin-left:auto;display:flex;gap:30px;font-size:17px}
+.top nav a{text-decoration:none;display:flex;align-items:center;gap:8px;color:var(--mut)}
+.top nav a.on{color:var(--ink);font-weight:500}
+.top nav a.on::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--series)}
+.top nav a sub{font-size:13px;vertical-align:baseline}
+.menu{display:none;margin-left:auto;background:none;border:0;font:500 17px var(--f);color:var(--ink);align-items:center;gap:10px;padding:8px 0}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);min-height:620px}
+.hero.tall{grid-template-columns:minmax(0,6fr) minmax(0,6fr)}
+.field{position:relative;background:var(--series);overflow:hidden;display:grid;place-items:center;padding:72px 72px 72px max(40px,calc((100vw - 1280px)/2 + 40px))}
+.field::before{content:"";position:absolute;width:78%;aspect-ratio:1;border-radius:50%;background:var(--c);left:-22%;bottom:-38%}
+.field::after{content:"";position:absolute;width:26%;aspect-ratio:1;border-radius:50%;background:var(--white);right:7%;top:9%;opacity:.9}
+.hero.tall .field::before{width:95%;bottom:-30%}
+.pf{position:relative;z-index:1;width:100%;aspect-ratio:var(--r);max-height:520px;display:block}
+.hero.tall .pf{width:auto;height:min(560px,64vh)}
+.pf img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(30,36,48,.18))}
+.info{container-type:inline-size;min-width:0;padding:72px max(40px,calc((100vw - 1280px)/2 + 40px)) 64px 64px;display:flex;flex-direction:column;justify-content:center}
+.series{display:flex;align-items:center;gap:10px;font-size:17px;margin:0 0 18px;color:var(--mut)}
+.series a{color:var(--ink);text-decoration:none;font-weight:500}
+.series i{width:12px;height:12px;border-radius:50%;background:var(--series)}
+.info h1{font-weight:500;font-size:min(84px,calc(100cqw / 7.1));line-height:.98;letter-spacing:-.025em;margin:0 0 16px;overflow-wrap:break-word;hyphens:auto}
+.fact{color:var(--mut);margin:0 0 44px;font-size:19px}
+.buy{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.price small{display:block;color:var(--mut);font-size:16px}
+.price strong{font-weight:500;font-size:44px;line-height:1;letter-spacing:-.02em}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);color:var(--white);text-decoration:none;font:500 19px var(--f);height:62px;padding:0 24px;border:0;cursor:pointer}
+.btn:hover{background:#343c4c}
+.btn .o{width:26px;height:26px;border-radius:50%;background:var(--series);display:grid;place-items:center;color:var(--ink);font-size:16px}
+/* sections */
+.sec{padding:96px 0}
+.sec .wrap{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:48px}
+.sec h2{font-weight:500;font-size:40px;line-height:1.05;letter-spacing:-.02em;margin:0}
+.sec h2 small{display:block;font-size:17px;color:var(--mut);letter-spacing:0;margin-top:10px;font-weight:400}
+.lead{font-size:28px;line-height:1.35;letter-spacing:-.01em;margin:0 0 28px;max-width:32ch}
+.txt p{margin:0 0 18px;max-width:62ch}
+.tint{background:var(--b)}
+.tint .wrap{grid-template-columns:minmax(0,4fr) minmax(0,8fr)}
+.know{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:28px 48px}
+.know li{display:grid;grid-template-columns:22px 1fr;gap:14px;font-size:18px}
+.know li::before{content:"";width:16px;height:16px;border-radius:50%;background:var(--white);margin-top:6px}
+.know strong{display:block;font-weight:500}
+.tix{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tk{display:flex;flex-direction:column;min-height:260px;padding:28px;text-decoration:none;position:relative;overflow:hidden}
+.tk:nth-child(1){background:var(--d)}.tk:nth-child(2){background:var(--c)}
+.tk::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(251,250,248,.35);right:-60px;bottom:-60px;transition:transform .3s}
+.tk:hover::after{transform:scale(1.25)}
+.tk b{font-weight:500;font-size:24px;line-height:1.2}
+.tk p{margin:6px 0 0;font-size:16px;opacity:.85;max-width:26ch}
+.tk strong{margin-top:auto;font-weight:500;font-size:48px;letter-spacing:-.02em;line-height:1;padding-top:24px}
+.tk span{font-weight:500;font-size:17px;margin-top:10px;position:relative;z-index:1}
+.cred{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 48px}
+.cred div{border-top:1px solid var(--line);padding:16px 0 20px;display:grid;grid-template-columns:160px 1fr;gap:16px}
+.cred dt{color:var(--mut)}.cred dd{margin:0;font-weight:500}
+.cred a{text-decoration:none}.cred a:hover{text-decoration:underline}
+/* footer */
+.foot{background:var(--ink);color:#d9dce3;padding:72px 0 40px;position:relative;overflow:hidden}
+.foot::before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;background:var(--d);opacity:.9;right:-300px;top:-360px}
+.foot .wrap{display:grid;grid-template-columns:5fr 2fr 2fr 3fr;gap:32px;position:relative}
+.foot .big{font-weight:500;font-size:44px;line-height:1.05;letter-spacing:-.02em;color:#fff;margin:18px 0 0;max-width:12ch}
+.foot h4{font-weight:500;color:#fff;margin:0 0 10px;font-size:17px}
+.foot ul{list-style:none;margin:0;padding:0;line-height:2;font-size:16px}
+.foot a{text-decoration:none}.foot a:hover{color:#fff}
+.legal{grid-column:1/-1;border-top:1px solid #3a4253;margin-top:48px;padding-top:16px;font-size:14px;color:#9aa1ae;display:flex;justify-content:space-between}
+@media (max-width:900px){
+  .wrap{padding:0 20px}
+  .top .wrap{height:60px}.logo img{width:30px}.logo{font-size:18px}
+  .top nav{display:none}.menu{display:flex}
+  .hero,.hero.tall{grid-template-columns:minmax(0,1fr);min-height:0}
+  .field{padding:20px;height:220px}
+  .pf,.hero.tall .pf{width:auto;height:180px;max-width:100%;aspect-ratio:var(--r)}
+  .field::before{width:300px;left:-90px;bottom:-170px}
+  .field::after{width:70px;right:16px;top:14px}
+  .info{padding:20px 20px 32px}
+  .series{font-size:15px;margin-bottom:6px}
+  .info h1{font-size:min(56px,calc(100cqw / 7.1));margin-bottom:4px}
+  .fact{font-size:16px;margin-bottom:16px}
+  .buy{gap:16px}
+  .price strong{font-size:34px}.price small{font-size:14px}
+  .btn{height:56px;padding:0 16px}
+  .sec{padding:56px 0}
+  .sec .wrap,.tint .wrap{grid-template-columns:minmax(0,1fr);gap:24px}
+  .sec h2{font-size:32px}
+  .lead{font-size:22px}
+  .know{grid-template-columns:1fr;gap:18px}
+  .tix{grid-template-columns:1fr}
+  .tk{min-height:200px;padding:22px}
+  .tk strong{font-size:40px}
+  .cred{grid-template-columns:1fr}
+  .cred div{grid-template-columns:1fr;gap:2px}
+  .foot .wrap{grid-template-columns:1fr}
+  .foot::before{width:300px;height:300px;right:-140px;top:-160px}
+  .legal{flex-direction:column;gap:6px}
+}
+</style></head><body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#"><img src="../../assets/logo.png" alt="">De Quizfabriek</a>
+  <nav><a href="#" class="">Quizavond <sub>3</sub></a><a href="#" class="on">Woonkamerquiz <sub>1</sub></a><a href="#" class="">Quizpakket <sub>2</sub></a><a href="#" class="">Kalender</a><a href="#">Mijn tickets</a></nav>
+  <button class="menu">Menu <span class="dots"><i></i><i></i><i></i><i></i></span></button>
+</div></header>
+<section class="hero tall">
+  <div class="field"><a class="pf" href="#" style="--r:0.7072"><img src="../../assets/portrait.jpg" width="1000" height="1414" alt="Poster Woonkamerquiz"></a></div>
+  <div class="info">
+    <p class="series"><i></i><a href="#">Woonkamerquiz</a> · Quizpakket</p>
+    <h1>Woonkamerquiz</h1>
+    <p class="fact">Quizpakket, speel wanneer je wil</p>
+    <div class="buy"><div class="price" data-price><small>vanaf</small><strong>€ 6,00</strong></div>
+      <a class="btn" href="#" data-cta>Bestellen<span class="o">→</span></a></div>
+  </div>
+</section>
+<section class="sec"><div class="wrap"><h2>Over de quiz<small>Quizpakket, speel wanneer je wil</small></h2>
+  <div class="txt"><p class="lead">Het Quizfabriek quizpakket is terug van nooit echt weggeweest! Quizzen waar je maar wil, wanneer je maar wil, met wie je maar wil.</p><p>🛋️ Je komt terecht in onze gezellige woonkamer waar Kim en Wietse je entertainen met gevarieerde vragen en plezierige breinbrekers, uiteraard met de nodige kwinkslag!</p><p>🙋 De vragen in deze quiz zijn bewust toegankelijk gehouden, met een grote focus op sfeer en plezier. Zo is de quiz geschikt voor werkelijk iedereen: van jong tot oud of van ervaren quizzer tot nieuweling!</p><p>📲 Je start de quiz op via een laptop of computer (die je op je tv kan aansluiten) en beantwoordt de vragen met je eigen smartphone, simpelweg door de QR-code te scannen. En zo ben je meteen vertrokken voor een uurtje quizplezier!</p></div></div></section>
+<section class="sec" id="tickets" style="padding-top:0"><div class="wrap"><h2>Tickets<small>Je krijgt meteen een mail met je link.</small></h2><div class="tix"><a class="tk" href="#"><b>Quizpakket</b><p>Eén link, speel binnen 72 uur na activatie.</p><strong>€ 6,00</strong><span>Bestellen →</span></a><a class="tk" href="#"><b>Quizpakket + bedrijfslicentie</b><p>Speel de quiz met je collega's, op het werk.</p><strong>€ 25,00</strong><span>Bestellen →</span></a></div></div></section>
+<section class="sec tint"><div class="wrap"><h2>Goed om te weten</h2><ul class="know"><li><span><strong>Speel wanneer het jou past</strong>Na je aankoop krijg je een link die je zelf activeert op het moment dat je de quiz wil spelen.</span></li><li><span><strong>Pauzeren mag</strong>Speel de quiz op je eigen tempo.</span></li><li><span><strong>Alleen of met een groep</strong>Speel solo of in ploegjes, met maximaal twintig smartphones.</span></li><li><span><strong>Voor elk wat wils</strong>Van klassieke quizonderwerpen tot onverwachte thema's.</span></li><li><span><strong>Het hele jaar door</strong>Winters en gezellig, maar ook perfect te spelen buiten de feestdagen.</span></li></ul></div></section>
+<section class="sec"><div class="wrap"><h2>Credits</h2><dl class="cred"><div><dt>Eindredactie</dt><dd><a href=#>Wietse Heremans</a></dd></div><div><dt>Auteurs</dt><dd><a href=#>Wietse Heremans</a>, <a href=#>Mathias Mathieu</a>, <a href=#>Tim Penninck</a></dd></div><div><dt>Presentatoren</dt><dd><a href=#>Wietse Heremans</a>, <a href=#>Kim Masselin</a></dd></div><div><dt>Regie & techniek</dt><dd><a href=#>Thijs Van der Schaeghe</a>, <a href=#>Wietse Heremans</a>, <a href=#>Mathias Mathieu</a></dd></div></dl></div></section>
+<footer class="foot"><div class="wrap">
+  <div><span class="dots"><i></i><i></i><i></i><i></i></span><p class="big">Quizzen met plezier, sinds 2015.</p></div>
+  <div><h4>Quizzen</h4><ul><li><a href="#">Quizavond</a></li><li><a href="#">Woonkamerquiz</a></li><li><a href="#">Quizpakket</a></li><li><a href="#">Kalender</a></li></ul></div>
+  <div><h4>Jij</h4><ul><li><a href="#">Mijn tickets</a></li><li><a href="#">Mijn account</a></li></ul></div>
+  <div><h4>Contact</h4><ul><li><a href="#">hallo@quizfabriek.be</a></li><li>Gent, België</li></ul></div>
+  <div class="legal"><span>© 2016–26 De Quizfabriek</span><span>Privacy · Voorwaarden · Ticketsysteem door CatLab Interactive</span></div>
+</div></footer>
+</body></html>
