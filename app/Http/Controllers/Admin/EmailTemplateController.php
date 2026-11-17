@@ -5,9 +5,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\AdministersEmails;
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
-use App\Models\Organisation;
 use App\Services\EmailTemplates;
 use Illuminate\Http\Request;
 
@@ -23,6 +23,8 @@ use Illuminate\Http\Request;
  */
 class EmailTemplateController extends Controller
 {
+    use AdministersEmails;
+
     /**
      * @var EmailTemplates
      */
@@ -115,10 +117,7 @@ class EmailTemplateController extends Controller
             $draft
         );
 
-        // The body is admin-written HTML: never let it run in the panel's origin.
-        return response($mail['body'])
-            ->header('Content-Type', 'text/html; charset=UTF-8')
-            ->header('Content-Security-Policy', 'sandbox');
+        return $this->sandboxedPreview($mail['body']);
     }
 
     /**
@@ -184,23 +183,6 @@ class EmailTemplateController extends Controller
 
         return redirect(action('Admin\EmailTemplateController@show', [ $type ]))
             ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" is terug de standaardversie.');
-    }
-
-    /**
-     * The active organisation, when the user administers it. `admin` is a
-     * global flag, so the organisation role is checked here too.
-     *
-     * @return Organisation
-     */
-    private function getAdministeredOrganisation()
-    {
-        $organisation = \Auth::user()->getActiveOrganisation();
-
-        if (!$organisation || !$organisation->isAdmin(\Auth::user())) {
-            abort(404);
-        }
-
-        return $organisation;
     }
 
     /**

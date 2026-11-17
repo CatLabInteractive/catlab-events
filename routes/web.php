@@ -103,11 +103,22 @@ Route::group([
             Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
 
             Route::get('emails', 'Admin\EmailTemplateController@index');
-            Route::get('emails/{type}', 'Admin\EmailTemplateController@show');
-            Route::match([ 'get', 'post' ], 'emails/{type}/preview', 'Admin\EmailTemplateController@preview');
-            Route::get('emails/{type}/edit', 'Admin\EmailTemplateController@edit');
-            Route::post('emails/{type}', 'Admin\EmailTemplateController@update');
-            Route::post('emails/{type}/reset', 'Admin\EmailTemplateController@reset');
+
+            // The library of named templates. Before the `emails/{type}` routes.
+            Route::get('emails/templates', 'Admin\EmailLibraryController@index');
+            Route::get('emails/templates/create', 'Admin\EmailLibraryController@create');
+            Route::post('emails/templates', 'Admin\EmailLibraryController@store');
+            Route::match([ 'get', 'post' ], 'emails/templates/create/preview', 'Admin\EmailLibraryController@previewNew');
+            Route::get('emails/templates/{id}/edit', 'Admin\EmailLibraryController@edit');
+            Route::match([ 'get', 'post' ], 'emails/templates/{id}/preview', 'Admin\EmailLibraryController@preview');
+            Route::post('emails/templates/{id}/delete', 'Admin\EmailLibraryController@destroy');
+            Route::post('emails/templates/{id}', 'Admin\EmailLibraryController@update');
+
+            Route::get('emails/{type}', 'Admin\EmailTemplateController@show')->where('type', 'confirmation|confirmationPlayLink|cancellation|waitingListInvitation|groupInvite');
+            Route::match([ 'get', 'post' ], 'emails/{type}/preview', 'Admin\EmailTemplateController@preview')->where('type', 'confirmation|confirmationPlayLink|cancellation|waitingListInvitation|groupInvite');
+            Route::get('emails/{type}/edit', 'Admin\EmailTemplateController@edit')->where('type', 'confirmation|confirmationPlayLink|cancellation|waitingListInvitation|groupInvite');
+            Route::post('emails/{type}', 'Admin\EmailTemplateController@update')->where('type', 'confirmation|confirmationPlayLink|cancellation|waitingListInvitation|groupInvite');
+            Route::post('emails/{type}/reset', 'Admin\EmailTemplateController@reset')->where('type', 'confirmation|confirmationPlayLink|cancellation|waitingListInvitation|groupInvite');
 
             Route::get('events/{event}/guests', 'Admin\GuestRegistrationController@index');
             Route::post('events/{event}/guests', 'Admin\GuestRegistrationController@store');
