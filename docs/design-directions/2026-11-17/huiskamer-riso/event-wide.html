@@ -1,0 +1,157 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Woonkamerquiz · Huiskamer</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Work+Sans:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+
+:root{
+  --paper:#f5ecd9; --paper-2:#efe2c6; --ink:#2b2a4c; --ink-2:#5d5873; --orange:#ff6c2f; --teal:#00838a; --mustard:#e8b04b;
+  --wood:#7a4b2a; --logo:#78be5a;
+  --serif:'Fraunces',Georgia,serif; --sans:'Work Sans',system-ui,sans-serif; --hand:'Caveat',cursive;
+}
+body{background:var(--paper);color:var(--ink);font:400 17px/1.65 var(--sans);position:relative}
+body::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .15  0 0 0 0 .3  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");pointer-events:none;mix-blend-mode:multiply;opacity:.5;z-index:99}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+.serif{font-family:var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1}
+/* header */
+.top .wrap{display:flex;align-items:center;gap:18px;height:84px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo img{width:46px}
+.logo span{font:italic 700 24px/1 var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1}
+.top nav{margin-left:auto;display:flex;gap:26px;align-items:center}
+.top nav a{text-decoration:none;font-weight:500;font-size:16px;padding:4px 0}
+.top nav a.on{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'><path d='M0 5 Q 5 0 10 5 T 20 5 T 30 5 T 40 5' fill='none' stroke='%23ff6c2f' stroke-width='2.5'/></svg>") repeat-x 0 100%/20px 6px;padding-bottom:7px}
+.top nav a sup{font:700 italic 13px var(--serif);color:var(--orange);margin-left:2px}
+.top nav .tix{border:2px solid var(--ink);border-radius:999px 999px 999px 999px/60% 70% 60% 80%;padding:7px 16px}
+.menu{display:none;margin-left:auto;font:700 26px/1 var(--hand);background:none;border:0;color:var(--ink);padding:6px 4px}
+/* hero: living-room wall */
+.wall{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'><g fill='none' stroke='%23f08a5d' stroke-width='3' opacity='.4'><path d='M60 0 C 95 30, 95 50, 60 80 C 25 110, 25 130, 60 160'/><path d='M0 0 C 35 30, 35 50, 0 80 C -35 110,-35 130, 0 160'/><path d='M120 0 C 155 30,155 50,120 80 C 85 110, 85 130, 120 160'/></g><g fill='%23e8b04b' opacity='.4'><circle cx='30' cy='40' r='9'/><circle cx='90' cy='120' r='9'/></g><g fill='%23f5ecd9'><circle cx='30' cy='40' r='3.5'/><circle cx='90' cy='120' r='3.5'/></g></svg>"),var(--paper-2);background-size:120px 160px,auto;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);position:relative}
+.wall::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22px;background:var(--wood);border-top:3px solid var(--ink)}
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:64px;align-items:center;padding:56px 20px 86px}
+.hero.tall{grid-template-columns:minmax(0,.8fr) minmax(0,1fr)}
+.hang{justify-self:center;position:relative;padding-top:34px;width:100%;display:flex;justify-content:center}
+.hang::before{content:"";position:absolute;top:0;left:50%;width:12px;height:12px;border-radius:50%;background:var(--ink);transform:translateX(-50%);box-shadow:2px 3px 0 rgba(43,42,76,.25)}
+.hang .wire{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:44%;height:40px;overflow:visible}
+.frame{position:relative;z-index:1;background:var(--wood);padding:14px;box-shadow:inset 0 0 0 2px #5a341b,inset 0 0 0 5px #9a6a43,10px 14px 0 rgba(43,42,76,.22);transform:rotate(-1.2deg);width:100%}
+.frame .mat{background:#fbf6ea;padding:clamp(12px,3%,26px);box-shadow:inset 2px 2px 4px rgba(0,0,0,.25)}
+.frame .pic{aspect-ratio:var(--r);display:block}
+.frame .pic img{width:100%;height:100%;object-fit:contain}
+.hero.tall .frame{width:auto;max-width:400px}
+.note{position:absolute;z-index:2;right:-6px;bottom:-30px;font:700 24px/1 var(--hand);color:var(--teal);transform:rotate(-4deg)}
+.info .kick{font:italic 500 20px/1.2 var(--serif);color:var(--teal);margin:0 0 6px;font-variation-settings:'SOFT' 100,'WONK' 1}
+.info .kick a{text-decoration:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'><path d='M0 5 Q 5 0 10 5 T 20 5 T 30 5 T 40 5' fill='none' stroke='%23ff6c2f' stroke-width='2.5'/></svg>") repeat-x 0 100%/20px 6px;padding-bottom:6px}
+.info{container-type:inline-size;min-width:0}
+.info h1{font:900 min(96px,calc(100cqw / 7.4))/.92 var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1,'opsz' 144;margin:0 0 14px;color:var(--ink);letter-spacing:-.02em;text-shadow:3px 3px 0 rgba(255,108,47,.55);hyphens:auto}
+.info .fact{margin:0 0 26px;font-size:18px;color:var(--ink-2)}
+.buy{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.price{font:italic 400 18px/1 var(--serif);font-variation-settings:'SOFT' 100}
+.price strong{display:block;font:800 46px/1 var(--serif);font-style:normal;font-variation-settings:'SOFT' 100,'WONK' 1;margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:12px;background:var(--orange);color:#fff;text-decoration:none;font:700 21px/1 var(--sans);padding:18px 28px;border-radius:999px;box-shadow:4px 4px 0 rgba(0,131,138,.85);transition:box-shadow .15s,transform .15s;border:0;cursor:pointer}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 rgba(0,131,138,.85)}
+.btn svg{width:22px;height:22px}
+.btn.teal{background:var(--teal);box-shadow:4px 4px 0 rgba(255,108,47,.8)}
+/* body */
+.body{padding:64px 0 24px}
+.body .wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:72px;align-items:start}
+h2.h{font:800 38px/1.05 var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1;margin:0 0 18px;letter-spacing:-.01em}
+h2.h em{font-weight:400;color:var(--teal)}
+.desc p{margin:0 0 18px;max-width:62ch}
+.desc p:first-child{font:italic 400 24px/1.4 var(--serif);font-variation-settings:'SOFT' 100;color:var(--ink)}
+.emo{margin-right:4px}
+.checks{list-style:none;padding:0;margin:0 0 56px}
+.checks li{padding:0 0 12px 44px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><path d='M4 15 C 8 17, 10 21, 11 24 C 14 15, 19 8, 25 3' fill='none' stroke='%23ff6c2f' stroke-width='3.5' stroke-linecap='round'/></svg>") no-repeat 0 2px/28px 28px;max-width:62ch}
+.checks li:nth-child(even){background-position:2px 0}
+.guide{border-top:3px double var(--ink);border-bottom:3px double var(--ink);padding:6px 0}
+.guide div{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:10px 0;border-bottom:1px dotted var(--ink-2)}
+.guide div:last-child{border:0}
+.guide dt{font:italic 500 17px/1.4 var(--serif);color:var(--teal);font-variation-settings:'SOFT' 100}
+.guide dd{margin:0;font-weight:600}
+.guide a{text-decoration:none}.guide a:hover{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='10' viewBox='0 0 40 10'><path d='M0 5 Q 5 0 10 5 T 20 5 T 30 5 T 40 5' fill='none' stroke='%23ff6c2f' stroke-width='2.5'/></svg>") repeat-x 0 100%/20px 6px}
+.tags{display:grid;gap:22px}
+.tag{position:relative;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:#fffaf0;border:2px solid var(--ink);padding:18px 20px 18px 46px;text-decoration:none;border-radius:46px 10px 10px 46px/50% 10px 10px 50%;transition:transform .15s}
+.tag:hover{transform:rotate(-1deg)}
+.tag::before{content:"";position:absolute;left:16px;top:50%;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);transform:translateY(-50%);background:var(--paper)}
+.tag b{display:block;font:700 18px/1.25 var(--sans)}
+.tag span{font-size:14px;color:var(--ink-2);display:block;margin-top:2px;line-height:1.4}
+.tag strong{font:800 28px/1 var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1;color:var(--orange)}
+.tag:nth-child(2){background:#e7f1ec}
+.aside .scribble{font:700 22px/1.2 var(--hand);color:var(--teal);margin:14px 0 0;transform:rotate(-2deg)}
+/* footer */
+.foot{margin-top:72px;background:var(--ink);color:var(--paper)}
+.foot .band{height:46px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='160' viewBox='0 0 120 160'><g fill='none' stroke='%23f08a5d' stroke-width='3' opacity='.4'><path d='M60 0 C 95 30, 95 50, 60 80 C 25 110, 25 130, 60 160'/><path d='M0 0 C 35 30, 35 50, 0 80 C -35 110,-35 130, 0 160'/><path d='M120 0 C 155 30,155 50,120 80 C 85 110, 85 130, 120 160'/></g><g fill='%23e8b04b' opacity='.4'><circle cx='30' cy='40' r='9'/><circle cx='90' cy='120' r='9'/></g><g fill='%23f5ecd9'><circle cx='30' cy='40' r='3.5'/><circle cx='90' cy='120' r='3.5'/></g></svg>"),var(--mustard);background-size:60px 80px,auto;border-top:3px solid var(--ink)}
+.foot .wrap{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:36px;padding-top:44px;padding-bottom:44px}
+.foot .big{font:italic 800 46px/1 var(--serif);font-variation-settings:'SOFT' 100,'WONK' 1;margin:0 0 10px;color:#ffb38f}
+.foot p{margin:0;color:#c9c4d9;font-size:15px}
+.foot h4{font:italic 600 18px var(--serif);margin:0 0 8px;color:var(--mustard)}
+.foot ul{list-style:none;margin:0;padding:0;line-height:2}
+.foot a{text-decoration:none;color:#e8e2f5}
+@media (max-width:880px){
+  .top .wrap{height:64px}.logo img{width:36px}.logo span{font-size:21px}
+  .top nav{display:none}.menu{display:block}
+  .hero,.hero.tall{grid-template-columns:minmax(0,1fr);gap:20px;padding:14px 20px 48px}
+  .hang{padding-top:20px}
+    .frame{padding:8px;transform:rotate(-1deg);width:auto;max-width:100%}
+  .frame .mat{padding:8px}
+  .frame .pic{height:min(calc((100vw - 92px) / var(--r)),172px);width:auto;max-width:100%}
+  .hero.tall .frame{max-width:none}
+  .note{font-size:19px;bottom:-24px;right:4px}
+  .hang{margin-bottom:22px}
+  .info h1{font-size:calc(100cqw / 7.4);margin-bottom:6px;text-shadow:2px 2px 0 rgba(255,108,47,.55)}
+  .info .kick{font-size:17px;margin-bottom:2px}
+  .info .fact{font-size:15px;margin-bottom:14px}
+  .buy{gap:14px;flex-wrap:nowrap;justify-content:space-between}
+  .price{font-size:15px}.price strong{font-size:34px}
+  .btn{padding:15px 22px;font-size:19px}
+  .body{padding-top:40px}
+  .body .wrap{grid-template-columns:minmax(0,1fr);gap:44px}
+  .aside{order:-1}
+  h2.h{font-size:31px}
+  .desc p:first-child{font-size:20px}
+  .guide div{grid-template-columns:1fr;gap:0}
+  .foot .wrap{grid-template-columns:1fr}
+}
+</style></head><body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#"><img src="../assets/logo.png" alt=""><span>De Quizfabriek</span></a>
+  <nav><a href="#" class="">Quizavond<sup>3</sup></a><a href="#" class="on">Woonkamerquiz<sup>1</sup></a><a href="#" class="">Quizpakket<sup>2</sup></a><a href="#" class="">Kalender</a><a class="tix" href="#">Mijn tickets</a></nav>
+  <button class="menu">menu ☰</button>
+</div></header>
+<section class="wall"><div class="wrap hero ">
+  <div class="hang"><svg class="wire" viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M50 0 L2 40 M50 0 L98 40" stroke="#2b2a4c" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/></svg><a class="frame" href="#"><div class="mat"><span class="pic" style="--r:1.7778"><img src="../assets/wide.jpg" width="1600" height="900" alt="Poster Woonkamerquiz"></span></div></a>
+    <span class="note">↖ klik, dan hangt hij groter</span></div>
+  <div class="info">
+    <p class="kick"><a href="#">Woonkamerquiz</a> · quizpakket</p>
+    <h1>Woonkamerquiz</h1>
+    <p class="fact">🏠 Quizpakket, speel wanneer je wil</p>
+    <div class="buy"><div class="price" data-price>tickets vanaf<strong>€ 6,00</strong></div>
+      <a class="btn" href="#" data-cta>Bestellen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 13c5-1 11-1 17-1M14 6c2 2 4 4 6 6-2 2-4 4-6 6"/></svg></a></div>
+  </div>
+</div></section>
+<section class="body"><div class="wrap">
+  <div>
+    <h2 class="h">Zet je maar, <em>de quiz begint zo</em></h2>
+    <div class="desc"><p class=""><span class="emo">📺</span> Het Quizfabriek quizpakket is terug van nooit echt weggeweest! Quizzen waar je maar wil, wanneer je maar wil, met wie je maar wil.</p>
+<p class=""><span class="emo">🛋️</span> Je komt terecht in onze gezellige woonkamer waar Kim en Wietse je entertainen met gevarieerde vragen en plezierige breinbrekers, uiteraard met de nodige kwinkslag!</p>
+<p class=""><span class="emo">🙋</span> De vragen in deze quiz zijn bewust toegankelijk gehouden, met een grote focus op sfeer en plezier. Zo is de quiz geschikt voor werkelijk iedereen: van jong tot oud of van ervaren quizzer tot nieuweling!</p>
+<p class=""><span class="emo">📲</span> Je start de quiz op via een laptop of computer (die je op je tv kan aansluiten) en beantwoordt de vragen met je eigen smartphone, simpelweg door de QR-code te scannen. En zo ben je meteen vertrokken voor een uurtje quizplezier!</p></div>
+    <h2 class="h" style="margin-top:44px">Goed om te weten</h2>
+    <ul class="checks"><li class=""><strong>Speel wanneer het jou past:</strong> na je aankoop krijg je een link die je zelf activeert op het moment dat je de quiz wil spelen.</li>
+<li class=""><strong>Pauzeren mag:</strong> speel de quiz op je eigen tempo.</li>
+<li class=""><strong>Alleen of met een groep:</strong> speel solo of in ploegjes, met maximaal twintig smartphones.</li>
+<li class=""><strong>Voor elk wat wils:</strong> van klassieke quizonderwerpen tot onverwachte thema's.</li>
+<li class=""><strong>Het hele jaar door:</strong> winters en gezellig, maar ook perfect te spelen buiten de feestdagen.</li></ul>
+    <h2 class="h">Op de aftiteling</h2>
+    <dl class="guide"><div><dt>Eindredactie</dt><dd><a href=#>Wietse Heremans</a></dd></div><div><dt>Auteurs</dt><dd><a href=#>Wietse Heremans</a>, <a href=#>Mathias Mathieu</a>, <a href=#>Tim Penninck</a></dd></div><div><dt>Presentatoren</dt><dd><a href=#>Wietse Heremans</a>, <a href=#>Kim Masselin</a></dd></div><div><dt>Regie & techniek</dt><dd><a href=#>Thijs Van der Schaeghe</a>, <a href=#>Wietse Heremans</a>, <a href=#>Mathias Mathieu</a></dd></div></dl>
+  </div>
+  <aside class="aside" id="tickets"><h2 class="h">Tickets</h2><div class="tags"><a class="tag" href="#"><div><b>Quizpakket</b><span>Eén link, speel binnen 72 uur na activatie.</span></div><strong>€ 6,00</strong></a><a class="tag" href="#"><div><b>Quizpakket + bedrijfslicentie</b><span>Speel de quiz met je collega's, op het werk.</span></div><strong>€ 25,00</strong></a></div>
+    <p class="scribble">Tante Margriet moet naar het toilet? Pauzeren mag!</p></aside>
+</div></section>
+<footer class="foot"><div class="band"></div><div class="wrap">
+  <div><p class="big">Tot in de woonkamer!</p><p>De Quizfabriek maakt quizavonden, quizpakketten en quizzen op maat. Sinds 2015, vanuit Gent. hallo@quizfabriek.be</p></div>
+  <div><h4>Op het programma</h4><ul><li><a href="#">Quizavond</a></li><li><a href="#">Woonkamerquiz</a></li><li><a href="#">Quizpakket</a></li><li><a href="#">Kalender</a></li></ul></div>
+  <div><h4>Jouw hoekje</h4><ul><li><a href="#">Mijn tickets</a></li><li><a href="#">Mijn account</a></li><li><a href="#">Privacy &amp; voorwaarden</a></li><li><a href="#">Ticketsysteem: CatLab Interactive</a></li></ul></div>
+</div></footer>
+</body></html>

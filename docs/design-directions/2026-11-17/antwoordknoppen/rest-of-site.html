@@ -1,0 +1,224 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rest van de site · Antwoordknoppen</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+
+:root{
+  --bg:#f3eee6; --ink:#1b1a1f; --ink-2:#55525c; --line:#d9d1c4;
+  --a:#c8283a; --b:#2e8b4a; --c:#c8822a; --d:#2a6eaa; --logo:#78be5a;
+  --series:var(--a);
+  --f:'Bricolage Grotesque',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--f);font-variation-settings:'opsz' 14}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+.disp{font-family:var(--f);font-weight:800;font-stretch:75%;font-variation-settings:'opsz' 96;letter-spacing:-.02em}
+.ribbon{display:grid;grid-template-columns:repeat(4,1fr);height:10px}
+.ribbon i:nth-child(1){background:var(--a)}.ribbon i:nth-child(2){background:var(--b)}.ribbon i:nth-child(3){background:var(--c)}.ribbon i:nth-child(4){background:var(--d)}
+/* header */
+.top .wrap{display:flex;align-items:center;height:72px;gap:20px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo img{width:44px}
+.logo span{font-weight:800;font-stretch:75%;font-size:24px;letter-spacing:-.01em;line-height:1}
+.top nav{margin-left:auto;display:flex;gap:6px}
+.top nav a{text-decoration:none;font-weight:600;font-size:16px;padding:8px 12px;display:flex;align-items:center;gap:8px}
+.top nav a .n{width:22px;height:22px;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff;background:var(--k,var(--ink))}
+.top nav a.on{background:var(--ink);color:var(--bg)}
+.menu{display:none;margin-left:auto;width:44px;height:44px;border:0;background:var(--ink);padding:12px 10px;display:none;flex-direction:column;justify-content:space-between}
+.menu i{display:block;height:4px}.menu i:nth-child(1){background:var(--a)}.menu i:nth-child(2){background:var(--b)}.menu i:nth-child(3){background:var(--c)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);min-height:560px}
+.hero.tall{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.hero-info{padding:56px 48px 48px max(20px,calc((100vw - 1200px)/2 + 20px));display:flex;flex-direction:column;justify-content:center}
+.series{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:16px;text-decoration:none;margin-bottom:18px}
+.series b{width:30px;height:30px;display:grid;place-items:center;background:var(--series);color:#fff;font-weight:800}
+.hero h1{font-size:clamp(56px,7.4vw,112px);line-height:.86;margin:0 0 18px;hyphens:auto;overflow-wrap:break-word}
+.fact{font-size:18px;color:var(--ink-2);margin:0 0 30px}
+.answers{display:grid;gap:10px}
+.ans{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:16px 18px;color:#fff;text-decoration:none;font-weight:700;font-size:21px;line-height:1.1;transition:transform .12s}
+.ans:hover{transform:translateX(6px)}
+.ans .k{width:40px;height:40px;display:grid;place-items:center;background:rgba(255,255,255,.22);font-weight:800;font-size:20px}
+.ans small{display:block;font-weight:500;font-size:14px;opacity:.85;margin-top:3px}
+.ans .p{font-weight:800;font-stretch:75%;font-size:34px;letter-spacing:-.01em}
+.ans.go{background:var(--b)}
+.ans .from{display:block;font:600 13px/1 var(--f);font-stretch:100%;letter-spacing:0;opacity:.85;text-align:right;margin:0 0 2px}
+.ans.alt{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 3px var(--ink);font-size:18px;padding:12px 18px}
+.ans.alt .k{background:var(--ink);color:var(--bg);width:32px;height:32px;font-size:16px}
+.stage{background:var(--series);display:grid;place-items:center;padding:56px;position:relative;overflow:hidden}
+.stage::before{content:attr(data-letter);position:absolute;right:-.06em;bottom:-.22em;font:800 520px/1 var(--f);font-stretch:75%;color:rgba(255,255,255,.08);pointer-events:none}
+.screen{position:relative;width:100%;max-width:760px;aspect-ratio:var(--r);max-height:70vh}
+.hero.tall .screen{width:auto;height:min(70vh,640px);max-width:100%}
+.screen img{width:100%;height:100%;object-fit:contain;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.screen-tag{position:absolute;left:0;bottom:-34px;color:rgba(255,255,255,.85);font-size:14px;font-weight:600}
+/* body */
+.body{padding:72px 0 40px}
+.body .wrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:72px;align-items:start}
+.q{display:flex;align-items:baseline;gap:14px;font-size:44px;line-height:1;margin:0 0 22px}
+.q small{font:700 15px/1 var(--f);font-stretch:100%;letter-spacing:0;color:var(--ink-2)}
+.lead p{margin:0 0 18px;max-width:62ch}
+.lead p:first-child{font-size:22px;line-height:1.45;font-weight:500}
+.emo{display:inline-block;margin-right:6px}
+.facts{list-style:none;padding:0;margin:0 0 56px;display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);border:2px solid var(--line)}
+.facts li{background:var(--bg);padding:18px 18px 16px;position:relative}
+.facts li::before{content:"";display:block;width:24px;height:6px;background:var(--a);margin-bottom:12px}
+.facts li:nth-child(4n+2)::before{background:var(--b)}.facts li:nth-child(4n+3)::before{background:var(--c)}.facts li:nth-child(4n+4)::before{background:var(--d)}
+.facts strong{display:block;font-size:19px;line-height:1.2;margin-bottom:4px}
+.facts li:last-child:nth-child(odd){grid-column:span 2}
+.score{border-top:3px solid var(--ink)}
+.score div{display:grid;grid-template-columns:200px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.score dt{font-weight:700;color:var(--ink-2);font-size:15px;padding-top:4px}
+.score dd{margin:0;font-weight:800;font-stretch:80%;font-size:24px;line-height:1.2}
+.score dd a{text-decoration:none;background-image:linear-gradient(var(--c),var(--c));background-size:100% 3px;background-repeat:no-repeat;background-position:0 100%}
+.tickets{position:sticky;top:20px}
+.tickets .q{font-size:34px}
+.tix{display:grid;gap:10px}
+.tix .ans{font-size:19px}
+.tix .ans:nth-child(1){background:var(--d)}.tix .ans:nth-child(2){background:var(--c)}
+.tix .ans .p{font-size:28px}
+.tix-note{font-size:14px;color:var(--ink-2);margin:14px 0 0}
+/* footer */
+.foot{background:var(--ink);color:var(--bg);margin-top:72px}
+.foot .wrap{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-top:48px;padding-bottom:48px}
+.foot .big{font-size:56px;line-height:.9;margin:0 0 14px}
+.foot p{color:#b9b4ab;margin:0;font-size:15px}
+.foot h4{margin:0 0 10px;font-size:15px;color:#fff}
+.foot ul{list-style:none;padding:0;margin:0;line-height:2}
+.foot a{text-decoration:none;color:#d6d0c6}.foot a:hover{color:#fff}
+.k-a{--k:var(--a)}.k-b{--k:var(--b)}.k-c{--k:var(--c)}.k-d{--k:var(--d)}
+@media (max-width:900px){
+  .top .wrap{height:58px}.logo img{width:34px}.logo span{font-size:21px}
+  .top nav{display:none}.menu{display:flex}
+  .hero,.hero.tall{grid-template-columns:minmax(0,1fr);min-height:0}
+  .hero-info{padding:22px 20px 26px}
+  .series{margin-bottom:10px;font-size:15px}.series b{width:26px;height:26px}
+  .hero h1{font-size:calc((100vw - 40px) / 5.2);margin-bottom:10px}
+  .fact{font-size:16px;margin-bottom:18px}
+  .ans{padding:13px 14px;font-size:19px;gap:12px}
+  .ans .k{width:34px;height:34px}
+  .ans .p{font-size:28px}
+  .stage{padding:28px 20px 44px}
+  .stage::before{font-size:300px}
+  .screen{max-height:none}
+  .hero.tall .screen{height:auto;width:min(100%,320px)}
+  .screen-tag{bottom:-30px;font-size:13px}
+  .body{padding:40px 0 20px}
+  .body .wrap{grid-template-columns:minmax(0,1fr);gap:48px}
+  .tickets{position:static;order:-1}
+  .q{font-size:34px}
+  .lead p:first-child{font-size:19px}
+  .facts{grid-template-columns:1fr}.facts li:last-child:nth-child(odd){grid-column:auto}
+  .score div{grid-template-columns:1fr;gap:2px}
+  .score dd{font-size:21px}
+  .foot .wrap{grid-template-columns:1fr;gap:28px}
+  .foot .big{font-size:44px}
+}
+
+.sheet{padding-top:40px}
+.sheet h1{font-size:88px;line-height:.86;margin:0 0 8px}
+.sheet .intro{color:var(--ink-2);margin:0 0 40px}
+.zone{margin-bottom:72px}
+.zt{display:flex;align-items:center;gap:12px;font-weight:700;margin-bottom:18px;font-size:15px;color:var(--ink-2)}
+.zt b{width:28px;height:28px;display:grid;place-items:center;color:#fff;background:var(--ink)}
+/* agenda */
+.ag{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.ev{text-decoration:none;display:flex;flex-direction:column}
+.ev .pic{background:var(--k);aspect-ratio:1;display:grid;place-items:center;padding:16px;position:relative}
+.ev .pic img{position:absolute;inset:16px;width:calc(100% - 32px);height:calc(100% - 32px);object-fit:contain;filter:drop-shadow(0 10px 12px rgba(0,0,0,.35))}
+.ev .when{display:flex;align-items:baseline;gap:8px;margin-top:12px}
+.ev .when b{font-size:40px;line-height:1}
+.ev .when span{font-weight:700;color:var(--ink-2)}
+.ev h3{font-size:26px;line-height:1.05;margin:4px 0 6px}
+.ev p{margin:0;color:var(--ink-2);font-size:15px}
+.flag{position:absolute;z-index:1;left:0;top:14px;background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:5px 10px}
+/* nav demo */
+.drawer{max-width:360px;background:var(--ink);color:#fff;padding:20px;display:grid;gap:8px}
+.drawer a{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;padding:12px;text-decoration:none;font-weight:700;font-size:20px;background:var(--k)}
+.drawer a .k{width:40px;height:40px;display:grid;place-items:center;background:rgba(255,255,255,.2);font-weight:800}
+.drawer a.plain{background:transparent;box-shadow:inset 0 0 0 2px #444}
+/* register */
+.reg{max-width:760px}
+.qstep{border:0;margin:0 0 36px;padding:0}
+.qstep legend{padding:0;margin-bottom:14px;width:100%}
+.qstep legend small{display:block;font-weight:700;font-size:14px;color:var(--ink-2);margin-bottom:4px}
+.qstep legend span{font-size:38px;line-height:1}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;padding:16px;color:#fff;cursor:pointer;position:relative;opacity:.55}
+.opt.on{opacity:1;outline:4px solid var(--ink);outline-offset:3px}
+.opt .k{width:40px;height:40px;display:grid;place-items:center;background:rgba(255,255,255,.22);font-weight:800;font-size:20px}
+.opt b{display:block;font-size:19px;line-height:1.2}.opt em{font-style:normal;font-weight:800;font-stretch:75%;font-size:30px;display:block;margin-top:6px}
+.opt small{display:block;font-size:14px;opacity:.9}
+.inp{display:block;width:100%;border:0;border-bottom:4px solid var(--ink);background:#fff;padding:16px 16px 12px;font-size:22px;font-weight:600;outline:none;border-radius:0}
+.inp:focus{border-bottom-color:var(--d);background:#fff}
+.inp::placeholder{color:#a9a39a;font-weight:400}
+.help{font-size:14px;color:var(--ink-2);margin:8px 0 0}
+.paybtn{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:var(--b);color:#fff;padding:20px 22px;font-weight:800;font-size:24px;cursor:pointer}
+.paybtn span{font-stretch:75%;font-size:34px}
+.fine{font-size:13px;color:var(--ink-2);margin-top:10px}
+/* thanks */
+.win{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--b);color:#fff}
+.win-l{padding:36px}
+.win-l small{font-weight:700;opacity:.85}
+.win-l h3{font-size:76px;line-height:.85;margin:6px 0 20px}
+.win dl{display:grid;grid-template-columns:auto 1fr;gap:6px 20px;margin:0 0 24px;font-size:16px}
+.win dt{opacity:.8}.win dd{margin:0;font-weight:700}
+.win-r{background:var(--a);display:grid;place-items:center;padding:32px}
+.win-r img{max-height:300px;width:auto;box-shadow:0 20px 40px -14px rgba(0,0,0,.5)}
+.btnw{display:inline-flex;gap:10px;align-items:center;background:#fff;color:var(--ink);padding:14px 20px;font-weight:800;font-size:18px;text-decoration:none}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.steps3 div{padding:18px;background:#fff}
+.steps3 b{display:block;font-size:20px;margin-bottom:4px}
+.steps3 p{margin:0;font-size:15px;color:var(--ink-2)}
+@media (max-width:900px){
+  .sheet h1{font-size:58px}
+  .ag{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 12px}
+  .ev .pic img{inset:10px;width:calc(100% - 20px);height:calc(100% - 20px)}.ev .when b{font-size:30px}.ev h3{font-size:18px}.ev p{font-size:13px}
+  .flag{font-size:12px;top:8px}
+  .opts{grid-template-columns:1fr}
+  .qstep legend span{font-size:30px}
+  .win{grid-template-columns:1fr}.win-l{padding:22px}.win-l h3{font-size:56px}
+  .win-r{order:-1;padding:20px}.win-r img{max-height:180px}
+  .steps3{grid-template-columns:1fr}
+  .paybtn{font-size:21px}
+}
+</style></head><body>
+<div class="ribbon"><i></i><i></i><i></i><i></i></div>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#"><img src="../assets/logo.png" alt=""><span class="disp">De Quizfabriek</span></a>
+  <nav><a href="#" class="on k-d">Quizavond<span class=n>3</span></a><a href="#" class="k-a">Woonkamerquiz<span class=n>1</span></a><a href="#" class="k-b">Quizpakket<span class=n>2</span></a><a href="#" class="">Kalender</a><a href="#">Mijn tickets</a></nav>
+  <button class="menu" aria-label="Menu"><i></i><i></i><i></i></button>
+</div></header>
+<main class="wrap sheet">
+  <h1 class="disp">Wat staat er op de planning?</h1>
+  <p class="intro">Home/agenda, navigatie, inschrijven, bedankt en footer. Elke reeks krijgt één van de vier antwoordkleuren.</p>
+  <section class="zone"><div class="zt"><b>A</b>Agenda op de home</div><div class="ag"><a class="ev" href="#" style="--k:var(--d)"><div class="pic"><img src="../assets/square.jpg" width="1200" height="1200" alt="Poster"><span class="flag">Laatste 6 tickets!</span></div>
+      <div class="when"><b class="disp">28 nov</b><span>za 20:00</span></div><h3 class="disp">Quiz in Café Sekuurne</h3><p>Café Sekuurne, Balegem</p></a><a class="ev" href="#" style="--k:var(--c)"><div class="pic"><img src="../assets/panorama.jpg" width="2400" height="700" alt="Poster"><span class="flag">Uitverkocht!</span></div>
+      <div class="when"><b class="disp">04 dec</b><span>vr 20:00</span></div><h3 class="disp">Quizfabriek x YUST</h3><p>YUST, Berchem</p></a><a class="ev" href="#" style="--k:var(--a)"><div class="pic"><img src="../assets/portrait.jpg" width="1000" height="1414" alt="Poster"></div>
+      <div class="when"><b class="disp">19 dec</b><span>za 20:00</span></div><h3 class="disp">Grote Kerstquiz</h3><p>Zaal De Kring, Gent</p></a><a class="ev" href="#" style="--k:var(--b)"><div class="pic"><img src="../assets/wide.jpg" width="1600" height="900" alt="Poster"></div>
+      <div class="when"><b class="disp">26 feb</b><span>vr 20:00</span></div><h3 class="disp">Quiz in het Wintercircus, editie 3</h3><p>Wintercircus, Gent</p></a></div></section>
+  <section class="zone"><div class="zt"><b>B</b>Menu op de telefoon</div><div class="drawer"><a href="#" style="--k:var(--d)"><span class="k">A</span>Quizavond<span>3</span></a><a href="#" style="--k:var(--c)"><span class="k">B</span>Woonkamerquiz<span>1</span></a><a href="#" style="--k:var(--a)"><span class="k">C</span>Quizpakket<span>2</span></a><a href="#" style="--k:var(--b)"><span class="k">D</span>Kalender<span></span></a><a class="plain" href="#"><span class="k">→</span>Mijn tickets<span></span></a></div></section>
+  <section class="zone"><div class="zt"><b>C</b>Inschrijven op één pagina</div>
+    <form class="reg" onsubmit="return false">
+      <fieldset class="qstep"><legend><small>Vraag 1 van 3</small><span class="disp">Welk ticket wordt het?</span></legend>
+        <div class="opts"><label class="opt on" style="background:var(--d)"><span class="k">A</span><span><b>Quizpakket</b><small>Eén link, speel binnen 72 uur na activatie.</small><em>€6,00</em></span></label>
+        <label class="opt" style="background:var(--c)"><span class="k">B</span><span><b>Quizpakket + bedrijfslicentie</b><small>Speel de quiz met je collega's.</small><em>€25,00</em></span></label></div></fieldset>
+      <fieldset class="qstep"><legend><small>Vraag 2 van 3</small><span class="disp">Hoe heet je team?</span></legend>
+        <input class="inp" value="De Kwinkslagers"><p class="help">Komt op het scorebord. Grappig mag, beledigend niet.</p></fieldset>
+      <fieldset class="qstep"><legend><small>Vraag 3 van 3</small><span class="disp">Waar sturen we je ticket naartoe?</span></legend>
+        <input class="inp" type="email" placeholder="jij@voorbeeld.be"><p class="help">Hier sturen we je ticket of je toegang naartoe.</p></fieldset>
+      <button class="paybtn">Betalen <span>€6,00</span></button><p class="fine">Veilig betalen via Mollie. Heb je al een account? Log in.</p>
+    </form></section>
+  <section class="zone"><div class="zt"><b>D</b>Bedankt / je ticket</div>
+    <div class="win"><div class="win-l"><small>✓ Juist antwoord! Bestelling #20931 is bevestigd</small><h3 class="disp">Woonkamer&shy;quiz</h3>
+      <dl><dt>Team</dt><dd>De Kwinkslagers</dd><dt>Ticket</dt><dd>Quizpakket</dd><dt>Speeltijd</dt><dd>72 uur na activatie</dd></dl>
+      <a class="btnw" href="#">Start de quiz →</a></div><div class="win-r"><img src="../assets/wide.jpg" width="1600" height="900" alt="Poster"></div></div>
+    <div class="steps3"><div><b>1. Start de quiz</b><p>Open de link op het scherm waar iedereen naar kijkt.</p></div><div><b>2. Activeer wanneer je klaar bent</b><p>Daarna kan je 72 uur spelen.</p></div><div><b>3. Bewaar de mail</b><p>Je link staat er ook in.</p></div></div></section>
+</main>
+<footer class="foot"><div class="ribbon"><i></i><i></i><i></i><i></i></div><div class="wrap">
+  <div><p class="big disp">Wie, wat, waar? De&nbsp;Quizfabriek.</p><p>Quizzen op maat en quizavonden, sinds 2015 uit Gent. hallo@quizfabriek.be</p></div>
+  <div><h4>Quizzen</h4><ul><li><a href="#">Quizavond</a></li><li><a href="#">Woonkamerquiz</a></li><li><a href="#">Quizpakket</a></li><li><a href="#">Kalender</a></li></ul></div>
+  <div><h4>Jij</h4><ul><li><a href="#">Mijn tickets</a></li><li><a href="#">Mijn account</a></li><li><a href="#">Privacy &amp; voorwaarden</a></li><li><a href="#">Ticketsysteem: CatLab Interactive</a></li></ul></div>
+</div></footer>
+</body></html>
