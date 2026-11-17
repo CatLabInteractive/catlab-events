@@ -518,6 +518,15 @@ select.rf-input {
   color: $rf-muted;
 }
 
+.rf-new-team {
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff7fa;
+  border: 2px dashed rgba($rf-pink, .45);
+
+  &[hidden] { display: none; }
+}
+
 .rf-signed-in {
   background: $rf-soft;
   border-radius: 8px;
