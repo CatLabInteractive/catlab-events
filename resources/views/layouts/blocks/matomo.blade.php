@@ -8,7 +8,7 @@
     _paq.push(['enableLinkTracking']);
     _paq.push(['enableHeartBeatTimer', 15]);
     (function() {
-        var u = @json(rtrim(config('services.matomo.url'), '/') . '/');
+        var u = @json(rtrim(config('services.matomo.url'), '/') . '/', JSON_UNESCAPED_SLASHES);
         _paq.push(['setTrackerUrl', u + 'matomo.php']);
         _paq.push(['setSiteId', @json((string) config('services.matomo.site_id'))]);
         var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];

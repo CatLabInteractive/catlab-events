@@ -138,6 +138,6 @@ class OrderThanksPageTest extends IntegrationTestCase
 
         $this->actingAs($user)->get("/orders/{$order->id}/thanks")
             ->assertStatus(200)
-            ->assertDontSee('matomo.js', false);
+            ->assertDontSee('matomo.php', false);
     }
 }
