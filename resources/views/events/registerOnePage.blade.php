@@ -47,6 +47,18 @@
         <form method="POST" action="{{ action('EventController@storeRegistration', [ $event->id ]) }}" accept-charset="UTF-8" class="register-one-page">
             @csrf
 
+            {{-- Returning teams: their history lives on the existing team, which needs a login. --}}
+            @if(!$user && $event->doesRequireTeam())
+                <div class="alert alert-info register-returning-team">
+                    <p>
+                        <strong>Speelde je team al eerder mee?</strong>
+                        Log dan eerst in en kies je bestaande team, zodat jullie scores en historiek bij elkaar blijven.
+                    </p>
+                    <p><a href="{{ $loginUrl }}" class="btn btn-primary">Inloggen en mijn team kiezen</a></p>
+                    <p class="small">Eerste keer? Vul hieronder gewoon alles in, een account is niet nodig.</p>
+                </div>
+            @endif
+
             {{-- 1. What --}}
             <div class="form-group">
                 <label>Kies je ticket</label>
