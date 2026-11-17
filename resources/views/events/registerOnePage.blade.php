@@ -58,15 +58,15 @@
                 <legend class="rf-step-title">Kies je ticket</legend>
 
                 <div class="rf-choices">
-                    @foreach($ticketCategories as $category)
-                        <label class="rf-choice @if(!$category->isAvailable()) rf-choice-disabled @endif">
+                    {{-- Only tickets that can be bought now: sold out or closed ones only confuse. --}}
+                    @foreach($availableCategories as $category)
+                        <label class="rf-choice">
                             <input
                                 type="radio"
                                 name="category"
                                 value="{{ $category->id }}"
                                 class="rf-choice-input"
                                 @checked($selectedCategoryId === $category->id)
-                                @disabled(!$category->isAvailable())
                             >
                             <span class="rf-choice-body">
                                 <span class="rf-choice-head">
@@ -82,7 +82,7 @@
                                     <span class="rf-choice-warning">{{ $category->errorToString($warning) }}</span>
                                 @endforeach
 
-                                @if(!$user && $category->isFree() && $category->isAvailable())
+                                @if(!$user && $category->isFree())
                                     <span class="rf-choice-meta">Gratis tickets vragen een account: <a href="{{ $loginUrl }}">log in</a>.</span>
                                 @endif
                             </span>

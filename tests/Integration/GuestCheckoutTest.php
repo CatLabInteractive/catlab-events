@@ -55,6 +55,24 @@ class GuestCheckoutTest extends IntegrationTestCase
         $response->assertSee(action('EventController@authSelectTicketCategory', [ $event->id ]), false);
     }
 
+    public function testTicketsThatCannotBeBoughtAreNotListed()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $open = $this->createTicketCategory($event, 15.0);
+        $open->name = 'Open ticket';
+        $open->save();
+
+        $closed = $this->createTicketCategory($event, 10.0);
+        $closed->name = 'Closed ticket';
+        $closed->end_date = new \DateTime('-1 day');
+        $closed->save();
+
+        $response = $this->get("/events/{$event->id}/register");
+        $response->assertStatus(200);
+        $response->assertSee('Open ticket');
+        $response->assertDontSee('Closed ticket');
+    }
+
     public function testLoggedInUserSeesNoEmailField()
     {
         $event = $this->createEvent($this->createOrganisation());
