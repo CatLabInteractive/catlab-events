@@ -157,6 +157,9 @@ Route::post('events/{event}/register', 'EventController@storeRegistration')
 
 // Old per-category links: the one-page form with the category preselected.
 Route::get('events/{event}/register/{ticketCategoryId}', 'EventController@register');
+// The old team-select step posted here; a page still open at deploy lands
+// on the new form instead of a 405.
+Route::post('events/{event}/register/{ticketCategoryId}', 'EventController@register');
 
 Route::get('status', 'StatusController@status')
     ->name('status');
