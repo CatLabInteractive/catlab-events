@@ -4,7 +4,7 @@
 
 **Goal:** An admin gives one event its own mail text or a shared library template. Every mail goes out in a new layout that the admin can adjust or replace.
 
-**Architecture:** `EmailTemplates::resolve()` picks which version of a mail goes out (event text, library template, legacy view, organisation version, default). Every mail body becomes "content HTML", and a new `EmailLayouts` service wraps that content in one layout: the default HTML file with placeholders, or the organisation's own HTML. The Blade layout `emails/layouts/layout.blade.php` stops being a real layout. The Blade default views keep `@section('content')`, and the code reads that section.
+**Architecture:** `EmailTemplates::resolve()` picks which version of a mail goes out (event text, library template, organisation version, default). Every mail body becomes "content HTML", and a new `EmailLayouts` service wraps that content in one layout: the default HTML file with placeholders, or the organisation's own HTML. The Blade layout `emails/layouts/layout.blade.php` stops being a real layout. The Blade default views keep `@section('content')`, and the code reads that section.
 
 **Tech Stack:** Laravel 5-era PHP 8.5, Blade, Charon admin, PHPUnit integration tests on MySQL.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Copy shown to admins is Dutch. The labels in the spec are exact: "Standaardmails", "Sjablonen", "Layout", "Standaard van de organisatie", "Sjabloon", "Eigen tekst voor dit evenement", "Oude vaste mail", "Oude vaste mail verwijderen", "Geavanceerd".
+- Copy shown to admins is Dutch. The labels in the spec are exact: "Standaardmails", "Sjablonen", "Layout", "Standaard van de organisatie", "Sjabloon", "Eigen tekst voor dit evenement", "Geavanceerd".
 - A mail that an admin did not touch keeps its text. Only the layout around it changes.
 - Default accent color: `#4cb050`.
 - Layout look, from the approved mockup at https://claude.ai/artifact/9VzZiTAwzJM6NAfKn7aymz:
@@ -38,17 +38,11 @@
 
 ---
 
-### Task 0: Count legacy `confirmation_email` events on production
+### Task 0: Count legacy `confirmation_email` events on production (done)
 
-This decides Task 7. No code.
-
-- [ ] **Step 1: Ask Thijs to run the count** (the auto-mode classifier blocks `dokku enter`, so Thijs runs it with `!`):
-
-```bash
-ssh dokku@fra001.apps.catlab.eu enter catlab-events web php artisan tinker --execute="echo App\Models\Event::withTrashed()->whereNotNull('confirmation_email')->where('confirmation_email','<>','')->pluck('confirmation_email','id')->toJson();"
-```
-
-- [ ] **Step 2: Write the result into Task 7.** `{}` means Task 7A. Anything else means Task 7B, and the list goes into the PR description.
+Done on 2026-11-17. 24 events have a value. None of them needs it: two point to views that
+no longer exist, 21 point to the default `emails/tickets/confirmation`, and event 74
+(`play-at-home`) last played on 2024-12-02. Task 3 removes the field.
 
 ---
 
@@ -134,36 +128,37 @@ ssh dokku@fra001.apps.catlab.eu enter catlab-events web php artisan tinker --exe
 
 **Files:**
 - Create: `app/Services/MailSource.php`
-- Modify: `app/Services/EmailTemplates.php`, `app/Listeners/SendEmail.php` (`sendConfirmationEmail`), `app/Events/InvitedFromWaitingList.php` (`renderDefaultContent`)
+- Modify: `app/Services/EmailTemplates.php`, `app/Listeners/SendEmail.php` (`sendConfirmationEmail`), `app/Events/InvitedFromWaitingList.php` (`renderDefaultContent`), `app/Http/Api/V1/ResourceDefinitions/Events/EventResourceDefinition.php`
+- Delete: `resources/views/emails/tickets/play-at-home.blade.php`
 - Test: `tests/Integration/EventEmailResolutionTest.php` (new)
 
 **Interfaces:**
 - Consumes: Task 1 models, Task 2 `render()`.
 - Produces:
-  - `MailSource` (readonly properties): `string $kind` (one of the constants `EVENT`, `LIBRARY`, `LEGACY`, `ORGANISATION`, `DEFAULT`), `?string $subject`, `?string $content`, `?string $view`, `?EmailTemplate $libraryTemplate`.
+  - `MailSource` (readonly properties): `string $kind` (one of the constants `EVENT`, `LIBRARY`, `ORGANISATION`, `DEFAULT`), `?string $subject`, `?string $content`, `?string $view`, `?EmailTemplate $libraryTemplate`.
   - `EmailTemplates::resolve(?Organisation $organisation, ?Event $event, string $type): MailSource`. The first match wins:
     1. the event's `EventEmail` with own text
     2. the `emailTemplate` of that row
-    3. for `CONFIRMATION` and `CONFIRMATION_PLAY_LINK` only: the event's `confirmation_email` view (skip it unless `view()->exists()`)
-    4. `getOverride()`
-    5. the view of the definition
+    3. `getOverride()`
+    4. the view of the definition
 
-    An event without `id` (sample data) skips 1 to 3. `GROUP_INVITE` never looks at an event.
-  - `render()` without `$template` uses `resolve($organisation, $attributes['event'] ?? null, $type)`. `LEGACY` and `DEFAULT` render their view's content section. The other kinds fill `subject` and `content`. For `LEGACY` the subject is the default subject.
+    An event without `id` (sample data) skips 1 and 2. `GROUP_INVITE` never looks at an event.
+  - `render()` without `$template` uses `resolve($organisation, $attributes['event'] ?? null, $type)`. `DEFAULT` renders the content section of its view. The other kinds fill `subject` and `content`.
   - `EmailTemplates::getStartingContent(?Organisation $organisation, ?Event $event, string $type): string` returns the placeholder text of the version in use (kinds `EVENT`, `LIBRARY`, `ORGANISATION`), else `getDefaultContent($type)`. Task 5 uses this.
   - `SendEmail::sendConfirmationEmail()` loses its own `confirmation_email` branch and calls `render()` only.
+  - Remove the `confirmation_email` field and the view scan from `EventResourceDefinition`. Delete `resources/views/emails/tickets/play-at-home.blade.php`. Leave the column.
   - `InvitedFromWaitingList::renderDefaultContent()` uses `resolve()`. It fills the text for kinds `EVENT`, `LIBRARY`, `ORGANISATION`, else it renders the view's content section as today.
 
 - [ ] **Step 1: Write the failing tests**, one per step. Send each registration mail through a guest registration, as `testACustomisedConfirmationIsSentInsteadOfTheDefault` does:
   - `testTheEventsOwnTextWinsOverEverything`: event own text, plus a library pick on another type, plus an organisation version. The mail uses the own subject and text.
   - `testALibraryTemplateWinsOverTheOrganisationVersion`
-  - `testALegacyViewWinsOverTheOrganisationVersionForBothConfirmationTypes`: `confirmation_email = 'emails.tickets.play-at-home'`. The mail contains a sentence from that view, for an order with and without `play_link`.
+  - `testTheOldConfirmationEmailFieldNoLongerChangesTheMail`: the event has `confirmation_email = 'emails.tickets.confirmation'` and the organisation has its own version. The organisation version goes out.
   - `testTheOrganisationVersionGoesOutWhenTheEventHasNothing`
   - `testTheDefaultGoesOutWhenNobodyChangedAnything`: contains "We zijn er bij!".
   - `testAnotherEventsTextDoesNotLeak`: own text on event A. A mail for event B of the same organisation is the default.
   - `testTheWaitingListEditorStartsFromTheEventsText`: own text for `waitingListInvitation` on the event. `GET /admin/events/{id}/waitinglist/invite/{user}/edit` shows that text with its placeholders filled in.
 - [ ] **Step 2: Run them.** Expected: FAIL.
-- [ ] **Step 3: Implement `MailSource`, `resolve()`, `getStartingContent()`**, and the three call-site changes.
+- [ ] **Step 3: Implement `MailSource`, `resolve()`, `getStartingContent()`**, the three call-site changes and the field removal.
 - [ ] **Step 4: Run `EventEmailResolutionTest`, `EmailTemplateTest`, `WaitingListInvitationTest`, `GuestRegistrationTest`, `FreeTicketPurchaseTest`.** Expected: all PASS.
 - [ ] **Step 5: Commit** "Let an event's own mail or library template win over the organisation's".
 
@@ -219,7 +214,7 @@ ssh dokku@fra001.apps.catlab.eu enter catlab-events web php artisan tinker --exe
   - `EmailTemplates::getSampleAttributes(Organisation $organisation, $type, ?Event $event = null)`. With `$event`, it uses the real event and its first ticket category. If the event has no ticket category, it uses a made-up category with the event's dates. Player, team, order and URLs stay made up.
   - Routes: `GET events/{event}/emails` `index`, `GET events/{event}/emails/{type}` `edit`, `POST events/{event}/emails/{type}` `update`, `GET|POST events/{event}/emails/{type}/preview` `preview`, with `type` limited to the four event types.
   - Access: `Event::findOrFail()`, then 404 unless `$event->organisation->isAdmin(Auth::user())`.
-  - `index` shows per type the label and the source: "Standaard van de organisatie", "Sjabloon: <name>", "Eigen tekst", or "Oude vaste mail (<view>)" (Task 7B only).
+  - `index` shows per type the label and the source: "Standaard van de organisatie", "Sjabloon: <name>", or "Eigen tekst".
   - `edit` shows radio `source` with `organisation|template|own` (the sketch in the spec). `template` has a select of the organisation's library templates of this type. When there are none, the option is disabled with the hint "Nog geen sjablonen voor deze mail". `own` has the editor, starting from `getStartingContent()`.
   - `update` per `source`:
     - `organisation`: delete the row.
@@ -281,25 +276,8 @@ ssh dokku@fra001.apps.catlab.eu enter catlab-events web php artisan tinker --exe
 
 ---
 
-### Task 7A: Remove the legacy field (if Task 0 found no events)
-
-**Files:** Modify `app/Http/Api/V1/ResourceDefinitions/Events/EventResourceDefinition.php` (remove the `confirmation_email` field and the view scan), `app/Services/EmailTemplates.php` (remove step 3 from `resolve()` and `MailSource::LEGACY`). Run `grep -rn play-at-home app resources`. If nothing else refers to `resources/views/emails/tickets/play-at-home.blade.php`, delete it. Leave the column. Change the Task 3 legacy test to assert that `confirmation_email` no longer changes the mail.
-
-- [ ] Run the full integration suite. Expected: PASS. Commit "Retire the per-event Blade confirmation mail".
-
-### Task 7B: Show and clear the legacy field (if Task 0 found events)
-
-**Files:** Modify `EventEmailController` (route `POST events/{event}/emails/legacy/clear` `clearLegacy`, sets `confirmation_email` to null), both event email views.
-
-- On `index`, both confirmation rows show "Oude vaste mail (<view>)". On `edit` of those two types, a notice explains the old mail and shows the button "Oude vaste mail verwijderen". Saving "Standaard van de organisatie" does not clear the field.
-- For such an event, "Eigen tekst" starts from `getDefaultContent($type)`, with the notice "Je vertrekt van de standaardtekst, niet van de oude vaste mail."
-- Tests: `testALegacyEventShowsItsOldMail`, `testClearingTheLegacyMailFallsBackToTheOrganisation`, `testSavingTheOrganisationChoiceKeepsTheLegacyMail`.
-- [ ] Run `EventEmailTest`. Expected: PASS. Commit "Show and clear the old per-event confirmation mail".
-
----
-
-### Task 8: Finish
+### Task 7: Finish
 
 - [ ] **Step 1: Run the full integration suite and the Unit suite.** Expected: all PASS.
 - [ ] **Step 2: Render one real registration mail and one waiting list mail** through the admin preview with the docker webserver (`http://localhost:8095/admin/emails/confirmation/preview`). Take screenshots at desktop and phone width and compare them with the mockup.
-- [ ] **Step 3: Push the branch and open a PR to `master`.** The description lists the Task 0 result, the new admin pages, and the screenshots.
+- [ ] **Step 3: Push the branch and open a PR to `master`.** The description lists the Task 0 result (and the fix for the 21 events), the new admin pages, and the screenshots.

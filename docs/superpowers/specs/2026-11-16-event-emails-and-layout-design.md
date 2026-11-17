@@ -102,11 +102,10 @@ New table `email_layouts`, one row per organisation (unique on `organisation_id`
 
 1. the event's own text (`event_emails.subject` and `content`)
 2. the library template that the event picked
-3. the legacy `confirmation_email` Blade view of the event (both confirmation types only, see Legacy)
-4. the organisation version
-5. the default Blade view
+3. the organisation version
+4. the default Blade view
 
-The team invitation has no event, so it only uses steps 4 and 5.
+The team invitation has no event, so it only uses steps 3 and 4.
 
 The waiting list invitation that an admin edits before a single send keeps its behavior.
 It starts from the version that the list above gives.
@@ -185,20 +184,16 @@ Previews stay in the sandboxed iframe.
 
 ### Legacy `confirmation_email`
 
-The field stays in the resolution order (step 3) so that no event changes behavior on deploy.
-During the build, count the events on production that have a value in it.
+The field goes away. Remove it from `EventResourceDefinition` and from `SendEmail`, and
+delete `play-at-home.blade.php`. Leave the column.
 
-- If none have one, remove the field from `EventResourceDefinition` and from `SendEmail`. Leave the column.
-- If some have one, keep step 3 and report the events to Thijs. Do not convert them automatically.
+The production count on 2026-11-17 found 24 events with a value:
 
-If step 3 stays, these rules apply:
-
-- The legacy view covers both `confirmation` and `confirmationPlayLink`, as it does today.
-- On the event page, both confirmation rows show the source "Oude vaste mail" with the view name.
-  A button "Oude vaste mail verwijderen" clears `confirmation_email`. After that the event
-  follows the organisation. Saving "Standaard van de organisatie" does not clear the field.
-- For such an event, "Eigen tekst" starts from the default editable text of the type,
-  because a Blade view has no placeholder version. The page says so.
+- Events 52 and 53 point to views that no longer exist. They already get the normal mail.
+- 21 events point to `emails/tickets/confirmation`, the default view itself. Today the field
+  wins over the organisation version, so these events never send an edited registration mail.
+  Removing the field fixes that.
+- Event 74 points to `play-at-home`. Its last date was 2024-12-02, so nothing is lost.
 
 ### Tests
 
