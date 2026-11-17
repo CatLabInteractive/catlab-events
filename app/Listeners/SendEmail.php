@@ -23,7 +23,7 @@ abstract class SendEmail
      * @param string|null $email overrides the user's address; guest orders have
      *   no user and are mailed at the address the admin entered instead.
      */
-    public function sendConfirmationEmail(Order $order, Event $event, ?User $user, $email = null)
+    public function sendConfirmationEmail(Order $order, Event $event, ?User $user, $email = null, ?string $appendHtml = null)
     {
         $recipient = $email ?: ($user ? $user->email : null);
         if (empty($recipient)) {
@@ -47,6 +47,10 @@ abstract class SendEmail
             $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
             $attributes
         );
+
+        if ($appendHtml !== null) {
+            $mail['body'] .= $appendHtml;
+        }
 
         $sender = $this->getSender($user, $order);
         if (!$sender) {

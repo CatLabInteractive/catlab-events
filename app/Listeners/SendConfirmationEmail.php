@@ -58,12 +58,26 @@ class SendConfirmationEmail extends SendEmail
 
         // Send email
         try {
-            if ($order->group) {
+            if ($order->group && $order->group->hasMembers()) {
                 foreach ($order->group->members as $member) {
                     if ($member->user) {
                         $this->sendConfirmationEmail($order, $order->event, $member->user);
                     }
                 }
+            } elseif ($order->group && $order->user) {
+                // A guest checkout's team has no members until its buyer logs
+                // in and claims it: mail the buyer, with the claim link.
+                $this->sendConfirmationEmail(
+                    $order,
+                    $order->event,
+                    $order->user,
+                    null,
+                    \View::make('emails.tickets.claimTeam', [
+                        'order' => $order,
+                        'group' => $order->group,
+                        'claimUrl' => action('OrderController@claim', [ $order->id ])
+                    ])->render()
+                );
             } elseif ($order->user) {
                 $this->sendConfirmationEmail($order, $order->event, $order->user);
             }

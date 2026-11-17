@@ -711,19 +711,6 @@ class Event extends Model implements EuklesModel
     }
 
     /**
-     * Called on view. Remove all pending tickets
-     */
-    public function cancelTimeoutPendingOrders()
-    {
-        $this->orders()
-            ->where('state', '=', Order::STATE_PENDING)
-            ->where('created_at', '<', (new \DateTime())->sub(new \DateInterval('PT' . self::ORDER_TIMEOUT_MINUTES . 'M')))
-            ->update([
-                'state' => Order::STATE_CANCELLED
-            ]);
-    }
-
-    /**
      * @return Collection
      */
     public function getPublishedPrices()
