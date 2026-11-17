@@ -27,4 +27,13 @@
         'cancelUrl' => action('Admin\EmailTemplateController@show', [ $type ])
     ])
 
+    @if($customised)
+        <form action="{{ action('Admin\EmailTemplateController@reset', [ $type ]) }}" method="post"
+              style="margin-top: 15px;"
+              onsubmit="return confirm('De aangepaste versie wordt verwijderd en de standaardversie wordt weer verstuurd. Doorgaan?');">
+            {{ csrf_field() }}
+            <button type="submit" class="btn btn-danger">Terug naar standaard</button>
+        </form>
+    @endif
+
 @endsection

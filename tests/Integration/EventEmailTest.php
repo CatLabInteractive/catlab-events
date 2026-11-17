@@ -126,6 +126,10 @@ class EventEmailTest extends IntegrationTestCase
             'content' => '<p>{{ greeting }} Alleen voor dit evenement</p>'
         ])->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
 
+        // The editor of an own text offers the way back.
+        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION))
+            ->assertSee($this->url('/' . EmailTemplates::CONFIRMATION . '/reset'));
+
         $eventEmail = $this->event->emails()->where('type', EmailTemplates::CONFIRMATION)->first();
         $this->assertNotNull($eventEmail);
         $this->assertNull($eventEmail->email_template_id);

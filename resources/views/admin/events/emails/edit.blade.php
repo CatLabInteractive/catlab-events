@@ -31,4 +31,13 @@
         'cancelUrl' => action('Admin\EventEmailController@index', [ $event->id ])
     ])
 
+    @if($isOwnText)
+        <form action="{{ action('Admin\EventEmailController@reset', [ $event->id, $type ]) }}" method="post"
+              style="margin-top: 15px;"
+              onsubmit="return confirm('De eigen tekst van dit evenement gaat verloren. Dit evenement verstuurt weer de standaard van de organisatie. Doorgaan?');">
+            {{ csrf_field() }}
+            <button type="submit" class="btn btn-danger">Terug naar standaard</button>
+        </form>
+    @endif
+
 @endsection
