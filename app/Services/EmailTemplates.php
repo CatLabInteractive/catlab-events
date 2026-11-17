@@ -8,6 +8,7 @@ namespace App\Services;
 use App\Models\EmailLayout;
 use App\Models\EmailTemplate;
 use App\Models\Event;
+use App\Models\EventEmail;
 use App\Models\EventDate;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -25,8 +26,9 @@ use InvalidArgumentException;
  *
  * The transactional mails an organisation can rewrite in the admin panel.
  *
- * Each mail has a default Blade template that goes out as long as the
- * organisation did not write its own version. An own version is plain HTML
+ * Each mail has a default Blade template that goes out as long as neither the
+ * event nor the organisation has its own version (see resolve()). An own
+ * version (event text, library template, organisation version) is plain HTML
  * with {{ placeholders }}: admins never write Blade, so the values are filled
  * in here, escaped, and only the placeholders listed per type are known.
  *
@@ -132,8 +134,68 @@ class EmailTemplates
     }
 
     /**
-     * Subject and full HTML body of the mail as it goes out: the
-     * organisation's own version when there is one, the default otherwise.
+     * The version of the mail that goes out. The first match wins:
+     * the event's own text, the library template picked for the event,
+     * the organisation's version, the default view.
+     *
+     * @param Organisation|null $organisation
+     * @param Event|null $event
+     * @param string $type
+     * @return MailSource
+     */
+    public function resolve(?Organisation $organisation, ?Event $event, string $type): MailSource
+    {
+        $definition = $this->getDefinition($type);
+
+        // A team invitation is not about an event. An event without id is
+        // made-up sample data and has no mails of its own.
+        if ($type !== self::GROUP_INVITE && $event && $event->id) {
+            /** @var EventEmail|null $eventEmail */
+            $eventEmail = $event->emails()->where('type', '=', $type)->first();
+
+            if ($eventEmail && $eventEmail->hasOwnText()) {
+                return new MailSource(MailSource::EVENT, $eventEmail->subject, $eventEmail->content);
+            }
+
+            $libraryTemplate = $eventEmail ? $eventEmail->emailTemplate : null;
+            if ($libraryTemplate) {
+                return new MailSource(
+                    MailSource::LIBRARY,
+                    $libraryTemplate->subject,
+                    $libraryTemplate->content,
+                    null,
+                    $libraryTemplate
+                );
+            }
+        }
+
+        $override = $this->getOverride($organisation, $type);
+        if ($override) {
+            return new MailSource(MailSource::ORGANISATION, $override->subject, $override->content);
+        }
+
+        return new MailSource(MailSource::DEFAULT, null, null, $definition['view']);
+    }
+
+    /**
+     * The placeholder text of the version in use, where an admin starts
+     * from when they edit the mail.
+     *
+     * @param Organisation|null $organisation
+     * @param Event|null $event
+     * @param string $type
+     * @return string
+     */
+    public function getStartingContent(?Organisation $organisation, ?Event $event, string $type): string
+    {
+        $source = $this->resolve($organisation, $event, $type);
+
+        return $source->hasText() ? ($source->content ?? '') : $this->getDefaultContent($type);
+    }
+
+    /**
+     * Subject and full HTML body of the mail as it goes out: the version
+     * resolve() picks for $attributes['event'] and the organisation.
      *
      * @param Organisation|null $organisation
      * @param string $type
@@ -155,16 +217,20 @@ class EmailTemplates
         // matches the layout around it.
         $attributes['accentColor'] = $layouts->getAccentColor($organisation, $layout);
 
-        $template = $template ?: $this->getOverride($organisation, $type);
+        // A draft passed in is previewed as if it were the organisation's
+        // version; otherwise the event's own mail may win (see resolve()).
+        $source = $template
+            ? new MailSource(MailSource::ORGANISATION, $template->subject, $template->content)
+            : $this->resolve($organisation, $attributes['event'] ?? null, $type);
 
-        if (!$template) {
+        if (!$source->hasText()) {
             // Only the content: the Blade views still extend the old layout
             // file, which now yields nothing but this section.
             $subject = $this->renderSubject($organisation, $type, $attributes);
-            $content = \View::make($this->getDefinition($type)['view'], $attributes)->renderSections()['content'];
+            $content = \View::make($source->view, $attributes)->renderSections()['content'] ?? '';
         } else {
-            $subject = $this->renderSubject($organisation, $type, $attributes, $template->subject);
-            $content = $this->renderContent($organisation, $type, $attributes, $template->content);
+            $subject = $this->renderSubject($organisation, $type, $attributes, $source->subject);
+            $content = $this->renderContent($organisation, $type, $attributes, $source->content);
         }
 
         return [

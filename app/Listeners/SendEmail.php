@@ -41,26 +41,12 @@ abstract class SendEmail
             'ticketCategory' => $order->ticketCategory
         ];
 
-        $templates = app(EmailTemplates::class);
-
-        if ($event->confirmation_email && view()->exists($event->confirmation_email)) {
-            // A template picked for this one event wins over the organisation's.
-            // Its view extends the mail layout file, which now yields only the
-            // content, so it needs the layout around it like every other mail.
-            $mail = [
-                'subject' => $templates->renderSubject($event->organisation, EmailTemplates::CONFIRMATION, $attributes),
-                'body' => app(EmailLayouts::class)->wrap(
-                    $event->organisation,
-                    \View::make($event->confirmation_email, $attributes)->renderSections()['content'] ?? ''
-                )
-            ];
-        } else {
-            $mail = $templates->render(
-                $event->organisation,
-                $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
-                $attributes
-            );
-        }
+        // render() picks the event's own mail when it has one.
+        $mail = app(EmailTemplates::class)->render(
+            $event->organisation,
+            $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
+            $attributes
+        );
 
         $sender = $this->getSender($user, $order);
         if (!$sender) {

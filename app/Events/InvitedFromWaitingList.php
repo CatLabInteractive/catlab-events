@@ -87,8 +87,9 @@ class InvitedFromWaitingList
     }
 
     /**
-     * The subject that goes out when the admin did not edit it: the
-     * organisation's own version of the invitation, or the default.
+     * The subject that goes out when the admin did not edit it: the event's
+     * own invitation, its library template, the organisation's version, or
+     * the default (EmailTemplates::resolve()).
      *
      * @param Event $event
      * @param User $user
@@ -123,17 +124,17 @@ class InvitedFromWaitingList
         // layout: its button should already have the layout's accent color.
         $attributes['accentColor'] = app(EmailLayouts::class)->getAccentColor($event->organisation);
 
-        $template = $templates->getOverride($event->organisation, EmailTemplates::WAITING_LIST_INVITATION);
-        if ($template) {
+        $source = $templates->resolve($event->organisation, $event, EmailTemplates::WAITING_LIST_INVITATION);
+        if ($source->hasText()) {
             return $templates->renderContent(
                 $event->organisation,
                 EmailTemplates::WAITING_LIST_INVITATION,
                 $attributes,
-                $template->content
+                $source->content
             );
         }
 
-        return \View::make('emails.tickets.waitingListInvitation', $attributes)->renderSections()['content'];
+        return \View::make($source->view, $attributes)->renderSections()['content'] ?? '';
     }
 
     /**
