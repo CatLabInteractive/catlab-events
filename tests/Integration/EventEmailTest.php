@@ -330,8 +330,10 @@ class EventEmailTest extends IntegrationTestCase
 
         $this->assertEquals(0, EventEmail::count());
 
+        // The flash message still names the mail, so look for its row.
         $this->actingAs($this->admin)->get($this->url())
-            ->assertDontSee('Inschrijving bevestigd (thuisquiz)');
+            ->assertDontSee('Dit evenement verstuurt deze mail niet.')
+            ->assertDontSee($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK . '/reset'));
     }
 
     public function testTheEventsMenuLinksToItsMails()
