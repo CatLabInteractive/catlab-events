@@ -231,6 +231,23 @@ class EventEmailTest extends IntegrationTestCase
         $this->assertEquals(0, EventEmail::count());
     }
 
+    public function testAnEventOfANonActiveOrganisationGetsNotFound()
+    {
+        $other = $this->createOrganisation();
+        $otherEvent = $this->createEvent($other);
+        $other->users()->attach($this->admin, [ 'role' => Organisation::ROLE_ADMIN ]);
+
+        // Admin of both, but the first organisation is the active one.
+        $this->withSession([ 'activeOrganisationId' => $this->organisation->id ]);
+
+        $base = '/admin/events/' . $otherEvent->id . '/emails';
+        $this->actingAs($this->admin)->get($base)->assertStatus(404);
+        $this->actingAs($this->admin)->get($base . '/' . EmailTemplates::CONFIRMATION)->assertStatus(404);
+        $this->actingAs($this->admin)->get($base . '/' . EmailTemplates::CONFIRMATION . '/preview')->assertStatus(404);
+
+        $this->actingAs($this->admin)->get($this->url())->assertStatus(200);
+    }
+
     public function testTheGroupInviteHasNoEventPage()
     {
         $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::GROUP_INVITE))->assertStatus(404);

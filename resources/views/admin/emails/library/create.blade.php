@@ -37,7 +37,7 @@
 
     @include('admin.emails.partials.editor', [
         'formAction' => action('Admin\EmailLibraryController@store'),
-        'previewAction' => action('Admin\EmailLibraryController@previewNew'),
+        'previewAction' => action('Admin\EmailLibraryController@previewNew', [ 'type' => $type ]),
         'cancelUrl' => action('Admin\EmailLibraryController@index')
     ])
 

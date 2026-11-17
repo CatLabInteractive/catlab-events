@@ -80,7 +80,11 @@ class EmailLayoutController extends Controller
         ]);
 
         $customHtml = $this->getCustomHtml($request);
-        if ($customHtml !== null && preg_match_all('/\{\{\s*content\s*\}\}/', $this->withoutInertBlocks($customHtml)) !== 1) {
+        // Every occurrence gets filled, so the raw HTML must hold exactly one as well.
+        if ($customHtml !== null && (
+            preg_match_all('/\{\{\s*content\s*\}\}/', $customHtml) !== 1
+            || preg_match_all('/\{\{\s*content\s*\}\}/', $this->withoutInertBlocks($customHtml)) !== 1
+        )) {
             return redirect()->back()->withInput()->withErrors([
                 'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.'
             ]);

@@ -198,4 +198,17 @@ class EmailLibraryTest extends IntegrationTestCase
         $new->assertHeader('Content-Security-Policy', 'sandbox');
         $this->assertStringContainsString('Nieuw concept', $new->getContent());
     }
+
+    public function testTheNewTemplatePageEmbedsAWorkingInitialPreview()
+    {
+        $page = $this->actingAs($this->admin)->get('/admin/emails/templates/create?type=' . EmailTemplates::CONFIRMATION);
+        $page->assertStatus(200);
+
+        $this->assertSame(1, preg_match('/<iframe[^>]*id="email-preview"[^>]*\ssrc="([^"]+)"/s', $page->getContent(), $match));
+        $src = html_entity_decode($match[1]);
+
+        $preview = $this->actingAs($this->admin)->get($src);
+        $preview->assertStatus(200);
+        $preview->assertHeader('Content-Security-Policy', 'sandbox');
+    }
 }

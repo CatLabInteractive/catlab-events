@@ -205,7 +205,9 @@ class EmailLayoutTest extends IntegrationTestCase
 
     public function testACustomLayoutNeedsExactlyOneContentPlaceholder()
     {
-        foreach ([ '<p>geen</p>', '<p>{{ content }}</p>{{ content }}', '<!-- {{ content }} --><p>x</p>' ] as $html) {
+        foreach ([ '<p>geen</p>', '<p>{{ content }}</p>{{ content }}', '<!-- {{ content }} --><p>x</p>',
+            '<html><head><title>{{ content }}</title></head><body>{{ content }}</body></html>',
+            '<!-- {{ content }} --><div>{{ content }}</div>' ] as $html) {
             $this->actingAs($this->admin)
                 ->post('/admin/emails/layout', [ 'custom_html' => $html ])
                 ->assertSessionHasErrors([ 'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.' ]);

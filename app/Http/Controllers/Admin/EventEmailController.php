@@ -278,7 +278,7 @@ class EventEmailController extends Controller
     }
 
     /**
-     * The event, when the user administers the event's organisation, or a 404.
+     * The event, when it belongs to the active organisation and the user administers it, or a 404.
      *
      * @param int $eventId
      * @return Event
@@ -288,7 +288,10 @@ class EventEmailController extends Controller
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
 
-        if (!$event->organisation || !$event->organisation->isAdmin(\Auth::user())) {
+        $organisation = \Auth::user()->getActiveOrganisation();
+        if (!$organisation
+            || (int) $event->organisation_id !== (int) $organisation->id
+            || !$organisation->isAdmin(\Auth::user())) {
             abort(404);
         }
 
