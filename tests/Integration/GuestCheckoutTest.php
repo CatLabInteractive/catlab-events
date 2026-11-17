@@ -27,7 +27,6 @@ class GuestCheckoutTest extends IntegrationTestCase
         return $this->post("/events/{$event->id}/register", array_merge([
             'category' => $category->id,
             'email' => 'guest@example.test',
-            'email_confirmation' => 'guest@example.test',
         ], $extra));
     }
 
@@ -50,10 +49,28 @@ class GuestCheckoutTest extends IntegrationTestCase
 
         $response->assertStatus(200);
         $response->assertSee('name="email"', false);
-        $response->assertSee('name="email_confirmation"', false);
+        $response->assertDontSee('name="email_confirmation"', false);
         $response->assertSee('action="' . action('EventController@storeRegistration', [ $event->id ]) . '"', false);
         $response->assertSee('Betalen');
         $response->assertSee(action('EventController@authSelectTicketCategory', [ $event->id ]), false);
+    }
+
+    public function testTicketsThatCannotBeBoughtAreNotListed()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $open = $this->createTicketCategory($event, 15.0);
+        $open->name = 'Open ticket';
+        $open->save();
+
+        $closed = $this->createTicketCategory($event, 10.0);
+        $closed->name = 'Closed ticket';
+        $closed->end_date = new \DateTime('-1 day');
+        $closed->save();
+
+        $response = $this->get("/events/{$event->id}/register");
+        $response->assertStatus(200);
+        $response->assertSee('Open ticket');
+        $response->assertDontSee('Closed ticket');
     }
 
     public function testLoggedInUserSeesNoEmailField()
@@ -260,14 +277,13 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);
     }
 
-    public function testMismatchedOrMissingAddressIsRefused()
+    public function testInvalidOrMissingAddressIsRefused()
     {
         $event = $this->createEvent($this->createOrganisation());
         $category = $this->createTicketCategory($event, 15.0);
 
-        $this->guestPost($event, $category, [ 'email_confirmation' => 'other@example.test' ])->assertSessionHasErrors('email');
-        $this->guestPost($event, $category, [ 'email' => 'nope', 'email_confirmation' => 'nope' ])->assertSessionHasErrors('email');
-        $this->guestPost($event, $category, [ 'email' => '', 'email_confirmation' => '' ])->assertSessionHasErrors('email');
+        $this->guestPost($event, $category, [ 'email' => 'nope' ])->assertSessionHasErrors('email');
+        $this->guestPost($event, $category, [ 'email' => '' ])->assertSessionHasErrors('email');
 
         $this->assertSame(0, Order::query()->count());
         $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);

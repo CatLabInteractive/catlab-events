@@ -16,7 +16,11 @@ use App\Tools\SlackNotifier;
 
 // Do we have catlab client id? (my own personal single sign on service)
 if (config('services.catlab.client_id')) {
-    \CatLab\Accounts\Client\Controllers\LoginController::setRoutes();
+    // CatLab accounts login (same paths as LoginController::setRoutes()),
+    // with remember-me always on: see App\Http\Controllers\Auth\CatLabLoginController.
+    Route::get('/login', '\CatLab\Accounts\Client\Controllers\LoginController@login')->name('login');
+    Route::get('/login/callback', '\App\Http\Controllers\Auth\CatLabLoginController@postLogin');
+    Route::post('/logout', '\CatLab\Accounts\Client\Controllers\LoginController@logout')->name('logout');
 } else {
     // Not set? Use default laravel authentication.
     Auth::routes();

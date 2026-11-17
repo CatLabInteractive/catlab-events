@@ -499,7 +499,7 @@ class EventController extends Controller
         }
 
         $back = redirect(action('EventController@selectTicketCategory', [ $event->id ]))->withInput(
-            $request->except([ 'email_confirmation', 'g-recaptcha-response', '_token' ])
+            $request->except([ 'g-recaptcha-response', '_token' ])
         );
 
         if ($this->isSoldOut($event)) {
@@ -524,14 +524,13 @@ class EventController extends Controller
         }
 
         if ($isGuest) {
-            $rules['email'] = 'required|email|max:255|confirmed';
+            $rules['email'] = 'required|email|max:255';
         }
 
         $validator = \Validator::make($request->all(), $rules, [
             'team.required' => 'Geef een teamnaam op.',
             'email.required' => 'Geef je e-mailadres op.',
             'email.email' => 'Dat e-mailadres lijkt niet te kloppen.',
-            'email.confirmed' => 'De twee e-mailadressen zijn niet hetzelfde.',
         ]);
         if ($validator->fails()) {
             return $back->withErrors($validator);
