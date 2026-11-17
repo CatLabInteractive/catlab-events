@@ -146,6 +146,14 @@ class Event extends Model implements EuklesModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function emails()
+    {
+        return $this->hasMany(EventEmail::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function orders()
     {
         return $this->hasMany(Order::class);

@@ -4,6 +4,8 @@
 
     <h2>E-mails</h2>
 
+    @include('admin.emails.partials.tabs', [ 'active' => 'standard' ])
+
     <p>
         Deze mails worden automatisch verstuurd. Bekijk hoe ze eruit zien, of pas ze aan voor alle
         evenementen van je organisatie.

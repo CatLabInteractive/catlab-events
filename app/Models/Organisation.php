@@ -147,6 +147,14 @@ class Organisation extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function emailLayout()
+    {
+        return $this->hasOne(EmailLayout::class);
+    }
+
+    /**
      * @param User $user
      * @return bool
      */

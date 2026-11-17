@@ -151,6 +151,12 @@ class EventController extends BaseAdminController
                 ->setQueryParameters($this->getShowQueryParameters($request))
         );
 
+        $table->modelAction(
+            (new ResourceAction('Admin\EventEmailController@index', 'E-mails', 'event'))
+                ->setRouteParameters($this->getShowRouteParameters($request))
+                ->setQueryParameters($this->getShowQueryParameters($request))
+        );
+
         return $table;
     }
 

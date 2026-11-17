@@ -5,8 +5,10 @@
 
 namespace App\Services;
 
+use App\Models\EmailLayout;
 use App\Models\EmailTemplate;
 use App\Models\Event;
+use App\Models\EventEmail;
 use App\Models\EventDate;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -24,10 +26,14 @@ use InvalidArgumentException;
  *
  * The transactional mails an organisation can rewrite in the admin panel.
  *
- * Each mail has a default Blade template that goes out as long as the
- * organisation did not write its own version. An own version is plain HTML
+ * Each mail has a default Blade template that goes out as long as neither the
+ * event nor the organisation has its own version (see resolve()). An own
+ * version (event text, library template, organisation version) is plain HTML
  * with {{ placeholders }}: admins never write Blade, so the values are filled
  * in here, escaped, and only the placeholders listed per type are known.
+ *
+ * Either way, the content goes out inside the organisation's mail layout
+ * (EmailLayouts).
  *
  * @package App\Services
  */
@@ -40,9 +46,32 @@ class EmailTemplates
     const GROUP_INVITE = 'groupInvite';
 
     /**
-     * Unknown placeholders are left alone, so a typo shows up in the preview.
+     * The mails an event can have its own version of. The team invitation
+     * is not about an event.
      */
-    const PLACEHOLDER_PATTERN = '/\{\{\s*([a-z_.]+)\s*\}\}/i';
+    const EVENT_TYPES = [
+        self::CONFIRMATION,
+        self::CONFIRMATION_PLAY_LINK,
+        self::CANCELLATION,
+        self::WAITING_LIST_INVITATION
+    ];
+
+    /**
+     * Every mail an organisation can rewrite.
+     */
+    const ALL_TYPES = [ ...self::EVENT_TYPES, self::GROUP_INVITE ];
+
+    /**
+     * A route constraint (`->where('type', ...)`) that matches exactly these types.
+     *
+     * @param string[] $types
+     * @return string
+     */
+    public static function routePattern(array $types = self::ALL_TYPES)
+    {
+        // The types are plain words, nothing to escape.
+        return implode('|', $types);
+    }
 
     /**
      * @return array[] type => [ label, description, view, subject ]
@@ -129,35 +158,123 @@ class EmailTemplates
             return null;
         }
 
-        return $organisation->emailTemplates()->where('type', '=', $type)->first();
+        return $organisation->emailTemplates()->organisationVersion()->where('type', '=', $type)->first();
     }
 
     /**
-     * Subject and full HTML body of the mail as it goes out: the
-     * organisation's own version when there is one, the default otherwise.
+     * The version of the mail that goes out. The first match wins:
+     * the event's own text, the library template picked for the event,
+     * the organisation's version, the default view.
+     *
+     * @param Organisation|null $organisation
+     * @param Event|null $event
+     * @param string $type
+     * @return MailSource
+     */
+    public function resolve(?Organisation $organisation, ?Event $event, string $type): MailSource
+    {
+        $definition = $this->getDefinition($type);
+
+        // A team invitation is not about an event. An event without id is
+        // made-up sample data and has no mails of its own.
+        if ($type !== self::GROUP_INVITE && $event && $event->id) {
+            /** @var EventEmail|null $eventEmail */
+            $eventEmail = $event->emails()->where('type', '=', $type)->first();
+
+            if ($eventEmail && $eventEmail->hasOwnText()) {
+                return new MailSource(MailSource::EVENT, $eventEmail->subject, $eventEmail->content);
+            }
+
+            $libraryTemplate = $eventEmail ? $eventEmail->emailTemplate : null;
+            if ($libraryTemplate) {
+                return new MailSource(
+                    MailSource::LIBRARY,
+                    $libraryTemplate->subject,
+                    $libraryTemplate->content,
+                    null,
+                    $libraryTemplate
+                );
+            }
+        }
+
+        $override = $this->getOverride($organisation, $type);
+        if ($override) {
+            return new MailSource(MailSource::ORGANISATION, $override->subject, $override->content);
+        }
+
+        return new MailSource(MailSource::DEFAULT, null, null, $definition['view']);
+    }
+
+    /**
+     * The placeholder text of the version in use, where an admin starts
+     * from when they edit the mail.
+     *
+     * @param Organisation|null $organisation
+     * @param Event|null $event
+     * @param string $type
+     * @return string
+     */
+    public function getStartingContent(?Organisation $organisation, ?Event $event, string $type): string
+    {
+        $source = $this->resolve($organisation, $event, $type);
+
+        return $source->hasText() ? ($source->content ?? '') : $this->getDefaultContent($type);
+    }
+
+    /**
+     * Subject and full HTML body of the mail as it goes out: the version
+     * resolve() picks for $attributes['event'] and the organisation.
      *
      * @param Organisation|null $organisation
      * @param string $type
      * @param array $attributes what the default Blade template needs
-     * @param EmailTemplate|null $template a (not yet saved) version to render instead of the stored one
+     * @param EmailTemplate|MailSource|null $template a (not yet saved) version to render instead of the
+     *      stored one, or the version to render whatever the event and organisation have stored
+     * @param EmailLayout|null $layout a (not yet saved) layout to render in instead of the stored one
+     * @param string|null $appendHtml trusted HTML added at the end of the content, inside the layout
      * @return string[] [ 'subject' => string, 'body' => string ]
      */
-    public function render(?Organisation $organisation, $type, array $attributes, ?EmailTemplate $template = null)
-    {
-        $template = $template ?: $this->getOverride($organisation, $type);
+    public function render(
+        ?Organisation $organisation,
+        $type,
+        array $attributes,
+        EmailTemplate|MailSource|null $template = null,
+        ?EmailLayout $layout = null,
+        ?string $appendHtml = null
+    ) {
+        $layouts = app(EmailLayouts::class);
 
-        if (!$template) {
-            return [
-                'subject' => $this->renderSubject($organisation, $type, $attributes),
-                'body' => \View::make($this->getDefinition($type)['view'], $attributes)->render()
-            ];
+        // Set before any view renders, so the button block in the content
+        // matches the layout around it.
+        $attributes['accentColor'] = $layouts->getAccentColor($organisation, $layout);
+
+        // A draft passed in is previewed as if it were the organisation's
+        // version; otherwise the event's own mail may win (see resolve()).
+        if ($template instanceof MailSource) {
+            $source = $template;
+        } elseif ($template) {
+            $source = new MailSource(MailSource::ORGANISATION, $template->subject, $template->content);
+        } else {
+            $source = $this->resolve($organisation, $attributes['event'] ?? null, $type);
+        }
+
+        if (!$source->hasText()) {
+            // Only the content: the Blade views still extend the old layout
+            // file, which now yields nothing but this section.
+            $subject = $this->renderSubject($organisation, $type, $attributes);
+            $content = \View::make($source->view, $attributes)->renderSections()['content'] ?? '';
+        } else {
+            $subject = $this->renderSubject($organisation, $type, $attributes, $source->subject);
+            $content = $this->renderContent($organisation, $type, $attributes, $source->content ?? '');
+        }
+
+        if ($appendHtml !== null) {
+            $content .= $appendHtml;
         }
 
         return [
-            'subject' => $this->renderSubject($organisation, $type, $attributes, $template->subject),
-            'body' => \View::make('emails.tickets.customContent', [
-                'content' => $this->renderContent($organisation, $type, $attributes, $template->content)
-            ])->render()
+            'subject' => $subject,
+            'body' => $layouts->wrap($organisation, $content, $layout)
         ];
     }
 
@@ -170,12 +287,10 @@ class EmailTemplates
      */
     public function renderSubject(?Organisation $organisation, $type, array $attributes, $subject = null)
     {
-        $values = $this->getValues($organisation, $type, $attributes);
-
-        return $this->fill($subject ?? $this->getDefaultSubject($type), function ($key) use ($values) {
-            $value = $values[$key];
-            return $value instanceof HtmlString ? trim(strip_tags($value->toHtml())) : (string) $value;
-        }, array_keys($values));
+        return Placeholders::fillText(
+            $subject ?? $this->getDefaultSubject($type),
+            $this->getValues($organisation, $type, $attributes)
+        );
     }
 
     /**
@@ -190,12 +305,7 @@ class EmailTemplates
      */
     public function renderContent(?Organisation $organisation, $type, array $attributes, $content)
     {
-        $values = $this->getValues($organisation, $type, $attributes);
-
-        return $this->fill($content, function ($key) use ($values) {
-            $value = $values[$key];
-            return $value instanceof HtmlString ? $value->toHtml() : e($value);
-        }, array_keys($values));
+        return Placeholders::fillHtml($content, $this->getValues($organisation, $type, $attributes));
     }
 
     /**
@@ -285,13 +395,16 @@ class EmailTemplates
     }
 
     /**
-     * Made-up (unsaved) data to preview a mail with.
+     * Data to preview a mail with. The player, team, order and links are
+     * made up (unsaved). The event is made up too, unless one is passed:
+     * then the real event and its first ticket category are used.
      *
      * @param Organisation $organisation
      * @param string $type
+     * @param Event|null $realEvent
      * @return array
      */
-    public function getSampleAttributes(Organisation $organisation, $type)
+    public function getSampleAttributes(Organisation $organisation, $type, ?Event $realEvent = null)
     {
         $this->getDefinition($type);
 
@@ -326,6 +439,17 @@ class EmailTemplates
         $ticketCategory->name = 'Standaard ticket';
         $ticketCategory->setRelation('eventDates', collect([ $date ]));
 
+        if ($realEvent) {
+            $event = $realEvent;
+
+            $realCategory = $event->getTicketCategoriesChronologically()->first();
+            if ($realCategory) {
+                $ticketCategory = $realCategory;
+            } else {
+                $ticketCategory->setRelation('eventDates', $event->eventDates);
+            }
+        }
+
         $order = new Order();
         $order->play_link = 'https://example.com/speel/VOORBEELD';
         $order->setRelation('event', $event);
@@ -337,7 +461,7 @@ class EmailTemplates
                 return [
                     'event' => $event,
                     'user' => $user,
-                    'url' => action('EventController@selectTicketCategory', [ 0, 'wt' => 'VOORBEELD' ])
+                    'url' => action('EventController@selectTicketCategory', [ $event->id ?: 0, 'wt' => 'VOORBEELD' ])
                 ];
 
             case self::GROUP_INVITE:
@@ -414,7 +538,7 @@ class EmailTemplates
             case self::WAITING_LIST_INVITATION:
                 $values['user.name'] = $attributes['user']->username;
                 $values['invitation.url'] = $attributes['url'];
-                $values['invitation.button'] = $this->renderButton($attributes['url'], 'Bestel je ticket');
+                $values['invitation.button'] = $this->renderButton($attributes, $attributes['url'], 'Bestel je ticket');
                 $values['event.available_dates'] = $event->eventDates
                     ->filter(function ($date) { return !$date->isSoldOut(); })
                     ->map(function ($date) { return $date->startDate->format('d/m/Y'); })
@@ -425,7 +549,7 @@ class EmailTemplates
                 $values['invitation.name'] = $attributes['invitation']->name;
                 $values['inviter.name'] = $attributes['from'] ? $attributes['from']->username : '';
                 $values['invitation.url'] = $attributes['inviteUrl'];
-                $values['invitation.button'] = $this->renderButton($attributes['inviteUrl'], 'Accepteren');
+                $values['invitation.button'] = $this->renderButton($attributes, $attributes['inviteUrl'], 'Accepteren');
                 break;
         }
 
@@ -433,32 +557,18 @@ class EmailTemplates
     }
 
     /**
+     * @param array $attributes the mail's attributes, for the accent color
      * @param string $url
      * @param string $label
      * @return HtmlString
      */
-    protected function renderButton($url, $label)
+    protected function renderButton(array $attributes, $url, $label)
     {
         return new HtmlString(\View::make('emails.blocks.button', [
             'url' => $url,
-            'label' => $label
+            'label' => $label,
+            'accentColor' => $attributes['accentColor'] ?? null
         ])->render());
-    }
-
-    /**
-     * @param string $template
-     * @param callable $valueOf key => replacement
-     * @param string[] $keys the placeholders that may be filled in
-     * @return string
-     */
-    protected function fill($template, callable $valueOf, array $keys)
-    {
-        return preg_replace_callback(self::PLACEHOLDER_PATTERN, function ($matches) use ($valueOf, $keys) {
-            if (!in_array($matches[1], $keys, true)) {
-                return $matches[0];
-            }
-            return $valueOf($matches[1]);
-        }, $template);
     }
 
     /**

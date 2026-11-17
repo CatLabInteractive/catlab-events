@@ -31,7 +31,6 @@ use App\Http\Api\V1\ResourceDefinitions\SeriesResourceDefinition;
 use App\Http\Api\V1\ResourceDefinitions\VenueResourceDefinition;
 use App\Http\Api\V1\Validators\EventValidator;
 use App\Models\Event;
-use Illuminate\Support\Str;
 
 /**
  * Class EventResourceDefinition
@@ -244,21 +243,6 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->writeable(false, true)
             ->required()
             ->bool();
-
-        // Scan the emails folder for email templates
-        $emailTemplates = [];
-        $emailTemplates[] = '';
-        $postfix = '.blade.php';
-        foreach (\Storage::disk('views')->files('emails/tickets') as $file) {
-            if (Str::endsWith($file, $postfix)) {
-                $emailTemplates[] = Str::substr($file, 0, -Str::length($postfix));
-            }
-        }
-
-        $this->field('confirmation_email')
-            ->visible(false, true)
-            ->writeable(true, true)
-            ->enum($emailTemplates);
 
         $this->addLanguageField();
 

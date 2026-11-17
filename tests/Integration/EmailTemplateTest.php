@@ -290,4 +290,38 @@ class EmailTemplateTest extends IntegrationTestCase
         $this->assertStringContainsString('Dag Wachtende, klik <a href="', $mail['body']);
         $this->assertStringContainsString('wt=', $mail['body']);
     }
+
+    public function testALibraryTemplateIsNotTheOrganisationVersion()
+    {
+        $this->organisation->emailTemplates()->create([
+            'type' => EmailTemplates::CONFIRMATION,
+            'name' => 'Thuisquiz',
+            'subject' => 'X',
+            'content' => '<p>X</p>'
+        ]);
+
+        $this->assertNull(
+            app(EmailTemplates::class)->getOverride($this->organisation, EmailTemplates::CONFIRMATION)
+        );
+
+        $response = $this->actingAs($this->admin)->get('/admin/emails');
+        $response->assertStatus(200);
+        $this->assertMatchesRegularExpression(
+            '/Inschrijving bevestigd<.*?Standaard/s',
+            $response->getContent()
+        );
+        $response->assertDontSee('Aangepast');
+
+        $this->actingAs($this->admin)->post('/admin/emails/' . EmailTemplates::CONFIRMATION . '/reset');
+        $this->assertSame(1, EmailTemplate::library()->count());
+    }
+
+    public function testTheTypeConstantsMatchTheDefinitions()
+    {
+        $this->assertSame(EmailTemplates::ALL_TYPES, array_keys(app(EmailTemplates::class)->getTypes()));
+        $this->assertSame(
+            array_values(array_diff(EmailTemplates::ALL_TYPES, [ EmailTemplates::GROUP_INVITE ])),
+            EmailTemplates::EVENT_TYPES
+        );
+    }
 }

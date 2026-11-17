@@ -1,0 +1,50 @@
+<?php
+/**
+ * CatLab Events - Event ticketing system
+ */
+
+namespace App\Http\Controllers\Admin\Concerns;
+
+use App\Models\Organisation;
+
+/**
+ * Trait AdministersEmails
+ *
+ * Shared by the controllers of the E-mails settings: finding the
+ * organisation the user administers, and answering with a safe preview.
+ *
+ * @package App\Http\Controllers\Admin\Concerns
+ */
+trait AdministersEmails
+{
+    /**
+     * The active organisation, when the user administers it. `admin` is a
+     * global flag, so the organisation role is checked here too.
+     *
+     * @return Organisation
+     */
+    protected function getAdministeredOrganisation()
+    {
+        $organisation = \Auth::user()->getActiveOrganisation();
+
+        if (!$organisation || !$organisation->isAdmin(\Auth::user())) {
+            abort(404);
+        }
+
+        return $organisation;
+    }
+
+    /**
+     * A mail body as the response of a preview frame.
+     *
+     * @param string $body
+     * @return \Illuminate\Http\Response
+     */
+    protected function sandboxedPreview($body)
+    {
+        // The body is admin-written HTML: never let it run in the panel's origin.
+        return response($body)
+            ->header('Content-Type', 'text/html; charset=UTF-8')
+            ->header('Content-Security-Policy', 'sandbox');
+    }
+}

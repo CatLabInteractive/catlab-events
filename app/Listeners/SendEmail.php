@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\EmailLayouts;
 use App\Services\EmailTemplates;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -40,25 +41,15 @@ abstract class SendEmail
             'ticketCategory' => $order->ticketCategory
         ];
 
-        $templates = app(EmailTemplates::class);
-
-        if ($event->confirmation_email && view()->exists($event->confirmation_email)) {
-            // A template picked for this one event wins over the organisation's.
-            $mail = [
-                'subject' => $templates->renderSubject($event->organisation, EmailTemplates::CONFIRMATION, $attributes),
-                'body' => \View::make($event->confirmation_email, $attributes)->render()
-            ];
-        } else {
-            $mail = $templates->render(
-                $event->organisation,
-                $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
-                $attributes
-            );
-        }
-
-        if ($appendHtml !== null) {
-            $mail['body'] .= $appendHtml;
-        }
+        // render() picks the event's own mail when it has one.
+        $mail = app(EmailTemplates::class)->render(
+            $event->organisation,
+            $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
+            $attributes,
+            null,
+            null,
+            $appendHtml
+        );
 
         $sender = $this->getSender($user, $order);
         if (!$sender) {
@@ -113,9 +104,8 @@ abstract class SendEmail
         );
 
         if ($content !== null) {
-            $mail['body'] = \View::make('emails.tickets.customContent', [
-                'content' => $content
-            ])->render();
+            // The admin edited only the text: it still goes out in the layout.
+            $mail['body'] = app(EmailLayouts::class)->wrap($event->organisation, $content);
         }
 
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);

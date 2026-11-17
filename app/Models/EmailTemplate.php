@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property int $organisation_id
  * @property string $type
+ * @property string $name empty for the organisation's version, set for a library template
  * @property string $subject
  * @property string $content HTML, without the mail layout
  *
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class EmailTemplate extends Model
 {
-    protected $fillable = [ 'type', 'subject', 'content' ];
+    protected $fillable = [ 'type', 'name', 'subject', 'content' ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -32,5 +33,35 @@ class EmailTemplate extends Model
     public function organisation()
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function eventEmails()
+    {
+        return $this->hasMany(EventEmail::class);
+    }
+
+    /**
+     * The version that goes out for the whole organisation.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOrganisationVersion($query)
+    {
+        return $query->where('name', '=', '');
+    }
+
+    /**
+     * Named templates an admin can pick for an event.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeLibrary($query)
+    {
+        return $query->where('name', '<>', '');
     }
 }

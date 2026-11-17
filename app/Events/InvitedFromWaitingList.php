@@ -24,6 +24,7 @@ namespace App\Events;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Services\EmailLayouts;
 use App\Services\EmailTemplates;
 use Illuminate\Queue\SerializesModels;
 
@@ -86,8 +87,9 @@ class InvitedFromWaitingList
     }
 
     /**
-     * The subject that goes out when the admin did not edit it: the
-     * organisation's own version of the invitation, or the default.
+     * The subject that goes out when the admin did not edit it: the event's
+     * own invitation, its library template, the organisation's version, or
+     * the default (EmailTemplates::resolve()).
      *
      * @param Event $event
      * @param User $user
@@ -118,17 +120,21 @@ class InvitedFromWaitingList
         $templates = app(EmailTemplates::class);
         $attributes = self::getMailAttributes($event, $user, $url);
 
-        $template = $templates->getOverride($event->organisation, EmailTemplates::WAITING_LIST_INVITATION);
-        if ($template) {
+        // The admin edits this text, and it goes out in the organisation's
+        // layout: its button should already have the layout's accent color.
+        $attributes['accentColor'] = app(EmailLayouts::class)->getAccentColor($event->organisation);
+
+        $source = $templates->resolve($event->organisation, $event, EmailTemplates::WAITING_LIST_INVITATION);
+        if ($source->hasText()) {
             return $templates->renderContent(
                 $event->organisation,
                 EmailTemplates::WAITING_LIST_INVITATION,
                 $attributes,
-                $template->content
+                $source->content ?? ''
             );
         }
 
-        return \View::make('emails.tickets.waitingListInvitation', $attributes)->renderSections()['content'];
+        return \View::make($source->view, $attributes)->renderSections()['content'] ?? '';
     }
 
     /**
