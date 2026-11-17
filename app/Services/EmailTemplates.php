@@ -62,6 +62,23 @@ class EmailTemplates
     const ALL_TYPES = [ ...self::EVENT_TYPES, self::GROUP_INVITE ];
 
     /**
+     * The event mails this event can send. Registrations for an event with a
+     * QuizWitz campaign get a play link, so they get the thuisquiz confirmation
+     * and not the normal one (see SendEmail).
+     *
+     * @param Event $event
+     * @return string[]
+     */
+    public static function getEventTypes(Event $event)
+    {
+        $hidden = $event->isQuizWitzCampaign() ? self::CONFIRMATION : self::CONFIRMATION_PLAY_LINK;
+
+        return array_values(array_filter(self::EVENT_TYPES, function ($type) use ($hidden) {
+            return $type !== $hidden;
+        }));
+    }
+
+    /**
      * A route constraint (`->where('type', ...)`) that matches exactly these types.
      *
      * @param string[] $types

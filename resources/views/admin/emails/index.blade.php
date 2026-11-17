@@ -39,6 +39,14 @@
                     <td class="text-right" style="white-space: nowrap;">
                         <a class="btn btn-sm btn-secondary" href="{{ action('Admin\EmailTemplateController@show', [ $type ]) }}">Voorbeeld</a>
                         <a class="btn btn-sm btn-primary" href="{{ action('Admin\EmailTemplateController@edit', [ $type ]) }}">Aanpassen</a>
+                        @if($definition['customised'])
+                            <form action="{{ action('Admin\EmailTemplateController@reset', [ $type ]) }}" method="post"
+                                  style="display: inline-block;"
+                                  onsubmit="return confirm('De aangepaste versie wordt verwijderd en de standaardversie wordt weer verstuurd. Doorgaan?');">
+                                {{ csrf_field() }}
+                                <button type="submit" class="btn btn-sm btn-danger">Terug naar standaard</button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach

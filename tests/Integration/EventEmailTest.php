@@ -107,6 +107,7 @@ class EventEmailTest extends IntegrationTestCase
             ->assertSee('Inschrijving geannuleerd')
             ->assertSee('Uitnodiging van de wachtlijst')
             ->assertDontSee('Uitnodiging voor een team')
+            ->assertDontSee('Inschrijving bevestigd (thuisquiz)')
             ->assertSee('Eigen tekst')
             ->assertSee('Sjabloon: Droevig afscheid')
             ->assertSee('Standaard van de organisatie')
@@ -117,15 +118,17 @@ class EventEmailTest extends IntegrationTestCase
     {
         $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION))
             ->assertStatus(200)
-            ->assertSee('Welke mail krijgt dit evenement?')
-            ->assertSee('Eigen tekst voor dit evenement')
-            ->assertSee('Nog geen sjablonen voor deze mail');
+            ->assertSee('Dit evenement heeft nog geen eigen tekst voor deze mail.')
+            ->assertDontSee('Welke mail krijgt dit evenement?');
 
         $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'own',
             'subject' => 'Speciaal voor {{ event.name }}',
             'content' => '<p>{{ greeting }} Alleen voor dit evenement</p>'
         ])->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
+
+        // The editor of an own text offers the way back.
+        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION))
+            ->assertSee($this->url('/' . EmailTemplates::CONFIRMATION . '/reset'));
 
         $eventEmail = $this->event->emails()->where('type', EmailTemplates::CONFIRMATION)->first();
         $this->assertNotNull($eventEmail);
@@ -140,7 +143,6 @@ class EventEmailTest extends IntegrationTestCase
     public function testOwnTextNeedsASubjectAndContent()
     {
         $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'own',
             'subject' => '',
             'content' => ''
         ])->assertSessionHasErrors([ 'subject', 'content' ]);
@@ -152,10 +154,10 @@ class EventEmailTest extends IntegrationTestCase
     {
         $template = $this->createLibraryTemplate($this->organisation, EmailTemplates::CONFIRMATION, 'Thuisquiz bevestiging');
 
-        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION))
+        $this->actingAs($this->admin)->get($this->url())
             ->assertStatus(200)
             ->assertSee('Thuisquiz bevestiging')
-            ->assertDontSee('Nog geen sjablonen voor deze mail');
+            ->assertSee($this->url('/' . EmailTemplates::CONFIRMATION . '/template'));
 
         // An earlier own text is replaced by the template.
         $this->event->emails()->create([
@@ -164,11 +166,8 @@ class EventEmailTest extends IntegrationTestCase
             'content' => '<p>Eigen</p>'
         ]);
 
-        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'template',
-            'email_template_id' => $template->id,
-            'subject' => 'Genegeerd',
-            'content' => '<p>Genegeerd</p>'
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION . '/template'), [
+            'email_template_id' => $template->id
         ])->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
 
         $this->assertEquals(1, EventEmail::count());
@@ -188,9 +187,10 @@ class EventEmailTest extends IntegrationTestCase
             'content' => '<p>Eigen</p>'
         ]);
 
-        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'organisation'
-        ])->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
+        $this->actingAs($this->admin)->get($this->url())
+            ->assertSee($this->url('/' . EmailTemplates::CONFIRMATION . '/reset'));
+
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION . '/reset'))->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
 
         $this->assertEquals(0, EventEmail::count());
     }
@@ -201,13 +201,11 @@ class EventEmailTest extends IntegrationTestCase
         $foreign = $this->createLibraryTemplate($other, EmailTemplates::CONFIRMATION, 'Van een ander');
         $wrongType = $this->createLibraryTemplate($this->organisation, EmailTemplates::CANCELLATION, 'Annulatie');
 
-        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'template',
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION . '/template'), [
             'email_template_id' => $foreign->id
         ])->assertSessionHasErrors('email_template_id');
 
-        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'template',
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION . '/template'), [
             'email_template_id' => $wrongType->id
         ])->assertSessionHasErrors('email_template_id');
 
@@ -223,10 +221,10 @@ class EventEmailTest extends IntegrationTestCase
         $this->actingAs($stranger)->get($this->url('/' . EmailTemplates::CONFIRMATION))->assertStatus(404);
         $this->actingAs($stranger)->get($this->url('/' . EmailTemplates::CONFIRMATION . '/preview'))->assertStatus(404);
         $this->actingAs($stranger)->post($this->url('/' . EmailTemplates::CONFIRMATION), [
-            'source' => 'own',
             'subject' => 'x',
             'content' => 'x'
         ])->assertStatus(404);
+        $this->actingAs($stranger)->post($this->url('/' . EmailTemplates::CONFIRMATION . '/reset'))->assertStatus(404);
 
         $this->assertEquals(0, EventEmail::count());
     }
@@ -268,20 +266,8 @@ class EventEmailTest extends IntegrationTestCase
             ->assertDontSee('Voorbeeldquiz');
     }
 
-    public function testThePostedPreviewShowsTheUnsavedChoice()
+    public function testThePostedPreviewShowsTheUnsavedOwnText()
     {
-        $template = $this->createLibraryTemplate(
-            $this->organisation,
-            EmailTemplates::CONFIRMATION,
-            'Thuisquiz',
-            '<p>Tekst van het sjabloon</p>'
-        );
-        $this->organisation->emailTemplates()->create([
-            'type' => EmailTemplates::CONFIRMATION,
-            'name' => '',
-            'subject' => 'Organisatie',
-            'content' => '<p>Tekst van de organisatie</p>'
-        ]);
         $this->event->emails()->create([
             'type' => EmailTemplates::CONFIRMATION,
             'subject' => 'Eigen',
@@ -290,26 +276,68 @@ class EventEmailTest extends IntegrationTestCase
 
         $preview = $this->url('/' . EmailTemplates::CONFIRMATION . '/preview');
 
+        $this->actingAs($this->admin)->get($preview)
+            ->assertSee('Opgeslagen eigen tekst');
+
         $this->actingAs($this->admin)->post($preview, [
-            'source' => 'own',
             'subject' => 'Nieuw',
             'content' => '<p>Nog niet opgeslagen voor {{ event.name }}</p>'
         ])->assertStatus(200)
             ->assertHeader('Content-Security-Policy', 'sandbox')
             ->assertSee('Nog niet opgeslagen voor ' . $this->event->name, false);
 
-        $this->actingAs($this->admin)->post($preview, [
-            'source' => 'template',
-            'email_template_id' => $template->id
-        ])->assertSee('Tekst van het sjabloon');
-
-        $this->actingAs($this->admin)->post($preview, [
-            'source' => 'organisation'
-        ])->assertSee('Tekst van de organisatie')
-            ->assertDontSee('Opgeslagen eigen tekst');
-
         // Nothing was saved.
         $this->assertEquals('<p>Opgeslagen eigen tekst</p>', $this->event->emails()->first()->content);
+    }
+
+    public function testAnEventWithoutCampaignHasNoThuisquizMail()
+    {
+        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK))->assertStatus(404);
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK), [
+            'subject' => 'x',
+            'content' => 'x'
+        ])->assertStatus(404);
+
+        $this->assertEquals(0, EventEmail::count());
+    }
+
+    public function testACampaignEventOnlyShowsTheThuisquizConfirmation()
+    {
+        $this->event->campaign_id = 12345;
+        $this->event->save();
+
+        $this->actingAs($this->admin)->get($this->url())
+            ->assertStatus(200)
+            ->assertSee('Inschrijving bevestigd (thuisquiz)')
+            ->assertDontSee($this->url('/' . EmailTemplates::CONFIRMATION . '"'), false)
+            ->assertSee('Inschrijving geannuleerd');
+
+        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION))->assertStatus(404);
+        $this->actingAs($this->admin)->get($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK))->assertStatus(200);
+    }
+
+    public function testAChoiceForAMailTheEventNoLongerSendsCanBeRemoved()
+    {
+        $this->event->emails()->create([
+            'type' => EmailTemplates::CONFIRMATION_PLAY_LINK,
+            'subject' => 'Eigen',
+            'content' => '<p>Eigen</p>'
+        ]);
+
+        $this->actingAs($this->admin)->get($this->url())
+            ->assertSee('Inschrijving bevestigd (thuisquiz)')
+            ->assertSee('Dit evenement verstuurt deze mail niet.')
+            ->assertSee($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK . '/reset'));
+
+        $this->actingAs($this->admin)->post($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK . '/reset'))
+            ->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
+
+        $this->assertEquals(0, EventEmail::count());
+
+        // The flash message still names the mail, so look for its row.
+        $this->actingAs($this->admin)->get($this->url())
+            ->assertDontSee('Dit evenement verstuurt deze mail niet.')
+            ->assertDontSee($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK . '/reset'));
     }
 
     public function testTheEventsMenuLinksToItsMails()

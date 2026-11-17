@@ -206,9 +206,17 @@ class EmailTemplateTest extends IntegrationTestCase
         $this->customise(EmailTemplates::CANCELLATION, 'Eigen onderwerp', '<p>Eigen tekst</p>');
         $this->assertSame(1, EmailTemplate::query()->count());
 
+        $resetUrl = action('Admin\EmailTemplateController@reset', [ EmailTemplates::CANCELLATION ]);
+
         $this->actingAs($this->admin)
             ->get('/admin/emails/' . EmailTemplates::CANCELLATION . '/edit')
-            ->assertSee('Eigen tekst', false);
+            ->assertSee('Eigen tekst', false)
+            ->assertSee($resetUrl);
+
+        // The overview offers the way back too, only for the customised mail.
+        $this->actingAs($this->admin)->get('/admin/emails')
+            ->assertSee($resetUrl)
+            ->assertDontSee(action('Admin\EmailTemplateController@reset', [ EmailTemplates::CONFIRMATION ]));
 
         $this->actingAs($this->admin)
             ->post('/admin/emails/' . EmailTemplates::CANCELLATION . '/reset')

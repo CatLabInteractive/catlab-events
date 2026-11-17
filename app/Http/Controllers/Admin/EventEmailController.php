@@ -20,15 +20,15 @@ use Illuminate\Validation\Rule;
  * out: the organisation's version, a library template, or the event's own text.
  * Without a choice (no event_emails row) the organisation's version goes out.
  *
+ * Each choice is its own action: the editor only edits the event's own text,
+ * a template is picked on the overview, and "back to the organisation's
+ * version" removes the event's choice.
+ *
  * @package App\Http\Controllers\Admin
  */
 class EventEmailController extends Controller
 {
     use AdministersEmails;
-
-    const SOURCE_ORGANISATION = 'organisation';
-    const SOURCE_TEMPLATE = 'template';
-    const SOURCE_OWN = 'own';
 
     /**
      * @var EmailTemplates
@@ -44,7 +44,7 @@ class EventEmailController extends Controller
     }
 
     /**
-     * Every event mail, and where it comes from.
+     * The mails this event sends, where each comes from, and what can be changed.
      *
      * @param int $eventId
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -52,9 +52,21 @@ class EventEmailController extends Controller
     public function index($eventId)
     {
         $event = $this->getEvent($eventId);
+        $applicable = EmailTemplates::getEventTypes($event);
+        $chosen = $event->emails()->pluck('type')->all();
+        $descriptions = $this->templates->getTypes();
 
         $mails = [];
         foreach (EmailTemplates::EVENT_TYPES as $type) {
+            $isApplicable = in_array($type, $applicable, true);
+            $hasChoice = in_array($type, $chosen, true);
+
+            // A mail this event does not send only shows up when it still has
+            // a choice of its own, so that choice can be removed.
+            if (!$isApplicable && !$hasChoice) {
+                continue;
+            }
+
             $source = $this->templates->resolve($event->organisation, $event, $type);
 
             switch ($source->kind) {
@@ -73,7 +85,13 @@ class EventEmailController extends Controller
 
             $mails[$type] = [
                 'label' => $this->templates->getLabel($type),
-                'origin' => $origin
+                'description' => $descriptions[$type]['description'],
+                'origin' => $origin,
+                'kind' => $source->kind,
+                'hasChoice' => $hasChoice,
+                'isApplicable' => $isApplicable,
+                'templateId' => $source->libraryTemplate ? $source->libraryTemplate->id : null,
+                'libraryTemplates' => $this->getLibraryTemplates($event, $type)
             ];
         }
 
@@ -84,7 +102,7 @@ class EventEmailController extends Controller
     }
 
     /**
-     * The choice for one mail.
+     * The editor for the event's own text. It starts from the version in use.
      *
      * @param int $eventId
      * @param string $type
@@ -93,32 +111,16 @@ class EventEmailController extends Controller
     public function edit($eventId, $type)
     {
         $event = $this->getEvent($eventId);
+        $this->assertManageable($event, $type);
         $organisation = $event->organisation;
 
         $current = $this->templates->resolve($organisation, $event, $type);
-
-        switch ($current->kind) {
-            case MailSource::EVENT:
-                $source = self::SOURCE_OWN;
-                break;
-
-            case MailSource::LIBRARY:
-                $source = self::SOURCE_TEMPLATE;
-                break;
-
-            default:
-                $source = self::SOURCE_ORGANISATION;
-                break;
-        }
 
         return view('admin.events.emails.edit', [
             'event' => $event,
             'type' => $type,
             'label' => $this->templates->getLabel($type),
-            'source' => $source,
-            'libraryTemplates' => $this->getLibraryTemplates($event, $type),
-            'templateId' => $current->libraryTemplate ? $current->libraryTemplate->id : null,
-            // The editor starts from the version in use.
+            'isOwnText' => $current->kind === MailSource::EVENT,
             'subject' => $current->hasText() ? $current->subject : $this->templates->getDefaultSubject($type),
             'content' => $this->templates->getStartingContent($organisation, $event, $type),
             'placeholders' => $this->templates->getPlaceholders($type)
@@ -126,7 +128,7 @@ class EventEmailController extends Controller
     }
 
     /**
-     * Store the choice for one mail.
+     * Store the event's own text.
      *
      * @param Request $request
      * @param int $eventId
@@ -136,38 +138,83 @@ class EventEmailController extends Controller
     public function update(Request $request, $eventId, $type)
     {
         $event = $this->getEvent($eventId);
+        $this->assertManageable($event, $type);
 
-        $this->validateChoice($request, $event, $type);
+        $this->validate($request, [
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string'
+        ]);
 
-        switch ($request->input('source')) {
-            case self::SOURCE_ORGANISATION:
-                $event->emails()->where('type', '=', $type)->delete();
-                break;
-
-            case self::SOURCE_TEMPLATE:
-                $event->emails()->updateOrCreate([ 'type' => $type ], [
-                    'email_template_id' => (int) $request->input('email_template_id'),
-                    'subject' => null,
-                    'content' => null
-                ]);
-                break;
-
-            case self::SOURCE_OWN:
-                $event->emails()->updateOrCreate([ 'type' => $type ], [
-                    'email_template_id' => null,
-                    'subject' => (string) $request->input('subject'),
-                    'content' => (string) $request->input('content')
-                ]);
-                break;
-        }
+        $event->emails()->updateOrCreate([ 'type' => $type ], [
+            'email_template_id' => null,
+            'subject' => (string) $request->input('subject'),
+            'content' => (string) $request->input('content')
+        ]);
 
         return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" is aangepast voor dit evenement.');
+            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" heeft nu een eigen tekst voor dit evenement.');
     }
 
     /**
-     * The mail with the real event. A GET shows the stored choice, a POST
-     * the choice from the form, without saving it.
+     * Use a library template for this event. It replaces an own text.
+     *
+     * @param Request $request
+     * @param int $eventId
+     * @param string $type
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function template(Request $request, $eventId, $type)
+    {
+        $event = $this->getEvent($eventId);
+        $this->assertManageable($event, $type);
+
+        $this->validate($request, [
+            'email_template_id' => [
+                'required',
+                'integer',
+                Rule::exists('email_templates', 'id')
+                    ->where('organisation_id', $event->organisation_id)
+                    ->where('type', $type)
+                    ->where(function ($query) {
+                        $query->where('name', '<>', '');
+                    })
+            ]
+        ], [
+            'email_template_id.required' => 'Kies een sjabloon.',
+            'email_template_id.exists' => 'Dit sjabloon bestaat niet voor deze mail.'
+        ]);
+
+        $event->emails()->updateOrCreate([ 'type' => $type ], [
+            'email_template_id' => (int) $request->input('email_template_id'),
+            'subject' => null,
+            'content' => null
+        ]);
+
+        return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
+            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" gebruikt nu een sjabloon voor dit evenement.');
+    }
+
+    /**
+     * Remove the event's choice: the organisation's version goes out again.
+     *
+     * @param int $eventId
+     * @param string $type
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function reset($eventId, $type)
+    {
+        $event = $this->getEvent($eventId);
+        $this->assertManageable($event, $type);
+
+        $event->emails()->where('type', '=', $type)->delete();
+
+        return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
+            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" gebruikt weer de standaard van de organisatie.');
+    }
+
+    /**
+     * The mail with the real event. A GET shows the version in use, a POST
+     * the own text from the editor, without saving it.
      *
      * @param Request $request
      * @param int $eventId
@@ -177,36 +224,18 @@ class EventEmailController extends Controller
     public function preview(Request $request, $eventId, $type)
     {
         $event = $this->getEvent($eventId);
+        $this->assertManageable($event, $type);
         $organisation = $event->organisation;
 
         // null: what resolve() picks for the event.
         $source = null;
 
         if ($request->isMethod('post')) {
-            switch ($request->input('source')) {
-                case self::SOURCE_TEMPLATE:
-                    $template = $this->getLibraryTemplates($event, $type)
-                        ->firstWhere('id', (int) $request->input('email_template_id'));
-                    if (!$template) {
-                        abort(404);
-                    }
-
-                    $source = new MailSource(MailSource::LIBRARY, $template->subject, $template->content, null, $template);
-                    break;
-
-                case self::SOURCE_OWN:
-                    $source = new MailSource(
-                        MailSource::EVENT,
-                        (string) $request->input('subject', ''),
-                        (string) $request->input('content', '')
-                    );
-                    break;
-
-                default:
-                    // Without the event, resolve() gives the organisation's version.
-                    $source = $this->templates->resolve($organisation, null, $type);
-                    break;
-            }
+            $source = new MailSource(
+                MailSource::EVENT,
+                (string) $request->input('subject', ''),
+                (string) $request->input('content', '')
+            );
         }
 
         $mail = $this->templates->render(
@@ -220,44 +249,20 @@ class EventEmailController extends Controller
     }
 
     /**
-     * @param Request $request
+     * A 404 for a mail this event does not send, unless the event still has
+     * a choice for it (so that choice can be seen and removed).
+     *
      * @param Event $event
      * @param string $type
      */
-    private function validateChoice(Request $request, Event $event, $type)
+    private function assertManageable(Event $event, $type)
     {
-        $this->validate($request, [
-            'source' => [
-                'required',
-                Rule::in([ self::SOURCE_ORGANISATION, self::SOURCE_TEMPLATE, self::SOURCE_OWN ])
-            ]
-        ]);
+        if (in_array($type, EmailTemplates::getEventTypes($event), true)) {
+            return;
+        }
 
-        switch ($request->input('source')) {
-            case self::SOURCE_TEMPLATE:
-                $this->validate($request, [
-                    'email_template_id' => [
-                        'required',
-                        'integer',
-                        Rule::exists('email_templates', 'id')
-                            ->where('organisation_id', $event->organisation_id)
-                            ->where('type', $type)
-                            ->where(function ($query) {
-                                $query->where('name', '<>', '');
-                            })
-                    ]
-                ], [
-                    'email_template_id.required' => 'Kies een sjabloon.',
-                    'email_template_id.exists' => 'Dit sjabloon bestaat niet voor deze mail.'
-                ]);
-                break;
-
-            case self::SOURCE_OWN:
-                $this->validate($request, [
-                    'subject' => 'required|string|max:255',
-                    'content' => 'required|string'
-                ]);
-                break;
+        if (!$event->emails()->where('type', '=', $type)->exists()) {
+            abort(404);
         }
     }
 
