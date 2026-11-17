@@ -40,6 +40,10 @@
             @include('events/teamsizeWarning', [ 'event' => $event ])
         @endif
 
+        @if(!$user && !$guestCheckout)
+            <p>Log in om te bestellen. Je kan inloggen met je e-mailadres; heb je nog geen account, dan maak je er meteen een aan.</p>
+            <p><a href="{{ $loginUrl }}" class="btn btn-primary btn-lg">Inloggen en bestellen</a></p>
+        @else
         <form method="POST" action="{{ action('EventController@storeRegistration', [ $event->id ]) }}" accept-charset="UTF-8" class="register-one-page">
             @csrf
 
@@ -159,6 +163,7 @@
 
         @if(!$user)
             <p>Heb je al een account? <a href="{{ $loginUrl }}">Log in</a>.</p>
+        @endif
         @endif
 
     @endif

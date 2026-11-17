@@ -23,7 +23,18 @@ class Recaptcha
      */
     public function isEnabled(): bool
     {
-        return !empty(config('services.recaptcha.secret'));
+        return !empty(config('services.recaptcha.secret')) && !empty(config('services.recaptcha.site_key'));
+    }
+
+    /**
+     * Guest checkout needs bot protection: in production it is only offered
+     * when reCAPTCHA is configured (security review 2026-11-17). Other
+     * environments run without keys.
+     * @return bool
+     */
+    public function allowsGuestCheckout(): bool
+    {
+        return $this->isEnabled() || !app()->environment('production');
     }
 
     /**
@@ -42,10 +53,8 @@ class Recaptcha
     public function verify(?string $response, ?string $ip = null): bool
     {
         if (!$this->isEnabled()) {
-            if (app()->environment('production')) {
-                \Log::warning('reCAPTCHA is not configured: the guest checkout form is unprotected (set RECAPTCHA_SECRET).');
-            }
-            return true;
+            // Fail closed in production; elsewhere (local, tests) no keys.
+            return !app()->environment('production');
         }
 
         if (!$response) {

@@ -472,6 +472,7 @@ class EventController extends Controller
             'team' => old('team', $request->query('team')),
             'showUiTPAS' => $event->hasUitPas(),
             'recaptchaSiteKey' => $user ? null : app(\App\Services\Recaptcha::class)->getSiteKey(),
+            'guestCheckout' => !$user && app(\App\Services\Recaptcha::class)->allowsGuestCheckout(),
             'loginUrl' => action('EventController@authSelectTicketCategory', [ $event->id ]),
             'canonicalUrl' => action('EventController@selectTicketCategory', [ $eventId ])
         ]);
@@ -540,6 +541,11 @@ class EventController extends Controller
         $ticketCategory = $event->ticketCategories()->find($request->input('category'));
         if (!$ticketCategory || !$ticketCategory->isAvailable()) {
             return $back->withErrors([ 'Dit type tickets is niet (meer) beschikbaar.' ]);
+        }
+
+        if ($isGuest && !app(\App\Services\Recaptcha::class)->allowsGuestCheckout()) {
+            \Log::warning('Guest checkout refused: reCAPTCHA is not configured (set RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET).');
+            return $back->withErrors([ 'Log in om te bestellen.' ]);
         }
 
         if ($isGuest) {

@@ -166,6 +166,41 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertSame(0, Order::query()->count());
     }
 
+    public function testWithoutRecaptchaKeysProductionOffersOnlyLogin()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+        config([ 'services.recaptcha.secret' => null, 'services.recaptcha.site_key' => null ]);
+
+        // The service itself fails closed in production...
+        $this->app['env'] = 'production';
+        $recaptcha = new \App\Services\Recaptcha();
+        $this->assertFalse($recaptcha->allowsGuestCheckout());
+        $this->assertFalse($recaptcha->verify('anything'));
+        $this->app['env'] = 'testing'; // (CSRF is only skipped in testing)
+
+        // ...and the page and the POST follow it.
+        $this->app->instance(\App\Services\Recaptcha::class, new class extends \App\Services\Recaptcha {
+            public function allowsGuestCheckout(): bool
+            {
+                return false;
+            }
+        });
+
+        $this->get("/events/{$event->id}/register")
+            ->assertStatus(200)
+            ->assertDontSee('name="email"', false)
+            ->assertSee('Inloggen en bestellen');
+
+        $this->guestPost($event, $category)->assertSessionHasErrors();
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);
+
+        // A logged-in buyer still gets the form.
+        $this->actingAs($this->createUser())->get("/events/{$event->id}/register")
+            ->assertSee('name="category"', false);
+    }
+
     public function testGuestCheckoutIsNotTrackedBeforePayment()
     {
         $event = $this->createEvent($this->createOrganisation());
