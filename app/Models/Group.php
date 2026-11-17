@@ -259,6 +259,35 @@ class Group extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
+     * Is this team name taken? Same rule as the team form (GroupValidator):
+     * a team with a similar name that ordered in the past 18 months. A
+     * leftover of a failed guest checkout (no members, only cancelled
+     * orders) does not count, so "Probeer het opnieuw" with the same name
+     * works.
+     *
+     * @param string $name
+     * @return Group|null the team holding the name
+     */
+    public static function findActiveWithName(string $name): ?Group
+    {
+        return self::similarName($name)
+            ->whereHas('orders', function ($query) {
+                $query->where('created_at', '>', date('Y-m-d', strtotime('-18 months')));
+            })
+            ->where(function ($query) {
+                $query
+                    ->whereHas('members', function ($q) {
+                        $q->whereNotNull('user_id');
+                    })
+                    ->orWhereHas('orders', function ($q) {
+                        $q->where('state', '!=', Order::STATE_CANCELLED);
+                    });
+            })
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
      * @param Group $group
      * @return bool
      */

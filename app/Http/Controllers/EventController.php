@@ -565,6 +565,12 @@ class EventController extends Controller
             }
         }
 
+        // A guest typing an active team's name: checked before anything is
+        // created at accounts.
+        if ($isGuest && $event->doesRequireTeam() && Group::findActiveWithName(trim((string)$request->input('team')))) {
+            return $back->withErrors([ self::teamNameTakenForGuest(trim((string)$request->input('team'))) ]);
+        }
+
         // The buyer.
         if ($isGuest) {
             try {
@@ -618,8 +624,36 @@ class EventController extends Controller
                         $order->changeState(Order::STATE_CANCELLED);
                     });
             } else {
+                $teamName = trim($request->input('team'));
+
+                // Same uniqueness rule as the team form (GroupValidator).
+                $holder = Group::findActiveWithName($teamName);
+                if ($holder) {
+                    if ($isGuest) {
+                        return $back->withErrors([ self::teamNameTakenForGuest($teamName) ]);
+                    }
+
+                    // The user's own team: register that one.
+                    $own = $user->groups()->find($holder->id);
+                    if (!$own) {
+                        return $back->withErrors([ 'Woops, te laat. Je teamnaam is niet uniek, kies alsjeblieft een andere teamnaam.' ]);
+                    }
+                    if ($event->isRegistered($own)) {
+                        return $back->withErrors([ 'Dit team is al ingeschreven.' ]);
+                    }
+                    $own
+                        ->orders()
+                        ->where('state', '=', Order::STATE_PENDING)
+                        ->each(function (Order $order) {
+                            $order->changeState(Order::STATE_CANCELLED);
+                        });
+                    $group = $own;
+                }
+            }
+
+            if ($event->doesRequireTeam() && !$group) {
                 $group = new Group();
-                $group->name = trim($request->input('team'));
+                $group->name = $teamName;
                 $group->save();
                 $createdGroup = $group;
 
@@ -677,6 +711,18 @@ class EventController extends Controller
         }
 
         return redirect($order->getPayUrl());
+    }
+
+    /**
+     * Most likely a returning team: their history lives on the existing
+     * team, which needs a login.
+     * @param string $teamName
+     * @return string
+     */
+    protected static function teamNameTakenForGuest(string $teamName): string
+    {
+        return 'De teamnaam "' . $teamName . '" is al in gebruik. Is dit jouw team? Log in om het te kiezen, '
+            . 'zodat jullie scores en historiek bij elkaar blijven. Anders: kies een andere teamnaam.';
     }
 
     /**

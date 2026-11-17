@@ -58,6 +58,12 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    /*
+     * Extra reverse proxies to trust, besides private ranges and Cloudflare
+     * (App\Http\Middleware\TrustProxies): comma separated IPs / CIDRs.
+     */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
 
     'owner' => [
 
