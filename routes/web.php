@@ -118,6 +118,12 @@ Route::group([
             Route::post('emails/templates/{id}/delete', 'Admin\EmailLibraryController@destroy');
             Route::post('emails/templates/{id}', 'Admin\EmailLibraryController@update');
 
+            // The mail layout. Before the `emails/{type}` routes.
+            Route::get('emails/layout', 'Admin\EmailLayoutController@edit');
+            Route::post('emails/layout', 'Admin\EmailLayoutController@update');
+            Route::match([ 'get', 'post' ], 'emails/layout/preview', 'Admin\EmailLayoutController@preview');
+            Route::post('emails/layout/reset', 'Admin\EmailLayoutController@reset');
+
             Route::get('emails/{type}', 'Admin\EmailTemplateController@show')->where('type', $allEmailTypes);
             Route::match([ 'get', 'post' ], 'emails/{type}/preview', 'Admin\EmailTemplateController@preview')->where('type', $allEmailTypes);
             Route::get('emails/{type}/edit', 'Admin\EmailTemplateController@edit')->where('type', $allEmailTypes);

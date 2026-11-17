@@ -57,7 +57,8 @@ class EmailLayouts
     {
         $layout = $draft ?: $this->getStoredLayout($organisation);
 
-        if ($layout && !empty($layout->accent_color)) {
+        // The color ends up in CSS, so anything but a plain hex color is ignored.
+        if ($layout && preg_match('/^#[0-9a-fA-F]{6}$/', (string) $layout->accent_color)) {
             return $layout->accent_color;
         }
 

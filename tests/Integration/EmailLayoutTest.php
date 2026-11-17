@@ -148,4 +148,156 @@ class EmailLayoutTest extends IntegrationTestCase
         $this->assertStringContainsString('Accepteren', $body);
         $this->assertStringNotContainsString('data-mail-header', $body);
     }
+
+    private function stored(): ?EmailLayout
+    {
+        return EmailLayout::query()->where('organisation_id', $this->organisation->id)->first();
+    }
+
+    public function testAnAdminSetsTheAccentColorAndFooterText()
+    {
+        $this->actingAs($this->admin)
+            ->get('/admin/emails/layout')
+            ->assertStatus(200)
+            ->assertSee('Geavanceerd');
+
+        $this->actingAs($this->admin)
+            ->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf', 'footer_text' => 'Tot snel!' ])
+            ->assertRedirect();
+
+        $layout = $this->stored();
+        $this->assertSame('#7b3fbf', $layout->accent_color);
+        $this->assertSame('Tot snel!', $layout->footer_text);
+        $this->assertNull($layout->custom_html);
+        $this->assertStringContainsString('border-top:4px solid #7b3fbf', $this->preview(EmailTemplates::CONFIRMATION));
+    }
+
+    public function testAnInvalidAccentColorIsRefused()
+    {
+        foreach ([ 'red', '#12345', '#gggggg', 'red;background:url(//x)' ] as $color) {
+            $this->actingAs($this->admin)
+                ->post('/admin/emails/layout', [ 'accent_color' => $color ])
+                ->assertSessionHasErrors('accent_color');
+        }
+
+        $this->assertNull($this->stored());
+    }
+
+    public function testABadAccentColorNeverReachesTheMail()
+    {
+        // The column holds 7 characters, so a stored value can only be a short one.
+        $layout = new EmailLayout([ 'accent_color' => 'red;x:y' ]);
+        $layout->organisation()->associate($this->organisation);
+        $layout->save();
+
+        $body = $this->preview(EmailTemplates::CONFIRMATION);
+        $this->assertStringContainsString('#4cb050', $body);
+        $this->assertStringNotContainsString('red;x:y', $body);
+
+        // A draft is not limited by the column.
+        $body = $this->actingAs($this->admin)
+            ->post('/admin/emails/layout/preview', [ 'accent_color' => 'red;background:url(//x)' ])
+            ->assertStatus(200)
+            ->getContent();
+        $this->assertStringContainsString('#4cb050', $body);
+        $this->assertStringNotContainsString('url(//x)', $body);
+    }
+
+    public function testACustomLayoutNeedsExactlyOneContentPlaceholder()
+    {
+        foreach ([ '<p>geen</p>', '<p>{{ content }}</p>{{ content }}' ] as $html) {
+            $this->actingAs($this->admin)
+                ->post('/admin/emails/layout', [ 'custom_html' => $html ])
+                ->assertSessionHasErrors([ 'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.' ]);
+        }
+        $this->assertNull($this->stored());
+
+        foreach ([ '<p>{{content}}</p>', '<p>{{  content  }}</p>' ] as $html) {
+            $this->actingAs($this->admin)
+                ->post('/admin/emails/layout', [ 'custom_html' => $html ])
+                ->assertSessionHasNoErrors();
+            $this->assertSame($html, $this->stored()->custom_html);
+        }
+    }
+
+    public function testAResetReturnsToTheDefaultLayout()
+    {
+        $layout = new EmailLayout([
+            'accent_color' => '#7b3fbf',
+            'footer_text' => 'Hallo',
+            'custom_html' => '<div id="eigen">{{ content }}</div>'
+        ]);
+        $layout->organisation()->associate($this->organisation);
+        $layout->save();
+
+        $this->actingAs($this->admin)->post('/admin/emails/layout/reset')->assertRedirect();
+
+        $layout = $this->stored();
+        $this->assertNull($layout->custom_html);
+        $this->assertSame('#7b3fbf', $layout->accent_color);
+        $this->assertSame('Hallo', $layout->footer_text);
+        $this->assertStringContainsString('data-mail-header', $this->preview(EmailTemplates::CONFIRMATION));
+    }
+
+    public function testSavingTheUnchangedDefaultStoresNothing()
+    {
+        $default = app(\App\Services\EmailLayouts::class)->getDefaultHtml();
+
+        $this->actingAs($this->admin)
+            ->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf', 'custom_html' => $default ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull($this->stored()->custom_html);
+
+        // Line endings of a browser post must not count as a change.
+        $this->actingAs($this->admin)
+            ->post('/admin/emails/layout', [ 'custom_html' => str_replace("\n", "\r\n", $default) ])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($this->stored()->custom_html);
+    }
+
+    public function testUnknownPlaceholdersInTheLayoutStayVisible()
+    {
+        $this->actingAs($this->admin)
+            ->post('/admin/emails/layout', [ 'custom_html' => '<div>{{ nope }}{{ content }}</div>' ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertStringContainsString('{{ nope }}', $this->preview(EmailTemplates::CONFIRMATION));
+    }
+
+    public function testTheLayoutPreviewShowsTheDraftWithoutSaving()
+    {
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/emails/layout/preview', [
+                'accent_color' => '#7b3fbf',
+                'footer_text' => 'Concept voettekst',
+                'custom_html' => ''
+            ])
+            ->assertStatus(200);
+
+        $this->assertStringContainsString('Content-Security-Policy', (string) $response->headers);
+        $this->assertStringContainsString('sandbox', $response->headers->get('Content-Security-Policy'));
+        $body = $response->getContent();
+        $this->assertStringContainsString('border-top:4px solid #7b3fbf', $body);
+        $this->assertStringContainsString('Concept voettekst', $body);
+        $this->assertStringContainsString('We zijn er bij!', $body);
+        $this->assertNull($this->stored());
+
+        $this->actingAs($this->admin)->get('/admin/emails/layout/preview')->assertStatus(200);
+    }
+
+    public function testOnlyAdminsCanChangeTheLayout()
+    {
+        $member = $this->createUser();
+        $member->admin = true;
+        $member->save();
+        $this->organisation->users()->attach($member, [ 'role' => 1 ]);
+
+        $this->actingAs($member)->get('/admin/emails/layout')->assertStatus(404);
+        $this->actingAs($member)->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf' ])->assertStatus(404);
+        $this->actingAs($member)->post('/admin/emails/layout/preview', [])->assertStatus(404);
+        $this->actingAs($member)->post('/admin/emails/layout/reset')->assertStatus(404);
+
+        $this->assertNull($this->stored());
+    }
 }
