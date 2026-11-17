@@ -207,7 +207,7 @@
 
                     <div class="col-md-3">
                         @if($nextEvent->poster)
-                            <a class="image-popup" href="{{ $nextEvent->poster->getUrl([ 'width' => 1200, 'height' => 1692 ]) }}">
+                            <a class="image-popup" href="{{ $nextEvent->poster->getUrl([ 'width' => 1600 ]) }}">
                                 <img data-src="{{ $nextEvent->poster->getUrl([ 'width' => 300 ]) }}" class="img-responsive lazy" alt="{{ $nextEvent->name }} poster" title="Poster '{{ $nextEvent->name }}'" />
                             </a>
                         @endif

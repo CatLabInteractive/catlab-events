@@ -1,12 +1,12 @@
 @if(\App\Http\Controllers\EventController::getValidWaitingListToken($event))
-    <div class="alert alert-info">
+    <div class="ev-notice">
         <p>
             Je staat op de <a href="{{ action('WaitingListController@waitingList', [ $event->id ]) }}">wachtlijst</a> voor {{ $event->name }}.
             Als er nog tickets vrijgekomen zijn, kan je deze hieronder bestellen.
         </p>
     </div>
 @elseif(isset($event) && $event->isSoldOut() && !$event->isFinished())
-    <div class="alert alert-danger">
+    <div class="ev-notice ev-notice-error">
         <p>
             <strong>Te laat! </strong>
             {{ $event->name }} is helemaal uitverkocht.
@@ -18,7 +18,7 @@
         </p>
     </div>
 @elseif(isset($event) && !$event->hasSaleStarted())
-    <div class="alert alert-danger">
+    <div class="ev-notice ev-notice-error">
         <p>
             <strong>De ticketverkoop voor {{$event->name}} is nog niet gestart.</strong>
         </p>
@@ -30,62 +30,51 @@
     </div>
 @endif
 
-<table class="table tickets">
-
-    <tr>
-        <th class="col-md-3">Type</th>
-        <th class="col-md-2">Prijs</th>
-
-        @if($showAvailableTickets)
-            <th class="col-md-2">Beschikbaar</th>
+{{-- Each ticket is a card you tap anywhere on; it opens the register form with that ticket selected. --}}
+<div class="ev-tickets">
+    @foreach($ticketCategories as $ticketCategory)
+        <?php $isAvailable = $ticketCategory->isAvailable(); ?>
+        @if($isAvailable)
+            <a class="ev-ticket" href="{{ action('EventController@register', [ $event->id, $ticketCategory->id ]) }}">
+        @else
+            <div class="ev-ticket ev-ticket-unavailable">
         @endif
 
-        <th class="col-md-3"></th>
+            <span class="ev-ticket-head">
+                <span class="ev-ticket-name">{{ $ticketCategory->name }}</span>
+                <span class="ev-ticket-price">{{ $ticketCategory->getFormattedTotalPrice() }}</span>
+            </span>
 
-        <th class="col-md-2"></th>
-    </tr>
-
-    <?php $first = true; ?>
-    @foreach($ticketCategories as $ticketCategory)
-        <tr <?php if($first) { $first = false; } else { echo 'class="inactive"'; } ?> >
-            <td >
-                {{ $ticketCategory->name }}
-                @if($ticketCategory->eventDates->count() > 0)
-                    <br />
-                    <small>
-                    {{ $ticketCategory->getDatesForDisplay() }}
-                    </small>
-                @endif
-            </td>
-            <td >
-                {{ $ticketCategory->getFormattedTotalPrice() }}
-            </td>
-
-            @if($showAvailableTickets)
-                <td>
-                    {{ $ticketCategory->countAvailableTickets() }}
-                </td>
+            @if($ticketCategory->description)
+                <span class="ev-ticket-description">{{ $ticketCategory->description }}</span>
             @endif
 
-            <td>
-                <strong>
-                    @foreach ($ticketCategory->getAvailabilityWarnings() as $warning)
-                        {{ $ticketCategory->errorToString($warning) }}<br>
-                    @endforeach
-                </strong>
-            </td>
+            @if($ticketCategory->eventDates->count() > 0)
+                <span class="ev-ticket-meta">{{ $ticketCategory->getDatesForDisplay() }}</span>
+            @endif
 
-            <td >
-                @if($ticketCategory->isAvailable())
-                    <a href="{{ action('EventController@register', [ $event->id, $ticketCategory->id] ) }}" class="btn btn-default">{{ $event->getOrderLabel() }}</a>
-                @else
-                    {{ $ticketCategory->errorToString($ticketCategory->getAvailableError()) }}
-                @endif
-            </td>
-        </tr>
+            @if($showAvailableTickets && $ticketCategory->countAvailableTickets() !== null)
+                <span class="ev-ticket-meta">Nog {{ $ticketCategory->countAvailableTickets() }} beschikbaar</span>
+            @endif
+
+            @foreach ($ticketCategory->getAvailabilityWarnings() as $warning)
+                <span class="ev-ticket-warning">{{ $ticketCategory->errorToString($warning) }}</span>
+            @endforeach
+
+            @if($isAvailable)
+                <span class="ev-ticket-action">{{ $event->getOrderLabel() }} <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+            @else
+                <span class="ev-ticket-warning">{{ $ticketCategory->errorToString($ticketCategory->getAvailableError()) }}</span>
+            @endif
+
+        @if($isAvailable)
+            </a>
+        @else
+            </div>
+        @endif
     @endforeach
-</table>
+</div>
 
 @if($event->hasFiniteTickets())
-    <p>Geen ticket kunnen bemachtigen? Onbetaalde tickets worden na {{ \App\Models\Event::ORDER_TIMEOUT_MINUTES }} minuten terug vrijgegeven.</p>
+    <p class="ev-tickets-footnote">Geen ticket kunnen bemachtigen? Onbetaalde tickets worden na {{ \App\Models\Event::ORDER_TIMEOUT_MINUTES }} minuten terug vrijgegeven.</p>
 @endif

@@ -31,23 +31,27 @@
         </header><!--/ Header end -->
 
 
-        <div id="page-banner-area" class="page-banner-area bg-overlay"
-            @if(isset($series) && $series->header)
-                style="background-image:url('{{ $series->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
-            @else
-                <?php $randomSeries = organisation()->getRandomSeries(); ?>
-                @if($randomSeries && $randomSeries->header)
-                    style="background-image:url('{{ $randomSeries->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
+        @hasSection('banner')
+            @yield('banner')
+        @else
+            <div id="page-banner-area" class="page-banner-area bg-overlay"
+                @if(isset($series) && $series->header)
+                    style="background-image:url('{{ $series->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
+                @else
+                    <?php $randomSeries = organisation()->getRandomSeries(); ?>
+                    @if($randomSeries && $randomSeries->header)
+                        style="background-image:url('{{ $randomSeries->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
+                    @endif
                 @endif
-            @endif
-        >
-            <!-- Subpage title start -->
-            <div class="page-banner-title">
-                <div class="container text-center">
-                    <h2>@yield('title')</h2>
-                </div>
-            </div><!-- Subpage title end -->
-        </div><!-- Page Banner end -->
+            >
+                <!-- Subpage title start -->
+                <div class="page-banner-title">
+                    <div class="container text-center">
+                        <h2>@yield('title')</h2>
+                    </div>
+                </div><!-- Subpage title end -->
+            </div><!-- Page Banner end -->
+        @endif
 
         <section>
             <div class="container">
