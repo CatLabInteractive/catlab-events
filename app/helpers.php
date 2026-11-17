@@ -35,3 +35,18 @@ function toMoney($amount)
 function organisation() {
     return \App\Models\Organisation::getRepresentedOrganisation();
 }
+
+/**
+ * The sender's display name on mail sent through accounts: the
+ * organisation's name (e.g. "Quizfabriek"). Null leaves it to accounts'
+ * default (mailer.from.name).
+ *
+ * @param \App\Models\Organisation|null $organisation
+ * @return string|null
+ */
+function mailFromName($organisation) {
+    if (!$organisation || !is_string($organisation->name) || trim($organisation->name) === '') {
+        return null;
+    }
+    return trim($organisation->name);
+}

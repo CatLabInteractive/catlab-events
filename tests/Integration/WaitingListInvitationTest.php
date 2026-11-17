@@ -109,6 +109,7 @@ class WaitingListInvitationTest extends IntegrationTestCase
         $this->assertSame($user->email, $mail['target']);
         $this->assertSame('Wachtlijst ' . $this->event->name, $mail['subject']);
         $this->assertStringContainsString('wt=' . $pivot->access_token, $mail['body']);
+        $this->assertSame($this->event->organisation->name, $mail['fromName']);
 
         $this->assertCount(1, $this->eukles->tracked);
     }

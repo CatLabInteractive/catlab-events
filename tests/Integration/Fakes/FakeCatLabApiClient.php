@@ -109,13 +109,13 @@ class FakeCatLabApiClient extends ApiClient
     /** @var \App\Models\User|null the user the factory last built a client for */
     public $currentUser = null;
 
-    public function sendEmail($subject, $body, $target = null)
+    public function sendEmail($subject, $body, $target = null, $fromName = null)
     {
         if ($this->sendEmailException) {
             throw $this->sendEmailException;
         }
 
-        $this->sendEmailCalls[] = ['subject' => $subject, 'body' => $body, 'target' => $target, 'user' => $this->currentUser];
+        $this->sendEmailCalls[] = ['subject' => $subject, 'body' => $body, 'target' => $target, 'fromName' => $fromName, 'user' => $this->currentUser];
 
         return true;
     }

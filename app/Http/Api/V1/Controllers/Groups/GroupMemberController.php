@@ -126,8 +126,9 @@ class GroupMemberController extends ResourceController
                 'inviteUrl' => action('GroupController@viewInvitation', [ $entity->id, $entity->token ])
             ];
 
+            $organisation = organisation();
             $mail = app(\App\Services\EmailTemplates::class)->render(
-                organisation(),
+                $organisation,
                 \App\Services\EmailTemplates::GROUP_INVITE,
                 $attributes
             );
@@ -141,7 +142,8 @@ class GroupMemberController extends ResourceController
                 $apiClient->sendEmail(
                     $mail['subject'],
                     $mail['body'],
-                    $entity->email
+                    $entity->email,
+                    mailFromName($organisation)
                 );
             } catch (GuzzleException $e) {
                 $rateLimited = $e instanceof BadResponseException
