@@ -148,13 +148,13 @@ class FakeCatLabApiClient extends ApiClient
     /** @var \Throwable|null thrown by findOrCreateUser() to simulate accounts failing */
     public $findOrCreateUserException = null;
 
-    public function findOrCreateUser($email, $language = 'nl')
+    public function findOrCreateUser($email, $language = 'en', array $attributes = [])
     {
         if ($this->findOrCreateUserException) {
             throw $this->findOrCreateUserException;
         }
 
-        $this->findOrCreateUserCalls[] = ['email' => $email, 'language' => $language];
+        $this->findOrCreateUserCalls[] = ['email' => $email, 'language' => $language] + ($attributes ? ['attributes' => $attributes] : []);
 
         $key = mb_strtolower($email);
         if (!isset($this->accountsUsers[$key])) {
