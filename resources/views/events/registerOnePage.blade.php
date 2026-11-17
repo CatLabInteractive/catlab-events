@@ -74,6 +74,10 @@
                                     <span class="rf-choice-price">{{ $category->getFormattedTotalPrice() }}</span>
                                 </span>
 
+                                @if($category->description)
+                                    <span class="rf-choice-description">{{ $category->description }}</span>
+                                @endif
+
                                 @if($category->eventDates->count() > 0)
                                     <span class="rf-choice-meta">{{ $category->getDatesForDisplay() }}</span>
                                 @endif

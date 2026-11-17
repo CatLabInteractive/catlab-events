@@ -76,6 +76,39 @@ class AdminSmokeTest extends IntegrationTestCase
         }
     }
 
+    public function testAdminCanSetATicketDescription()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $category = $this->createTicketCategory($event, 10.0);
+        $admin = $this->adminOf($organisation);
+
+        $date = new \App\Models\EventDate();
+        $date->event()->associate($event);
+        $date->startDate = new \DateTime('+1 month');
+        $date->endDate = new \DateTime('+1 month +3 hours');
+        $date->save();
+
+        $this->actingAs($admin)
+            ->get('/admin/events/' . $event->id . '/ticketCategories/' . $category->id . '/edit')
+            ->assertSee('name="fields[description][input][0][value]"', false);
+
+        $field = function ($type, $value) {
+            return [ 'type' => $type, 'multiple' => '0', 'input' => [ [ 'value' => $value ] ] ];
+        };
+        $this->actingAs($admin)->put('/admin/events/' . $event->id . '/ticketCategories/' . $category->id, [
+            'fields' => [
+                'name' => $field('string', 'Single player'),
+                'description' => $field('string', 'Je speelt de quiz alleen. Je hebt twee toestellen nodig.'),
+                'price' => $field('number', '10'),
+            ],
+            'linkableFields' => 'eventDates',
+            'linkable' => [ 'eventDates' => [ [ 'id' => $date->id ] ] ],
+        ]);
+
+        $this->assertSame('Je speelt de quiz alleen. Je hebt twee toestellen nodig.', $category->fresh()->description);
+    }
+
     /**
      * The order detail page renders a table for every relationship on the
      * resource. Order has an expanded single ticketCategory relationship, so

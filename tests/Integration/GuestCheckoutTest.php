@@ -55,6 +55,19 @@ class GuestCheckoutTest extends IntegrationTestCase
         $response->assertSee(action('EventController@authSelectTicketCategory', [ $event->id ]), false);
     }
 
+    public function testTicketDescriptionIsShownOnTheForm()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+        $category->name = 'Single player';
+        $category->description = 'Je speelt de quiz alleen. Je hebt twee toestellen nodig.';
+        $category->save();
+
+        $this->get("/events/{$event->id}/register")
+            ->assertStatus(200)
+            ->assertSee('Je speelt de quiz alleen. Je hebt twee toestellen nodig.');
+    }
+
     public function testTicketsThatCannotBeBoughtAreNotListed()
     {
         $event = $this->createEvent($this->createOrganisation());

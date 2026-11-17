@@ -454,6 +454,14 @@ $rf-soft: #f6f6f8;
 .rf-choice-name { font-weight: 700; }
 .rf-choice-price { font-weight: 700; white-space: nowrap; }
 
+.rf-choice-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: $rf-dark;
+}
+
 .rf-choice-meta,
 .rf-choice-warning {
   display: block;
