@@ -315,4 +315,13 @@ class EmailTemplateTest extends IntegrationTestCase
         $this->actingAs($this->admin)->post('/admin/emails/' . EmailTemplates::CONFIRMATION . '/reset');
         $this->assertSame(1, EmailTemplate::library()->count());
     }
+
+    public function testTheTypeConstantsMatchTheDefinitions()
+    {
+        $this->assertSame(EmailTemplates::ALL_TYPES, array_keys(app(EmailTemplates::class)->getTypes()));
+        $this->assertSame(
+            array_values(array_diff(EmailTemplates::ALL_TYPES, [ EmailTemplates::GROUP_INVITE ])),
+            EmailTemplates::EVENT_TYPES
+        );
+    }
 }

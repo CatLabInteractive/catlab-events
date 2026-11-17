@@ -63,6 +63,7 @@
     @include('admin.emails.partials.editor', [
         'formAction' => action('Admin\EventEmailController@update', [ $event->id, $type ]),
         'previewAction' => action('Admin\EventEmailController@preview', [ $event->id, $type ]),
+        'previewCaption' => 'Met de gegevens van dit evenement en een verzonnen speler.',
         'cancelUrl' => action('Admin\EventEmailController@index', [ $event->id ])
     ])
 

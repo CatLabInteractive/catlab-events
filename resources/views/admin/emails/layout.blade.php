@@ -34,7 +34,7 @@
         <div class="form-group">
             <label for="footer_text">Voettekst</label>
             <textarea class="form-control" id="footer_text" name="footer_text" rows="3" maxlength="2000">{{ old('footer_text', $footerText) }}</textarea>
-            <small class="text-muted">Staat onder de contactgegevens van de organisatie.</small>
+            <small class="text-muted">Staat boven de contactgegevens van de organisatie.</small>
         </div>
 
         <details style="margin-bottom: 15px;" @if($errors->has('custom_html') || old('custom_html') !== null || $hasCustomHtml) open @endif>
@@ -92,12 +92,34 @@
             var picker = document.getElementById('accent_color_picker');
             var text = document.getElementById('accent_color_text');
 
-            picker.addEventListener('input', function () { text.value = picker.value; });
+            var form = document.getElementById('email-layout-form');
+            var footer = document.getElementById('footer_text');
+            var timer = null;
+
+            // Post the draft to the preview frame (never to the save action).
+            function refreshPreview() {
+                var oldAction = form.action;
+                var oldTarget = form.target;
+                form.action = {!! json_encode(action('Admin\EmailLayoutController@preview')) !!};
+                form.target = 'layout-preview';
+                HTMLFormElement.prototype.submit.call(form);
+                form.action = oldAction;
+                form.target = oldTarget;
+            }
+
+            function schedulePreview() {
+                clearTimeout(timer);
+                timer = setTimeout(refreshPreview, 400);
+            }
+
+            picker.addEventListener('input', function () { text.value = picker.value; schedulePreview(); });
             text.addEventListener('input', function () {
                 if (/^#[0-9a-fA-F]{6}$/.test(text.value)) {
                     picker.value = text.value;
                 }
+                schedulePreview();
             });
+            footer.addEventListener('input', schedulePreview);
         })();
     </script>
 

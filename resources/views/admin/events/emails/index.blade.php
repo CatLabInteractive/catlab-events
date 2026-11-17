@@ -10,6 +10,11 @@
         een sjabloon, of een eigen tekst voor dit evenement.
     </p>
 
+    <p>
+        Inschrijvingen met een speellink (thuisquiz) krijgen de aparte mail "Inschrijving bevestigd (thuisquiz)".
+        Een eigen tekst voor de gewone bevestiging geldt dus niet voor hen.
+    </p>
+
     <table class="table">
         <thead>
             <tr>

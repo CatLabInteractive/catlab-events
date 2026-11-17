@@ -1,7 +1,7 @@
 {{--
     The form that edits one mail: subject, content, placeholders, buttons and a
     sandboxed preview. Expects $formAction, $previewAction, $cancelUrl, $subject,
-    $content and $placeholders. A view can add fields above the subject with an
+    $content and $placeholders, and optionally $previewCaption. A view can add fields above the subject with an
     `extraFields` section.
 --}}
     <form action="{{ $formAction }}" method="post" id="email-edit-form">
@@ -53,7 +53,7 @@
     </form>
 
     <h4>Voorbeeld</h4>
-    <p><small class="text-muted">Met verzonnen gegevens. Klik op "Voorbeeld" om je wijzigingen te bekijken zonder ze op te slaan.</small></p>
+    <p><small class="text-muted">{{ $previewCaption ?? 'Met verzonnen gegevens.' }} Klik op "Voorbeeld" om je wijzigingen te bekijken zonder ze op te slaan.</small></p>
     <iframe name="email-preview" id="email-preview"
             src="{{ $previewAction }}"
             style="width: 100%; height: 600px; border: 1px solid #ddd;"

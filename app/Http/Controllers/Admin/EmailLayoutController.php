@@ -80,7 +80,7 @@ class EmailLayoutController extends Controller
         ]);
 
         $customHtml = $this->getCustomHtml($request);
-        if ($customHtml !== null && preg_match_all('/\{\{\s*content\s*\}\}/', $customHtml) !== 1) {
+        if ($customHtml !== null && preg_match_all('/\{\{\s*content\s*\}\}/', $this->withoutInertBlocks($customHtml)) !== 1) {
             return redirect()->back()->withInput()->withErrors([
                 'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.'
             ]);
@@ -95,6 +95,22 @@ class EmailLayoutController extends Controller
 
         return redirect(action('Admin\EmailLayoutController@edit'))
             ->with('message', 'De layout is opgeslagen.');
+    }
+
+    /**
+     * A copy of the HTML without the parts that never show up in the mail body:
+     * comments, style blocks and the head.
+     *
+     * @param string $html
+     * @return string
+     */
+    private function withoutInertBlocks($html)
+    {
+        return preg_replace([
+            '/<!--.*?-->/s',
+            '/<style\b[^>]*>.*?<\/style>/is',
+            '/<head\b[^>]*>.*?<\/head>/is'
+        ], '', $html);
     }
 
     /**
