@@ -14,6 +14,12 @@ return [
     |
     */
 
+    // Matomo web analytics (cookieless). Leave either value empty to disable.
+    'matomo' => [
+        'url' => env('MATOMO_URL'),
+        'site_id' => env('MATOMO_SITE_ID'),
+    ],
+
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),

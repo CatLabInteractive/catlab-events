@@ -28,6 +28,8 @@
         <env name="ERRBIT_ENABLED" value="false"/>
         <env name="VALID_DOMAINS" value=""/>
         <env name="EUKLES_SERVER" value=""/>
+        <env name="MATOMO_URL" value=""/>
+        <env name="MATOMO_SITE_ID" value=""/>
         <!-- Deterministic Eukles config: the container inherits the developer's
              .env, so without pinning these, EuklesEventSubscriber::subscribe()
              (which gates registration on config('eukles.key')) would silently

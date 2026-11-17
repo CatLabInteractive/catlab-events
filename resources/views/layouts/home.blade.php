@@ -5,6 +5,7 @@
     @include('layouts.blocks.style')
     @include('layouts.blocks.seo')
     @include('layouts.blocks.gtag')
+    @include('layouts.blocks.matomo')
 </head>
 <body>
 @include('blocks.chatwoot', [ 'organisation' => organisation() ])

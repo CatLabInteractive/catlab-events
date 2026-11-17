@@ -240,9 +240,37 @@
                 'orderPrice' => $order->ticketCategory->getTotalPrice()
             ]) !!};
 
-            trackerData.eventCallback = function() {
-                window.location = redirect_url;
+            // Give Matomo (if loaded on this page) a moment to send the order
+            // before the redirect; the 2 s fallback above still caps the wait.
+            var waitForMatomo = function (done) {
+                var tries = 0;
+                (function check() {
+                    var hasMatomo = !!document.querySelector('script[src$="matomo.js"]');
+                    if (!hasMatomo || window.Matomo || tries++ > 15) {
+                        setTimeout(done, window.Matomo ? 300 : 0);
+                        return;
+                    }
+                    setTimeout(check, 100);
+                })();
             };
+
+            trackerData.eventCallback = function() {
+                waitForMatomo(function () {
+                    window.location = redirect_url;
+                });
+            };
+
+            // Matomo ecommerce order. Same payload as the dataLayer event, no
+            // personal data. Ignored when Matomo is not configured.
+            var _paq = window._paq = window._paq || [];
+            _paq.push(['addEcommerceItem',
+                String(trackerData.ticketCategoryId),
+                trackerData.orderEvent,
+                trackerData.ticketCategory,
+                trackerData.orderPrice,
+                1
+            ]);
+            _paq.push(['trackEcommerceOrder', String(trackerData.orderId), trackerData.orderPrice]);
 
             dataLayer.push(trackerData);
 

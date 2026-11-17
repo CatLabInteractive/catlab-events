@@ -113,4 +113,31 @@ class OrderThanksPageTest extends IntegrationTestCase
 
         $this->actingAs($user)->get("/orders/{$order->id}/calendar.ics")->assertStatus(200);
     }
+
+    public function testConfirmedOrderIsSentToMatomoAsEcommerceOrder()
+    {
+        config([
+            'services.matomo.url' => 'https://stats.example.test',
+            'services.matomo.site_id' => '7',
+        ]);
+        list ($order, $user) = $this->acceptedOrder();
+
+        // First view of an accepted order fires the conversion tracker.
+        $this->actingAs($user)->get("/orders/{$order->id}/thanks")
+            ->assertStatus(200)
+            ->assertSee('https://stats.example.test/', false)
+            ->assertSee("['disableCookies']", false)
+            ->assertSee("'addEcommerceItem'", false)
+            ->assertSee("'trackEcommerceOrder'", false);
+    }
+
+    public function testNoMatomoWithoutConfiguration()
+    {
+        config([ 'services.matomo.url' => null, 'services.matomo.site_id' => null ]);
+        list ($order, $user) = $this->acceptedOrder();
+
+        $this->actingAs($user)->get("/orders/{$order->id}/thanks")
+            ->assertStatus(200)
+            ->assertDontSee('matomo.js', false);
+    }
 }
