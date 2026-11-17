@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1e34ceadab40df583695245c544705b5",
+    "content-hash": "74d52f4ee000c2200a7c6141e2c6e9ec",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -657,16 +657,16 @@
         },
         {
             "name": "catlabinteractive/laravel-catlab-accounts",
-            "version": "v4.4.0",
+            "version": "v4.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-catlab-accounts.git",
-                "reference": "230a3363de83ca0001722bbfd6c74834093c8df2"
+                "reference": "c605713d55729f2081f08377a393cee0e8befd02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/230a3363de83ca0001722bbfd6c74834093c8df2",
-                "reference": "230a3363de83ca0001722bbfd6c74834093c8df2",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-catlab-accounts/zipball/c605713d55729f2081f08377a393cee0e8befd02",
+                "reference": "c605713d55729f2081f08377a393cee0e8befd02",
                 "shasum": ""
             },
             "require": {
@@ -692,9 +692,9 @@
             "description": "Oauth-Openid client for the catlab authentication api for Ll",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-catlab-accounts/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.4.0"
+                "source": "https://github.com/CatLabInteractive/laravel-catlab-accounts/tree/v4.5.0"
             },
-            "time": "2026-11-17T09:14:37+00:00"
+            "time": "2026-11-17T21:35:39+00:00"
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
