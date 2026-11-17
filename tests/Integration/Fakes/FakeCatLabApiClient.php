@@ -140,4 +140,45 @@ class FakeCatLabApiClient extends ApiClient
 
         return 'https://accounts.example.test' . $path . '?' . http_build_query($parameters + ['authcode' => 'fake-login-token']);
     }
+
+    /** @var array<string,int> address (lowercased) => accounts user id */
+    public $accountsUsers = [];
+    public $nextAccountsUserId = 90000;
+    public $findOrCreateUserCalls = [];
+    /** @var \Throwable|null thrown by findOrCreateUser() to simulate accounts failing */
+    public $findOrCreateUserException = null;
+
+    public function findOrCreateUser($email, $language = 'nl')
+    {
+        if ($this->findOrCreateUserException) {
+            throw $this->findOrCreateUserException;
+        }
+
+        $this->findOrCreateUserCalls[] = ['email' => $email, 'language' => $language];
+
+        $key = mb_strtolower($email);
+        if (!isset($this->accountsUsers[$key])) {
+            $this->accountsUsers[$key] = $this->nextAccountsUserId++;
+        }
+        return $this->accountsUsers[$key];
+    }
+
+    public $cancelOrderCalls = [];
+    /** @var \Throwable|null thrown by cancelOrder() (e.g. a 409 while a payment is pending) */
+    public $cancelOrderException = null;
+
+    public function cancelOrder($orderId)
+    {
+        if ($this->cancelOrderException) {
+            throw $this->cancelOrderException;
+        }
+
+        $this->cancelOrderCalls[] = $orderId;
+
+        if ($this->orderStatus === 'PENDING') {
+            $this->orderStatus = 'CANCELLED';
+        }
+
+        return [ 'id' => $orderId, 'status' => $this->orderStatus ];
+    }
 }

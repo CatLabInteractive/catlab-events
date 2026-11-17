@@ -69,6 +69,13 @@ return [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY')
     ],
 
+    // reCAPTCHA v2 on the guest checkout form. Without a secret the check is
+    // skipped (local development, tests); production must set both.
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret' => env('RECAPTCHA_SECRET')
+    ],
+
     'errbit' => [
         // Mirror app.env's default: an unset APP_ENV is "production" for
         // the app (and its log lines) so it must be for reporting too.

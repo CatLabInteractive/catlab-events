@@ -128,9 +128,10 @@ class TicketCategory extends Model implements EuklesModel
     /**
      * @param Group|null $group
      * @param string $waitingListAccessToken
+     * @param User|null $buyer who the order is for (defaults to the logged-in user)
      * @return Order
      */
-    public function createOrder(Group $group = null, $waitingListAccessToken = null)
+    public function createOrder(?Group $group = null, $waitingListAccessToken = null, ?User $buyer = null)
     {
         $order = new Order();
         $order->waiting_list_access_token = $waitingListAccessToken;
@@ -142,7 +143,7 @@ class TicketCategory extends Model implements EuklesModel
         }
 
         $order->ticketCategory()->associate($this);
-        $order->user()->associate(\Auth::getUser());
+        $order->user()->associate($buyer ?: \Auth::getUser());
 
         return $order;
     }

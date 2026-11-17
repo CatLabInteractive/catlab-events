@@ -22,6 +22,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\ExpirePendingOrders;
 use App\Console\Commands\SyncEukles;
 use App\Console\Commands\TestEukles;
 use Illuminate\Console\Scheduling\Schedule;
@@ -39,6 +40,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        ExpirePendingOrders::class,
         SyncEukles::class,
         TestEukles::class
     ];
@@ -51,8 +53,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        $schedule->command('orders:expire-pending')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
     }
 
     /**

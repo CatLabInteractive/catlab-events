@@ -67,6 +67,10 @@ class EventServiceProvider extends ServiceProvider
             SendWaitingListInvitation::class
         ],
 
+        \Illuminate\Auth\Events\Login::class => [
+            \App\Listeners\ClaimGuestCheckoutTeams::class
+        ],
+
         PreparingOrder::class => [
 
         ]

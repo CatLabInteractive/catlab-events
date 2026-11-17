@@ -108,13 +108,18 @@ class OrderController extends Controller
             $order->save();
         }
 
-        $retryFormAction = action('EventController@processRegister', [ $order->event->id, $order->ticketCategory->id ] );
-        $retryFormInput = [
-            'group' => $order->group ? $order->group->id : null
-        ];
+        // "Try again" goes back to the one-page form, prefilled.
+        $retryQuery = [ $order->event->id, 'category' => $order->ticketCategory->id ];
+        if ($order->group) {
+            $retryQuery['team'] = $order->group->name;
+        }
+        $retryUrl = action('EventController@selectTicketCategory', $retryQuery);
 
-        if (\Request::session()->get('uitpas_card_number')) {
-            $retryFormInput['uitpas'] = \Request::session()->get('uitpas_card_number');
+        // The thanks URL is signed, not tied to a login: on a guest order,
+        // only show the buyer's own address to the buyer.
+        $email = $order->user ? $order->user->email : null;
+        if ($email && $order->is_guest_checkout && \Auth::id() !== $order->user_id) {
+            $email = self::maskEmail($email);
         }
 
         $event = $order->event;
@@ -136,14 +141,55 @@ class OrderController extends Controller
                 'firstDate' => $eventDates->first(),
                 'isPackage' => $event->isPackage() || $event->isQuizWitzCampaign(),
                 'livestreamUrl' => $livestreamUrl,
-                'email' => $order->user ? $order->user->email : null,
+                'email' => $email,
+                'isGuestCheckout' => (bool)$order->is_guest_checkout,
                 'calendarUrl' => action('OrderController@calendar', [ $order->id, 'sig' => $order->thanksSignature() ]),
                 'trackConversion' => $trackConversion,
                 'redirectUrl' => $order->getThanksUrl(),
-                'retryFormAction' => $retryFormAction,
-                'retryFormInput' => $retryFormInput
+                'retryUrl' => $retryUrl
             ]
         );
+    }
+
+    /**
+     * "Beheer je team" from a guest checkout's confirmation mail. A guest's
+     * team has no members; the order's buyer, once logged in (and so proven
+     * to own the address), becomes its admin.
+     *
+     * @param $orderId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function claim($orderId)
+    {
+        /** @var Order $order */
+        $order = Order::findOrFail($orderId);
+        abort_unless(\Auth::id() !== null && (int)\Auth::id() === (int)$order->user_id, 403);
+
+        $group = $order->group;
+        if ($group && !$group->hasMembers()) {
+            $group->addAdmin(\Auth::user());
+        }
+
+        if ($group) {
+            return redirect(action('GroupController@show', [ $group->id ]));
+        }
+
+        return redirect(action('OrderController@view', [ $order->id ]));
+    }
+
+    /**
+     * t***@example.com
+     *
+     * @param string $email
+     * @return string
+     */
+    public static function maskEmail(string $email): string
+    {
+        $at = strrpos($email, '@');
+        if ($at === false || $at === 0) {
+            return '***';
+        }
+        return mb_substr($email, 0, 1) . '***' . substr($email, $at);
     }
 
     /**

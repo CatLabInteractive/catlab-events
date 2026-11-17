@@ -9,13 +9,13 @@ class PurchaseGuardsTest extends IntegrationTestCase
 {
     use CreatesEventFixtures;
 
-    public function testTicketRegistrationRequiresLogin()
+    public function testOldPerCategoryLinkRedirectsToThePublicForm()
     {
         $event = $this->createEvent($this->createOrganisation());
         $category = $this->createTicketCategory($event, 10.0);
 
         $this->get("/events/{$event->id}/register/{$category->id}")
-            ->assertRedirect('/login');
+            ->assertRedirect(action('EventController@selectTicketCategory', [ $event->id, 'category' => $category->id ]));
     }
 
     public function testProcessingAnOrderRequiresLogin()

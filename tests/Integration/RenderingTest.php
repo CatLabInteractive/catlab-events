@@ -88,7 +88,7 @@ class RenderingTest extends IntegrationTestCase
 
         $response = $this->actingAs($user)
             ->withSession([ '_old_input' => [ 'group' => (string)$second->id ] ])
-            ->get("/events/{$event->id}/register/{$category->id}");
+            ->get("/events/{$event->id}/register?category={$category->id}");
 
         $response->assertStatus(200);
         $response->assertSee('name="_token"', false);
@@ -115,7 +115,7 @@ class RenderingTest extends IntegrationTestCase
         $response->assertSee('name="_token"', false);
     }
 
-    public function testFailedPaymentOffersARetryFormWithTheOriginalInput()
+    public function testFailedPaymentOffersARetryLinkToThePrefilledForm()
     {
         $event = $this->createEvent($this->createOrganisation());
         $category = $this->createTicketCategory($event, 15.0);
@@ -129,8 +129,7 @@ class RenderingTest extends IntegrationTestCase
 
         $response->assertStatus(200);
         $this->assertEquals(Order::STATE_CANCELLED, $order->fresh()->state);
-        $response->assertSee('action="' . action('EventController@processRegister', [ $event->id, $category->id ]) . '"', false);
-        $response->assertSee('<input type="hidden" name="group" value="">', false);
+        $response->assertSee('href="' . e(action('EventController@selectTicketCategory', [ $event->id, 'category' => $category->id ])) . '"', false);
         $response->assertSee('Probeer het opnieuw');
     }
 }

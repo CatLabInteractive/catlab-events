@@ -44,6 +44,11 @@ class EventController extends Controller
     const SESSION_WAITING_LIST_ACCESS_TOKEN = 'waiting_list_access_token';
 
     /**
+     * Unpaid guest-checkout orders one address may have open for one event.
+     */
+    const MAX_PENDING_GUEST_ORDERS = 2;
+
+    /**
      * @return bool
      */
     public static function getValidWaitingListToken(Event $event)
@@ -382,9 +387,14 @@ class EventController extends Controller
     }
 
     /**
+     * The one-page register form (guest checkout spec 2026-11-17). Public:
+     * a guest fills in category, team name and email address and goes
+     * straight to the pay page; a logged-in user gets the same page with
+     * their teams and address.
+     *
      * @param Request $request
      * @param $eventId
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View|void
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
      * @throws \Exception
      */
     public function selectTicketCategory(Request $request, $eventId)
@@ -392,7 +402,7 @@ class EventController extends Controller
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
         if (!$event->canRegister()) {
-            return redirect()->back();
+            return redirect(action('EventController@view', [ $event->id ]));
         }
 
         // Look for a waiting list token
@@ -401,9 +411,6 @@ class EventController extends Controller
             $request->session()->put(self::SESSION_WAITING_LIST_ACCESS_TOKEN, $wt);
         }
 
-        /**
-         *
-         */
         if ($this->isSoldOut($event)) {
             return view(
                 'events.registrationError',
@@ -415,36 +422,15 @@ class EventController extends Controller
             );
         }
 
-        // Select category
         $user = Auth::user();
-        if (!$user) {
-            // User is not logged in.
-            return $this->registerLoginExplanation($event);
-        }
 
-        // Check if we have pending orders that aren't paid yet.
-        $response = $this->getPendingOrdersResponse($event);
-        if ($response) {
-            return $response;
-        }
-
-        /** @var TicketCategory[] $categories */
-        $categories = $event->ticketCategories;
-
-        $availableTickets = [];
-        foreach ($categories as $v) {
-            if ($v->isAvailable()) {
-                $availableTickets[] = $v;
+        // Unpaid orders of this user first (logged-in users only: a guest
+        // has no session to tie earlier orders to).
+        if ($user) {
+            $response = $this->getPendingOrdersResponse($event);
+            if ($response) {
+                return $response;
             }
-        }
-
-        $showAvailableTickets = false;
-
-        $user = Auth::user();
-        $isAdmin = $user && $user->isAdmin();
-        if ($isAdmin) {
-            $attendees = $event->attendees()->get();
-            $showAvailableTickets = true;
         }
 
         $ticketCategories = $event->ticketCategories->sort(function(TicketCategory $a, TicketCategory $b) {
@@ -459,18 +445,214 @@ class EventController extends Controller
             return $a->price - $b->price;
         });
 
-        /*
-        if (count($availableTickets) === 1) {
-            return redirect(action('EventController@register', [ $event->id, $availableTickets[0]->id ]));
-        }*/
+        $available = $ticketCategories->filter(function (TicketCategory $category) {
+            return $category->isAvailable();
+        });
 
-        return view('events.selectTicketCategory', [
+        $selectedCategoryId = old('category', $request->query('category'));
+        if (!$selectedCategoryId && $available->count() > 0) {
+            $selectedCategoryId = $available->first()->id;
+        }
+
+        $groups = [];
+        if ($user && $event->doesRequireTeam()) {
+            foreach ($user->groups as $group) {
+                $groups[$group->id] = $group->name;
+            }
+        }
+
+        return view('events.registerOnePage', [
             'event' => $event,
-            'categories' => $categories,
-            'showAvailableTickets' => $showAvailableTickets,
+            'user' => $user,
             'ticketCategories' => $ticketCategories,
+            'availableCategories' => $available,
+            'selectedCategoryId' => $selectedCategoryId ? intval($selectedCategoryId) : null,
+            'groups' => $groups,
+            'team' => old('team', $request->query('team')),
+            'showUiTPAS' => $event->hasUitPas(),
+            'recaptchaSiteKey' => $user ? null : app(\App\Services\Recaptcha::class)->getSiteKey(),
+            'loginUrl' => action('EventController@authSelectTicketCategory', [ $event->id ]),
             'canonicalUrl' => action('EventController@selectTicketCategory', [ $eventId ])
         ]);
+    }
+
+    /**
+     * Submit of the one-page register form: guest checkout or logged-in.
+     *
+     * A guest's order is filed under the accounts user that owns the typed
+     * address (found or created), WITHOUT logging anyone in. A guest's team
+     * gets no members until its buyer logs in and claims it.
+     *
+     * @param Request $request
+     * @param $eventId
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     * @throws \Exception
+     */
+    public function storeRegistration(Request $request, $eventId)
+    {
+        /** @var Event $event */
+        $event = Event::findOrFail($eventId);
+        if (!$event->canRegister()) {
+            return redirect(action('EventController@view', [ $event->id ]));
+        }
+
+        $back = redirect(action('EventController@selectTicketCategory', [ $event->id ]))->withInput(
+            $request->except([ 'email_confirmation', 'g-recaptcha-response', '_token' ])
+        );
+
+        if ($this->isSoldOut($event)) {
+            return $back->withErrors([ 'Dit evenement is uitverkocht.' ]);
+        }
+
+        /** @var User|null $user */
+        $user = Auth::user();
+        $isGuest = !$user;
+
+        $rules = [
+            'category' => 'required|integer',
+            'group' => 'nullable|integer',
+            'uitpas' => 'nullable|string|max:64',
+        ];
+
+        // A logged-in user picks one of their teams, or types a new name
+        // (which wins over the picked team).
+        $useExistingGroup = $user && $request->input('group') && trim((string)$request->input('team')) === '';
+        if ($event->doesRequireTeam() && !$useExistingGroup) {
+            $rules['team'] = 'required|string|max:100';
+        }
+
+        if ($isGuest) {
+            $rules['email'] = 'required|email|max:255|confirmed';
+        }
+
+        $validator = \Validator::make($request->all(), $rules, [
+            'team.required' => 'Geef een teamnaam op.',
+            'email.required' => 'Geef je e-mailadres op.',
+            'email.email' => 'Dat e-mailadres lijkt niet te kloppen.',
+            'email.confirmed' => 'De twee e-mailadressen zijn niet hetzelfde.',
+        ]);
+        if ($validator->fails()) {
+            return $back->withErrors($validator);
+        }
+
+        /** @var TicketCategory|null $ticketCategory */
+        $ticketCategory = $event->ticketCategories()->find($request->input('category'));
+        if (!$ticketCategory || !$ticketCategory->isAvailable()) {
+            return $back->withErrors([ 'Dit type tickets is niet (meer) beschikbaar.' ]);
+        }
+
+        if ($isGuest) {
+            // A free order is accepted at once: as a guest that would mail an
+            // unproven address, with a team name the visitor picked.
+            if ($ticketCategory->isFree()) {
+                return $back->withErrors([ 'Log in om je in te schrijven voor gratis tickets.' ]);
+            }
+
+            if (!app(\App\Services\Recaptcha::class)->verify($request->input('g-recaptcha-response'), $request->ip())) {
+                return $back->withErrors([ 'Bevestig dat je geen robot bent.' ]);
+            }
+        } else {
+            $response = $this->getPendingOrdersResponse($event);
+            if ($response) {
+                return $response;
+            }
+        }
+
+        // The buyer.
+        if ($isGuest) {
+            try {
+                $buyer = app(\App\Services\GuestBuyer::class)->resolve(trim($request->input('email')));
+            } catch (\Throwable $e) {
+                \Log::error('Guest checkout: could not find or create the buyer at accounts', [
+                    'event' => $event->id,
+                    'error' => $e->getMessage()
+                ]);
+                return $back->withErrors([ 'Er ging iets mis. Probeer het binnen enkele minuten opnieuw.' ]);
+            }
+
+            // Typing someone else's address must not cancel their unpaid
+            // orders, so a guest's earlier ones stay; cap them instead.
+            $pendingGuestOrders = $buyer->orders()
+                ->where('event_id', '=', $event->id)
+                ->where('state', '=', Order::STATE_PENDING)
+                ->where('is_guest_checkout', '=', true)
+                ->count();
+            if ($pendingGuestOrders >= self::MAX_PENDING_GUEST_ORDERS) {
+                return $back->withErrors([
+                    'Er staan al bestellingen op betaling te wachten voor dit adres. Rond die af, of probeer het over een half uur opnieuw.'
+                ]);
+            }
+        } else {
+            $buyer = $user;
+        }
+
+        // The team.
+        $group = null;
+        if ($event->doesRequireTeam()) {
+            if ($useExistingGroup) {
+                /** @var Group $group */
+                $group = $user->groups()->find($request->input('group'));
+                if (!$group) {
+                    return $back->withErrors([ 'Dat team bestaat niet.' ]);
+                }
+
+                if ($event->isRegistered($group)) {
+                    return $back->withErrors([ 'Dit team is al ingeschreven.' ]);
+                }
+
+                // Cancel the team's earlier unpaid orders.
+                $group
+                    ->orders()
+                    ->where('state', '=', Order::STATE_PENDING)
+                    ->each(function (Order $order) {
+                        $order->changeState(Order::STATE_CANCELLED);
+                    });
+            } else {
+                $group = new Group();
+                $group->name = trim($request->input('team'));
+                $group->save();
+
+                if (!$isGuest) {
+                    $group->addAdmin($user);
+                }
+            }
+        }
+
+        // UiTPAS: validated by applying the tariff, registered on checkout.
+        $uitpas = null;
+        if ($event->hasUitPas() && $request->input('uitpas')) {
+            $uitPasService = \UitDb::getUitPasService();
+            if ($uitPasService) {
+                try {
+                    $uitPasService->applyUitPasTariff($ticketCategory, $ticketCategory->getTicketPriceCalculator(), $request->input('uitpas'));
+                    $uitpas = $request->input('uitpas');
+                } catch (UitPASException $e) {
+                    return $back->withErrors([ $e->getMessage() ]);
+                }
+            }
+        }
+        $request->session()->put('uitpas_card_number', $uitpas);
+
+        event(new PreparingOrder($buyer, $event, $this->getEuklesOriginWebsite(), $ticketCategory, $group));
+
+        try {
+            $order = app(\App\Services\OrderCheckout::class)->checkout(
+                $buyer,
+                $event,
+                $ticketCategory,
+                $group,
+                $uitpas,
+                $isGuest
+            );
+        } catch (UitPASException $e) {
+            return $back->withErrors([ $e->getMessage() ]);
+        }
+
+        if ($order->isAccepted()) {
+            return $this->redirect($order->getThanksUrl());
+        }
+
+        return redirect($order->getPayUrl());
     }
 
     /**
@@ -493,208 +675,29 @@ class EventController extends Controller
     }
 
     /**
+     * "Log in" from the register page: the auth middleware sends the visitor
+     * through the accounts login and back to the register page.
+     *
      * @param Request $request
      * @param $eventId
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * @throws \Exception
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function authSelectTicketCategory(Request $request, $eventId)
     {
-        return $this->selectTicketCategory($request, $eventId);
+        return redirect(action('EventController@selectTicketCategory', [ $eventId ]));
     }
 
     /**
-     * @param Request $request
+     * Old per-category links (bookmarks, mails): the one-page form with the
+     * category preselected.
+     *
      * @param $eventId
      * @param $ticketCategoryId
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     * @throws \Exception
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function register(Request $request, $eventId, $ticketCategoryId)
+    public function register($eventId, $ticketCategoryId)
     {
-        /** @var Event $event */
-        $event = Event::findOrFail($eventId);
-
-        // Check if we have pending orders that aren't paid yet.
-        $response = $this->getPendingOrdersResponse($event);
-        if ($response) {
-            return $response;
-        }
-
-        if (!$event->canRegister()) {
-            return redirect()->back();
-        }
-
-        /** @var TicketCategory $ticketCategory */
-        $ticketCategory = $event->ticketCategories()->findOrFail($ticketCategoryId);
-
-        if ($this->isSoldOut($event) || !$ticketCategory->isAvailable()) {
-            return redirect(action('EventController@selectTicketCategory', [ $eventId ]));
-        }
-
-        // No team required? Then go straight to the confirmation.
-        if (!$event->doesRequireTeam()) {
-            return $this->confirmRegister($request, $eventId, $ticketCategoryId, null);
-        }
-
-        // Do we have a groupId?
-        if ($groupId = \Request::get('groupId')) {
-            return $this->confirmRegister($request, $eventId, $ticketCategoryId, $groupId);
-        }
-
-        $user = Auth::user();
-
-        $groupAddUrl = action('GroupController@create', [ 'return' => \Request::url() . '?groupId={id}', 'event' => $event->id ]);
-
-        // do we have at least one group?
-        if ($user->groups()->count() === 0) {
-            return redirect($groupAddUrl);
-        }
-
-        $groupValues = [];
-        foreach ($user->groups as $group) {
-            $groupValues[$group->id] = $group->name;
-        }
-
-        return view('events.register', [
-            'action' => \Request::url(),
-            'event' => $event,
-            'groups' => $groupValues,
-            'ticketCategory' => $ticketCategory,
-            'groupAddUrl' => $groupAddUrl,
-            'canonicalUrl' => action('EventController@register', [ $eventId, $ticketCategoryId ])
-        ]);
-    }
-
-    /**
-     * Little explanation on why you need to register.
-     * @param Event $event
-     * @param TicketCategory $ticketCategory
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    protected function registerLoginExplanation(Event $event)
-    {
-        if ($this->isSoldOut($event)) {
-            return redirect(action('WaitingListController@waitingList', [ $event->id ]));
-        }
-
-        $nextLink = action('EventController@authSelectTicketCategory', [$event->id ]);
-
-        return view(
-            'events/whyregister',
-            [
-                'event' => $event,
-                'showAvailableTickets' => false,
-                'loginLink' => $nextLink
-            ]
-        );
-    }
-
-    /**
-     * @param Request $request
-     * @param $eventId
-     * @param $ticketCategoryId
-     * @param null $groupId
-     * @return $this|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     * @throws \Exception
-     */
-    public function confirmRegister(Request $request, $eventId, $ticketCategoryId, $groupId = null)
-    {
-        $user = Auth::getUser();
-
-        /** @var Event $event */
-        $event = Event::findOrFail($eventId);
-        if (!$event->canRegister()) {
-            return redirect()->back();
-        }
-
-        /** @var TicketCategory $ticketCategory */
-        $ticketCategory = $event->ticketCategories()->findOrFail($ticketCategoryId);
-
-        // Do we require a group?
-        $group = null;
-        if ($event->doesRequireTeam()) {
-            if (!isset($groupId)) {
-                $groupId = $request->input('group');
-            }
-
-            /** @var Group $group */
-            $group = $user->groups()->findOrFail($groupId);
-
-            // Look for existing orders
-            if ($event->isRegistered($group)) {
-                return redirect()->back()->withErrors([
-                    'Dit team is al ingeschreven.'
-                ]);
-            }
-
-            // Cancel all pending orders
-            $group
-                ->orders()
-                ->where('state', '=', Order::STATE_PENDING)
-                ->each(function(Order $order) {
-                    /*
-                    $order->state = Order::STATE_CANCELLED;
-                    $order->save();
-                    */
-                    // if i understand correctly, this should never happen.
-                    $order->changeState(Order::STATE_CANCELLED);
-                });
-        }
-
-        if ($this->isSoldOut($event) || !$ticketCategory->isAvailable()) {
-            return redirect(action('EventController@selectTicketCategory', [ $eventId ]))
-                ->withErrors([
-                    'Dit type tickets is uitverkocht.'
-                ]);
-        }
-
-        event(new PreparingOrder($user, $event, $this->getEuklesOriginWebsite(), $ticketCategory, $group));
-
-        $input = [];
-
-        if ($event->doesRequireTeam()) {
-            $input['group'] = $group->id;
-        }
-
-        $priceCalculator = $ticketCategory->getTicketPriceCalculator();
-
-        // Do we have uitpas id?
-        $errors = [];
-        $validUitpas = null;
-        if ($request->query('uitpas')) {
-            $uitPasService = \UitDb::getUitPasService();
-            if ($uitPasService) {
-                try {
-                    $uitPasService->applyUitPasTariff($ticketCategory, $priceCalculator, $request->query('uitpas'));
-                    $validUitpas = $request->query('uitpas');
-                } catch (UitPASException $e) {
-                    $errors[] = $e->getMessage();
-                }
-            }
-        }
-
-        $input['uitpas'] = $validUitpas;
-        $request->session()->put('uitpas_card_number', $validUitpas);
-
-        $view = view('events.confirmRegister', [
-            'showUiTPAS' => $event->hasUitPas(),
-            'action' => action('EventController@processRegister', [ $eventId, $ticketCategoryId ]),
-            'uitpasAction' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
-            'group' => $group,
-            'input' => $input,
-            'event' => $event,
-            'ticketCategory' => $ticketCategory,
-            'ticketPriceCalculator' => $priceCalculator,
-            'canonicalUrl' => action('EventController@confirmRegister', [ $eventId, $ticketCategoryId ]),
-            'uitpas' => $validUitpas
-        ]);
-
-        if ($errors) {
-            $view->withErrors($errors);
-        }
-
-        return $view;
+        return redirect(action('EventController@selectTicketCategory', [ $eventId, 'category' => $ticketCategoryId ]));
     }
 
     /**
@@ -744,98 +747,21 @@ class EventController extends Controller
             ]);
         }
 
-        $client = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
+        try {
+            $order = app(\App\Services\OrderCheckout::class)->checkout(
+                $user,
+                $event,
+                $ticketCategory,
+                $group,
+                $request->input('uitpas') ?: null
+            );
+        } catch (UitPASException $e) {
+            return redirect(action('EventController@selectTicketCategory', [ $event->id, 'category' => $ticketCategory->id ]))
+                ->withErrors([ $e->getMessage() ]);
+        }
 
-        // create a default order
-        $waitingListAccessToken = self::getValidWaitingListToken($event);
-        $order = $ticketCategory->createOrder($group, $waitingListAccessToken ?: null);
-
-        if ($ticketCategory->isFree()) {
-            $order->save();
-            $order->changeState(Order::STATE_ACCEPTED);
+        if ($order->isAccepted()) {
             return $this->redirect($order->getThanksUrl());
-        }
-
-        // Check if an uitpas card id was provided.
-        $uitPas = $request->input('uitpas');
-        if ($uitPas) {
-            try {
-                $uitPasService = \UitDb::getUitPasService();
-                if ($uitPasService) {
-                    $uitPasService->registerTicketSale($order, $uitPas);
-                }
-            } catch (UitPASException $e) {
-                return redirect(
-                    action('EventController@confirmRegister', [ $event->id, $ticketCategory->id, 'groupId' => $group->id, 'uitpas' => $uitPas ]))
-                    ->withErrors([
-                            $e->getMessage()
-                        ]
-                    );
-            }
-        }
-
-        try {
-            $order->save();
-        } catch (\Exception $e) {
-            $uitPasService = \UitDb::getUitPasService();
-            if ($uitPasService) {
-                $uitPasService->registerOrderCancel($order);
-            }
-        }
-
-        $ticketPriceCalculator = $order->getTicketPriceCalculator();
-
-        $transactionFee = $ticketPriceCalculator->calculateTransactionFee();
-
-        $items = [
-            [
-                'name' => $event->name,
-                'description' => $group ? 'Inschrijving ' . $group->name : 'Inschrijving',
-                'amount' => 1,
-                'price' => $ticketPriceCalculator->getTicketPrice(false),
-                'vat' => $ticketPriceCalculator->getTicketPriceVat()
-            ],
-        ];
-
-        if ($transactionFee > 0) {
-            $items[] = [
-                'name' => 'Transactiekosten',
-                'amount' => 1,
-                'price' => $ticketPriceCalculator->calculateTransactionFee(),
-                'vat' => $ticketPriceCalculator->calculateTransactionFeeVat()
-            ];
-        }
-
-        try {
-            $orderData = $client->createOrder([
-
-                // Signed per order: orders/{id}/sync has no session (audit 2026-08-27).
-                'callback' => action('OrderController@sync', [ $order->id, 'sig' => $order->syncSignature() ]),
-                'partner' => $event->organisation->catlab_partner_id,
-                'items' => $items,
-                'maxTransactionFee' => $ticketPriceCalculator->calculateTransactionFee(false)
-
-            ]);
-
-            $order->catlab_order_id = $orderData['id'];
-            $order->pay_url = $orderData['payUrl'];
-
-            // Second factor for refunding this order later. Accounts returns
-            // it once, here: no GET endpoint hands it back.
-            if (isset($orderData['refundToken'])) {
-                $order->refund_token = $orderData['refundToken'];
-            } else {
-                \Log::warning('Paid order created without a refund token; it will not be refundable from the admin panel', [
-                    'order' => $order->id,
-                    'catlabOrder' => $orderData['id']
-                ]);
-            }
-
-            $order->save();
-
-        } catch (\Exception $e) {
-            $order->delete();
-            throw $e;
         }
 
         // Redirect to the payment gateway.
@@ -861,7 +787,9 @@ class EventController extends Controller
         // Do we have any pending orders that we should pay first?
         $user = Auth::user();
 
-        $pendingOrders = $user->orders()->pending()->get();
+        // Guest-checkout orders filed under this address are left out: anyone
+        // can type an address, and they expire on their own.
+        $pendingOrders = $user->orders()->pending()->where('is_guest_checkout', '=', false)->get();
         if (\Request::query('cancelPendingOrders')) {
             foreach ($pendingOrders as $pendingOrder) {
                 /** @var Order $pendingOrder */
