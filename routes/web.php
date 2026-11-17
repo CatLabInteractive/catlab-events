@@ -138,6 +138,8 @@ Route::group([
             Route::get('events/{event}/emails', 'Admin\EventEmailController@index');
             Route::get('events/{event}/emails/{type}', 'Admin\EventEmailController@edit')->where('type', $eventEmailTypes);
             Route::post('events/{event}/emails/{type}', 'Admin\EventEmailController@update')->where('type', $eventEmailTypes);
+            Route::post('events/{event}/emails/{type}/template', 'Admin\EventEmailController@template')->where('type', $eventEmailTypes);
+            Route::post('events/{event}/emails/{type}/reset', 'Admin\EventEmailController@reset')->where('type', $eventEmailTypes);
             Route::match([ 'get', 'post' ], 'events/{event}/emails/{type}/preview', 'Admin\EventEmailController@preview')->where('type', $eventEmailTypes);
 
             Route::get('events/{event}/guests', 'Admin\GuestRegistrationController@index');
