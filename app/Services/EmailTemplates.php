@@ -129,7 +129,7 @@ class EmailTemplates
             return null;
         }
 
-        return $organisation->emailTemplates()->where('type', '=', $type)->first();
+        return $organisation->emailTemplates()->organisationVersion()->where('type', '=', $type)->first();
     }
 
     /**

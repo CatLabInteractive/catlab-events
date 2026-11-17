@@ -45,7 +45,7 @@ class EmailTemplateController extends Controller
     {
         $organisation = $this->getAdministeredOrganisation();
 
-        $overrides = $organisation->emailTemplates()->get()->keyBy('type');
+        $overrides = $organisation->emailTemplates()->organisationVersion()->get()->keyBy('type');
 
         $types = [];
         foreach ($this->templates->getTypes() as $type => $definition) {
@@ -158,7 +158,7 @@ class EmailTemplateController extends Controller
         ]);
 
         $organisation->emailTemplates()->updateOrCreate(
-            [ 'type' => $type ],
+            [ 'type' => $type, 'name' => '' ],
             [
                 'subject' => $request->input('subject'),
                 'content' => $request->input('content')
@@ -180,7 +180,7 @@ class EmailTemplateController extends Controller
         $organisation = $this->getAdministeredOrganisation();
         $this->assertType($type);
 
-        $organisation->emailTemplates()->where('type', '=', $type)->delete();
+        $organisation->emailTemplates()->organisationVersion()->where('type', '=', $type)->delete();
 
         return redirect(action('Admin\EmailTemplateController@show', [ $type ]))
             ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" is terug de standaardversie.');
