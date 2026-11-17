@@ -164,6 +164,10 @@ class OrderController extends Controller
         /** @var Order $order */
         $order = Order::findOrFail($orderId);
         abort_unless(\Auth::id() !== null && (int)\Auth::id() === (int)$order->user_id, 403);
+        // Only a paid guest checkout's team is claimable (same rule as the
+        // login listener): an unpaid order can be made by anyone typing the
+        // address, with any team name.
+        abort_unless($order->is_guest_checkout && $order->isAccepted(), 404);
 
         $group = $order->group;
         if ($group && !$group->hasMembers()) {

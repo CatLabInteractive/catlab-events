@@ -151,6 +151,55 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertSame(90000, (int)$buyer->catlab_id);
     }
 
+    public function testLocalAccountWithoutCatlabIdIsLeftAloneAndAskedToLogIn()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $legacy = $this->createUser();
+        $legacy->email = 'guest@example.test';
+        $legacy->save();
+
+        $this->guestPost($event, $category)->assertSessionHasErrors();
+
+        $this->assertSame('guest@example.test', $legacy->fresh()->email);
+        $this->assertSame(0, Order::query()->count());
+    }
+
+    public function testGuestCheckoutIsNotTrackedBeforePayment()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $this->guestPost($event, $category)->assertRedirect();
+        $this->assertSame([], $this->eukles->tracked);
+    }
+
+    public function testAccountsOrderFailureShowsAnErrorAndLeavesNoTeam()
+    {
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+        $this->catlabApi->createOrderException = new \RuntimeException('accounts down');
+
+        $this->guestPost($event, $category, [ 'team' => 'Ghost team' ])->assertSessionHasErrors();
+
+        $this->assertSame(0, Order::query()->count());
+        $this->assertSame(0, Group::query()->where('name', '=', 'Ghost team')->count());
+    }
+
+    public function testViewingTheEventNoLongerCancelsUnpaidOrdersLocally()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $this->guestPost($event, $category)->assertRedirect();
+        $order = Order::query()->firstOrFail();
+        $this->ageOrder($order, 45);
+
+        $this->get("/events/{$event->id}")->assertStatus(200);
+        $this->assertEquals(Order::STATE_PENDING, $order->fresh()->state, 'only orders:expire-pending cancels, at accounts first');
+    }
+
     public function testFirstEverUserCreatedByACheckoutIsNoAdmin()
     {
         $event = $this->createEvent($this->createOrganisation());
@@ -288,6 +337,13 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->guestPost($event, $category, [ 'team' => 'Claimers' ])->assertRedirect();
         $order = Order::query()->firstOrFail();
         $buyer = $order->user;
+
+        // Unpaid: anyone can create one under any address, so not claimable.
+        $this->actingAs($buyer)->get("/orders/{$order->id}/claim")->assertStatus(404);
+        $this->assertFalse($order->group->hasMembers());
+
+        $order->state = Order::STATE_ACCEPTED;
+        $order->save();
 
         $this->actingAs($this->createUser())->get("/orders/{$order->id}/claim")->assertStatus(403);
         $this->assertFalse($order->group->hasMembers());

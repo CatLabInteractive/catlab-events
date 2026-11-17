@@ -52,8 +52,15 @@ class FakeCatLabApiClient extends ApiClient
         parent::__construct(null);
     }
 
+    /** @var \Throwable|null thrown by createOrder() to simulate accounts failing */
+    public $createOrderException = null;
+
     public function createOrder($data)
     {
+        if ($this->createOrderException) {
+            throw $this->createOrderException;
+        }
+
         $this->createOrderCalls[] = $data;
 
         return [

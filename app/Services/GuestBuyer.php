@@ -42,6 +42,8 @@ class GuestBuyer
     /**
      * @param string $email
      * @return User
+     * @throws GuestBuyerNeedsLogin when a local account that was never linked
+     *   to accounts holds the address
      * @throws \Throwable when accounts could not be reached
      */
     public function resolve(string $email): User
@@ -55,21 +57,25 @@ class GuestBuyer
             return $user;
         }
 
-        // users.email is unique and not nullable. Another local row can still
-        // hold this address: a stale copy from before its owner changed
-        // their address at accounts. Accounts says the address is this
-        // catlab_id's now, so move the stale row out of the way; its next
-        // login refreshes it from accounts.
-        User::query()
-            ->where('email', '=', $email)
-            ->where(function ($query) use ($catlabId) {
-                $query->whereNull('catlab_id')->orWhere('catlab_id', '!=', $catlabId);
-            })
-            ->get()
-            ->each(function (User $stale) {
-                $stale->email = 'stale-' . $stale->id . '@invalid';
-                $stale->save();
-            });
+        // users.email is unique and not nullable, so another local row can
+        // still hold this address.
+        $holders = User::query()->where('email', '=', $email)->get();
+        foreach ($holders as $holder) {
+            if ($holder->catlab_id === null) {
+                // A local account never linked to accounts: it would never be
+                // refreshed, so renaming it would break it for good. Its owner
+                // logs in instead.
+                throw new GuestBuyerNeedsLogin('Address held by a local account without catlab_id');
+            }
+        }
+
+        // A stale copy from before its owner changed their address at
+        // accounts. Accounts says the address is this catlab_id's now, so
+        // move the stale row out of the way; its next login refreshes it.
+        foreach ($holders as $stale) {
+            $stale->email = 'stale-' . $stale->id . '@invalid';
+            $stale->save();
+        }
 
         $user = new User();
         $user->catlab_id = $catlabId;
@@ -77,7 +83,16 @@ class GuestBuyer
         $user->name = strstr($email, '@', true) ?: $email;
         // Required by the schema; never usable (accounts handles login).
         $user->password = bcrypt(bin2hex(random_bytes(32)));
-        $user->save();
+        try {
+            $user->save();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // A concurrent checkout for the same address won the insert.
+            $existing = User::query()->where('catlab_id', '=', $catlabId)->first();
+            if ($existing) {
+                return $existing;
+            }
+            throw $e;
+        }
 
         // User::boot() makes the very first user an admin. A guest buyer
         // must never be one.

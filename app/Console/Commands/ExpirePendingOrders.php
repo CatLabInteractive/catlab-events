@@ -35,8 +35,10 @@ use Illuminate\Console\Command;
  * before the seat is given to someone else; an order whose payment is still
  * in progress at a gateway (accounts answers 409) is left for a later run.
  *
- * Event::cancelTimeoutPendingOrders() (a local-only sweep on event view)
- * still exists alongside this.
+ * This is the only expiry: the old local-only sweep on event view
+ * (Event::cancelTimeoutPendingOrders) left the pay URL working, so a late
+ * payment could revive an order whose seat was already resold. Needs the
+ * scheduler cron.
  *
  * @package App\Console\Commands
  */

@@ -306,7 +306,8 @@ class EventController extends Controller
     {
         /** @var Event $event */
         $event = Event::findOrFail($eventId);
-        $event->cancelTimeoutPendingOrders();
+        // Unpaid orders are expired by orders:expire-pending, which cancels
+        // them at accounts first (a local-only cancel left the pay URL working).
 
         if (!$event->is_published) {
             abort(404, 'Event not found');
@@ -562,6 +563,8 @@ class EventController extends Controller
         if ($isGuest) {
             try {
                 $buyer = app(\App\Services\GuestBuyer::class)->resolve(trim($request->input('email')));
+            } catch (\App\Services\GuestBuyerNeedsLogin $e) {
+                return $back->withErrors([ 'Log in om met dit e-mailadres te bestellen.' ]);
             } catch (\Throwable $e) {
                 \Log::error('Guest checkout: could not find or create the buyer at accounts', [
                     'event' => $event->id,
@@ -588,6 +591,7 @@ class EventController extends Controller
 
         // The team.
         $group = null;
+        $createdGroup = null;
         if ($event->doesRequireTeam()) {
             if ($useExistingGroup) {
                 /** @var Group $group */
@@ -611,6 +615,7 @@ class EventController extends Controller
                 $group = new Group();
                 $group->name = trim($request->input('team'));
                 $group->save();
+                $createdGroup = $group;
 
                 if (!$isGuest) {
                     $group->addAdmin($user);
@@ -633,7 +638,11 @@ class EventController extends Controller
         }
         $request->session()->put('uitpas_card_number', $uitpas);
 
-        event(new PreparingOrder($buyer, $event, $this->getEuklesOriginWebsite(), $ticketCategory, $group));
+        // Not for guests: the typed address is unproven until payment, and
+        // must not end up in tracking (or any mail flow behind it) before then.
+        if (!$isGuest) {
+            event(new PreparingOrder($buyer, $event, $this->getEuklesOriginWebsite(), $ticketCategory, $group));
+        }
 
         try {
             $order = app(\App\Services\OrderCheckout::class)->checkout(
@@ -645,7 +654,16 @@ class EventController extends Controller
                 $isGuest
             );
         } catch (UitPASException $e) {
+            $this->deleteUnusedGroup($createdGroup);
             return $back->withErrors([ $e->getMessage() ]);
+        } catch (\Throwable $e) {
+            \Log::error('Checkout: could not create the order', [
+                'event' => $event->id,
+                'guest' => $isGuest,
+                'error' => $e->getMessage()
+            ]);
+            $this->deleteUnusedGroup($createdGroup);
+            return $back->withErrors([ 'Er ging iets mis. Probeer het binnen enkele minuten opnieuw.' ]);
         }
 
         if ($order->isAccepted()) {
@@ -653,6 +671,25 @@ class EventController extends Controller
         }
 
         return redirect($order->getPayUrl());
+    }
+
+    /**
+     * A team created for a checkout that failed: remove it again, unless
+     * something already refers to it.
+     * @param Group|null $group
+     */
+    protected function deleteUnusedGroup(?Group $group)
+    {
+        if (!$group) {
+            return;
+        }
+        try {
+            if ($group->orders()->count() === 0 && $group->members()->count() === 0) {
+                $group->delete();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Could not remove the team of a failed checkout', [ 'group' => $group->id, 'error' => $e->getMessage() ]);
+        }
     }
 
     /**
