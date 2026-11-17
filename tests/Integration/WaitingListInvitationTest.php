@@ -173,6 +173,8 @@ class WaitingListInvitationTest extends IntegrationTestCase
         $this->assertSame('Nog een plekje vrij!', $mail['subject']);
         $this->assertStringContainsString('Aangepaste tekst', $mail['body']);
         $this->assertStringNotContainsString('Er is een ticket vrijgekomen!', $mail['body']);
+        // The edited text still goes out inside the organisation's layout.
+        $this->assertStringContainsString('data-mail-header', $mail['body']);
 
         $this->assertCount(1, $this->eukles->tracked);
     }

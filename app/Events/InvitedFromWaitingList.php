@@ -24,6 +24,7 @@ namespace App\Events;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Services\EmailLayouts;
 use App\Services\EmailTemplates;
 use Illuminate\Queue\SerializesModels;
 
@@ -117,6 +118,10 @@ class InvitedFromWaitingList
     {
         $templates = app(EmailTemplates::class);
         $attributes = self::getMailAttributes($event, $user, $url);
+
+        // The admin edits this text, and it goes out in the organisation's
+        // layout: its button should already have the layout's accent color.
+        $attributes['accentColor'] = app(EmailLayouts::class)->getAccentColor($event->organisation);
 
         $template = $templates->getOverride($event->organisation, EmailTemplates::WAITING_LIST_INVITATION);
         if ($template) {

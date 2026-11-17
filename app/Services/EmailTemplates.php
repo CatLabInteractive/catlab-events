@@ -5,6 +5,7 @@
 
 namespace App\Services;
 
+use App\Models\EmailLayout;
 use App\Models\EmailTemplate;
 use App\Models\Event;
 use App\Models\EventDate;
@@ -29,6 +30,9 @@ use InvalidArgumentException;
  * with {{ placeholders }}: admins never write Blade, so the values are filled
  * in here, escaped, and only the placeholders listed per type are known.
  *
+ * Either way, the content goes out inside the organisation's mail layout
+ * (EmailLayouts).
+ *
  * @package App\Services
  */
 class EmailTemplates
@@ -38,11 +42,6 @@ class EmailTemplates
     const CANCELLATION = 'cancellation';
     const WAITING_LIST_INVITATION = 'waitingListInvitation';
     const GROUP_INVITE = 'groupInvite';
-
-    /**
-     * Unknown placeholders are left alone, so a typo shows up in the preview.
-     */
-    const PLACEHOLDER_PATTERN = '/\{\{\s*([a-z_.]+)\s*\}\}/i';
 
     /**
      * @return array[] type => [ label, description, view, subject ]
@@ -140,24 +139,37 @@ class EmailTemplates
      * @param string $type
      * @param array $attributes what the default Blade template needs
      * @param EmailTemplate|null $template a (not yet saved) version to render instead of the stored one
+     * @param EmailLayout|null $layout a (not yet saved) layout to render in instead of the stored one
      * @return string[] [ 'subject' => string, 'body' => string ]
      */
-    public function render(?Organisation $organisation, $type, array $attributes, ?EmailTemplate $template = null)
-    {
+    public function render(
+        ?Organisation $organisation,
+        $type,
+        array $attributes,
+        ?EmailTemplate $template = null,
+        ?EmailLayout $layout = null
+    ) {
+        $layouts = app(EmailLayouts::class);
+
+        // Set before any view renders, so the button block in the content
+        // matches the layout around it.
+        $attributes['accentColor'] = $layouts->getAccentColor($organisation, $layout);
+
         $template = $template ?: $this->getOverride($organisation, $type);
 
         if (!$template) {
-            return [
-                'subject' => $this->renderSubject($organisation, $type, $attributes),
-                'body' => \View::make($this->getDefinition($type)['view'], $attributes)->render()
-            ];
+            // Only the content: the Blade views still extend the old layout
+            // file, which now yields nothing but this section.
+            $subject = $this->renderSubject($organisation, $type, $attributes);
+            $content = \View::make($this->getDefinition($type)['view'], $attributes)->renderSections()['content'];
+        } else {
+            $subject = $this->renderSubject($organisation, $type, $attributes, $template->subject);
+            $content = $this->renderContent($organisation, $type, $attributes, $template->content);
         }
 
         return [
-            'subject' => $this->renderSubject($organisation, $type, $attributes, $template->subject),
-            'body' => \View::make('emails.tickets.customContent', [
-                'content' => $this->renderContent($organisation, $type, $attributes, $template->content)
-            ])->render()
+            'subject' => $subject,
+            'body' => $layouts->wrap($organisation, $content, $layout)
         ];
     }
 
@@ -170,12 +182,10 @@ class EmailTemplates
      */
     public function renderSubject(?Organisation $organisation, $type, array $attributes, $subject = null)
     {
-        $values = $this->getValues($organisation, $type, $attributes);
-
-        return $this->fill($subject ?? $this->getDefaultSubject($type), function ($key) use ($values) {
-            $value = $values[$key];
-            return $value instanceof HtmlString ? trim(strip_tags($value->toHtml())) : (string) $value;
-        }, array_keys($values));
+        return Placeholders::fillText(
+            $subject ?? $this->getDefaultSubject($type),
+            $this->getValues($organisation, $type, $attributes)
+        );
     }
 
     /**
@@ -190,12 +200,7 @@ class EmailTemplates
      */
     public function renderContent(?Organisation $organisation, $type, array $attributes, $content)
     {
-        $values = $this->getValues($organisation, $type, $attributes);
-
-        return $this->fill($content, function ($key) use ($values) {
-            $value = $values[$key];
-            return $value instanceof HtmlString ? $value->toHtml() : e($value);
-        }, array_keys($values));
+        return Placeholders::fillHtml($content, $this->getValues($organisation, $type, $attributes));
     }
 
     /**
@@ -414,7 +419,7 @@ class EmailTemplates
             case self::WAITING_LIST_INVITATION:
                 $values['user.name'] = $attributes['user']->username;
                 $values['invitation.url'] = $attributes['url'];
-                $values['invitation.button'] = $this->renderButton($attributes['url'], 'Bestel je ticket');
+                $values['invitation.button'] = $this->renderButton($attributes, $attributes['url'], 'Bestel je ticket');
                 $values['event.available_dates'] = $event->eventDates
                     ->filter(function ($date) { return !$date->isSoldOut(); })
                     ->map(function ($date) { return $date->startDate->format('d/m/Y'); })
@@ -425,7 +430,7 @@ class EmailTemplates
                 $values['invitation.name'] = $attributes['invitation']->name;
                 $values['inviter.name'] = $attributes['from'] ? $attributes['from']->username : '';
                 $values['invitation.url'] = $attributes['inviteUrl'];
-                $values['invitation.button'] = $this->renderButton($attributes['inviteUrl'], 'Accepteren');
+                $values['invitation.button'] = $this->renderButton($attributes, $attributes['inviteUrl'], 'Accepteren');
                 break;
         }
 
@@ -433,32 +438,18 @@ class EmailTemplates
     }
 
     /**
+     * @param array $attributes the mail's attributes, for the accent color
      * @param string $url
      * @param string $label
      * @return HtmlString
      */
-    protected function renderButton($url, $label)
+    protected function renderButton(array $attributes, $url, $label)
     {
         return new HtmlString(\View::make('emails.blocks.button', [
             'url' => $url,
-            'label' => $label
+            'label' => $label,
+            'accentColor' => $attributes['accentColor'] ?? null
         ])->render());
-    }
-
-    /**
-     * @param string $template
-     * @param callable $valueOf key => replacement
-     * @param string[] $keys the placeholders that may be filled in
-     * @return string
-     */
-    protected function fill($template, callable $valueOf, array $keys)
-    {
-        return preg_replace_callback(self::PLACEHOLDER_PATTERN, function ($matches) use ($valueOf, $keys) {
-            if (!in_array($matches[1], $keys, true)) {
-                return $matches[0];
-            }
-            return $valueOf($matches[1]);
-        }, $template);
     }
 
     /**

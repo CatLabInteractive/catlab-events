@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\EmailLayouts;
 use App\Services\EmailTemplates;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -44,9 +45,14 @@ abstract class SendEmail
 
         if ($event->confirmation_email && view()->exists($event->confirmation_email)) {
             // A template picked for this one event wins over the organisation's.
+            // Its view extends the mail layout file, which now yields only the
+            // content, so it needs the layout around it like every other mail.
             $mail = [
                 'subject' => $templates->renderSubject($event->organisation, EmailTemplates::CONFIRMATION, $attributes),
-                'body' => \View::make($event->confirmation_email, $attributes)->render()
+                'body' => app(EmailLayouts::class)->wrap(
+                    $event->organisation,
+                    \View::make($event->confirmation_email, $attributes)->renderSections()['content'] ?? ''
+                )
             ];
         } else {
             $mail = $templates->render(
@@ -109,9 +115,8 @@ abstract class SendEmail
         );
 
         if ($content !== null) {
-            $mail['body'] = \View::make('emails.tickets.customContent', [
-                'content' => $content
-            ])->render();
+            // The admin edited only the text: it still goes out in the layout.
+            $mail['body'] = app(EmailLayouts::class)->wrap($event->organisation, $content);
         }
 
         $apiClient = app(\App\Services\CatLabApiClientFactory::class)->forUser($user);
