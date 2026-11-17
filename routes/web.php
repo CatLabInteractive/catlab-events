@@ -150,7 +150,16 @@ Route::get('author/{id}/{slug?}', 'AuthorController@view');
 Route::get('events/{event}/waitinglist', 'WaitingListController@waitingList');
 Route::get('events/{event}/waitinglist/subscribe', 'WaitingListController@addToWaitinglist')->middleware([ 'auth' ]);
 
+// One-page register form: public, guest checkout (spec 2026-11-17).
 Route::get('events/{event}/register', 'EventController@selectTicketCategory');
+Route::post('events/{event}/register', 'EventController@storeRegistration')
+    ->middleware([ 'throttle:10,1' ]);
+
+// Old per-category links: the one-page form with the category preselected.
+Route::get('events/{event}/register/{ticketCategoryId}', 'EventController@register');
+// The old team-select step posted here; a page still open at deploy lands
+// on the new form instead of a 405.
+Route::post('events/{event}/register/{ticketCategoryId}', 'EventController@register');
 
 Route::get('status', 'StatusController@status')
     ->name('status');
@@ -160,13 +169,11 @@ Route::group([
 ], function() {
 
     Route::get('events/{event}/register-auth', 'EventController@authSelectTicketCategory');
-    Route::get('events/{event}/register/{ticketCategoryId}', 'EventController@register');
-
-    Route::post('events/{event}/register/{ticketCategoryId}', 'EventController@confirmRegister');
     Route::post('events/{event}/register/{ticketCategoryId}/process', 'EventController@processRegister');
 
     Route::get('orders', 'OrderController@index');
     Route::get('orders/{id}', 'OrderController@view');
+    Route::get('orders/{id}/claim', 'OrderController@claim');
 
     Route::get('catlabaccount/{remotePath?}', 'CatLabAccountController@redirect')
         ->where('remotePath', '(.*)');

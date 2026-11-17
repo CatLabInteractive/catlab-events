@@ -27,13 +27,7 @@
             <div class="alert alert-danger order-thanks-retry">
                 <p><strong>Oh nee!</strong> De betaling is mislukt. Er werd niets aangerekend.</p>
 
-                <form method="POST" action="{{ $retryFormAction }}" accept-charset="UTF-8">
-                    @csrf
-                    @foreach($retryFormInput as $k => $v)
-                        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                    @endforeach
-                    <input type="submit" value="Probeer het opnieuw" class="btn btn-danger">
-                </form>
+                <a href="{{ $retryUrl }}" class="btn btn-danger">Probeer het opnieuw</a>
             </div>
         @endif
 

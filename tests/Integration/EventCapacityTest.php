@@ -66,7 +66,7 @@ class EventCapacityTest extends IntegrationTestCase
         $category = $event->ticketCategories()->firstOrFail();
 
         $this->actingAs($this->createUser())
-            ->get("/events/{$event->id}/register/{$category->id}")
+            ->get("/events/{$event->id}/register?category={$category->id}")
             ->assertStatus(200);
     }
 }

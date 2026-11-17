@@ -71,6 +71,32 @@ class Group extends \CatLab\Charon\Laravel\Database\Model implements EuklesModel
     }
 
     /**
+     * A team created through guest checkout has no members until its buyer
+     * claims it (after logging in): only then do they become its admin.
+     * @return bool
+     */
+    public function hasMembers()
+    {
+        return $this->members()->whereNotNull('user_id')->exists();
+    }
+
+    /**
+     * @param User $user
+     * @return GroupMember
+     */
+    public function addAdmin(User $user)
+    {
+        $member = new GroupMember([ 'role' => \App\Enum\GroupMemberRoles::ADMIN ]);
+        $member->user()->associate($user);
+        $member->group()->associate($this);
+        $member->save();
+
+        $this->unsetRelation('members');
+
+        return $member;
+    }
+
+    /**
      * Check if a given user is an administrator.
      * @param $user
      * @return bool
