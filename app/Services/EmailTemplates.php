@@ -231,6 +231,7 @@ class EmailTemplates
      * @param EmailTemplate|MailSource|null $template a (not yet saved) version to render instead of the
      *      stored one, or the version to render whatever the event and organisation have stored
      * @param EmailLayout|null $layout a (not yet saved) layout to render in instead of the stored one
+     * @param string|null $appendHtml trusted HTML added at the end of the content, inside the layout
      * @return string[] [ 'subject' => string, 'body' => string ]
      */
     public function render(
@@ -238,7 +239,8 @@ class EmailTemplates
         $type,
         array $attributes,
         EmailTemplate|MailSource|null $template = null,
-        ?EmailLayout $layout = null
+        ?EmailLayout $layout = null,
+        ?string $appendHtml = null
     ) {
         $layouts = app(EmailLayouts::class);
 
@@ -264,6 +266,10 @@ class EmailTemplates
         } else {
             $subject = $this->renderSubject($organisation, $type, $attributes, $source->subject);
             $content = $this->renderContent($organisation, $type, $attributes, $source->content ?? '');
+        }
+
+        if ($appendHtml !== null) {
+            $content .= $appendHtml;
         }
 
         return [

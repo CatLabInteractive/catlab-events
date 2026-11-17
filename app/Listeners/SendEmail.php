@@ -45,12 +45,11 @@ abstract class SendEmail
         $mail = app(EmailTemplates::class)->render(
             $event->organisation,
             $order->play_link ? EmailTemplates::CONFIRMATION_PLAY_LINK : EmailTemplates::CONFIRMATION,
-            $attributes
+            $attributes,
+            null,
+            null,
+            $appendHtml
         );
-
-        if ($appendHtml !== null) {
-            $mail['body'] .= $appendHtml;
-        }
 
         $sender = $this->getSender($user, $order);
         if (!$sender) {

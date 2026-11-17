@@ -344,6 +344,27 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertStringContainsString(action('OrderController@claim', [ $order->id ]), $mail['body']);
     }
 
+    public function testTheClaimBlockSitsInsideTheMailCardNotAfterTheDocument()
+    {
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+        $this->createUser();
+
+        $this->guestPost($event, $category, [ 'team' => 'De Slimmeriken' ])->assertRedirect();
+        $order = Order::query()->firstOrFail();
+
+        $this->catlabApi->orderStatus = 'ACCEPTED';
+        $this->get("/orders/{$order->id}/sync?sig=" . $order->syncSignature())->assertStatus(200);
+
+        $body = $this->catlabApi->sendEmailCalls[0]['body'];
+        $claimAt = strpos($body, 'Beheer je team.');
+        $this->assertNotFalse($claimAt);
+        $this->assertSame(1, substr_count($body, '</html>'));
+        $this->assertLessThan(strpos($body, '</html>'), $claimAt);
+        // The layout's footer cell comes after the content cell.
+        $this->assertLessThan(strpos($body, 'padding:24px 24px 8px'), $claimAt);
+    }
+
     public function testLoggedInUserCanPickAnExistingTeamOrTypeANewOne()
     {
         $event = $this->teamEvent();
