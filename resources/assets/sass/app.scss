@@ -304,3 +304,301 @@ $ticket-muted: #777480;
   .order-ticket-poster strong { font-size: 22px; }
   .order-ticket-rows { gap: 12px 14px; }
 }
+
+/*
+ * Register form (events/{id}/register). Mobile first: one column, big tap
+ * targets, 16px inputs (smaller makes iOS zoom in on focus).
+ */
+$rf-pink: #ff0763;
+$rf-dark: #1c1c24;
+$rf-line: #d4d4da;
+$rf-muted: #6b6875;
+$rf-soft: #f6f6f8;
+
+.rf {
+  max-width: 560px;
+  margin: 0 0 40px;
+  font-size: 16px;
+  color: $rf-dark;
+
+  *, *:before, *:after { box-sizing: border-box; }
+
+  a:not(.rf-button) { color: $rf-pink; text-decoration: underline; }
+}
+
+.rf-title {
+  font-size: 22px;
+  font-weight: 900;
+  margin: 0 0 20px;
+  color: $rf-dark;
+}
+
+.rf-alert {
+  background: $rf-soft;
+  border-left: 4px solid $rf-muted;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+
+  ul { margin: 0; padding-left: 18px; }
+}
+
+.rf-alert-error {
+  background: #fff1f4;
+  border-left-color: $rf-pink;
+}
+
+.rf-returning {
+  background: $rf-soft;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 28px;
+
+  p { margin: 0 0 12px; }
+
+  .rf-returning-first {
+    margin: 12px 0 0;
+    font-size: 14px;
+    color: $rf-muted;
+  }
+}
+
+/* Steps: numbered with a CSS counter, so leaving out the team step renumbers. */
+.register-one-page { counter-reset: rf-step; }
+
+.rf-step {
+  border: 0;
+  margin: 0 0 32px;
+  padding: 0;
+  min-width: 0;
+
+  .rf-field:last-child { margin-bottom: 0; }
+  counter-increment: rf-step;
+}
+
+.rf-step-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: $rf-dark;
+
+  &:before {
+    content: counter(rf-step);
+    flex: 0 0 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background: $rf-pink;
+    color: #fff;
+    font-size: 14px;
+  }
+}
+
+/* Ticket choice: each option is a card you tap anywhere on. */
+.rf-choices {
+  display: grid;
+  gap: 10px;
+}
+
+.rf-choice {
+  position: relative;
+  display: block;
+  margin: 0;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.rf-choice-input {
+  position: absolute;
+  top: 50%;
+  margin-top: -10px !important;
+  left: 16px;
+  width: 20px;
+  height: 20px;
+  accent-color: $rf-pink;
+}
+
+.rf-choice-body {
+  display: block;
+  padding: 14px 16px 14px 48px;
+  border: 2px solid $rf-line;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color .15s, background-color .15s;
+}
+
+.rf-choice-input:checked + .rf-choice-body {
+  border-color: $rf-pink;
+  background: #fff7fa;
+}
+
+.rf-choice-input:focus-visible + .rf-choice-body {
+  outline: 3px solid rgba($rf-pink, .35);
+  outline-offset: 2px;
+}
+
+.rf-choice-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.rf-choice-name { font-weight: 700; }
+.rf-choice-price { font-weight: 700; white-space: nowrap; }
+
+.rf-choice-meta,
+.rf-choice-warning {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: $rf-muted;
+}
+
+.rf-choice-warning { color: $rf-pink; font-weight: 700; }
+
+/* Text fields: label on top, a real box around the input. */
+.rf-field { margin-bottom: 16px; }
+
+.rf-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: $rf-dark;
+}
+
+.rf-optional {
+  font-weight: normal;
+  color: $rf-muted;
+  font-size: 14px;
+}
+
+.rf-input {
+  display: block;
+  width: 100%;
+  height: 50px;
+  padding: 0 14px;
+  font-size: 16px;
+  color: $rf-dark;
+  background: #fff;
+  border: 2px solid $rf-line;
+  border-radius: 8px;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus {
+    outline: none;
+    border-color: $rf-pink;
+    box-shadow: 0 0 0 3px rgba($rf-pink, .2);
+  }
+}
+
+.rf-input-error { border-color: $rf-pink; background: #fff7fa; }
+
+select.rf-input {
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%231c1c24' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.rf-help {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: $rf-muted;
+}
+
+.rf-signed-in {
+  background: $rf-soft;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+
+.rf-more {
+  margin-top: 12px;
+
+  summary {
+    cursor: pointer;
+    color: $rf-pink;
+    font-size: 15px;
+    padding: 6px 0;
+  }
+
+  &[open] summary { margin-bottom: 10px; }
+}
+
+.rf-captcha {
+  margin: 0 0 24px;
+  min-height: 78px;
+}
+
+.rf-button {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: 2px solid $rf-pink;
+  border-radius: 8px;
+  background: $rf-pink;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+
+  &:hover, &:focus {
+    background: darken($rf-pink, 8%);
+    border-color: darken($rf-pink, 8%);
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
+.rf-button-secondary {
+  background: #fff;
+  color: $rf-pink;
+
+  &:hover, &:focus { background: $rf-pink; border-color: $rf-pink; }
+}
+
+.rf-submit { font-size: 18px; }
+
+.rf-fineprint {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $rf-muted;
+
+  p { margin: 0 0 8px; }
+}
+
+.rf-login {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid $rf-line;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .rf-title { font-size: 26px; }
+
+  .rf-returning {
+    padding: 20px;
+
+    .rf-button { display: inline-block; width: auto; }
+  }
+}

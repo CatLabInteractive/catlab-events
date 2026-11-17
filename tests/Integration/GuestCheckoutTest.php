@@ -27,7 +27,6 @@ class GuestCheckoutTest extends IntegrationTestCase
         return $this->post("/events/{$event->id}/register", array_merge([
             'category' => $category->id,
             'email' => 'guest@example.test',
-            'email_confirmation' => 'guest@example.test',
         ], $extra));
     }
 
@@ -50,10 +49,28 @@ class GuestCheckoutTest extends IntegrationTestCase
 
         $response->assertStatus(200);
         $response->assertSee('name="email"', false);
-        $response->assertSee('name="email_confirmation"', false);
+        $response->assertDontSee('name="email_confirmation"', false);
         $response->assertSee('action="' . action('EventController@storeRegistration', [ $event->id ]) . '"', false);
         $response->assertSee('Betalen');
         $response->assertSee(action('EventController@authSelectTicketCategory', [ $event->id ]), false);
+    }
+
+    public function testTicketsThatCannotBeBoughtAreNotListed()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $open = $this->createTicketCategory($event, 15.0);
+        $open->name = 'Open ticket';
+        $open->save();
+
+        $closed = $this->createTicketCategory($event, 10.0);
+        $closed->name = 'Closed ticket';
+        $closed->end_date = new \DateTime('-1 day');
+        $closed->save();
+
+        $response = $this->get("/events/{$event->id}/register");
+        $response->assertStatus(200);
+        $response->assertSee('Open ticket');
+        $response->assertDontSee('Closed ticket');
     }
 
     public function testLoggedInUserSeesNoEmailField()
@@ -260,14 +277,13 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);
     }
 
-    public function testMismatchedOrMissingAddressIsRefused()
+    public function testInvalidOrMissingAddressIsRefused()
     {
         $event = $this->createEvent($this->createOrganisation());
         $category = $this->createTicketCategory($event, 15.0);
 
-        $this->guestPost($event, $category, [ 'email_confirmation' => 'other@example.test' ])->assertSessionHasErrors('email');
-        $this->guestPost($event, $category, [ 'email' => 'nope', 'email_confirmation' => 'nope' ])->assertSessionHasErrors('email');
-        $this->guestPost($event, $category, [ 'email' => '', 'email_confirmation' => '' ])->assertSessionHasErrors('email');
+        $this->guestPost($event, $category, [ 'email' => 'nope' ])->assertSessionHasErrors('email');
+        $this->guestPost($event, $category, [ 'email' => '' ])->assertSessionHasErrors('email');
 
         $this->assertSame(0, Order::query()->count());
         $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);
@@ -363,6 +379,93 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->assertLessThan(strpos($body, '</html>'), $claimAt);
         // The layout's footer cell comes after the content cell.
         $this->assertLessThan(strpos($body, 'padding:24px 24px 8px'), $claimAt);
+    }
+
+    private function activeTeam(string $name, ?User $admin = null): Group
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $team = new Group();
+        $team->name = $name;
+        $team->save();
+        if ($admin) {
+            $team->addAdmin($admin);
+        }
+
+        $order = $category->createOrder($team, null, $admin ?: $this->createUser());
+        $order->state = Order::STATE_ACCEPTED;
+        $order->save();
+
+        return $team;
+    }
+
+    public function testGuestCannotTakeTheNameOfAnActiveTeam()
+    {
+        $this->activeTeam('De Kwisbrains');
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+        $before = Order::query()->count();
+
+        $response = $this->guestPost($event, $category, [ 'team' => 'De Kwisbrains' ]);
+        $response->assertSessionHasErrors();
+        $this->assertStringContainsString('Log in', implode(' ', session('errors')->all()));
+
+        $this->assertSame($before, Order::query()->count());
+        $this->assertSame(1, Group::query()->where('name', '=', 'De Kwisbrains')->count());
+        $this->assertSame([], $this->catlabApi->findOrCreateUserCalls);
+    }
+
+    public function testRetryAfterAFailedGuestPaymentKeepsTheTeamName()
+    {
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $this->guestPost($event, $category, [ 'team' => 'Tweede Kans' ])->assertRedirect();
+        $first = Order::query()->firstOrFail();
+        $first->changeState(Order::STATE_CANCELLED);
+
+        $this->catlabApi->nextOrderId++;
+        $this->guestPost($event, $category, [ 'team' => 'Tweede Kans' ])->assertSessionHasNoErrors();
+        $this->assertSame(2, Order::query()->count());
+    }
+
+    public function testLoggedInUserTypingTheirOwnTeamNameRegistersThatTeam()
+    {
+        $user = $this->createUser();
+        $team = $this->activeTeam('Eigen Team', $user);
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $this->actingAs($user)->post("/events/{$event->id}/register", [ 'category' => $category->id, 'team' => 'Eigen Team' ])->assertRedirect();
+
+        $this->assertSame(1, Group::query()->where('name', '=', 'Eigen Team')->count());
+        $this->assertSame($team->id, (int)Order::query()->where('event_id', '=', $event->id)->firstOrFail()->group_id);
+    }
+
+    public function testLoggedInUserCannotTakeSomeoneElsesActiveTeamName()
+    {
+        $this->activeTeam('Andermans Team', $this->createUser());
+        $event = $this->teamEvent();
+        $category = $this->createTicketCategory($event, 15.0);
+
+        $this->actingAs($this->createUser())
+            ->post("/events/{$event->id}/register", [ 'category' => $category->id, 'team' => 'Andermans Team' ])
+            ->assertSessionHasErrors();
+        $this->assertSame(0, Order::query()->where('event_id', '=', $event->id)->count());
+    }
+
+    public function testReturningTeamsAreNudgedToLogIn()
+    {
+        $event = $this->teamEvent();
+        $this->createTicketCategory($event, 15.0);
+        $this->get("/events/{$event->id}/register")->assertSee('Inloggen en mijn team kiezen');
+        $this->actingAs($this->createUser())->get("/events/{$event->id}/register")->assertDontSee('Inloggen en mijn team kiezen');
+
+        $this->app['auth']->guard()->logout();
+        $package = $this->createEvent($this->createOrganisation());
+        $this->createTicketCategory($package, 15.0);
+        $this->get("/events/{$package->id}/register")->assertDontSee('Inloggen en mijn team kiezen');
     }
 
     public function testLoggedInUserCanPickAnExistingTeamOrTypeANewOne()

@@ -39,6 +39,9 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // Remember-me cookie lifetime in minutes (set on every login,
+            // see CatLabLoginController). Default: 2 years.
+            'remember' => (int) env('AUTH_REMEMBER_MINUTES', 60 * 24 * 365 * 2),
         ],
 
         'api' => [
