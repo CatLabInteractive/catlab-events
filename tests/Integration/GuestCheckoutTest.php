@@ -55,6 +55,19 @@ class GuestCheckoutTest extends IntegrationTestCase
         $response->assertSee(action('EventController@authSelectTicketCategory', [ $event->id ]), false);
     }
 
+    public function testTicketDescriptionIsShownOnTheForm()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $category = $this->createTicketCategory($event, 15.0);
+        $category->name = 'Single player';
+        $category->description = 'Je speelt de quiz alleen. Je hebt twee toestellen nodig.';
+        $category->save();
+
+        $this->get("/events/{$event->id}/register")
+            ->assertStatus(200)
+            ->assertSee('Je speelt de quiz alleen. Je hebt twee toestellen nodig.');
+    }
+
     public function testTicketsThatCannotBeBoughtAreNotListed()
     {
         $event = $this->createEvent($this->createOrganisation());
@@ -481,10 +494,32 @@ class GuestCheckoutTest extends IntegrationTestCase
         $this->actingAs($user)->post("/events/{$event->id}/register", [ 'category' => $category->id, 'group' => $team->id ])->assertRedirect();
         $this->assertSame($team->id, (int)Order::query()->firstOrFail()->group_id);
 
-        $this->actingAs($user)->post("/events/{$event->id}/register?cancelPendingOrders=1", [ 'category' => $category->id, 'group' => $team->id, 'team' => 'Nieuw' ])->assertRedirect();
+        $this->actingAs($user)->post("/events/{$event->id}/register?cancelPendingOrders=1", [ 'category' => $category->id, 'group' => 'new', 'team' => 'Nieuw' ])->assertRedirect();
         $new = Group::query()->where('name', '=', 'Nieuw')->firstOrFail();
         $this->assertTrue($new->hasMembers());
         $this->assertSame($user->id, (int)$new->members()->first()->user_id);
+
+        // "Nieuw team" without a name is refused.
+        $this->actingAs($user)->post("/events/{$event->id}/register?cancelPendingOrders=1", [ 'category' => $category->id, 'group' => 'new', 'team' => '' ])
+            ->assertSessionHasErrors('team');
+    }
+
+    public function testLoggedInUserGetsTheirTeamsWithANewTeamOption()
+    {
+        $event = $this->teamEvent();
+        $this->createTicketCategory($event, 15.0);
+        $user = $this->createUser();
+        $team = new Group();
+        $team->name = 'Bestaand';
+        $team->save();
+        $team->addAdmin($user);
+
+        $response = $this->actingAs($user)->get("/events/{$event->id}/register");
+        $response->assertSee('<option value="' . $team->id . '"', false);
+        $response->assertSee('<option value="new"', false);
+        $response->assertSee('+ Nieuw team…');
+        $response->assertSee('<optgroup label="Je teams">', false);
+        $response->assertDontSee('Of schrijf een nieuw team in');
     }
 
     public function testClaimMakesTheBuyerTeamAdminAndRefusesAnyoneElse()

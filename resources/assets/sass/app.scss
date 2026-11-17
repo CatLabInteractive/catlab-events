@@ -317,7 +317,7 @@ $rf-soft: #f6f6f8;
 
 .rf {
   max-width: 560px;
-  margin: 0 0 40px;
+  margin: 0 auto 40px;
   font-size: 16px;
   color: $rf-dark;
 
@@ -454,6 +454,14 @@ $rf-soft: #f6f6f8;
 .rf-choice-name { font-weight: 700; }
 .rf-choice-price { font-weight: 700; white-space: nowrap; }
 
+.rf-choice-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: $rf-dark;
+}
+
 .rf-choice-meta,
 .rf-choice-warning {
   display: block;
@@ -516,6 +524,15 @@ select.rf-input {
   margin: 6px 0 0;
   font-size: 14px;
   color: $rf-muted;
+}
+
+.rf-new-team {
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff7fa;
+  border: 2px dashed rgba($rf-pink, .45);
+
+  &[hidden] { display: none; }
 }
 
 .rf-signed-in {

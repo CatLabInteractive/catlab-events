@@ -512,13 +512,12 @@ class EventController extends Controller
 
         $rules = [
             'category' => 'required|integer',
-            'group' => 'nullable|integer',
+            'group' => [ 'nullable', 'regex:/^(new|\d+)$/' ],
             'uitpas' => 'nullable|string|max:64',
         ];
 
-        // A logged-in user picks one of their teams, or types a new name
-        // (which wins over the picked team).
-        $useExistingGroup = $user && $request->input('group') && trim((string)$request->input('team')) === '';
+        // A logged-in user picks one of their teams, or "new" and types a name.
+        $useExistingGroup = $user && ctype_digit((string)$request->input('group'));
         if ($event->doesRequireTeam() && !$useExistingGroup) {
             $rules['team'] = 'required|string|max:100';
         }

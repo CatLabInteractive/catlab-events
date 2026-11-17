@@ -74,6 +74,10 @@
                                     <span class="rf-choice-price">{{ $category->getFormattedTotalPrice() }}</span>
                                 </span>
 
+                                @if($category->description)
+                                    <span class="rf-choice-description">{{ $category->description }}</span>
+                                @endif
+
                                 @if($category->eventDates->count() > 0)
                                     <span class="rf-choice-meta">{{ $category->getDatesForDisplay() }}</span>
                                 @endif
@@ -97,20 +101,44 @@
                     <legend class="rf-step-title">Je team</legend>
 
                     @if($user && count($groups) > 0)
+                        {{-- An existing team is the default; "Nieuw team" reveals the name field. --}}
+                        <?php $_newTeam = old('group') === 'new'; ?>
                         <div class="rf-field">
-                            <label for="group" class="rf-label">Kies een van je teams</label>
+                            <label for="group" class="rf-label">Team</label>
                             <select name="group" id="group" class="rf-input">
-                                @foreach($groups as $value => $label)
-                                    <option value="{{ $value }}" @selected((string)old('group') === (string)$value)>{{ $label }}</option>
-                                @endforeach
+                                <optgroup label="Je teams">
+                                    @foreach($groups as $value => $label)
+                                        <option value="{{ $value }}" @selected((string)old('group') === (string)$value)>{{ $label }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <option disabled>──────────</option>
+                                <option value="new" @selected($_newTeam)>+ Nieuw team…</option>
                             </select>
                         </div>
 
-                        <div class="rf-field">
-                            <label for="team" class="rf-label">Of schrijf een nieuw team in <span class="rf-optional">optioneel</span></label>
-                            <input type="text" name="team" id="team" value="{{ $team }}" maxlength="100" class="rf-input @error('team') rf-input-error @enderror" autocomplete="off" aria-describedby="team-help">
-                            <p class="rf-help" id="team-help">Laat leeg om het gekozen team in te schrijven.</p>
+                        <div class="rf-field rf-new-team" id="new-team">
+                            <label for="team" class="rf-label">Naam van je nieuwe team</label>
+                            <input type="text" name="team" id="team" value="{{ $team }}" maxlength="100" class="rf-input @error('team') rf-input-error @enderror" autocomplete="off">
                         </div>
+
+                        <script>
+                            (function () {
+                                var select = document.getElementById('group');
+                                var field = document.getElementById('new-team');
+                                var input = document.getElementById('team');
+                                function sync() {
+                                    var isNew = select.value === 'new';
+                                    field.hidden = !isNew;
+                                    input.disabled = !isNew;
+                                    input.required = isNew;
+                                }
+                                select.addEventListener('change', function () {
+                                    sync();
+                                    if (select.value === 'new') { input.focus(); }
+                                });
+                                sync();
+                            })();
+                        </script>
                     @else
                         <div class="rf-field">
                             <label for="team" class="rf-label">Teamnaam</label>

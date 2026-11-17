@@ -53,6 +53,12 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->string()
             ->min(3);
 
+        // Shown under the ticket on the register form.
+        $this->field('description')
+            ->visible()
+            ->writeable(true, true)
+            ->string();
+
         $this->field('price')
             ->sortable()
             ->visible(true)
