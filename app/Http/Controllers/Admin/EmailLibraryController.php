@@ -285,7 +285,7 @@ class EmailLibraryController extends Controller
      * Needs eventEmails.event to be loaded.
      *
      * @param EmailTemplate $template
-     * @return string[]
+     * @return string[] name by event id
      */
     private function getEventNames(EmailTemplate $template)
     {
@@ -293,11 +293,11 @@ class EmailLibraryController extends Controller
         foreach ($template->eventEmails as $eventEmail) {
             // A soft-deleted event does not load.
             if ($eventEmail->event) {
-                $names[] = $eventEmail->event->name;
+                $names[$eventEmail->event->id] = $eventEmail->event->name;
             }
         }
 
-        return array_values(array_unique($names));
+        return $names;
     }
 
     /**
@@ -307,10 +307,7 @@ class EmailLibraryController extends Controller
      */
     private function getLibraryTypes()
     {
-        return array_values(array_diff(
-            array_keys($this->templates->getTypes()),
-            [ EmailTemplates::GROUP_INVITE ]
-        ));
+        return EmailTemplates::EVENT_TYPES;
     }
 
     /**

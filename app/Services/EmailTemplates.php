@@ -46,6 +46,34 @@ class EmailTemplates
     const GROUP_INVITE = 'groupInvite';
 
     /**
+     * The mails an event can have its own version of. The team invitation
+     * is not about an event.
+     */
+    const EVENT_TYPES = [
+        self::CONFIRMATION,
+        self::CONFIRMATION_PLAY_LINK,
+        self::CANCELLATION,
+        self::WAITING_LIST_INVITATION
+    ];
+
+    /**
+     * Every mail an organisation can rewrite.
+     */
+    const ALL_TYPES = [ ...self::EVENT_TYPES, self::GROUP_INVITE ];
+
+    /**
+     * A route constraint (`->where('type', ...)`) that matches exactly these types.
+     *
+     * @param string[] $types
+     * @return string
+     */
+    public static function routePattern(array $types = self::ALL_TYPES)
+    {
+        // The types are plain words, nothing to escape.
+        return implode('|', $types);
+    }
+
+    /**
      * @return array[] type => [ label, description, view, subject ]
      */
     protected function definitions()
@@ -200,7 +228,8 @@ class EmailTemplates
      * @param Organisation|null $organisation
      * @param string $type
      * @param array $attributes what the default Blade template needs
-     * @param EmailTemplate|null $template a (not yet saved) version to render instead of the stored one
+     * @param EmailTemplate|MailSource|null $template a (not yet saved) version to render instead of the
+     *      stored one, or the version to render whatever the event and organisation have stored
      * @param EmailLayout|null $layout a (not yet saved) layout to render in instead of the stored one
      * @return string[] [ 'subject' => string, 'body' => string ]
      */
@@ -208,7 +237,7 @@ class EmailTemplates
         ?Organisation $organisation,
         $type,
         array $attributes,
-        ?EmailTemplate $template = null,
+        EmailTemplate|MailSource|null $template = null,
         ?EmailLayout $layout = null
     ) {
         $layouts = app(EmailLayouts::class);
@@ -219,9 +248,13 @@ class EmailTemplates
 
         // A draft passed in is previewed as if it were the organisation's
         // version; otherwise the event's own mail may win (see resolve()).
-        $source = $template
-            ? new MailSource(MailSource::ORGANISATION, $template->subject, $template->content)
-            : $this->resolve($organisation, $attributes['event'] ?? null, $type);
+        if ($template instanceof MailSource) {
+            $source = $template;
+        } elseif ($template) {
+            $source = new MailSource(MailSource::ORGANISATION, $template->subject, $template->content);
+        } else {
+            $source = $this->resolve($organisation, $attributes['event'] ?? null, $type);
+        }
 
         if (!$source->hasText()) {
             // Only the content: the Blade views still extend the old layout
@@ -230,7 +263,7 @@ class EmailTemplates
             $content = \View::make($source->view, $attributes)->renderSections()['content'] ?? '';
         } else {
             $subject = $this->renderSubject($organisation, $type, $attributes, $source->subject);
-            $content = $this->renderContent($organisation, $type, $attributes, $source->content);
+            $content = $this->renderContent($organisation, $type, $attributes, $source->content ?? '');
         }
 
         return [
@@ -356,13 +389,16 @@ class EmailTemplates
     }
 
     /**
-     * Made-up (unsaved) data to preview a mail with.
+     * Data to preview a mail with. The player, team, order and links are
+     * made up (unsaved). The event is made up too, unless one is passed:
+     * then the real event and its first ticket category are used.
      *
      * @param Organisation $organisation
      * @param string $type
+     * @param Event|null $realEvent
      * @return array
      */
-    public function getSampleAttributes(Organisation $organisation, $type)
+    public function getSampleAttributes(Organisation $organisation, $type, ?Event $realEvent = null)
     {
         $this->getDefinition($type);
 
@@ -397,6 +433,17 @@ class EmailTemplates
         $ticketCategory->name = 'Standaard ticket';
         $ticketCategory->setRelation('eventDates', collect([ $date ]));
 
+        if ($realEvent) {
+            $event = $realEvent;
+
+            $realCategory = $event->getTicketCategoriesChronologically()->first();
+            if ($realCategory) {
+                $ticketCategory = $realCategory;
+            } else {
+                $ticketCategory->setRelation('eventDates', $event->eventDates);
+            }
+        }
+
         $order = new Order();
         $order->play_link = 'https://example.com/speel/VOORBEELD';
         $order->setRelation('event', $event);
@@ -408,7 +455,7 @@ class EmailTemplates
                 return [
                     'event' => $event,
                     'user' => $user,
-                    'url' => action('EventController@selectTicketCategory', [ 0, 'wt' => 'VOORBEELD' ])
+                    'url' => action('EventController@selectTicketCategory', [ $event->id ?: 0, 'wt' => 'VOORBEELD' ])
                 ];
 
             case self::GROUP_INVITE:

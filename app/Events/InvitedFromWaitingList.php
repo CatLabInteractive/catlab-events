@@ -130,7 +130,7 @@ class InvitedFromWaitingList
                 $event->organisation,
                 EmailTemplates::WAITING_LIST_INVITATION,
                 $attributes,
-                $source->content
+                $source->content ?? ''
             );
         }
 

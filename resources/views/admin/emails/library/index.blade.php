@@ -35,8 +35,8 @@
                     <td>{{ $labels[$template->type] ?? $template->type }}</td>
                     <td>{{ $template->updated_at ? $template->updated_at->format('d/m/Y H:i') : '' }}</td>
                     <td>
-                        @forelse($events[$template->id] as $name)
-                            {{ $name }}@if(!$loop->last), @endif
+                        @forelse($events[$template->id] as $eventId => $name)
+                            <a href="{{ action('Admin\EventEmailController@index', [ $eventId ]) }}">{{ $name }}</a>@if(!$loop->last), @endif
                         @empty
                             <span class="text-muted">Nog niet gebruikt</span>
                         @endforelse
