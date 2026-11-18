@@ -224,7 +224,7 @@ class EventController extends BaseAdminController
     public function exportMembers($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
 
         $ticketCategories = $event->getTicketCategoriesChronologically();
 
@@ -281,7 +281,7 @@ class EventController extends BaseAdminController
     public function exportSales($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $out) = $this->prepareExportSales($event);
 
         return $this->outputCsv(
@@ -294,7 +294,7 @@ class EventController extends BaseAdminController
     public function exportSalesTimeline($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $out) = $this->prepareExportSalesOverTime($event);
 
         return $this->outputCsv(
@@ -307,7 +307,7 @@ class EventController extends BaseAdminController
     public function exportClearing($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $teams, $sumTotal, $columnsSum) = $this->prepareExportSales($event, true);
 
         $organisation = $event->organisation;
@@ -530,5 +530,19 @@ class EventController extends BaseAdminController
             200,
             $headers
         );
+    }
+
+    /**
+     * An event of an organisation the user administers; 404 otherwise.
+     * @param $eventId
+     * @return Event
+     */
+    private function findEditableEvent($eventId)
+    {
+        $event = Event::findOrFail($eventId);
+        if (!\Auth::user() || !\Auth::user()->can('edit', $event)) {
+            abort(404);
+        }
+        return $event;
     }
 }

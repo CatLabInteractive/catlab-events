@@ -432,7 +432,12 @@ class WaitingListController extends Controller
      */
     private function getEvent($eventId)
     {
-        return Event::findOrFail($eventId);
+        // Only admins of the event's organisation.
+        $event = Event::findOrFail($eventId);
+        if (!\Auth::user() || !\Auth::user()->can('edit', $event)) {
+            abort(404);
+        }
+        return $event;
     }
 
     /**

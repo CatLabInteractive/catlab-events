@@ -77,6 +77,31 @@ class AdminSmokeTest extends IntegrationTestCase
     }
 
     /**
+     * Another organisation's event: its waiting list, exports and create
+     * forms are out of reach.
+     */
+    public function testAnotherOrganisationsEventPagesAreRefused()
+    {
+        $ours = $this->createOrganisation();
+        $admin = $this->adminOf($ours);
+        $theirs = $this->createOrganisation();
+        $event = $this->createEvent($theirs);
+
+        foreach ([
+            '/admin/events/' . $event->id . '/waitinglist',
+            '/admin/events/' . $event->id . '/export/members',
+            '/admin/events/' . $event->id . '/export/sales',
+            '/admin/events/' . $event->id . '/export/clearing',
+            '/admin/events/' . $event->id . '/export/salesovertime',
+        ] as $url) {
+            $this->actingAs($admin)->get($url)->assertStatus(404);
+        }
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/ticketCategories/create')->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/eventDates/create')->assertStatus(403);
+    }
+
+    /**
      * The event form comes in sections, and the admin speaks Dutch.
      */
     public function testTheEventFormIsGroupedAndInDutch()

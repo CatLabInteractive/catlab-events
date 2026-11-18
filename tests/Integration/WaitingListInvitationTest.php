@@ -28,12 +28,15 @@ class WaitingListInvitationTest extends IntegrationTestCase
     {
         parent::setUp();
 
-        $this->event = $this->createEvent($this->createOrganisation());
+        $organisation = $this->createOrganisation();
+        $this->event = $this->createEvent($organisation);
         $this->createTicketCategory($this->event, 0.0);
 
+        // The waiting list is for admins of the event's organisation.
         $this->admin = $this->createUser();
         $this->admin->admin = 1;
         $this->admin->save();
+        $organisation->users()->attach($this->admin, [ 'role' => 10 ]);
     }
 
     /**

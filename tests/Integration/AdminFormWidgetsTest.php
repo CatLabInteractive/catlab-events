@@ -331,4 +331,56 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $this->assertStringNotContainsString('script', $description);
         $this->assertStringNotContainsString('onclick', $description);
     }
+
+    /**
+     * Existing content survives a save: anchors (the series FAQ link looks
+     * for id="faq"), embedded players; an emptied editor is stored empty.
+     */
+    public function testHtmlFieldsKeepAnchorsAndEmbedsAndStoreEmptyAsEmpty()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $save = function (string $description) use ($admin, $series) {
+            $this->actingAs($admin)->put('/admin/series/' . $series->id, [
+                'fields' => [
+                    'slug' => $series->slug,
+                    'name' => $series->name,
+                    'active' => '1',
+                    'description' => $description,
+                ],
+            ])->assertRedirect();
+            return $series->fresh()->description;
+        };
+
+        $description = $save('<h2 id="faq">FAQ</h2><iframe src="https://www.youtube.com/embed/abc"></iframe><iframe src="https://evil.example/x"></iframe>');
+        $this->assertStringContainsString('<h2 id="faq">', $description);
+        $this->assertStringContainsString('src="https://www.youtube.com/embed/abc"', $description);
+        $this->assertStringNotContainsString('evil.example', $description);
+        $this->assertTrue($series->fresh()->hasFaq());
+
+        $this->assertSame('', (string) $save('<p><br></p>'));
+        $this->assertSame('', (string) $save(''));
+    }
+
+    /**
+     * The public team page lists members and scores as tabs.
+     */
+    public function testTheTeamPageRenders()
+    {
+        $this->createOrganisation();
+        $user = $this->createUser();
+
+        $this->actingAs($user)->post('/groups', [ 'fields' => [ 'name' => 'De Quizvogels' ] ]);
+        $group = \App\Models\Group::where('name', 'De Quizvogels')->firstOrFail();
+
+        $this->actingAs($user)->get('/groups/' . $group->id)
+            ->assertStatus(200)
+            ->assertSee('De Quizvogels')
+            ->assertSee('?tab=members', false);
+
+        $this->actingAs($user)->get('/groups/' . $group->id . '?tab=members')
+            ->assertStatus(200);
+    }
 }
