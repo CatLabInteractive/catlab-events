@@ -15,7 +15,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="oPD8Eleu4afQxa2E9SomFw7viXKuq8lYRj3zz7CJ">
+<meta name="csrf-token" content="N9BJP7kfDODfs8AIRXc8beSHtnnI4Mouwh2AKaxh">
 
             <title>    Pubquiz
  – De Quizfabriek</title>
@@ -59,6 +59,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet" />
 <link href="../../../css/app.css" rel="stylesheet" type="text/css" />
+<script src="../../../js/kv.js" defer></script>
     
     <style>:root{--kv-c0:#61cc6f;--kv-c0-text:#1f3326;--kv-c1:#5e2fff;--kv-c1-text:#ffffff;--kv-c2:#fcc765;--kv-c2-text:#1f3326;--kv-c3:#bf8076;--kv-c3-text:#1f3326;--kv-c4:#4a6a9a;--kv-c4-text:#ffffff;--kv-c5:#58998d;--kv-c5-text:#1f3326;--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-0{--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-1{--kv-field:#5e2fff;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-2{--kv-field:#fcc765;--kv-field-2:#5e2fff;--kv-on-field:#1f3326}.kv-field-3{--kv-field:#bf8076;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}.kv-field-4{--kv-field:#4a6a9a;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-5{--kv-field:#58998d;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}</style>
     <meta property="og:image" content="https://www.quizfabriek.be/images/share/QuizWitz-Backstay-event.jpg" />
@@ -91,10 +92,10 @@
 <!-- End Google Tag Manager -->
 </head>
 <body class="kv-site kv-page kv-field-2">
-    
-    <div class="body-inner compact">
+    <a class="kv-skip" href="#main">Naar de inhoud</a>
 
-        <header id="header" class="kv-header">
+    
+    <header id="header" class="kv-header">
     <div class="kv-header-inner">
 
         <a class="kv-header-logo" href="../../../">
@@ -139,59 +140,8 @@
     </div>
 </header>
 
-<script>
-    (function () {
-        var header = document.getElementById('header');
-        if (!header) {
-            return;
-        }
-        var button = header.querySelector('.kv-nav-button');
-        var groups = header.querySelectorAll('.kv-nav-group');
 
-        function setGroup(group, open) {
-            group.classList.toggle('is-open', open);
-            group.querySelector('.kv-nav-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-        }
-
-        function closeGroups(except) {
-            Array.prototype.forEach.call(groups, function (group) {
-                if (group !== except) {
-                    setGroup(group, false);
-                }
-            });
-        }
-
-        if (button) {
-            button.addEventListener('click', function () {
-                var open = !header.classList.contains('kv-nav-open');
-                header.classList.toggle('kv-nav-open', open);
-                button.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-        }
-
-        Array.prototype.forEach.call(groups, function (group) {
-            group.querySelector('.kv-nav-toggle').addEventListener('click', function (e) {
-                e.stopPropagation();
-                closeGroups(group);
-                setGroup(group, !group.classList.contains('is-open'));
-            });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!header.contains(e.target)) {
-                closeGroups(null);
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeGroups(null);
-            }
-        });
-    })();
-</script>
-
-
+    <main id="main" tabindex="-1">
                             <div class="kv-pagehead kv-pagehead-event">
         <div class="kv-wrap">
                             <p class="kv-series"><i aria-hidden="true"></i>Quizavonden</p>
@@ -199,12 +149,9 @@
                             <p class="kv-facts"><span>Woensdag 30 december 2026, 20:00</span><span>Zaal De Kring, Gent</span></p>
                     </div>
     </div>
-        
-        <section>
-            <div class="container">
-
-                
-                    <section class="kv-sec kv-sec-form">
+    
+    
+                <section class="kv-sec kv-sec-form">
         <div class="kv-wrap">
             
 <div class="rf">
@@ -225,7 +172,7 @@
             </div>
         
         <form action="./" accept-charset="UTF-8" class="register-one-page" method="get">
-            <input type="hidden" name="_token" value="oPD8Eleu4afQxa2E9SomFw7viXKuq8lYRj3zz7CJ" autocomplete="off">
+            <input type="hidden" name="_token" value="N9BJP7kfDODfs8AIRXc8beSHtnnI4Mouwh2AKaxh" autocomplete="off">
             
             <fieldset class="rf-step">
                 <legend class="rf-step-title">Kies je ticket</legend>
@@ -303,15 +250,9 @@
 
         </div>
     </section>
-            </div>
-        </section>
+                </main>
 
-        <section>
-            <div class="container">
-                            </div>
-        </section>
-
-        <footer id="footer" class="footer kv-footer">
+    <footer id="footer" class="footer kv-footer">
         <div class="kv-wrap">
             <div class="kv-footer-grid">
                 <div>
@@ -352,17 +293,6 @@
         </div>
 
     </footer>
-
-    <script type="text/javascript" src="../../../js/app.js"></script>
-    <script type="text/javascript">
-        var myLazyLoad = new LazyLoad({
-            elements_selector: ".lazy"
-        });
-    </script>
-
-
-
-    </div>
 
 <div style="position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:4px 10px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font:12px/1.4 system-ui,sans-serif;pointer-events:none">Preview of #101 · demo data</div></body>
 </html>

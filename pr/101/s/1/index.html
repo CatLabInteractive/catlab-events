@@ -15,7 +15,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="apmzGfgMUcZR27dMyvBhgUwGdSwJNYfa4iAulPXR">
+<meta name="csrf-token" content="hexsMrutHmnV9s14y5oSsCopAQy0M5LqvMYx24wA">
 
             <title>Woonkamerquiz – De Quizfabriek</title>
     
@@ -58,6 +58,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet" />
 <link href="../../css/app.css" rel="stylesheet" type="text/css" />
+<script src="../../js/kv.js" defer></script>
     
     <style>:root{--kv-c0:#61cc6f;--kv-c0-text:#1f3326;--kv-c1:#5e2fff;--kv-c1-text:#ffffff;--kv-c2:#fcc765;--kv-c2-text:#1f3326;--kv-c3:#bf8076;--kv-c3-text:#1f3326;--kv-c4:#4a6a9a;--kv-c4-text:#ffffff;--kv-c5:#58998d;--kv-c5-text:#1f3326;--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-0{--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-1{--kv-field:#5e2fff;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-2{--kv-field:#fcc765;--kv-field-2:#5e2fff;--kv-on-field:#1f3326}.kv-field-3{--kv-field:#bf8076;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}.kv-field-4{--kv-field:#4a6a9a;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-5{--kv-field:#58998d;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}</style>
     <meta property="og:image" content="../../preview-assets/header__width_1200_height_630.jpg" />
@@ -130,9 +131,9 @@
 <!-- End Google Tag Manager -->
 </head>
 <body class="kv-site kv-page kv-field-1">
+    <a class="kv-skip" href="#main">Naar de inhoud</a>
 
-<div class="body-inner compact">
-
+    
     <header id="header" class="kv-header">
     <div class="kv-header-inner">
 
@@ -178,60 +179,9 @@
     </div>
 </header>
 
-<script>
-    (function () {
-        var header = document.getElementById('header');
-        if (!header) {
-            return;
-        }
-        var button = header.querySelector('.kv-nav-button');
-        var groups = header.querySelectorAll('.kv-nav-group');
 
-        function setGroup(group, open) {
-            group.classList.toggle('is-open', open);
-            group.querySelector('.kv-nav-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-        }
-
-        function closeGroups(except) {
-            Array.prototype.forEach.call(groups, function (group) {
-                if (group !== except) {
-                    setGroup(group, false);
-                }
-            });
-        }
-
-        if (button) {
-            button.addEventListener('click', function () {
-                var open = !header.classList.contains('kv-nav-open');
-                header.classList.toggle('kv-nav-open', open);
-                button.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-        }
-
-        Array.prototype.forEach.call(groups, function (group) {
-            group.querySelector('.kv-nav-toggle').addEventListener('click', function (e) {
-                e.stopPropagation();
-                closeGroups(group);
-                setGroup(group, !group.classList.contains('is-open'));
-            });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!header.contains(e.target)) {
-                closeGroups(null);
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeGroups(null);
-            }
-        });
-    })();
-</script>
-
-    
-    
+    <main id="main" tabindex="-1">
+                
 
     
             <div class="kv-hero kv-hero-tall  kv-hero-photo  kv-field-1">
@@ -288,44 +238,6 @@
 
 </div>
 
-    <script>
-        // Hero slideshow: a slow crossfade between the series photos. Each photo
-        // only loads just before it is shown; reduced motion keeps the first one.
-        (function () {
-            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduce) {
-                return;
-            }
-            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
-                var images = show.querySelectorAll('img');
-                var current = 0;
-
-                function prepare(img) {
-                    if (img.dataset.src) {
-                        img.srcset = img.dataset.srcset;
-                        img.src = img.dataset.src;
-                        delete img.dataset.src;
-                    }
-                }
-
-                prepare(images[1]);
-                setInterval(function () {
-                    if (document.hidden) {
-                        return;
-                    }
-                    var next = (current + 1) % images.length;
-                    var img = images[next];
-                    if (!img.complete) {
-                        return;
-                    }
-                    images[current].classList.remove('is-shown');
-                    img.classList.add('is-shown');
-                    current = next;
-                    prepare(images[(current + 1) % images.length]);
-                }, 6500);
-            });
-        })();
-    </script>
     
             <section class="kv-sec">
             <div class="kv-wrap">
@@ -441,8 +353,8 @@
         </div>
     </section>
 
+        </main>
 
-    
     <footer id="footer" class="footer kv-footer">
         <div class="kv-wrap">
             <div class="kv-footer-grid">
@@ -484,17 +396,6 @@
         </div>
 
     </footer>
-
-    <script type="text/javascript" src="../../js/app.js"></script>
-    <script type="text/javascript">
-        var myLazyLoad = new LazyLoad({
-            elements_selector: ".lazy"
-        });
-    </script>
-
-
-
-</div>
 
 <div style="position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:4px 10px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font:12px/1.4 system-ui,sans-serif;pointer-events:none">Preview of #101 · demo data</div></body>
 </html>
