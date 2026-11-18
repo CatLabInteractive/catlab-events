@@ -79,6 +79,37 @@ class MenuTest extends IntegrationTestCase
         $response->assertDontSee('href="http://localhost/over-ons/team"', false);
     }
 
+    public function testFooterPagesAppearInTheFooter()
+    {
+        $organisation = $this->createOrganisation();
+        $this->createPage($organisation, 'over-ons');
+
+        $contact = $this->createPage($organisation, 'over-ons/contact');
+        $contact->show_in_footer = true;
+        $contact->sort_order = 2;
+        $contact->save();
+
+        $privacy = $this->createPage($organisation, 'cookiebeleid');
+        $privacy->show_in_footer = true;
+        $privacy->sort_order = 1;
+        $privacy->save();
+
+        $draft = $this->createPage($organisation, 'concept', [], 'nl', false);
+        $draft->show_in_footer = true;
+        $draft->save();
+
+        $response = $this->get('/over-ons');
+        $response->assertStatus(200);
+        $response->assertSeeInOrder([
+            'id="footer"',
+            'href="http://localhost/cookiebeleid"', '>Page cookiebeleid (nl)</a>',
+            'href="http://localhost/over-ons/contact"',
+        ], false);
+        $response->assertDontSee('href="http://localhost/concept"', false);
+        // Footer pages are not menu pages.
+        $this->assertStringNotContainsString('cookiebeleid', explode('id="footer"', $response->getContent())[0]);
+    }
+
     public function testTheHomePageIsNotInTheMenu()
     {
         $organisation = $this->createOrganisation();

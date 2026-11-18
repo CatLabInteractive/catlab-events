@@ -58,6 +58,9 @@
                         @if($page->show_in_menu)
                             <span class="badge badge-light">in menu</span>
                         @endif
+                        @if($page->show_in_footer)
+                            <span class="badge badge-light">in footer</span>
+                        @endif
                     </td>
                     <td>
                         @if($main)

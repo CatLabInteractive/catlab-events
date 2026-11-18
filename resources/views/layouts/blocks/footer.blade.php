@@ -19,6 +19,19 @@
                     </ul>
                 </div>
 
+                {{-- CMS pages marked "toon in footer". --}}
+                @php($footerPages = app(\App\Cms\Menu::class)->footerItems(organisation(), $cmsLocale ?? null))
+                @if(count($footerPages) > 0)
+                    <div>
+                        <h4>{{ organisation()->name }}</h4>
+                        <ul>
+                            @foreach($footerPages as $footerPage)
+                                <li><a href="{{ $footerPage['url'] }}">{{ $footerPage['title'] }}</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <?php $footerSeries = organisation()->series()->active()->with('organisation')->get(); ?>
                 @if($footerSeries->count() > 0)
                     <div>

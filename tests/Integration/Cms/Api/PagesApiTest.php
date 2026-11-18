@@ -34,11 +34,13 @@ class PagesApiTest extends IntegrationTestCase
         $response = $this->actingAs($admin)->postJson('/api/v1/organisations/' . $organisation->id . '/pages', [
             'sort_order' => 3,
             'show_in_menu' => true,
+            'show_in_footer' => true,
         ]);
 
         $response->assertStatus(201);
         $response->assertJsonPath('sort_order', 3);
         $response->assertJsonPath('show_in_menu', true);
+        $response->assertJsonPath('show_in_footer', true);
 
         $page = Page::findOrFail($response->json('id'));
         $this->assertSame($organisation->id, (int) $page->organisation_id);

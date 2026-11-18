@@ -94,12 +94,49 @@ class Menu
     }
 
     /**
+     * The pages marked show_in_footer (any level) with a published
+     * translation in the locale, by sort_order. The home page is left out.
+     * @param Organisation $organisation
+     * @param string|null $locale
+     * @return array list of [ title, url ]
+     */
+    public function footerItems(Organisation $organisation, ?string $locale = null): array
+    {
+        $locale = in_array($locale, config('cms.locales'), true) ? $locale : config('cms.default_locale');
+
+        return Cache::remember(self::cacheKey($organisation->id, $locale) . ':footer', self::CACHE_TTL, function () use ($organisation, $locale) {
+            return PageTranslation::query()
+                ->select('page_translations.*')
+                ->join('pages', 'pages.id', '=', 'page_translations.page_id')
+                ->where('page_translations.organisation_id', '=', $organisation->id)
+                ->where('pages.organisation_id', '=', $organisation->id)
+                ->where('page_translations.locale', '=', $locale)
+                ->where('page_translations.is_published', '=', true)
+                ->where('pages.show_in_footer', '=', true)
+                ->whereNull('pages.deleted_at')
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('organisations')
+                        ->whereColumn('organisations.home_page_id', 'pages.id');
+                })
+                ->orderBy('pages.sort_order')
+                ->orderBy('pages.id')
+                ->get()
+                ->map(function (PageTranslation $translation) {
+                    return [ 'title' => $translation->title, 'url' => $translation->getUrl() ];
+                })
+                ->all();
+        });
+    }
+
+    /**
      * @param int $organisationId
      */
     public function forget(int $organisationId): void
     {
         foreach (config('cms.locales') as $locale) {
             Cache::forget(self::cacheKey($organisationId, $locale));
+            Cache::forget(self::cacheKey($organisationId, $locale) . ':footer');
         }
     }
 
