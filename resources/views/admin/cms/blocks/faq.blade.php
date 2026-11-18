@@ -1,0 +1,2 @@
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Titel', 'name' => $name . '[title]', 'value' => $data['title'] ?? '', 'error' => $error . '.title', 'max' => 120 ] ])
+@include('admin.cms.blocks._repeater', [ 'repeater' => [ 'key' => 'items', 'label' => 'Vragen', 'name' => $name, 'error' => $error, 'rows' => $data['items'] ?? [], 'max' => 50, 'row' => 'admin.cms.blocks._faq_row', 'add' => 'Vraag toevoegen' ] ])

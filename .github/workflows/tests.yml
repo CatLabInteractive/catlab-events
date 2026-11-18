@@ -58,6 +58,18 @@ jobs:
           DB_PASSWORD: root
         run: vendor/bin/phpunit -c phpunit.integration.xml
 
+      - name: Verify routes are cacheable
+        # Deploy runs `artisan route:cache` (build/upgrade.sh): a closure
+        # route, or a CMS route group that cannot be serialised, fails here
+        # instead of in production.
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_PASSWORD: root
+          DB_USERNAME: root
+          DB_DATABASE: catlab_events_test
+        run: php artisan route:cache && php artisan route:clear
+
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest

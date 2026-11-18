@@ -43,5 +43,18 @@ class AssetResourceDefinition extends BaseResourceDefinition
             ->required()
             ->visible(true)
             ->writeable(true, true);
+
+        $this->field('url')
+            ->string()
+            ->describe('Public URL of the original file. Read only.')
+            ->visible(true, true);
+
+        $this->field('width')
+            ->number()
+            ->visible();
+
+        $this->field('height')
+            ->number()
+            ->visible();
     }
 }

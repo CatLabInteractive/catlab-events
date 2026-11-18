@@ -46,7 +46,10 @@
                             @if($navOrganisation->competitions()->count() > 0)
                                 <li><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
                             @endif
-                            @if($navOrganisation->blog_url)
+                            @php($navBlogUrl = app(\App\Cms\Blog::class)->navigationUrl($navOrganisation, $cmsLocale ?? null))
+                            @if($navBlogUrl)
+                                <li><a href="{{ $navBlogUrl }}">{{ __('cms.blog') }}</a></li>
+                            @elseif($navOrganisation->blog_url)
                                 <li><a href="{{ $navOrganisation->blog_url }}">Blog <i class="fa fa-external-link" aria-hidden="true"></i></a></li>
                             @endif
                             @if($navOrganisation->support_email)

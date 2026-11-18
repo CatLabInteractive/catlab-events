@@ -128,6 +128,16 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        // The CMS page rendered at / (and /en, /fr); empty keeps the
+        // calendar homepage. Must be a page of this organisation
+        // (OrganisationController::beforeSaveEntity()).
+        $this->field('home_page_id')
+            ->number()
+            ->label('Startpagina')
+            ->describe('Id van de CMS-pagina die als startpagina getoond wordt (zie Pagina\'s). Leeg: de kalender.')
+            ->visible()
+            ->writeable();
+
         $this->field('footer_html')
             ->visible()
             ->writeable();
