@@ -24,10 +24,7 @@ jQuery(function($) {
 	/*  Mobile Menu
 	/* ----------------------------------------------------------- */
 
-	jQuery(".nav.navbar-nav li a").on("click", function() { 
-		jQuery(this).parent("li").find(".dropdown-menu").slideToggle();
-		jQuery(this).find("i").toggleClass("fa-angle-down fa-angle-up");
-	});
+	// The header menu is handled in layouts/blocks/header.blade.php.
 
 
 	/* ----------------------------------------------------------- */
@@ -51,37 +48,22 @@ jQuery(function($) {
 	/*  Event Map 
 	/* -----------------------------------------------------------*/
 
-	if ( $( '#map' ).length > 0 ) {
-
-	    var eventmap = $.parseJSON($('#map').attr('data-coordinates'));
-
-      $('#map')
-      .gmap3({
-         zoom: 16,
-         center: eventmap,
-         mapTypeId : google.maps.MapTypeId.ROADMAP,
-         scrollwheel: false
-      })
-
-      .marker({
-        position: eventmap
-      })
-
-      .infowindow({
-         position: eventmap,
-         content: $('#map').attr('data-address')
-      })
-
-      .then(function (infowindow) {
-         var map = this.get(0);
-         var marker = this.get(1);
-         marker.addListener('click', function() {
-            infowindow.open(map, marker);
-         });
-      });
+	// Plain Google Maps API: the old gmap3 plugin called the API's classes without
+	// 'new', which the current API no longer allows.
+	var mapElement = document.getElementById('map');
+	if (mapElement && window.google && google.maps) {
+		var eventPosition = JSON.parse(mapElement.getAttribute('data-coordinates'));
+		var eventMap = new google.maps.Map(mapElement, {
+			zoom: 16,
+			center: eventPosition,
+			scrollwheel: false
+		});
+		var eventMarker = new google.maps.Marker({ position: eventPosition, map: eventMap });
+		var eventInfo = new google.maps.InfoWindow({ content: mapElement.getAttribute('data-address') });
+		eventMarker.addListener('click', function () {
+			eventInfo.open(eventMap, eventMarker);
+		});
 	}
-
- 
 
 
 	/* ----------------------------------------------------------- */

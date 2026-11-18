@@ -29,7 +29,6 @@ mix
         'resources/assets/js/waypoints.min.js',
         'resources/assets/js/jquery.colorbox.js',
         //'resources/assets/js/smoothscroll.js',
-        'resources/assets/js/gmap3.js',
         'resources/assets/js/jquery.easypiechart.js',
         'resources/assets/js/custom.js',
         'resources/assets/js/lazyload.js',
