@@ -20,15 +20,7 @@
 
     <div class="body-inner compact">
 
-        <header id="header" class="header kv-header">
-            <div class="container">
-                <div class="row">
-
-                    @include('layouts.blocks.navigation')
-
-                </div><!--/ Row end -->
-            </div><!--/ Container end -->
-        </header><!--/ Header end -->
+        @include('layouts.blocks.header')
 
 
         @hasSection('banner')
