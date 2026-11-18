@@ -1,25 +1,37 @@
-<h3>Quiz kalender</h3>
-@if(!empty($cities))
-    <p>
-        Ben je op zoek naar een leuke groepsactiviteit in {{ implode(', ', $cities) }}
-        of weet je even niet wat te doen?
-        Wij organiseren vast de leukste quizzes van {{ implode(', ', $cities) }}!
-    </p>
-@endif
+<section class="kv-sec">
+    <div class="kv-wrap">
+        <h2 class="kv-sec-title">
+            Binnenkort
+            @if(!empty($cities))
+                <small>
+                    Op zoek naar een leuke groepsactiviteit in {{ implode(', ', $cities) }}?
+                    Wij organiseren vast de leukste quizzes van {{ implode(', ', $cities) }}!
+                </small>
+            @endif
+        </h2>
 
-@if (count($events) === 0)
-    <p>Er zijn nog geen evenementen gepland.</p>
-@else
-    @component('blocks.eventtable', [ 'events' => $events ])
-    @endcomponent
-@endif
+        @if (count($events) === 0)
+            <p class="kv-text">Er zijn nog geen evenementen gepland.</p>
+        @else
+            <div class="kv-cards">
+                @foreach($events as $v)
+                    @include('blocks.event-card', [ 'cardEvent' => $v ])
+                @endforeach
+            </div>
+        @endif
+    </div>
+</section>
 
 @if(isset($pastEvents))
-    <h3>Voorbije edities</h3>
-    @if (count($pastEvents) === 0)
-        <p>Er zijn geen voorbije edities.</p>
-    @else
-        @component('blocks.eventtable', [ 'events' => $pastEvents ])
-        @endcomponent
-    @endif
+    <section class="kv-sec">
+        <div class="kv-wrap">
+            <h2 class="kv-sec-title">Voorbije edities</h2>
+            @if (count($pastEvents) === 0)
+                <p class="kv-text">Er zijn geen voorbije edities.</p>
+            @else
+                @component('blocks.eventtable', [ 'events' => $pastEvents ])
+                @endcomponent
+            @endif
+        </div>
+    </section>
 @endif

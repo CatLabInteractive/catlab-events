@@ -73,6 +73,19 @@ class Series extends Model
         return $query->where('active', '=', 1);
     }
 
+    /**
+     * The colour field class this series uses in the site design (kv-field-0 to kv-field-3).
+     * @return string
+     */
+    public function getColourClass()
+    {
+        return 'kv-field-' . ($this->id % 4);
+    }
+
+    /**
+     * @param Event|null $focusEvent
+     * @return string
+     */
     public function getUrl(Event $focusEvent = null)
     {
         $parameters = [ $this->id, $this->slug ];

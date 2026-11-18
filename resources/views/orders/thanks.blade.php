@@ -19,8 +19,12 @@
     $playLink = $order->isAccepted() && $order->play_link && !($isPackage && $startsLater) ? $order->play_link : null;
 @endphp
 
+@section('bodyClass')kv-page {{ $event->getColourClass() }}@endsection
+
 @section('content')
 
+    <section class="kv-sec">
+    <div class="kv-wrap kv-wrap-narrow">
     <div class="order-thanks">
 
         @if($order->isCancelled())
@@ -33,9 +37,9 @@
 
         {{-- The ticket --}}
         <div class="order-ticket">
-            <div class="order-ticket-poster"
+            <div class="order-ticket-poster @if($event->poster) order-ticket-poster-image @endif"
                 @if($event->poster)
-                    style="background-image: linear-gradient(to bottom, rgba(28,28,36,.15), rgba(28,28,36,.85)), url('{{ $event->poster->getUrl([ 'width' => 800 ]) }}')"
+                    style="background-image: linear-gradient(to bottom, rgba(31,51,38,.15), rgba(31,51,38,.85)), url('{{ $event->poster->getUrl([ 'width' => 800 ]) }}')"
                 @endif
             >
                 <small>{{ $isPackage ? 'Quizpakket' : ($livestreamUrl ? 'Online quiz' : 'Live quiz') }}</small>
@@ -249,4 +253,6 @@
         </script>
     @endif
 
+    </div>
+    </section>
 @endsection

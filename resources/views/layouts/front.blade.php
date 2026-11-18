@@ -6,7 +6,7 @@
     @include('layouts.blocks.seo')
     @include('layouts.blocks.gtag')
 </head>
-<body>
+<body class="kv-site @yield('bodyClass')">
     @include('blocks.chatwoot', [ 'organisation' => organisation() ])
 
     <div id="fb-root"></div>
@@ -20,7 +20,7 @@
 
     <div class="body-inner compact">
 
-        <header id="header" class="header header-transparent">
+        <header id="header" class="header kv-header">
             <div class="container">
                 <div class="row">
 
@@ -34,23 +34,12 @@
         @hasSection('banner')
             @yield('banner')
         @else
-            <div id="page-banner-area" class="page-banner-area bg-overlay"
-                @if(isset($series) && $series->header)
-                    style="background-image:url('{{ $series->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
-                @else
-                    <?php $randomSeries = organisation()->getRandomSeries(); ?>
-                    @if($randomSeries && $randomSeries->header)
-                        style="background-image:url('{{ $randomSeries->header->getUrl([ 'width' => 1280, 'height' => 768 ]) }}')"
-                    @endif
-                @endif
-            >
-                <!-- Subpage title start -->
-                <div class="page-banner-title">
-                    <div class="container text-center">
-                        <h2>@yield('title')</h2>
-                    </div>
-                </div><!-- Subpage title end -->
-            </div><!-- Page Banner end -->
+            <?php $pageHeadClass = (isset($series) && $series instanceof \App\Models\Series) ? $series->getColourClass() : 'kv-field-0'; ?>
+            <div class="kv-pagehead {{ $pageHeadClass }}">
+                <div class="kv-wrap">
+                    <h1 class="kv-pagehead-title">@yield('title')</h1>
+                </div>
+            </div>
         @endif
 
         <section>

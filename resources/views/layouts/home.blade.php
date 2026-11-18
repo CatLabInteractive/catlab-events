@@ -6,12 +6,12 @@
     @include('layouts.blocks.seo')
     @include('layouts.blocks.gtag')
 </head>
-<body>
+<body class="kv-site @yield('bodyClass')">
 @include('blocks.chatwoot', [ 'organisation' => organisation() ])
 
 <div class="body-inner compact">
 
-    <header id="header" class="header header-transparent">
+    <header id="header" class="header kv-header">
         <div class="container">
             <div class="row">
 

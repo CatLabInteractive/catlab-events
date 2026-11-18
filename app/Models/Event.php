@@ -72,6 +72,18 @@ class Event extends Model implements EuklesModel
         'event_type'
     ];
 
+    /**
+     * The colour field class of this event's series (kv-field-0 when it has none).
+     * @return string
+     */
+    public function getColourClass()
+    {
+        return $this->series ? $this->series->getColourClass() : 'kv-field-0';
+    }
+
+    /**
+     * @return string
+     */
     public function getUrl()
     {
         return action('EventController@view', [ $this->id, Str::slug($this->name) ]);

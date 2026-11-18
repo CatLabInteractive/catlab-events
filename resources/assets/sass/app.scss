@@ -81,10 +81,10 @@ table .small {
 }
 
 /* Order thanks page: ticket stub + "what now" steps */
-$ticket-pink: #ff0763;
-$ticket-dark: #1c1c24;
-$ticket-line: #e4e4e8;
-$ticket-muted: #777480;
+$ticket-pink: #1f3326;
+$ticket-dark: #1f3326;
+$ticket-line: #d9d8cc;
+$ticket-muted: #5d6b60;
 
 .order-thanks {
   max-width: 560px;
@@ -108,7 +108,10 @@ $ticket-muted: #777480;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background: radial-gradient(120% 140% at 0% 0%, $ticket-pink 0%, #8b0b5e 45%, #2a1440 100%);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--kv-field, #78b46c);
+  color: $ticket-dark;
   background-size: cover;
   background-position: center;
 
@@ -208,9 +211,10 @@ $ticket-muted: #777480;
       line-height: 26px;
       text-align: center;
       border-radius: 50%;
-      border: 2px solid $ticket-pink;
-      background: #fff;
-      color: $ticket-pink;
+      border: 0;
+      line-height: 30px;
+      background: var(--kv-field, #78b46c);
+      color: $ticket-dark;
       font-weight: 900;
     }
 
@@ -309,11 +313,12 @@ $ticket-muted: #777480;
  * Register form (events/{id}/register). Mobile first: one column, big tap
  * targets, 16px inputs (smaller makes iOS zoom in on focus).
  */
-$rf-pink: #ff0763;
-$rf-dark: #1c1c24;
-$rf-line: #d4d4da;
-$rf-muted: #6b6875;
-$rf-soft: #f6f6f8;
+// Kleurveld palette (see _kleurveld.scss): ink is the accent, the series colour marks the steps.
+$rf-pink: #1f3326;
+$rf-dark: #1f3326;
+$rf-line: #d9d8cc;
+$rf-muted: #5d6b60;
+$rf-soft: #fbfaf5;
 
 .rf {
   max-width: 560px;
@@ -344,8 +349,8 @@ $rf-soft: #f6f6f8;
 }
 
 .rf-alert-error {
-  background: #fff1f4;
-  border-left-color: $rf-pink;
+  background: #fbfaf5;
+  border-left-color: #c4553a;
 }
 
 .rf-returning {
@@ -436,7 +441,7 @@ $rf-soft: #f6f6f8;
 
 .rf-choice-input:checked + .rf-choice-body {
   border-color: $rf-pink;
-  background: #fff7fa;
+  background: #fbfaf5;
 }
 
 .rf-choice-input:focus-visible + .rf-choice-body {
@@ -511,7 +516,7 @@ $rf-soft: #f6f6f8;
   }
 }
 
-.rf-input-error { border-color: $rf-pink; background: #fff7fa; }
+.rf-input-error { border-color: $rf-pink; background: #fbfaf5; }
 
 select.rf-input {
   padding-right: 40px;
@@ -529,7 +534,7 @@ select.rf-input {
 .rf-new-team {
   padding: 14px;
   border-radius: 10px;
-  background: #fff7fa;
+  background: #fbfaf5;
   border: 2px dashed rgba($rf-pink, .45);
 
   &[hidden] { display: none; }
@@ -620,578 +625,5 @@ select.rf-input {
   }
 }
 
-/*
- * Event page (events/{id}). Mobile first. A dark hero carries the poster,
- * the title, the key facts and the order button, so the call to action sits
- * at the top of the page. Posters come in any aspect ratio: see .ev-poster.
- */
-$ev-pink: #ff0763;
-$ev-dark: #1c1c24;
-$ev-line: #e4e4e8;
-$ev-muted: #6b6875;
-$ev-soft: #f6f6f8;
 
-.ev-hero {
-  position: relative;
-  overflow: hidden;
-  background: radial-gradient(120% 140% at 0% 0%, #8b0b5e 0%, #2a1440 55%, $ev-dark 100%);
-  color: #fff;
-  padding: 96px 0 28px;
-
-  .container { position: relative; z-index: 1; }
-}
-
-/* The series header, blurred and darkened so any photo works behind white text. */
-.ev-hero-bg {
-  position: absolute;
-  inset: -40px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(14px) saturate(1.2);
-  opacity: .55;
-
-  &:after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba($ev-dark, .55) 0%, rgba($ev-dark, .35) 40%, rgba($ev-dark, .9) 100%);
-  }
-}
-
-.ev-hero-grid {
-  display: grid;
-  gap: 18px;
-  align-items: center;
-}
-
-/*
- * A poster frame that works for any aspect ratio. The frame takes the poster's
- * ratio (set inline as --ev-poster-ratio, clamped), the image is contained,
- * never cropped, and a blurred copy of the poster fills what is left.
- */
-.ev-poster {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: var(--ev-poster-ratio, 1);
-  max-height: min(240px, 36vh);
-  overflow: hidden;
-  border-radius: 12px;
-  background: $ev-dark;
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .7);
-
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: transform .3s ease;
-  }
-
-  &:hover img, &:focus img { transform: scale(1.02); }
-
-  &:focus-visible {
-    outline: 3px solid rgba($ev-pink, .6);
-    outline-offset: 3px;
-  }
-}
-
-.ev-poster-backdrop {
-  position: absolute;
-  inset: -24px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(18px) brightness(.7);
-}
-
-.ev-poster-zoom {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 34px;
-  height: 34px;
-  line-height: 34px;
-  text-align: center;
-  border-radius: 50%;
-  background: rgba($ev-dark, .65);
-  color: #fff;
-  font-size: 14px;
-  opacity: .85;
-}
-
-.ev-kicker {
-  margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: lighten($ev-pink, 12%);
-
-  a { color: inherit; }
-  a:hover, a:focus { color: #fff; text-decoration: none; }
-}
-
-.ev-title {
-  margin: 0 0 12px;
-  font-size: 30px;
-  line-height: 1.1;
-  font-weight: 900;
-  color: #fff;
-  overflow-wrap: anywhere;
-}
-
-.ev-facts {
-  list-style: none;
-  margin: 0 0 16px;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-
-  li {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 11px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, .12);
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .fa { color: lighten($ev-pink, 12%); }
-}
-
-/* Price + order button: a white ticket stub on the dark hero. */
-.ev-cta {
-  position: relative;
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  background: #fff;
-  color: $ev-dark;
-  box-shadow: 0 16px 40px -20px rgba(0, 0, 0, .8);
-}
-
-.ev-cta-price {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 8px;
-  line-height: 1.2;
-
-  strike { color: $ev-muted; font-size: 16px; }
-}
-
-.ev-cta-price-label {
-  flex-basis: 100%;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $ev-muted;
-}
-
-.ev-cta-price-amount {
-  font-size: 26px;
-  font-weight: 900;
-}
-
-.ev-cta-price-unit { color: $ev-muted; font-size: 15px; }
-
-.ev-cta-price-details {
-  flex-basis: 100%;
-  margin-top: 4px;
-  font-size: 13px;
-  color: $ev-muted;
-}
-
-.ev-cta-secondary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-
-  .ev-button { flex: 1 1 auto; }
-}
-
-.ev-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 10px 18px;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-align: center;
-  transition: background-color .15s, border-color .15s, color .15s;
-
-  &:hover, &:focus { text-decoration: none; }
-
-  &:focus-visible {
-    outline: 3px solid rgba($ev-pink, .45);
-    outline-offset: 2px;
-  }
-}
-
-.ev-button-primary {
-  background: $ev-pink;
-  border-color: $ev-pink;
-  color: #fff;
-  font-size: 17px;
-  letter-spacing: .02em;
-
-  &:hover, &:focus {
-    background: darken($ev-pink, 8%);
-    border-color: darken($ev-pink, 8%);
-    color: #fff;
-  }
-
-  .fa { transition: transform .15s; }
-  &:hover .fa { transform: translateX(3px); }
-}
-
-.ev-button-ghost {
-  background: #fff;
-  border-color: $ev-line;
-  color: $ev-dark;
-  font-size: 15px;
-  min-height: 42px;
-
-  &:hover, &:focus {
-    border-color: $ev-pink;
-    color: $ev-pink;
-  }
-}
-
-/* Body: description and credits, with the ticket list beside it on desktop. */
-.ev-body {
-  display: grid;
-  gap: 32px;
-  margin-top: 8px;
-  color: $ev-dark;
-}
-
-.ev-main { min-width: 0; }
-
-.ev-description {
-  font-size: 16px;
-  line-height: 1.65;
-
-  h1, h2, h3, h4 { color: $ev-dark; font-weight: 900; }
-  p, li { font-size: 16px; line-height: 1.65; }
-  h4 { font-size: 20px; margin: 0 0 12px; }
-  ul { padding-left: 20px; }
-  li { margin-bottom: 4px; }
-  img { max-width: 100%; height: auto; }
-}
-
-.ev-section-title {
-  margin: 0 0 14px;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $ev-dark;
-}
-
-.ev-main .ev-section-title { margin-top: 32px; }
-
-.ev-credits {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-  margin: 0;
-
-  > div {
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: $ev-soft;
-  }
-
-  dt {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: $ev-muted;
-    margin-bottom: 2px;
-  }
-
-  dd { margin: 0; font-weight: 500; }
-  a { color: $ev-pink; }
-}
-
-.ev-competition {
-  margin-top: 20px;
-  .fa { color: $ev-pink; }
-}
-
-.ev-aside-card {
-  padding: 18px;
-  border-radius: 12px;
-  background: $ev-soft;
-}
-
-.ev-notice {
-  background: #fff;
-  border-left: 4px solid $ev-muted;
-  border-radius: 6px;
-  padding: 12px 14px;
-  margin-bottom: 14px;
-
-  p:last-child { margin-bottom: 0; }
-  a { color: $ev-pink; text-decoration: underline; }
-}
-
-.ev-notice-error {
-  background: #fff1f4;
-  border-left-color: $ev-pink;
-}
-
-/* Ticket cards, in the same style as the register form's ticket choice. */
-.ev-tickets {
-  display: grid;
-  gap: 10px;
-}
-
-.ev-ticket {
-  display: block;
-  padding: 14px 16px;
-  border: 2px solid $ev-line;
-  border-radius: 10px;
-  background: #fff;
-  color: $ev-dark;
-  transition: border-color .15s, background-color .15s;
-
-  > span { display: block; }
-}
-
-a.ev-ticket:hover, a.ev-ticket:focus {
-  border-color: $ev-pink;
-  background: #fff7fa;
-  color: $ev-dark;
-  text-decoration: none;
-}
-
-.ev-ticket-unavailable { opacity: .7; }
-
-.ev-ticket .ev-ticket-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.ev-ticket-name { font-weight: 700; }
-.ev-ticket-price { font-weight: 700; white-space: nowrap; }
-
-.ev-ticket-description {
-  margin-top: 4px;
-  font-size: 15px;
-  line-height: 1.4;
-}
-
-.ev-ticket-meta {
-  margin-top: 4px;
-  font-size: 14px;
-  color: $ev-muted;
-}
-
-.ev-ticket-warning {
-  margin-top: 4px;
-  font-size: 14px;
-  font-weight: 700;
-  color: $ev-pink;
-}
-
-.ev-ticket .ev-ticket-action {
-  margin-top: 8px;
-  font-weight: 700;
-  color: $ev-pink;
-}
-
-.ev-tickets-footnote {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: $ev-muted;
-}
-
-/* Phone order bar, shown by a small script once the hero button is out of view. */
-.ev-buybar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: #fff;
-  box-shadow: 0 -8px 24px -12px rgba(0, 0, 0, .35);
-  transform: translateY(110%);
-  transition: transform .2s ease;
-
-  .ev-button { flex: 0 0 auto; min-height: 44px; padding: 8px 18px; }
-}
-
-.ev-buybar-visible { transform: translateY(0); }
-
-.ev-buybar-text {
-  flex: 1;
-  min-width: 0;
-  line-height: 1.25;
-
-  strong, span {
-    display: block;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  strong { color: $ev-dark; }
-  span { font-size: 14px; color: $ev-muted; }
-}
-
-/* "Meer quizzen": cards with a fixed image frame; any poster fits inside. */
-.ev-more {
-  padding-top: 40px;
-}
-
-.ev-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.ev-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid $ev-line;
-  color: $ev-dark;
-  transition: transform .15s, box-shadow .15s;
-
-  &:hover, &:focus {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .45);
-    color: $ev-dark;
-    text-decoration: none;
-  }
-}
-
-.ev-card-image {
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: radial-gradient(120% 140% at 0% 0%, #8b0b5e 0%, #2a1440 55%, $ev-dark 100%);
-
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-}
-
-.ev-card-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  color: rgba(255, 255, 255, .35);
-}
-
-/* Phones: cards lie down, image on the left, so the list stays short. */
-@media (max-width: 767px) {
-  .ev-cards { grid-template-columns: 1fr; gap: 10px; }
-  .ev-card { flex-direction: row; }
-  .ev-card-image { flex: 0 0 38%; aspect-ratio: 4 / 3; }
-  .ev-card-body { align-self: center; }
-  .ev-card-title { font-size: 16px; }
-}
-
-.ev-card-body {
-  display: block;
-  padding: 12px 14px 14px;
-
-  > span { display: block; }
-}
-
-.ev-card-kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $ev-pink;
-  min-height: 1em;
-}
-
-.ev-card-title {
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1.2;
-  margin: 2px 0 4px;
-}
-
-.ev-card-meta {
-  font-size: 14px;
-  color: $ev-muted;
-}
-
-@media (min-width: 768px) {
-  .ev-hero { padding: 120px 0 40px; }
-  .ev-title { font-size: 42px; }
-  .ev-poster { max-height: 420px; }
-
-  .ev-cta {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    padding: 16px 18px;
-
-    .ev-cta-secondary { grid-column: 1 / -1; }
-    .ev-cta-secondary .ev-button { flex: 0 0 auto; }
-  }
-
-  .ev-cta-price-amount { font-size: 30px; }
-  .ev-button-primary { padding: 12px 28px; }
-  .ev-buybar { display: none; }
-}
-
-@media (min-width: 992px) {
-  .ev-hero { padding: 140px 0 56px; }
-  .ev-hero-grid { gap: 40px; }
-
-  .ev-hero-tall .ev-hero-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
-  .ev-hero-wide .ev-hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
-  .ev-hero-noposter .ev-hero-grid { max-width: 760px; }
-
-  .ev-hero-tall .ev-poster { max-height: 480px; }
-  .ev-hero-wide .ev-poster { max-height: 400px; }
-
-  .ev-title { font-size: 52px; }
-
-  .ev-body-with-tickets {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    gap: 48px;
-    align-items: start;
-  }
-
-  .ev-aside {
-    position: sticky;
-    top: 20px;
-  }
-}
+@import "kleurveld";
