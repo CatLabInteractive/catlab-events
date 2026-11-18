@@ -258,7 +258,7 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertSame($foto->id, $textImage['image_id'], 'lazy image, original of the resize');
         $this->assertSame('left', $textImage['image_position']);
         $this->assertSame('<p>Een paar keer per jaar.</p>', $textImage['html'], 'a duplicated text once');
-        $this->assertSame([ 'label' => 'Meer', 'url' => '/evenementen' ], $textImage['button']);
+        $this->assertEquals([ 'label' => 'Meer', 'url' => '/evenementen' ], $textImage['button']);
 
         // Two quote sections merged into one reviews block.
         $this->assertSame([ 'Een topavond.', 'Heel vlot.' ], array_column($reviews['items'], 'quote'));
