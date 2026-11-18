@@ -24,6 +24,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Api\V1\Controllers\Base\ResourceController;
 use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Models\RESTResource;
 use Illuminate\Http\Request;
 
 /**
@@ -86,5 +87,20 @@ class PeopleController extends BaseAdminController
 
                 break;
         }
+    }
+
+    /**
+     * People have no name field, only first and last name; without this
+     * they'd show up as "#12" in the event form's producers, authors, ...
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getLinkableOptionLabel(Request $request, RESTResource $resource): string
+    {
+        $values = $resource->toArray();
+        $name = trim(($values['first_name'] ?? '') . ' ' . ($values['last_name'] ?? ''));
+
+        return $name !== '' ? $name : '#' . $values['id'];
     }
 }
