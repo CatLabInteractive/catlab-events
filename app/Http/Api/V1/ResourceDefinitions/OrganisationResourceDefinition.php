@@ -144,6 +144,12 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        // Site design colours, e.g. "#61cc6f/#fcc765, #5e2fff". Empty uses the default palette.
+        $this->field('theme_colours')
+            ->string()
+            ->visible()
+            ->writeable();
+
         $this->field('livestream_css')
             ->visible()
             ->writeable();

@@ -476,12 +476,14 @@ body.kv-page {
   flex-direction: column;
   min-height: 190px;
   padding: 22px;
-  background: $kv-gold;
-  color: $kv-ink;
+  /* Tiles cycle through the organisation's colours (set inline by ColourPalette). */
+  --kv-tile-text: var(--kv-c0-text, #{$kv-ink});
+  background: var(--kv-c0, #{$kv-green});
+  color: var(--kv-tile-text);
 
-  &:nth-child(4n+2) { background: $kv-green; }
-  &:nth-child(4n+3) { background: $kv-rose; }
-  &:nth-child(4n+4) { background: $kv-teal; }
+  &:nth-child(4n+2) { background: var(--kv-c2, #{$kv-gold}); --kv-tile-text: var(--kv-c2-text, #{$kv-ink}); }
+  &:nth-child(4n+3) { background: var(--kv-c3, #{$kv-rose}); --kv-tile-text: var(--kv-c3-text, #{$kv-ink}); }
+  &:nth-child(4n+4) { background: var(--kv-c1, #{$kv-violet}); --kv-tile-text: var(--kv-c1-text, #fff); }
 
   &:after {
     content: "";
@@ -499,7 +501,7 @@ body.kv-page {
 }
 
 a.kv-ticket:hover, a.kv-ticket:focus {
-  color: $kv-ink;
+  color: var(--kv-tile-text);
   text-decoration: none;
 
   &:after { transform: scale(1.25); }
@@ -509,6 +511,7 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
 .kv-ticket-unavailable {
   background: $kv-paper !important;
+  --kv-tile-text: #{$kv-muted} !important;
   color: $kv-muted;
 }
 
@@ -695,10 +698,10 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   gap: 5px;
 
   i { width: 10px; height: 10px; border-radius: 50%; }
-  i:nth-child(1) { background: $kv-green; }
-  i:nth-child(2) { background: $kv-gold; }
-  i:nth-child(3) { background: $kv-violet; }
-  i:nth-child(4) { background: $kv-rose; }
+  i:nth-child(1) { background: var(--kv-c0, #{$kv-green}); }
+  i:nth-child(2) { background: var(--kv-c2, #{$kv-gold}); }
+  i:nth-child(3) { background: var(--kv-c1, #{$kv-violet}); }
+  i:nth-child(4) { background: var(--kv-c3, #{$kv-rose}); }
 }
 
 .kv-footer-claim {
@@ -971,7 +974,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 
 /* ---------- Series page ---------- */
 
-.kv-pagehead-series {
+.kv-pagehead.kv-pagehead-series {
   --kv-on-field: #{$kv-ink};
   background: $kv-bg;
   padding-bottom: 40px;

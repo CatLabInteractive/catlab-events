@@ -74,12 +74,14 @@ class Series extends Model
     }
 
     /**
-     * The colour field class this series uses in the site design (kv-field-0 to kv-field-5).
+     * The colour field class this series uses in the site design, picked
+     * from its organisation's palette.
      * @return string
      */
     public function getColourClass()
     {
-        return 'kv-field-' . ($this->id % 6);
+        $palette = $this->organisation ? $this->organisation->getColourPalette() : new \App\Tools\ColourPalette();
+        return $palette->getClassFor($this->id);
     }
 
     /**
