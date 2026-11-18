@@ -1,0 +1,3 @@
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Titel', 'name' => $name . '[title]', 'value' => $data['title'] ?? '', 'error' => $error . '.title', 'max' => 120 ] ])
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'YouTube-link', 'name' => $name . '[youtube_url]', 'value' => $data['youtube_url'] ?? '', 'error' => $error . '.youtube_url', 'max' => 255, 'required' => true, 'placeholder' => 'https://www.youtube.com/watch?v=...' ] ])
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Onderschrift', 'name' => $name . '[caption]', 'value' => $data['caption'] ?? '', 'error' => $error . '.caption', 'max' => 300 ] ])

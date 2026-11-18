@@ -91,6 +91,11 @@ Route::group([
             Route::get('assets', 'Admin\AssetController@index');
             Route::post('assets', 'Admin\AssetController@upload');
 
+            // CMS pages and blog posts (custom editors, not Charon admin controllers)
+            \App\Http\Controllers\Admin\PageController::routes();
+            \App\Http\Controllers\Admin\PostController::routes();
+            \App\Http\Controllers\Admin\CmsAssetController::routes();
+
             Route::get('uitdb', 'Admin\UitDbController@index');
             Route::get('uitdb/connect', 'Admin\UitDbController@link');
             Route::get('uitdb/disconnect', 'Admin\UitDbController@unlink');
@@ -234,3 +239,15 @@ Route::get('sitemap.xml', 'SitemapController@sitemap');
 
 // routes
 \App\Http\Controllers\ReferenceController::routes();
+
+// ---------------------------------------------------------------------------
+// CMS (pages, blog). MUST stay last: the page route is a catch-all and any
+// route registered after it is shadowed. New top-level paths also belong in
+// config/cms.php 'reserved_slugs' (ReservedSlugsTest enforces both).
+// ---------------------------------------------------------------------------
+\App\Http\Controllers\PageController::routes();
+// Every method, not just GET (Route::fallback): a POST to an unknown path
+// stays a 404 instead of a 405 caused by the GET-only fallback matching it.
+Route::any('{fallbackPlaceholder}', 'RedirectController@fallback')
+    ->where('fallbackPlaceholder', '.*')
+    ->fallback();

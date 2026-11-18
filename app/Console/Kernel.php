@@ -25,6 +25,7 @@ namespace App\Console;
 use App\Console\Commands\ExpirePendingOrders;
 use App\Console\Commands\SyncEukles;
 use App\Console\Commands\TestEukles;
+use App\Console\Commands\WordPressImport;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -42,7 +43,8 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         ExpirePendingOrders::class,
         SyncEukles::class,
-        TestEukles::class
+        TestEukles::class,
+        WordPressImport::class,
     ];
 
     /**

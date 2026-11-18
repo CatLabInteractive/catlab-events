@@ -45,6 +45,8 @@ class AdminSmokeTest extends IntegrationTestCase
             '/admin/orders',
             '/admin/livestreams',
             '/admin/assets',
+            '/admin/pages',
+            '/admin/posts',
         ] as $url) {
             $this->actingAs($admin)->get($url)->assertStatus(200);
         }
@@ -71,6 +73,8 @@ class AdminSmokeTest extends IntegrationTestCase
             '/admin/events/' . $event->id . '/ticketCategories/' . $category->id . '/edit',
             '/admin/events/' . $event->id . '/eventDates',
             '/admin/venues/create',
+            '/admin/pages/create',
+            '/admin/posts/create',
         ] as $url) {
             $this->actingAs($admin)->get($url)->assertStatus(200);
         }
