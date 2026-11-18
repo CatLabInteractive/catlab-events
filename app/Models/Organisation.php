@@ -80,6 +80,23 @@ class Organisation extends Model
     }
 
     /**
+     * footer_html as it may be printed: sanitised on output too, because
+     * rows written before the save hook existed are stored as they were
+     * (they are not rewritten in the database, which production shares).
+     * @return string|null
+     */
+    public function getSafeFooterHtml(): ?string
+    {
+        if ($this->footer_html === null || $this->footer_html === '') {
+            return null;
+        }
+
+        $clean = app(HtmlSanitizer::class)->sanitize($this->footer_html);
+
+        return $clean === '' ? null : $clean;
+    }
+
+    /**
      * @return Organisation
      */
     public static function getRepresentedOrganisation()

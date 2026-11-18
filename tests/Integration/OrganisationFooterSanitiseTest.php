@@ -74,17 +74,17 @@ class OrganisationFooterSanitiseTest extends IntegrationTestCase
         $this->assertNull($organisation->fresh()->footer_html);
     }
 
-    public function testMigrationCleansStoredFooters()
+    public function testStoredFootersAreCleanedOnDisplayNotRewritten()
     {
         $organisation = $this->createOrganisation();
         DB::table('organisations')->where('id', $organisation->id)
             ->update([ 'footer_html' => '<p>Ok</p><script>alert(1)</script>' ]);
 
-        require_once base_path('database/migrations/2026_10_01_100500_sanitise_organisation_footer_html.php');
-        (new \SanitiseOrganisationFooterHtml())->up();
+        $this->assertSame('<p>Ok</p>', $organisation->fresh()->getSafeFooterHtml());
 
+        // The stored value is left alone (the database is shared with production).
         $this->assertSame(
-            '<p>Ok</p>',
+            '<p>Ok</p><script>alert(1)</script>',
             DB::table('organisations')->where('id', $organisation->id)->value('footer_html')
         );
     }

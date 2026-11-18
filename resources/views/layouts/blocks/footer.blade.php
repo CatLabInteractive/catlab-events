@@ -74,8 +74,9 @@
                     Deze website is een <a href="https://github.com/CatLabInteractive/catlab-events">open source</a> project.
                 </p>
 
-                @if(organisation()->footer_html)
-                    {!! organisation()->footer_html !!}
+                @php($footerHtml = organisation()->getSafeFooterHtml())
+                @if($footerHtml)
+                    {!! $footerHtml !!}
                 @endif
             </div>
         </div>
