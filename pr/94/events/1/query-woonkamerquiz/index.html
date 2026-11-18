@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="GUtaDw9phpHu0VpvJIEbuIUJfRoC8iyCU3oSfNpz">
+<meta name="csrf-token" content="x09jxCGK5A2XweSno2k0KpiSW99nVsNHFYJefGLb">
 
             <title>Woonkamerquiz - Woonkamerquiz  – De Quizfabriek</title>
     
@@ -38,7 +38,15 @@
 
 <script>
     var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy'
+        privacyPolicyUrl: '/docs/en/privacy',
+        buttonPrimaryClass: 'kv-cc-primary',
+        buttonSecondaryClass: 'kv-cc-secondary',
+        // The chat bubble waits until a choice is made, so it never covers the banner.
+        postSelectionCallback: function () {
+            if (window.kvLoadChat) {
+                window.kvLoadChat();
+            }
+        }
     });
     cookieConsent.enableCrossDomain([
         'catlab.eu',

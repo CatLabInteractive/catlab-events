@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="jmXRkGOx2cJMLMzAX77D3y8cPE6O7RqeZLIw0qvm">
+<meta name="csrf-token" content="J62mkzF6F0NY0AKYC04Oku7PhxZG1QZkY732CBPw">
 
             <title>    Woonkamerquiz
  – De Quizfabriek</title>
@@ -39,7 +39,15 @@
 
 <script>
     var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy'
+        privacyPolicyUrl: '/docs/en/privacy',
+        buttonPrimaryClass: 'kv-cc-primary',
+        buttonSecondaryClass: 'kv-cc-secondary',
+        // The chat bubble waits until a choice is made, so it never covers the banner.
+        postSelectionCallback: function () {
+            if (window.kvLoadChat) {
+                window.kvLoadChat();
+            }
+        }
     });
     cookieConsent.enableCrossDomain([
         'catlab.eu',
@@ -224,7 +232,7 @@
         
         
         <form action="../" accept-charset="UTF-8" class="register-one-page" method="get">
-            <input type="hidden" name="_token" value="jmXRkGOx2cJMLMzAX77D3y8cPE6O7RqeZLIw0qvm" autocomplete="off">
+            <input type="hidden" name="_token" value="J62mkzF6F0NY0AKYC04Oku7PhxZG1QZkY732CBPw" autocomplete="off">
             
             <fieldset class="rf-step">
                 <legend class="rf-step-title">Kies je ticket</legend>

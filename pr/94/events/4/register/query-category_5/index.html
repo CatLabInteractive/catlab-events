@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="NxTZmf7wmegpjuSCX7lqqzP9PPoSMF3ser39AFYd">
+<meta name="csrf-token" content="4CwREV3Q27tFJ5QAOxqBgBDU5Bd4ZY0xyOTpwmnv">
 
             <title>    Zomerquiz
  – De Quizfabriek</title>
@@ -39,7 +39,15 @@
 
 <script>
     var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy'
+        privacyPolicyUrl: '/docs/en/privacy',
+        buttonPrimaryClass: 'kv-cc-primary',
+        buttonSecondaryClass: 'kv-cc-secondary',
+        // The chat bubble waits until a choice is made, so it never covers the banner.
+        postSelectionCallback: function () {
+            if (window.kvLoadChat) {
+                window.kvLoadChat();
+            }
+        }
     });
     cookieConsent.enableCrossDomain([
         'catlab.eu',
@@ -232,7 +240,7 @@
             </div>
         
         <form action="../" accept-charset="UTF-8" class="register-one-page" method="get">
-            <input type="hidden" name="_token" value="NxTZmf7wmegpjuSCX7lqqzP9PPoSMF3ser39AFYd" autocomplete="off">
+            <input type="hidden" name="_token" value="4CwREV3Q27tFJ5QAOxqBgBDU5Bd4ZY0xyOTpwmnv" autocomplete="off">
             
             <fieldset class="rf-step">
                 <legend class="rf-step-title">Kies je ticket</legend>

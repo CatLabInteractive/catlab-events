@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="QhwxljxmIywnU9Rfc653egGWepcu7fdZiDS5dPqv">
+<meta name="csrf-token" content="wSuUBWXE5DtyJKOZDsYpOBR2CiZr55cXQPQL2W1s">
 
             <title>Quizavonden – De Quizfabriek</title>
     
@@ -38,7 +38,15 @@
 
 <script>
     var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy'
+        privacyPolicyUrl: '/docs/en/privacy',
+        buttonPrimaryClass: 'kv-cc-primary',
+        buttonSecondaryClass: 'kv-cc-secondary',
+        // The chat bubble waits until a choice is made, so it never covers the banner.
+        postSelectionCallback: function () {
+            if (window.kvLoadChat) {
+                window.kvLoadChat();
+            }
+        }
     });
     cookieConsent.enableCrossDomain([
         'catlab.eu',

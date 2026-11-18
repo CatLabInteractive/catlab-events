@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="FU75qrseCB5sRCbO8IlaJprhPEycgEgMNXsqBQSt">
+<meta name="csrf-token" content="6ceEOCsho49mxyK68qKVcH1Bok75p0XLEnxzGZMo">
 
             <title>    Quiz kalender
  – De Quizfabriek</title>
@@ -39,7 +39,15 @@
 
 <script>
     var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy'
+        privacyPolicyUrl: '/docs/en/privacy',
+        buttonPrimaryClass: 'kv-cc-primary',
+        buttonSecondaryClass: 'kv-cc-secondary',
+        // The chat bubble waits until a choice is made, so it never covers the banner.
+        postSelectionCallback: function () {
+            if (window.kvLoadChat) {
+                window.kvLoadChat();
+            }
+        }
     });
     cookieConsent.enableCrossDomain([
         'catlab.eu',
@@ -217,7 +225,7 @@
             Binnenkort
                             <small>
                     Op zoek naar een leuke groepsactiviteit in Gent?
-                    Wij organiseren vast de leukste quizzes van Gent!
+                    Bij ons vind je vast de leukste quiz in de buurt!
                 </small>
                     </h2>
 
