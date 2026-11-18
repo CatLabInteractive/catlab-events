@@ -253,4 +253,38 @@ class AdminFormWidgetsTest extends IntegrationTestCase
 
         $this->assertDatabaseHas('groups', [ 'name' => 'De Quizvogels' ]);
     }
+
+    /**
+     * People have no name field; the event form lists them by their first
+     * and last name, not as "#12".
+     */
+    public function testPeopleAreListedByName()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+
+        $person = new \App\Models\Person();
+        $person->first_name = 'Anna';
+        $person->last_name = 'Peeters';
+        $person->organisation()->associate($organisation);
+        $person->user()->associate($admin);
+        $person->save();
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('>Anna Peeters</label>', false)
+            ->assertDontSee('>#' . $person->id . '</label>', false);
+    }
+
+    public function testDescriptionsAreEditedInATextarea()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('<textarea id="field-description" name="fields[description]"', false);
+    }
 }

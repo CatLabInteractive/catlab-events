@@ -28,6 +28,7 @@ use App\Services\Admin\CentralStorageUploadHandler;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
 use CatLab\CharonFrontend\Widgets\FileWidget;
+use CatLab\CharonFrontend\Widgets\TextareaWidget;
 
 /**
  * Shared base for the admin CRUD controllers: carries the FrontCrudController
@@ -37,6 +38,7 @@ use CatLab\CharonFrontend\Widgets\FileWidget;
  *
  * Relationships to an Asset (posters, logos, headers, ...) are edited with a
  * file widget: preview, upload to CentralStorage, pick existing, remove.
+ * Descriptions, teasers and addresses get a textarea.
  *
  * @package App\Http\Controllers\Admin
  */
@@ -52,5 +54,10 @@ abstract class BaseAdminController extends Controller implements FrontCrudContro
             AssetResourceDefinition::class,
             new FileWidget(new CentralStorageUploadHandler(), 'image/*')
         );
+
+        // Free text that spans lines (descriptions, teasers, addresses).
+        foreach ([ 'description', 'teaser', 'address' ] as $field) {
+            $this->widgets()->forField($field, new TextareaWidget());
+        }
     }
 }
