@@ -76,7 +76,7 @@ return [
         // element => allowed attributes ('class' is handled separately)
         'elements' => [
             'p' => [], 'br' => [], 'h2' => [], 'h3' => [], 'h4' => [],
-            'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'u' => [], 's' => [],
+            'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'u' => [], 's' => [], 'sub' => [], 'sup' => [],
             'a' => [ 'href', 'title', 'target' ],
             'ul' => [], 'ol' => [], 'li' => [],
             'blockquote' => [], 'pre' => [], 'code' => [], 'hr' => [],

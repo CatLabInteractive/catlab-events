@@ -681,7 +681,8 @@ logic in `App\Cms\Import\WordPressImporter` so it is testable with
   blocks in the admin before cutover. The WordPress home page is imported like any other page
   (the `front page` setting is not public, so `--home=<slug>` names it);
   with `--home`, the command sets `organisations.home_page_id` to it.
-- **Redirects**: read `/post-sitemap.xml` and `/page-sitemap.xml`, and for
+- **Redirects**: read the sitemaps listed in WordPress core's `/wp-sitemap.xml`
+  (Yoast's `/post-sitemap.xml` and `/page-sitemap.xml` when there is no index), and for
   every URL that does not resolve to an imported page/post path print it,
   so the remaining map (`/category/…`, `/feed/`, `/author/…`) can be
   filled by hand. Media redirects are written automatically.

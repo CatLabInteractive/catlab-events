@@ -289,13 +289,13 @@ Branch `feature/wordpress-import`.
 - Create: `tests/Integration/Cms/WordPressImportTest.php` + fixtures `tests/Integration/Cms/fixtures/wp-{posts,pages,media}.json` (two posts with a gallery + YouTube embed, one page tree incl. a `-nieuw` draft, one media item)
 - Test also: `tests/Unit/Cms/ContentRewriterTest.php`
 
-- [ ] **Step 1: Failing tests** from the spec's `WordPressImportTest` row, using `Http::fake([...])` and `FakeCentralStorage`. Assert: `posts.wp_post_id` set, `posts.author` filled from the embedded WP author name (`?_embed`), imported assets carry `organisation_id`, `published_at` equals the WP `date` interpreted in Europe/Brussels, body contains the asset URL and no `wp-content/uploads`, `cms_redirects` has `wp-content/uploads/2019/03/foto.jpg`, second run changes nothing (`assertDatabaseCount`), `-nieuw` skipped, page tree parent set and translation unpublished with one `rich_text` block, `--dry-run` writes nothing.
-- [ ] **Step 2: Implement.** Pagination via the `X-WP-TotalPages` header. Log dropped elements per post (compare tag counts before/after sanitising) and print them at the end. Retries on media download (3, backoff). Everything inside one transaction per post.
-- [ ] **Step 3: GREEN.** Commit `"wordpress:import — posts, pages and media from the WP REST API"`.
+- [x] **Step 1: Failing tests** from the spec's `WordPressImportTest` row, using `Http::fake([...])` and `FakeCentralStorage`. Assert: `posts.wp_post_id` set, `posts.author` filled from the embedded WP author name (`?_embed`), imported assets carry `organisation_id`, `published_at` equals the WP `date` interpreted in Europe/Brussels, body contains the asset URL and no `wp-content/uploads`, `cms_redirects` has `wp-content/uploads/2019/03/foto.jpg`, second run changes nothing (`assertDatabaseCount`), `-nieuw` skipped, page tree parent set and translation unpublished with one `rich_text` block, `--dry-run` writes nothing.
+- [x] **Step 2: Implement.** Pagination via the `X-WP-TotalPages` header. Log dropped elements per post (compare tag counts before/after sanitising) and print them at the end. Retries on media download (3, backoff). Everything inside one transaction per post.
+- [x] **Step 3: GREEN.** Commit `"wordpress:import — posts, pages and media from the WP REST API"`.
 
 ### Task 4.2: Run the import on production (operations, not code)
 
-- [ ] `php artisan wordpress:import --organisation=<Quizfabriek id> --posts --dry-run`, review the mapping, then without `--dry-run`. Then `--pages`. Then `--redirects` and hand the printed unmapped URL list to whoever fills the redirect table (phase 5 admin) — most are `/category/…`; `/feed/` URLs get a 301 to `/blog`.
+- [ ] `php artisan wordpress:import --organisation=<Quizfabriek id> --posts --dry-run`, review the mapping, then without `--dry-run`. Then `--pages`. Then `--redirects` (reads WordPress core's `/wp-sitemap.xml`; a dry run on 2026-11-18 mapped all 36 posts and the pages, leaving 32 URLs: the `-nieuw` drafts, `/category/…`, `/tag/…`, `/type/video/` and `/author/…`) and hand the printed unmapped URL list to whoever fills the redirect table (phase 5 admin) — most are `/category/…`; `/feed/` URLs get a 301 to `/blog`.
 - [ ] Spot-check three posts on `tickets.quizfabriek.be/2019/…` (they render there already; canonical will move at cutover).
 - [ ] Editors rebuild the nine pages from the imported `rich_text` drafts using blocks; keep them **unpublished** except for previewing.
 

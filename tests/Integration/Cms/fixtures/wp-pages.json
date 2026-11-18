@@ -1,0 +1,67 @@
+[
+  {
+    "id": 202,
+    "slug": "team",
+    "parent": 201,
+    "menu_order": 1,
+    "status": "publish",
+    "title": {
+      "rendered": "Ons team"
+    },
+    "content": {
+      "rendered": "<div class=\"elementor elementor-202\"><section class=\"elementor-section elementor-top-section\"><div class=\"elementor-container\"><div class=\"elementor-column\"><div class=\"elementor-widget-wrap\"><div class=\"elementor-element elementor-widget elementor-widget-heading\"><div class=\"elementor-widget-container\"><h1 class=\"elementor-heading-title\">Het team</h1></div></div><div class=\"elementor-element elementor-widget elementor-widget-image\"><div class=\"elementor-widget-container\"><img src=\"https://www.quizfabriek.be/wp-content/uploads/2019/03/foto-300x225.jpg\" alt=\"Team\"></div></div><div class=\"elementor-element elementor-widget elementor-widget-text-editor\"><div class=\"elementor-widget-container\"><p>Wij maken quizzen.</p></div></div></div></div></div></section></div>"
+    }
+  },
+  {
+    "id": 201,
+    "slug": "over-ons",
+    "parent": 0,
+    "menu_order": 3,
+    "status": "publish",
+    "title": {
+      "rendered": "Over ons"
+    },
+    "content": {
+      "rendered": "<p>Over de Quizfabriek.</p>"
+    }
+  },
+  {
+    "id": 203,
+    "slug": "over-ons-nieuw",
+    "parent": 0,
+    "menu_order": 4,
+    "status": "publish",
+    "title": {
+      "rendered": "Over ons (nieuw)"
+    },
+    "content": {
+      "rendered": "<p>Concept.</p>"
+    }
+  },
+  {
+    "id": 204,
+    "slug": "sko_milk",
+    "parent": 0,
+    "menu_order": 5,
+    "status": "publish",
+    "title": {
+      "rendered": "SKO"
+    },
+    "content": {
+      "rendered": "<p>x</p>"
+    }
+  },
+  {
+    "id": 205,
+    "slug": "blog",
+    "parent": 0,
+    "menu_order": 6,
+    "status": "publish",
+    "title": {
+      "rendered": "Blog"
+    },
+    "content": {
+      "rendered": "<p>Onze berichten.</p>"
+    }
+  }
+]
