@@ -250,7 +250,8 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertSame('De perfecte quiz', $hero['title']);
         $this->assertSame('Voor iedereen een quiz.', $hero['subtitle']);
         // Links to the site become paths; ALL CAPS labels sentence case.
-        $this->assertSame([ [ 'label' => 'Evenementen', 'url' => '/', 'style' => 'primary' ] ], $hero['buttons']);
+        // assertEquals: MySQL's JSON column reorders keys, MariaDB keeps them.
+        $this->assertEquals([ [ 'label' => 'Evenementen', 'url' => '/', 'style' => 'primary' ] ], $hero['buttons']);
 
         $foto = Asset::query()->where('name', 'foto.jpg')->firstOrFail();
         $this->assertSame('Quizevenementen', $textImage['title']);
