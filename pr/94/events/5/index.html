@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="aUCGCsnRKdxfsdLHif2bsENfGywUvi0CBrGb7ide">
+<meta name="csrf-token" content="LhhXCqYoVfBqPHh3pP02XC5B8AV7e6OBQ7jbULl6">
 
             <title>Quiz zonder poster - Quizavonden  – De Quizfabriek</title>
     
@@ -131,7 +131,7 @@
             "price": 25,
             "priceCurrency": "EUR",
             "availability": "http:\/\/schema.org\/SoldOut",
-            "validFrom": "2026-11-18T16:32:37+01:00"
+            "validFrom": "2026-11-18T16:58:43+01:00"
         }
     ],
     "organizer": {
@@ -199,15 +199,11 @@
                                                             </a>
                         </li>
                     
-                    <li class="kv-nav-item kv-nav-group">
-                        <button type="button" class="kv-nav-toggle" aria-expanded="false">
-                            Quizzes <i class="kv-nav-caret" aria-hidden="true"></i>
-                        </button>
-                        <ul class="kv-nav-sub">
-                            <li><a href="../../calendar/">Kalender</a></li>
-                                                                                                            </ul>
-                    </li>
+                    <li class="kv-nav-item"><a href="../../calendar/">Kalender</a></li>
 
+                    
+                    
+                    
                                             <li class="kv-nav-item"><a href="../../preview-info/unavailable.html">Login</a></li>
                                     </ul>
             </nav>
@@ -268,8 +264,9 @@
 </script>
 
 
-                        <div class="kv-hero kv-hero-noposter kv-field-2">
+                        <div class="kv-hero kv-hero-noposter  kv-field-2">
 
+    
     
     <div class="kv-hero-info">
                     <p class="kv-series"><i aria-hidden="true"></i><a href="../../s/2/quizavonden/query-event_5/">Quizavonden</a></p>
@@ -304,6 +301,45 @@
             </div>
 
 </div>
+
+    <script>
+        // Hero slideshow: a slow crossfade between the series photos. Each photo
+        // only loads just before it is shown; reduced motion keeps the first one.
+        (function () {
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) {
+                return;
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
+                var images = show.querySelectorAll('img');
+                var current = 0;
+
+                function prepare(img) {
+                    if (img.dataset.src) {
+                        img.srcset = img.dataset.srcset;
+                        img.src = img.dataset.src;
+                        delete img.dataset.src;
+                    }
+                }
+
+                prepare(images[1]);
+                setInterval(function () {
+                    if (document.hidden) {
+                        return;
+                    }
+                    var next = (current + 1) % images.length;
+                    var img = images[next];
+                    if (!img.complete) {
+                        return;
+                    }
+                    images[current].classList.remove('is-shown');
+                    img.classList.add('is-shown');
+                    current = next;
+                    prepare(images[(current + 1) % images.length]);
+                }, 6500);
+            });
+        })();
+    </script>
         
         <section>
             <div class="container">

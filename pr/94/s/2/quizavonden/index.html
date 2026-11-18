@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="fh3Mtk6TbzcBvPU63HllkUpKlQxS6r49KAps6L9B">
+<meta name="csrf-token" content="woOiaRmlSrSNC1fgtf39uaY2UwsxTPgmDM8pPVSJ">
 
             <title>Quizavonden – De Quizfabriek</title>
     
@@ -168,15 +168,11 @@
                                                             </a>
                         </li>
                     
-                    <li class="kv-nav-item kv-nav-group">
-                        <button type="button" class="kv-nav-toggle" aria-expanded="false">
-                            Quizzes <i class="kv-nav-caret" aria-hidden="true"></i>
-                        </button>
-                        <ul class="kv-nav-sub">
-                            <li><a href="../../../calendar/">Kalender</a></li>
-                                                                                                            </ul>
-                    </li>
+                    <li class="kv-nav-item"><a href="../../../calendar/">Kalender</a></li>
 
+                    
+                    
+                    
                                             <li class="kv-nav-item"><a href="../../../preview-info/unavailable.html">Login</a></li>
                                     </ul>
             </nav>
@@ -240,15 +236,9 @@
     
 
     
-    <div class="kv-pagehead kv-pagehead-series kv-field-2">
-        <div class="kv-wrap">
-            <p class="kv-series"><i aria-hidden="true"></i>Quizreeks</p>
-            <h1 class="kv-pagehead-title">Quizavonden</h1>
-        </div>
-    </div>
+            <div class="kv-hero kv-hero-tall  kv-field-2">
 
-            <div class="kv-hero kv-hero-tall kv-field-2">
-
+    
             <div class="kv-hero-field">
             <a class="kv-poster image-popup "
    href="../../../preview-assets/square__width_1600.jpg"
@@ -263,7 +253,7 @@
         </div>
     
     <div class="kv-hero-info">
-                    <p class="kv-series"><i aria-hidden="true"></i>Volgende quiz</p>
+                    <h1 class="kv-series kv-series-h1"><i aria-hidden="true"></i>Quizavonden<span class="kv-series-sub">volgende quiz</span></h1>
         
                     <h2 class="kv-title"><a href="../../../events/3/query-pubquiz/">Pubquiz</a></h2>
         
@@ -295,6 +285,45 @@
             </div>
 
 </div>
+
+    <script>
+        // Hero slideshow: a slow crossfade between the series photos. Each photo
+        // only loads just before it is shown; reduced motion keeps the first one.
+        (function () {
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) {
+                return;
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
+                var images = show.querySelectorAll('img');
+                var current = 0;
+
+                function prepare(img) {
+                    if (img.dataset.src) {
+                        img.srcset = img.dataset.srcset;
+                        img.src = img.dataset.src;
+                        delete img.dataset.src;
+                    }
+                }
+
+                prepare(images[1]);
+                setInterval(function () {
+                    if (document.hidden) {
+                        return;
+                    }
+                    var next = (current + 1) % images.length;
+                    var img = images[next];
+                    if (!img.complete) {
+                        return;
+                    }
+                    images[current].classList.remove('is-shown');
+                    img.classList.add('is-shown');
+                    current = next;
+                    prepare(images[(current + 1) % images.length]);
+                }, 6500);
+            });
+        })();
+    </script>
     
             <section class="kv-sec">
             <div class="kv-wrap">
