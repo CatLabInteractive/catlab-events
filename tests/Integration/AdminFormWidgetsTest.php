@@ -118,17 +118,16 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
 
-        $stored = new Asset();
-        $stored->name = 'poster.png';
-        $stored->asset_key = 'uploaded';
-        \CentralStorage::shouldReceive('store')->once()->andReturn($stored);
-
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('poster.png', 600, 900) ],
         ])->assertRedirect();
 
-        $this->assertNotNull($stored->id);
-        $this->assertSame($stored->id, $series->fresh()->logo_asset_id);
+        // FakeCentralStorage (IntegrationTestCase) records the upload and
+        // returns an unsaved Asset, like the real client.
+        $this->assertCount(1, $this->centralStorage->stored);
+        $logo = $series->fresh()->logo;
+        $this->assertNotNull($logo);
+        $this->assertSame('poster.png', $logo->name);
     }
 
     public function testPickingAnExistingFileLinksIt()
@@ -172,12 +171,11 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
 
-        \CentralStorage::shouldReceive('store')->never();
-
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf') ],
         ])->assertRedirect()->assertSessionHasErrors('fields.logo.file');
 
+        $this->assertCount(0, $this->centralStorage->stored);
         $this->assertNull($series->fresh()->logo_asset_id);
     }
 

@@ -28,7 +28,9 @@ class FakeCentralStorage extends CentralStorageClient
 
     public function __construct()
     {
-        parent::__construct(self::FRONT, 'test-key', 'test-secret');
+        // No version: like fromConfig() without centralStorage.version, URLs
+        // get no _v parameter.
+        parent::__construct(self::FRONT, 'test-key', 'test-secret', null, null);
         $this->setFrontUrl(self::FRONT);
     }
 
