@@ -30,8 +30,8 @@ use App\Services\EmailTemplates;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\CharonFrontend\Widgets\FormField;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -152,33 +152,65 @@ class EmailTemplateController extends BaseAdminController
     }
 
     /**
+     * Deleting a mail goes back to the standard text.
      * @param Request $request
-     * @return \Illuminate\Contracts\View\View
+     * @param RESTResource $resource
+     * @return string
      */
-    public function confirmDelete(Request $request)
+    protected function getDestroyConfirmText(Request $request, RESTResource $resource): string
     {
-        return parent::confirmDelete($request)->with(
-            'question',
-            'De aangepaste versie wordt verwijderd en de standaardversie wordt weer verstuurd. Doorgaan?'
-        );
+        return 'De aangepaste versie wordt verwijderd en de standaardversie wordt weer verstuurd. Doorgaan?';
     }
 
     /**
      * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getDestroyConfirmLabel(Request $request, RESTResource $resource): string
+    {
+        return 'Terug naar standaard';
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function destroy(Request $request)
+    protected function afterDestroy(Request $request, RESTResource $resource)
     {
-        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
-        $response = $this->dispatchToApi(Action::DESTROY, $request);
-
-        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
-            return $this->handleErrorResponse($response, 'destroy');
-        }
-
         Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" is terug de standaardversie.');
 
         return redirect(action('Admin\EmailTemplateController@index'));
+    }
+
+    /**
+     * The list says what its buttons do, and leaves out the code of the mail.
+     * @param string $action
+     * @param ResourceAction $rowAction
+     * @return ResourceAction
+     */
+    protected function configureRowAction(string $action, ResourceAction $rowAction): ResourceAction
+    {
+        return $this->labelledMailAction($action, $rowAction);
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexColumns(Request $request): array
+    {
+        return [ 'type' ];
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexFilters(Request $request): array
+    {
+        return [ 'type' ];
     }
 
     /**
@@ -191,16 +223,6 @@ class EmailTemplateController extends BaseAdminController
         Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" is aangepast.');
 
         return redirect(action('Admin\EmailTemplateController@index'));
-    }
-
-    /**
-     * @param JsonResponse $response
-     * @param $redirectMethod
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
-    {
-        return $this->refusedByApi($response);
     }
 
     /**
@@ -247,9 +269,6 @@ class EmailTemplateController extends BaseAdminController
 
             case 'form':
                 return 'admin.emails.standard.form';
-
-            case Action::DESTROY:
-                return 'admin.emails.confirm-reset';
         }
 
         return parent::getView($action);

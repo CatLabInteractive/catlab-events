@@ -107,9 +107,7 @@ class EmailLibraryTest extends IntegrationTestCase
             'name' => 'Warm welcome',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ] ])->assertSessionHas('message', function ($message) {
-            return (string) $message === 'Er is al een sjabloon met deze naam voor deze mail.';
-        });
+        ] ])->assertSessionHasErrors([ 'fields.name' => 'Er is al een sjabloon met deze naam voor deze mail.' ]);
         $this->assertEquals(1, $this->organisation->emailTemplates()->library()->count());
 
         // Same name for another type is fine.
@@ -129,7 +127,7 @@ class EmailLibraryTest extends IntegrationTestCase
             'name' => 'Invite',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ] ])->assertSessionHas('message');
+        ] ])->assertSessionHasErrors('fields.type');
 
         $this->assertEquals(0, $this->organisation->emailTemplates()->library()->count());
     }

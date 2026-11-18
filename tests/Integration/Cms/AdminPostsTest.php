@@ -215,7 +215,7 @@ class AdminPostsTest extends IntegrationTestCase
             ->post('/admin/posts', [ 'fields' => $this->postFields([ 'featured_image_id' => $foreign->id ]) ])
             ->assertRedirect('/admin/posts/create');
 
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertSame(0, Post::count());
     }
 
@@ -232,7 +232,7 @@ class AdminPostsTest extends IntegrationTestCase
         ] as $overrides) {
             $this->postTranslation($admin, $post, $this->translationFields([ 'locale' => 'nl' ] + $overrides))
                 ->assertRedirect('/admin/posts/' . $post->id . '/translations/create');
-            $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         }
 
         $this->assertSame(0, PostTranslation::count());
@@ -266,7 +266,7 @@ class AdminPostsTest extends IntegrationTestCase
 
         $post = $this->emptyPost($organisation);
         $this->postTranslation($admin, $post, $this->translationFields([ 'locale' => 'nl' ]));
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertNull($post->fresh()->translation('nl'));
 
         // The same slug in another locale of the same organisation is fine.

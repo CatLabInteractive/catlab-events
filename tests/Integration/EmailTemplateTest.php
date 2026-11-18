@@ -329,7 +329,8 @@ class EmailTemplateTest extends IntegrationTestCase
             '/Inschrijving bevestigd\s*<.*?Standaard/s',
             $response->getContent()
         );
-        $response->assertDontSee('Aangepast');
+        // "Aangepast op" is a column; no mail says it is customised.
+        $this->assertDoesNotMatchRegularExpression('/<td[^>]*>\s*Aangepast/', $response->getContent());
 
         $this->actingAs($this->admin)->delete('/admin/emails/' . EmailTemplates::CONFIRMATION);
         $this->assertSame(1, EmailTemplate::library()->count());

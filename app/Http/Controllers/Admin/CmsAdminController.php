@@ -33,9 +33,7 @@ use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\Charon\Models\RESTResource;
 use CatLab\CharonFrontend\Widgets\TextareaWidget;
 use CatLab\CharonFrontend\Widgets\TextWidget;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\HtmlString;
 
 /**
  * Shared base of the CMS admin (pages, blog posts and their translations):
@@ -62,51 +60,6 @@ abstract class CmsAdminController extends BaseAdminController
             ->forField('meta_description', new TextareaWidget(false, [ 'rows' => 2, 'maxlength' => 320 ]))
             ->forField('og_image_id', new ImageWidget())
             ->forField('featured_image_id', new ImageWidget());
-    }
-
-    /**
-     * The writers refuse some deletes (the home page, a page with child
-     * pages): say so instead of "deleted".
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function destroy(Request $request)
-    {
-        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
-        $response = $this->dispatchToApi(Action::DESTROY, $request);
-
-        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
-            return $this->handleErrorResponse($response, 'destroy');
-        }
-
-        return $this->afterDestroy($request, $resource);
-    }
-
-    /**
-     * The api's validation messages (the writers' own, in Dutch), without
-     * its generic English first line.
-     * @param JsonResponse $response
-     * @param $redirectMethod
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
-    {
-        $data = $response->getData(true);
-
-        $lines = [];
-        foreach (($data['error']['issues'] ?? []) as $errors) {
-            foreach ((array) $errors as $error) {
-                $lines[] = e($error);
-            }
-        }
-
-        if (count($lines) === 0) {
-            $lines[] = e($data['error']['message'] ?? 'Er ging iets mis.');
-        }
-
-        return redirect()->back()
-            ->with('message', new HtmlString('Niet opgeslagen:<br>' . implode('<br>', $lines)))
-            ->withInput();
     }
 
     /**

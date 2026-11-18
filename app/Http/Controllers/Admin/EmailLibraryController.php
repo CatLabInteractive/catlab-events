@@ -36,7 +36,6 @@ use CatLab\Charon\Models\RESTResource;
 use CatLab\CharonFrontend\Widgets\FormField;
 use CatLab\CharonFrontend\Widgets\TextWidget;
 use CatLab\Laravel\Table\Table;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\HtmlString;
 
@@ -218,34 +217,6 @@ class EmailLibraryController extends BaseAdminController
     protected function canViewModel(Request $request, $model)
     {
         return false;
-    }
-
-    /**
-     * A template an event still uses is refused: say so instead of "deleted".
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function destroy(Request $request)
-    {
-        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
-        $response = $this->dispatchToApi(Action::DESTROY, $request);
-
-        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
-            return $this->handleErrorResponse($response, 'destroy');
-        }
-
-        return $this->afterDestroy($request, $resource);
-    }
-
-    /**
-     * The api's validation messages, without its generic English first line.
-     * @param JsonResponse $response
-     * @param $redirectMethod
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
-    {
-        return $this->refusedByApi($response);
     }
 
     /**

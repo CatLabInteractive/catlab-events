@@ -29,7 +29,6 @@ use App\Services\Admin\Widgets\LayoutHtmlWidget;
 use App\Services\EmailTemplates;
 use CatLab\Charon\Models\RESTResource;
 use CatLab\CharonFrontend\Widgets\TextareaWidget;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -137,16 +136,6 @@ class EmailLayoutController extends BaseAdminController
         Session::flash('message', 'De layout is opgeslagen.');
 
         return redirect(action('Admin\EmailLayoutController@edit'));
-    }
-
-    /**
-     * @param JsonResponse $response
-     * @param $redirectMethod
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
-    {
-        return $this->refusedByApi($response);
     }
 
     /**

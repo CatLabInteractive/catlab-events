@@ -49,30 +49,22 @@ trait AdministersEmails
     }
 
     /**
-     * What the api refused, in its own (Dutch) words instead of the generic
-     * English first line, back on the form with the input kept.
+     * The row buttons of a list of mails say what they do: "Aanpassen" and
+     * "Terug naar standaard" instead of a pencil and a bin.
      *
-     * @param \Illuminate\Http\JsonResponse $response
-     * @return \Illuminate\Http\RedirectResponse
+     * @param string $action
+     * @param \CatLab\CharonFrontend\Models\Table\ResourceAction $rowAction
+     * @return \CatLab\CharonFrontend\Models\Table\ResourceAction
      */
-    protected function refusedByApi(\Illuminate\Http\JsonResponse $response)
+    protected function labelledMailAction(string $action, $rowAction)
     {
-        $data = $response->getData(true);
-
-        $lines = [];
-        foreach (($data['error']['issues'] ?? []) as $errors) {
-            foreach ((array) $errors as $error) {
-                $lines[] = e($error);
-            }
+        if ($action === \CatLab\Charon\Enums\Action::EDIT) {
+            $rowAction->setIcon(null)->showLabel()->setStyle('outline-primary');
+        } elseif ($action === \CatLab\Charon\Enums\Action::DESTROY) {
+            $rowAction->setIcon(null)->showLabel()->setStyle('outline-danger');
         }
 
-        if (count($lines) === 0) {
-            $lines[] = e($data['error']['message'] ?? 'Er ging iets mis.');
-        }
-
-        return redirect()->back()
-            ->with('message', new \Illuminate\Support\HtmlString(implode('<br>', $lines)))
-            ->withInput();
+        return $rowAction;
     }
 
     /**

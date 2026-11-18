@@ -177,9 +177,7 @@ class EmailLayoutTest extends IntegrationTestCase
         foreach ([ 'red', '#12345', '#gggggg', 'red;background:url(//x)' ] as $color) {
             $this->actingAs($this->admin)
                 ->put('/admin/emails/layout', [ 'fields' => [ 'accent_color' => $color ] ])
-                ->assertSessionHas('message', function ($message) {
-                    return (string) $message === 'De accentkleur moet een kleur zijn zoals #4cb050.';
-                });
+                ->assertSessionHasErrors([ 'fields.accent_color' => 'De accentkleur moet een kleur zijn zoals #4cb050.' ]);
         }
 
         $this->assertNull($this->stored());
@@ -212,9 +210,7 @@ class EmailLayoutTest extends IntegrationTestCase
             '<!-- {{ content }} --><div>{{ content }}</div>' ] as $html) {
             $this->actingAs($this->admin)
                 ->put('/admin/emails/layout', [ 'fields' => [ 'custom_html' => $html ] ])
-                ->assertSessionHas('message', function ($message) {
-                    return (string) $message === 'De layout moet precies één keer {{ content }} bevatten.';
-                });
+                ->assertSessionHasErrors([ 'fields.custom_html' => 'De layout moet precies één keer {{ content }} bevatten.' ]);
         }
         $this->assertNull($this->stored());
 

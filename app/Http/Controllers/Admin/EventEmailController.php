@@ -35,9 +35,9 @@ use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\Context as ContextContract;
 use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\CharonFrontend\Widgets\FormField;
 use CatLab\Laravel\Table\Table;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -53,11 +53,38 @@ class EventEmailController extends BaseAdminController
 {
     use AdministersEmails;
 
+    /**
+     * The organisation's library templates, by type; loaded for the list.
+     * @var \Illuminate\Support\Collection|null
+     */
+    private $libraryTemplates;
+
     public function __construct()
     {
         parent::__construct();
 
         $this->setParentController(EventController::class, 'event');
+
+        // Choose a library template straight from the list.
+        $this->addRowAction('Gebruik sjabloon', function (Request $request, RESTResource $mail) {
+            return action('Admin\EventEmailController@update', [
+                'event' => $request->route('event'),
+                'type' => $mail->toArray()['type'],
+            ]);
+        }, [
+            'method' => 'put',
+            'style' => 'outline-secondary',
+            'select' => [
+                'name' => 'fields[email_template_id]',
+                'options' => function (Request $request, RESTResource $mail) {
+                    return $this->templateOptions($request, $mail);
+                },
+                'selected' => function (Request $request, RESTResource $mail) {
+                    $source = $mail->getSource();
+                    return $source instanceof EventMail ? $source->email_template_id : null;
+                },
+            ],
+        ]);
 
         $this->widgets()
             ->forField('email_template_id', new EventTemplateWidget())
@@ -258,33 +285,93 @@ class EventEmailController extends BaseAdminController
     }
 
     /**
+     * Deleting a mail of an event goes back to the organisation's version.
      * @param Request $request
-     * @return \Illuminate\Contracts\View\View
+     * @param RESTResource $resource
+     * @return string
      */
-    public function confirmDelete(Request $request)
+    protected function getDestroyConfirmText(Request $request, RESTResource $resource): string
     {
-        return parent::confirmDelete($request)->with(
-            'question',
-            'De keuze van dit evenement (een sjabloon of een eigen tekst) gaat verloren. Dit evenement verstuurt weer de standaard van de organisatie. Doorgaan?'
-        );
+        return 'De keuze van dit evenement (een sjabloon of een eigen tekst) gaat verloren. Dit evenement verstuurt weer de standaard van de organisatie. Doorgaan?';
     }
 
     /**
      * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getDestroyConfirmLabel(Request $request, RESTResource $resource): string
+    {
+        return 'Terug naar standaard';
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function destroy(Request $request)
+    protected function afterDestroy(Request $request, RESTResource $resource)
     {
-        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
-        $response = $this->dispatchToApi(Action::DESTROY, $request);
-
-        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
-            return $this->handleErrorResponse($response, 'destroy');
-        }
-
         Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" gebruikt weer de standaard van de organisatie.');
 
         return redirect($this->indexUrl($request));
+    }
+
+    /**
+     * @param string $action
+     * @param ResourceAction $rowAction
+     * @return ResourceAction
+     */
+    protected function configureRowAction(string $action, ResourceAction $rowAction): ResourceAction
+    {
+        return $this->labelledMailAction($action, $rowAction);
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexColumns(Request $request): array
+    {
+        return [ 'type' ];
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexFilters(Request $request): array
+    {
+        return [ 'type' ];
+    }
+
+    /**
+     * The library templates a mail of this event can use, by id.
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string[]
+     */
+    private function templateOptions(Request $request, RESTResource $resource): array
+    {
+        $mail = $resource->getSource();
+        if (!$mail instanceof EventMail || !$mail->isApplicable()) {
+            return [];
+        }
+
+        if ($this->libraryTemplates === null) {
+            $this->libraryTemplates = $this->getEvent($request)->organisation->emailTemplates()
+                ->library()
+                ->orderBy('name')
+                ->get()
+                ->groupBy('type');
+        }
+
+        $options = [];
+        foreach ($this->libraryTemplates->get($mail->type, []) as $template) {
+            $options[$template->id] = $template->name;
+        }
+
+        return $options;
     }
 
     /**
@@ -301,16 +388,6 @@ class EventEmailController extends BaseAdminController
             : 'De mail "' . $label . '" heeft nu een eigen tekst voor dit evenement.');
 
         return redirect($this->indexUrl($request));
-    }
-
-    /**
-     * @param JsonResponse $response
-     * @param $redirectMethod
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
-    {
-        return $this->refusedByApi($response);
     }
 
     /**
@@ -383,9 +460,6 @@ class EventEmailController extends BaseAdminController
 
             case 'form':
                 return 'admin.events.emails.form';
-
-            case Action::DESTROY:
-                return 'admin.emails.confirm-reset';
         }
 
         return parent::getView($action);

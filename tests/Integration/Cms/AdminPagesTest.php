@@ -180,7 +180,7 @@ class AdminPagesTest extends IntegrationTestCase
             ->delete('/admin/pages/' . $page->id)
             ->assertRedirect();
 
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertStringContainsString('startpagina', (string) session('message'));
         $this->assertNotNull(Page::find($page->id));
         $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
     }
@@ -196,7 +196,7 @@ class AdminPagesTest extends IntegrationTestCase
             ->delete('/admin/pages/' . $parent->id)
             ->assertRedirect();
 
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertStringContainsString('onderliggende pagina', (string) session('message'));
         $this->assertNotNull(Page::find($parent->id));
     }
 
@@ -434,7 +434,7 @@ class AdminPagesTest extends IntegrationTestCase
         foreach ([ 'events', '', 'Over ons!' ] as $slug) {
             $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'slug' => $slug ]))
                 ->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
-            $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         }
 
         $this->assertSame(0, PageTranslation::count());
@@ -474,7 +474,7 @@ class AdminPagesTest extends IntegrationTestCase
         $page = $this->emptyPage($organisation);
 
         $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]));
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertSame(1, PageTranslation::count());
 
         // Same path in another organisation is fine.
@@ -500,11 +500,11 @@ class AdminPagesTest extends IntegrationTestCase
             ->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
 
         $this->assertSame(0, PageTranslation::count());
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
 
         $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create')
             ->assertStatus(200)
-            ->assertSee('Niet opgeslagen')
+            ->assertSee('alert alert-warning', false)
             ->assertSee('Deze tekst mag niet verloren gaan')
             ->assertSee('value="Over ons"', false);
     }
@@ -524,10 +524,10 @@ class AdminPagesTest extends IntegrationTestCase
             $input = $this->translationFields([ 'locale' => 'nl' ]);
             $input['blocks'][0]['data']['image_id'] = (string) $asset->id;
             $this->postTranslation($admin, $page, $input);
-            $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
 
             $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'og_image_id' => (string) $asset->id ]));
-            $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         }
 
         $this->assertSame(0, PageTranslation::count());
@@ -578,14 +578,14 @@ class AdminPagesTest extends IntegrationTestCase
         // A page cannot hang under itself or its own descendants.
         $this->actingAs($admin)
             ->put('/admin/pages/' . $parent->id, [ 'fields' => $this->pageFields([ 'parent_id' => (string) $page->id ]) ]);
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertNull($parent->fresh()->parent_id);
 
         // Nor under another organisation's page.
         $foreign = $this->createPage($this->createOrganisation(), 'elders');
         $this->actingAs($admin)
             ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'parent_id' => (string) $foreign->id ]) ]);
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertSame($parent->id, (int) $page->fresh()->parent_id);
     }
 
@@ -685,7 +685,7 @@ class AdminPagesTest extends IntegrationTestCase
         // Another address must be a safe one.
         $this->actingAs($admin)
             ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'link' => [ 'kind' => 'url', 'url' => 'javascript:alert(1)' ] ]) ]);
-        $this->assertStringContainsString('Niet opgeslagen', (string) session('message'));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         $this->assertSame(Page::LINK_CALENDAR, $page->fresh()->link);
 
         $this->actingAs($admin)

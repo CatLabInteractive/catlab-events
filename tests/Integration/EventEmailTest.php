@@ -155,9 +155,10 @@ class EventEmailTest extends IntegrationTestCase
             'email_template_id' => '',
             'subject' => '',
             'content' => ''
-        ] ])->assertSessionHas('message', function ($message) {
-            return (string) $message === 'Vul onderwerp in.<br>Vul inhoud in.';
-        });
+        ] ])->assertSessionHasErrors([
+            'fields.subject' => 'Vul onderwerp in.',
+            'fields.content' => 'Vul inhoud in.',
+        ]);
 
         $this->assertEquals(0, EventEmail::count());
     }
@@ -197,6 +198,32 @@ class EventEmailTest extends IntegrationTestCase
         $this->actingAs($this->admin)->get($this->url())->assertSee('Sjabloon: Thuisquiz bevestiging');
     }
 
+    public function testATemplateCanBeChosenStraightFromTheList()
+    {
+        $template = $this->createLibraryTemplate($this->organisation, EmailTemplates::CONFIRMATION, 'Thuisquiz bevestiging');
+
+        // The row of that mail has a select with its templates; other rows have none.
+        $html = $this->actingAs($this->admin)->get($this->url())->assertStatus(200)->getContent();
+        $this->assertSame(1, substr_count($html, '<select name="fields[email_template_id]"'));
+        $this->assertMatchesRegularExpression('~<option value="' . $template->id . '"\s*>Thuisquiz bevestiging</option>~', $html);
+        $this->assertMatchesRegularExpression('~>Gebruik sjabloon</button>~', $html);
+
+        // The buttons say what they do.
+        $this->assertMatchesRegularExpression('~class="btn btn-sm btn-outline-primary table-action"\s*>Aanpassen</a>~', $html);
+
+        // Posting only the select chooses the template.
+        $this->actingAs($this->admin)->put($this->url('/' . EmailTemplates::CONFIRMATION), [ 'fields' => [
+            'email_template_id' => $template->id,
+        ] ])->assertRedirect(action('Admin\EventEmailController@index', [ $this->event->id ]));
+
+        $this->assertEquals($template->id, $this->event->emails()->first()->email_template_id);
+
+        // The list now preselects it, and the mail can go back to the standard.
+        $html = $this->actingAs($this->admin)->get($this->url())->getContent();
+        $this->assertMatchesRegularExpression('~<option value="' . $template->id . '"\s+selected\s*>~', $html);
+        $this->assertMatchesRegularExpression('~class="btn btn-sm btn-outline-danger table-action"\s*>Terug naar standaard</a>~', $html);
+    }
+
     public function testChoosingTheOrganisationVersionRemovesTheEventsChoice()
     {
         $this->event->emails()->create([
@@ -227,17 +254,15 @@ class EventEmailTest extends IntegrationTestCase
         $foreign = $this->createLibraryTemplate($other, EmailTemplates::CONFIRMATION, 'Van een ander');
         $wrongType = $this->createLibraryTemplate($this->organisation, EmailTemplates::CANCELLATION, 'Annulatie');
 
-        $refused = function ($message) {
-            return (string) $message === 'Dit sjabloon bestaat niet voor deze mail.';
-        };
+        $refused = [ 'fields.email_template_id' => 'Dit sjabloon bestaat niet voor deze mail.' ];
 
         $this->actingAs($this->admin)->put($this->url('/' . EmailTemplates::CONFIRMATION), [ 'fields' => [
             'email_template_id' => $foreign->id
-        ] ])->assertSessionHas('message', $refused);
+        ] ])->assertSessionHasErrors($refused);
 
         $this->actingAs($this->admin)->put($this->url('/' . EmailTemplates::CONFIRMATION), [ 'fields' => [
             'email_template_id' => $wrongType->id
-        ] ])->assertSessionHas('message', $refused);
+        ] ])->assertSessionHasErrors($refused);
 
         $this->assertEquals(0, EventEmail::count());
     }
