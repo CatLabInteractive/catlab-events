@@ -17,20 +17,11 @@ let mix = require('laravel-mix');
 mix
     .sass('resources/assets/sass/app.scss', 'public/css')
     .sass('resources/assets/sass/admin.scss', 'public/css')
-    .copy('resources/assets/fonts', 'public/fonts', false)
     .copy('resources/assets/images', 'public/images', false)
-    .copy('resources/assets/js/html5shiv.js', 'public/js')
-    .copy('resources/assets/js/respond.min.js', 'public/js')
+    // The public site: no dependencies, see kv.js.
     .scripts([
-        'resources/assets/js/jquery.js',
-        'resources/assets/js/bootstrap.min.js',
-        'resources/assets/js/jquery.jCounter.js',
-        'resources/assets/js/jquery.colorbox.js',
-        //'resources/assets/js/smoothscroll.js',
-        'resources/assets/js/custom.js',
-        'resources/assets/js/lazyload.js',
-        'resources/assets/js/livestream.js'
-    ], 'public/js/app.js')
+        'resources/assets/js/kv.js'
+    ], 'public/js/kv.js')
     .scripts([
         'resources/assets/js/jquery.js',
         'resources/assets/js/bootstrap.min.js',

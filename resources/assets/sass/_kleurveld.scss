@@ -10,27 +10,7 @@
  * Styles are scoped to .kv-* classes, plus the shared header and footer.
  */
 
-$kv-bg: #f3f1e9;
-$kv-paper: #fbfaf5;
-$kv-ink: #1f3326;
-$kv-ink-hover: #2f4a37;
-$kv-muted: #5d6b60;
-$kv-line: #d9d8cc;
-
-// From the logo and quizfabriek.be. Each has its own hue, so series stay apart.
-$kv-green: #61cc6f;  // site green (hero bands, active menu), close to the logo shield
-$kv-gold: #fcc765;   // logo banner, site cards
-$kv-violet: #5e2fff; // site call-to-action button
-$kv-rose: #bf8076;   // site "missie" blocks, social buttons
-$kv-slate: #4a6a9a;  // team page names
-$kv-teal: #58998d;   // team page bars
-$kv-peach: #f8e6c6;  // site light cards
-$kv-sage: $kv-green; // kept as an alias
-$kv-mint: $kv-peach;
-$kv-butter: $kv-peach;
-$kv-alert: #c4553a;  // only for "uitverkocht" / last tickets
-
-$kv-font: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+/* Colour and type tokens: _kv-tokens.scss. */
 
 /*
  * Each series gets one field: its main colour, a second colour for the circles,
@@ -49,29 +29,14 @@ $kv-font: 'Jost', 'Helvetica Neue', Arial, sans-serif;
 .kv-field-4 { --kv-field: #{$kv-slate};  --kv-field-2: #{$kv-gold};   --kv-on-field: #fff; }
 .kv-field-5 { --kv-field: #{$kv-teal};   --kv-field-2: #{$kv-peach};  --kv-on-field: #{$kv-ink}; }
 
-/* ---------- Page base (only on pages that opt in with .kv-page) ---------- */
+/* ---------- Page layout ---------- */
 
-body.kv-site {
-  background: $kv-bg;
-  color: $kv-ink;
-  font-family: $kv-font;
+.kv-sec { padding: 56px 0; }
+.kv-sec + .kv-sec { padding-top: 0; }
+.kv-sec.kv-band, .kv-sec + .kv-sec.kv-band, .kv-band + .kv-sec { padding-top: 56px; }
 
-  .body-inner { background: $kv-bg; }
-
-}
-
-/* The old theme sets font and size on p directly; undo that without outranking .kv-* rules. */
-:where(body.kv-site) p { font-family: inherit; font-size: inherit; line-height: inherit; }
-
-body.kv-page {
-  .body-inner > section { padding: 0; }
-  .body-inner section.kv-sec { padding: 56px 0; }
-  .body-inner section.kv-sec + section.kv-sec { padding-top: 0; }
-  .body-inner section.kv-sec.kv-band,
-  .body-inner section.kv-sec + section.kv-sec.kv-band { padding-top: 56px; }
-  .body-inner section.kv-band + section.kv-sec { padding-top: 56px; }
-  .body-inner > section > .container { width: auto; max-width: none; padding: 0; }
-}
+/* Pages without their own sections (layouts/front wraps them in this). */
+.kv-plain { padding: 40px 0 72px; }
 
 .kv-wrap {
   max-width: 1200px;
@@ -82,12 +47,7 @@ body.kv-page {
   @media (min-width: 768px) { padding-left: 40px; padding-right: 40px; }
 }
 
-.kv-site h1, .kv-site h2, .kv-site h3, .kv-site h4 {
-  font-family: $kv-font;
-  color: $kv-ink;
-  text-transform: none;
-  letter-spacing: -.01em;
-}
+h1, h2, h3, h4 { letter-spacing: -.01em; }
 
 /* ---------- Header ---------- */
 
@@ -194,8 +154,19 @@ body.kv-page {
 .kv-nav-item.is-active > a { font-weight: 500; }
 
 .kv-nav-count {
-  font-size: 13px;
-  color: $kv-muted;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--kv-field);
+  color: var(--kv-on-field);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .kv-nav-caret {
@@ -228,7 +199,7 @@ body.kv-page {
 
   a:hover, a:focus-visible, .kv-nav-sub-button:hover, .kv-nav-sub-button:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
   form { margin: 0; }
-  .fa { margin-left: 4px; font-size: 12px; color: $kv-muted; }
+  .kv-icon { margin-left: 4px; font-size: 12px; color: $kv-muted; }
 }
 
 .kv-nav-group.is-open .kv-nav-sub { display: block; }
@@ -361,6 +332,7 @@ body.kv-page {
 
   .kv-hero-info { position: relative; z-index: 1; padding-top: 32px; }
   .kv-series, .kv-hero-facts { color: var(--kv-on-field); opacity: .9; }
+  .kv-series a, .kv-series a:hover, .kv-series a:focus { color: inherit; }
   .kv-title, .kv-title a { color: var(--kv-on-field); }
   .kv-series i, .kv-hero-facts li:before { background: $kv-paper; }
   .kv-links a, .kv-links a:hover, .kv-links a:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
@@ -425,7 +397,7 @@ body.kv-page {
   }
 }
 
-.kv-page .kv-title {
+.kv-title {
   margin: 0 0 6px;
   font-weight: 500;
   font-size: min(52px, calc(100cqw / 8));
@@ -445,14 +417,14 @@ body.kv-page {
 }
 
 /* Event name on a colour field or photo: the field's text colour, also when it's a link. */
-.kv-site .kv-hero.kv-hero-photo .kv-title,
-.kv-page .kv-hero.kv-hero-photo .kv-title a, .kv-page .kv-hero.kv-hero-photo .kv-title a:hover, .kv-page .kv-hero.kv-hero-photo .kv-title a:focus { color: #fff; }
+.kv-hero.kv-hero-photo .kv-title,
+.kv-hero.kv-hero-photo .kv-title a, .kv-hero.kv-hero-photo .kv-title a:hover, .kv-hero.kv-hero-photo .kv-title a:focus { color: #fff; }
 
-.kv-site .kv-hero-noposter .kv-title,
-.kv-page .kv-hero-noposter .kv-title a, .kv-page .kv-hero-noposter .kv-title a:hover, .kv-page .kv-hero-noposter .kv-title a:focus { color: var(--kv-on-field); }
+.kv-hero-noposter .kv-title,
+.kv-hero-noposter .kv-title a, .kv-hero-noposter .kv-title a:hover, .kv-hero-noposter .kv-title a:focus { color: var(--kv-on-field); }
 
 /* The series name as the page's h1, in the small kicker line above the event name. */
-.kv-site h1.kv-series-h1 {
+h1.kv-series-h1 {
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -637,7 +609,7 @@ body.kv-page {
 
   a { color: $kv-ink; text-decoration: underline; text-decoration-color: var(--kv-field); text-decoration-thickness: 2px; text-underline-offset: 4px; }
   a:hover, a:focus { color: $kv-ink; text-decoration-color: $kv-ink; }
-  .fa { margin-right: 4px; }
+  .kv-icon { margin-right: 4px; }
 }
 
 /* ---------- Sections ---------- */
@@ -652,7 +624,7 @@ body.kv-page {
   }
 }
 
-.kv-page .kv-sec-title {
+.kv-sec-title {
   margin: 0;
   font-weight: 500;
   font-size: 32px;
@@ -745,9 +717,12 @@ body.kv-page {
   background: var(--kv-c0, #{$kv-green});
   color: var(--kv-tile-text);
 
-  &:nth-child(4n+2) { background: var(--kv-c2, #{$kv-gold}); --kv-tile-text: var(--kv-c2-text, #{$kv-ink}); }
-  &:nth-child(4n+3) { background: var(--kv-c3, #{$kv-rose}); --kv-tile-text: var(--kv-c3-text, #{$kv-ink}); }
-  &:nth-child(4n+4) { background: var(--kv-c1, #{$kv-violet}); --kv-tile-text: var(--kv-c1-text, #fff); }
+  /* All six colours in turn: green, gold, rose, violet, slate, teal. */
+  &:nth-child(6n+2) { background: var(--kv-c2, #{$kv-gold}); --kv-tile-text: var(--kv-c2-text, #{$kv-ink}); }
+  &:nth-child(6n+3) { background: var(--kv-c3, #{$kv-rose}); --kv-tile-text: var(--kv-c3-text, #{$kv-ink}); }
+  &:nth-child(6n+4) { background: var(--kv-c1, #{$kv-violet}); --kv-tile-text: var(--kv-c1-text, #fff); }
+  &:nth-child(6n+5) { background: var(--kv-c4, #{$kv-slate}); --kv-tile-text: var(--kv-c4-text, #fff); }
+  &:nth-child(6n+6) { background: var(--kv-c5, #{$kv-teal}); --kv-tile-text: var(--kv-c5-text, #{$kv-ink}); }
 
   &:after {
     content: "";
@@ -1022,19 +997,19 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-poster { height: auto; width: 100%; max-height: 460px; }
   .kv-hero-tall .kv-poster { width: auto; height: min(520px, 62vh); }
   .kv-hero-info { padding: 40px; }
-  .kv-page .kv-title { font-size: min(76px, calc(100cqw / 7.5)); margin-bottom: 14px; }
+  .kv-title { font-size: min(76px, calc(100cqw / 7.5)); margin-bottom: 14px; }
   .kv-facts { font-size: 18px; margin-bottom: 32px; }
   .kv-hero-facts { font-size: 18px; margin-bottom: 32px; }
   .kv-buy { padding: 22px 24px 20px; }
   .kv-price strong { font-size: 42px; }
   .kv-btn { min-height: 60px; font-size: 19px; padding: 0 18px 0 24px; }
 
-  body.kv-page .body-inner section.kv-sec { padding-top: 88px; padding-bottom: 88px; }
-  body.kv-page .body-inner section.kv-sec + section.kv-sec { padding-top: 0; }
-  body.kv-page .body-inner section.kv-sec.kv-band,
-  body.kv-page .body-inner section.kv-band + section.kv-sec { padding-top: 88px; }
+  .kv-sec { padding-top: 88px; padding-bottom: 88px; }
+  .kv-sec + .kv-sec { padding-top: 0; }
+  .kv-sec.kv-band, .kv-band + .kv-sec { padding-top: 88px; }
+  .kv-plain { padding: 56px 0 96px; }
   .kv-sec > .kv-wrap { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 48px; }
-  .kv-page .kv-sec-title { font-size: 40px; }
+  .kv-sec-title { font-size: 40px; }
 
   .kv-tickets { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .kv-ticket { min-height: 240px; padding: 28px; }
@@ -1165,7 +1140,7 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-facts { color: var(--kv-on-field); margin: 0; }
 }
 
-.kv-site .kv-pagehead-title {
+.kv-pagehead-title {
   margin: 0;
   max-width: 18ch;
   font-family: $kv-font;
@@ -1182,7 +1157,6 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 .kv-pagehead-event .kv-pagehead-title { margin-bottom: 8px; }
 
 /* Pages that still use the old content markup get a bit of air under the page head. */
-body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40px; }
 
 .kv-sec-form > .kv-wrap { display: block; }
 
@@ -1230,7 +1204,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   font-weight: 500;
 }
 
-.kv-site .table.agenda {
+.table.agenda {
   background: transparent;
 
   th { font-weight: 500; color: $kv-muted; border-bottom: 1px solid $kv-line; }
@@ -1242,7 +1216,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   .kv-pagehead { padding: 64px 0 56px; }
   .kv-pagehead:before { width: 420px; height: 420px; right: -120px; bottom: -280px; }
   .kv-pagehead:after { width: 70px; height: 70px; right: 300px; top: 36px; }
-  .kv-site .kv-pagehead-title { font-size: 52px; }
+  .kv-pagehead-title { font-size: 52px; }
 }
 
 /* ---------- Series page ---------- */
@@ -1268,8 +1242,8 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   p:last-child { margin-bottom: 0; }
 }
 
-.kv-page .kv-title a { color: $kv-ink; }
-.kv-page .kv-title a:hover, .kv-page .kv-title a:focus { color: $kv-ink; text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 8px; }
+.kv-title a { color: $kv-ink; }
+.kv-title a:hover, .kv-title a:focus { color: $kv-ink; text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 8px; }
 
 .kv-series-logo { display: block; max-width: 160px; height: auto; margin-bottom: 20px; }
 
@@ -1321,31 +1295,6 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 }
 
 .kv-wrap-narrow { max-width: 640px; }
-
-/* Bootstrap buttons that remain on older pages, in the same language as .kv-btn. */
-.kv-site .btn {
-  border-radius: 0;
-  font-family: $kv-font;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.kv-site .btn-default {
-  background: transparent;
-  border: 2px solid $kv-ink;
-  color: $kv-ink;
-
-  &:hover, &:focus { background: $kv-ink; border-color: $kv-ink; color: $kv-paper; }
-}
-
-.kv-site .btn-primary {
-  background: $kv-ink;
-  border: 2px solid $kv-ink;
-  color: $kv-paper;
-
-  &:hover, &:focus { background: $kv-ink-hover; border-color: $kv-ink-hover; color: $kv-paper; }
-}
 
 /* ---------- Past events, grouped by year ---------- */
 
@@ -1401,8 +1350,8 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 }
 
 .kv-past-date { font-size: 14px; color: $kv-muted; }
-.kv-page .kv-past-name { color: $kv-ink; font-weight: 500; }
-.kv-page .kv-past-name:hover, .kv-page .kv-past-name:focus { color: $kv-ink; text-decoration: underline; }
+.kv-past-name { color: $kv-ink; font-weight: 500; }
+.kv-past-name:hover, .kv-past-name:focus { color: $kv-ink; text-decoration: underline; }
 .kv-past-meta { font-size: 14px; color: $kv-muted; }
 
 @media (min-width: 768px) {
@@ -1470,4 +1419,118 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
     .buttons { flex-direction: row-reverse; flex-wrap: wrap; }
     .buttons button { width: auto; flex: 1 1 auto; }
   }
+}
+
+/* ---------- Mijn tickets ---------- */
+
+.kv-orders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid $kv-line;
+}
+
+.kv-order {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: start;
+  padding: 16px 0;
+  border-bottom: 1px solid $kv-line;
+}
+
+.kv-order-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--kv-field, #{$kv-muted});
+}
+
+.kv-order-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.kv-order-name {
+  color: $kv-ink;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.kv-order-name:hover, .kv-order-name:focus { color: $kv-ink; text-decoration: underline; text-underline-offset: 4px; }
+
+.kv-order-meta { font-size: 15px; color: $kv-muted; }
+
+.kv-order-flag {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 2px 10px;
+  background: $kv-alert;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.kv-order-action { grid-column: 2; }
+
+.kv-order-link {
+  font-size: 16px;
+  font-weight: 500;
+  color: $kv-ink;
+  text-decoration: underline;
+  text-decoration-color: var(--kv-field, #{$kv-ink});
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.kv-order-link:hover, .kv-order-link:focus { color: $kv-ink; text-decoration-color: $kv-ink; }
+
+.kv-order-state { font-size: 14px; color: $kv-muted; }
+
+.kv-btn.kv-btn-small { display: inline-flex; min-height: 44px; padding: 0 12px 0 16px; font-size: 16px; }
+.kv-btn.kv-btn-small .kv-btn-dot { flex-basis: 24px; width: 24px; height: 24px; }
+
+@media (min-width: 768px) {
+  .kv-order {
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 18px 0;
+  }
+
+  .kv-order-dot { margin-top: 0; align-self: start; margin-top: 8px; }
+  .kv-order-action { grid-column: 3; text-align: right; }
+}
+
+/* Keyboard focus on dark backgrounds (the base rule is in _kv-base). */
+.kv-hero-photo a:focus-visible, .kv-footer a:focus-visible { outline-color: #fff; }
+
+.kv-orders-intro { margin: 0 0 24px; color: $kv-muted; }
+
+/* ---------- Poster and video popup (kv.js) ---------- */
+
+.kv-dialog {
+  max-width: min(96vw, 1100px);
+  max-height: 94vh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+
+  &::backdrop { background: rgba(10, 14, 11, .86); }
+}
+
+.kv-dialog-body { display: grid; place-items: center; }
+.kv-dialog-image { display: block; max-width: 100%; max-height: 90vh; width: auto; height: auto; }
+.kv-dialog-frame { display: block; width: min(92vw, 960px); aspect-ratio: 16 / 9; border: 0; background: #000; }
+
+.kv-dialog-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
 }

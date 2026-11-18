@@ -40,19 +40,19 @@
                     <h4>{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h4>
                     <div class="kv-footer-social">
                         @if(organisation()->facebook_url)
-                            <a href="{{organisation()->facebook_url}}" title="{{organisation()->name}} Facebook"><i class="fa fa-facebook"></i><span class="sr-only">Facebook</span></a>
+                            <a href="{{organisation()->facebook_url}}" title="{{organisation()->name}} Facebook">@include('blocks.icon', [ 'name' => 'facebook' ])<span class="sr-only">Facebook</span></a>
                         @endif
                         @if(organisation()->twitter_url)
-                            <a href="{{organisation()->twitter_url}}" title="{{organisation()->name}} Twitter"><i class="fa fa-twitter"></i><span class="sr-only">Twitter</span></a>
+                            <a href="{{organisation()->twitter_url}}" title="{{organisation()->name}} Twitter">@include('blocks.icon', [ 'name' => 'twitter' ])<span class="sr-only">Twitter</span></a>
                         @endif
                         @if(organisation()->youtube_url)
-                            <a href="{{organisation()->youtube_url}}" title="{{organisation()->name}} YouTube"><i class="fa fa-youtube"></i><span class="sr-only">YouTube</span></a>
+                            <a href="{{organisation()->youtube_url}}" title="{{organisation()->name}} YouTube">@include('blocks.icon', [ 'name' => 'youtube' ])<span class="sr-only">YouTube</span></a>
                         @endif
                         @if(organisation()->instagram_url)
-                            <a href="{{organisation()->instagram_url}}" title="{{organisation()->name}} Instagram"><i class="fa fa-instagram"></i><span class="sr-only">Instagram</span></a>
+                            <a href="{{organisation()->instagram_url}}" title="{{organisation()->name}} Instagram">@include('blocks.icon', [ 'name' => 'instagram' ])<span class="sr-only">Instagram</span></a>
                         @endif
                         @if(organisation()->linkedin_url)
-                            <a href="{{organisation()->linkedin_url}}" title="{{organisation()->name}} LinkedIn"><i class="fa fa-linkedin"></i><span class="sr-only">LinkedIn</span></a>
+                            <a href="{{organisation()->linkedin_url}}" title="{{organisation()->name}} LinkedIn">@include('blocks.icon', [ 'name' => 'linkedin' ])<span class="sr-only">LinkedIn</span></a>
                         @endif
                     </div>
                     @if(organisation()->support_email)
@@ -81,12 +81,5 @@
         </div>
 
     </footer>
-
-    <script type="text/javascript" src="{{ mix('js/app.js') }}"></script>
-    <script type="text/javascript">
-        var myLazyLoad = new LazyLoad({
-            elements_selector: ".lazy"
-        });
-    </script>
 
 @endif

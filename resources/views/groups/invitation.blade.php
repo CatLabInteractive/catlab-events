@@ -1,12 +1,10 @@
 @extends('layouts/front')
 
 @section('title')
-    {{ $invitation->group->name }} Uitnodiging
+    Uitnodiging voor {{ $invitation->group->name }}
 @endsection
 
 @section('content')
-
-    <div class="invoice">
 
         <h3>Dag {{ $invitation->name }}</h3>
 
@@ -19,7 +17,5 @@
         <p>
             <a href="{{ action('GroupController@acceptInvitation', [ $invitation->id, $invitation->token ]) }}" class="btn btn-primary">Accepteren</a>
         </p>
-
-    </div>
 
 @endsection

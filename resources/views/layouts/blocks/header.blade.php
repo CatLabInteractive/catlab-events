@@ -1,8 +1,8 @@
 {{--
     The site header: logo, the quiz series and a few menus. Mobile first: on
     small screens the links fold into a panel behind the menu button. The
-    account menu opens on hover (with a mouse) and on click or tap; the script
-    below handles the toggling. No Bootstrap navbar classes, so the old theme styles don't apply.
+    account menu opens on hover (with a mouse) and on click or tap; kv.js
+    handles the toggling. No Bootstrap navbar classes, so the old theme styles don't apply.
 --}}
 <?php $navOrganisation = organisation(); ?>
 <header id="header" class="kv-header">
@@ -81,54 +81,3 @@
     </div>
 </header>
 
-<script>
-    (function () {
-        var header = document.getElementById('header');
-        if (!header) {
-            return;
-        }
-        var button = header.querySelector('.kv-nav-button');
-        var groups = header.querySelectorAll('.kv-nav-group');
-
-        function setGroup(group, open) {
-            group.classList.toggle('is-open', open);
-            group.querySelector('.kv-nav-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
-        }
-
-        function closeGroups(except) {
-            Array.prototype.forEach.call(groups, function (group) {
-                if (group !== except) {
-                    setGroup(group, false);
-                }
-            });
-        }
-
-        if (button) {
-            button.addEventListener('click', function () {
-                var open = !header.classList.contains('kv-nav-open');
-                header.classList.toggle('kv-nav-open', open);
-                button.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-        }
-
-        Array.prototype.forEach.call(groups, function (group) {
-            group.querySelector('.kv-nav-toggle').addEventListener('click', function (e) {
-                e.stopPropagation();
-                closeGroups(group);
-                setGroup(group, !group.classList.contains('is-open'));
-            });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!header.contains(e.target)) {
-                closeGroups(null);
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeGroups(null);
-            }
-        });
-    })();
-</script>

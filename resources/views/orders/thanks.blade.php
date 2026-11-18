@@ -84,11 +84,11 @@
 
             <div class="order-ticket-status order-ticket-status-{{ $order->isAccepted() ? 'ok' : ($order->isPending() ? 'pending' : 'failed') }}">
                 @if($order->isAccepted())
-                    <i class="fa fa-check"></i> Bevestigd
+                    @include('blocks.icon', [ 'name' => 'check' ]) Bevestigd
                 @elseif($order->isPending())
-                    <i class="fa fa-clock-o"></i> Betaling wordt verwerkt
+                    @include('blocks.icon', [ 'name' => 'clock' ]) Betaling wordt verwerkt
                 @else
-                    <i class="fa fa-times"></i> Betaling mislukt
+                    @include('blocks.icon', [ 'name' => 'times' ]) Betaling mislukt
                 @endif
             </div>
         </div>
@@ -96,7 +96,7 @@
         {{-- What now? --}}
         @if($order->isPending())
             <div class="order-thanks-mail">
-                <i class="fa fa-envelope-o"></i>
+                @include('blocks.icon', [ 'name' => 'envelope' ])
                 <p>
                     <strong>We verwerken je betaling.</strong>
                     Zodra die is goedgekeurd, sturen we
@@ -113,7 +113,7 @@
                     <li>
                         <strong>Start de quiz</strong>
                         <p>Open de link op het scherm waar iedereen naar kijkt, bijvoorbeeld een laptop of tv.</p>
-                        <a href="{{ $playLink }}" class="btn btn-primary order-thanks-play" target="_blank" rel="noopener">Start de quiz <i class="fa fa-arrow-right"></i></a>
+                        <a href="{{ $playLink }}" class="btn btn-primary order-thanks-play" target="_blank" rel="noopener">Start de quiz @include('blocks.icon', [ 'name' => 'arrow-right' ])</a>
                         <div class="order-thanks-link">
                             <input type="text" readonly value="{{ $playLink }}" id="order-play-link" aria-label="Link om te spelen">
                             <button type="button" class="btn btn-default btn-sm" data-copy="#order-play-link">Kopieer</button>
@@ -174,14 +174,14 @@
                                     Je ticket geldt voor {{ count($eventDates) }} data, ze staan allemaal in het agendabestand.
                                 @endif
                             </p>
-                            <a href="{{ $calendarUrl }}" class="btn btn-default"><i class="fa fa-calendar-plus-o"></i> Toevoegen aan agenda</a>
+                            <a href="{{ $calendarUrl }}" class="btn btn-default">@include('blocks.icon', [ 'name' => 'calendar-plus' ]) Toevoegen aan agenda</a>
                         </li>
                     @endif
                     @if($livestreamUrl)
                         <li>
                             <strong>Speel online mee</strong>
                             <p>Je kan het spel nu al opstarten. De link staat ook in je mail.</p>
-                            <a href="{{ $livestreamUrl }}" class="btn btn-primary order-thanks-play">Start spel <i class="fa fa-arrow-right"></i></a>
+                            <a href="{{ $livestreamUrl }}" class="btn btn-primary order-thanks-play">Start spel @include('blocks.icon', [ 'name' => 'arrow-right' ])</a>
                         </li>
                     @elseif($event->venue)
                         <li>
@@ -200,27 +200,11 @@
 
             @if($order->isAccepted() && $event->getFacebookEventUrl())
                 <p>
-                    Zet je ook 'aanwezig' op ons <a href="{{ $event->getFacebookEventUrl() }}"><i class="fa fa-facebook"></i> Facebook-evenement</a>? Dank je! <i class="fa fa-heart"></i>
+                    Zet je ook 'aanwezig' op ons <a href="{{ $event->getFacebookEventUrl() }}">@include('blocks.icon', [ 'name' => 'facebook' ]) Facebook-evenement</a>? Dank je! @include('blocks.icon', [ 'name' => 'heart' ])
                 </p>
             @endif
         </div>
     </div>
-
-    <script>
-        document.querySelectorAll('[data-copy]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                var input = document.querySelector(button.getAttribute('data-copy'));
-                var done = function () { button.textContent = 'Gekopieerd!'; };
-                input.select();
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(input.value).then(done, function () { document.execCommand('copy'); done(); });
-                } else {
-                    document.execCommand('copy');
-                    done();
-                }
-            });
-        });
-    </script>
 
     @if($trackConversion)
 

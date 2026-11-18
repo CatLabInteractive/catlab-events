@@ -36,7 +36,7 @@
                 <div class="kv-text">
                     {!! $series->teaser !!}
                     @if($series->hasVideo())
-                        <p class="kv-links"><a class="popup" href="{{ $series->getVideoUrl() }}"><i class="fa fa-play" aria-hidden="true"></i>Bekijk de video</a></p>
+                        <p class="kv-links"><a class="popup" href="{{ $series->getVideoUrl() }}">@include('blocks.icon', [ 'name' => 'play' ])Bekijk de video</a></p>
                     @endif
                 </div>
             </div>

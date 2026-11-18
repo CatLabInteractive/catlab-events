@@ -6,12 +6,10 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-
     @foreach($event->eventDates as $eventDate)
         @if($eventDate->hasScores())
-            <h3>Eindstand {{$eventDate->startDate->format('Y-m-d H:i')}}</h3>
-            <table class="table">
+            <h3>Eindstand {{ $eventDate->startDate->translatedFormat('j F Y') }}</h3>
+            <table class="table kv-scores">
                 @foreach($eventDate->scores as $score)
 
                     <tr>
