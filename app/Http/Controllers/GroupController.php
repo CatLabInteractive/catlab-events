@@ -33,6 +33,7 @@ use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Laravel\Models\ResourceResponse;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
+use CatLab\Charon\Models\RESTResource;
 use Illuminate\Http\Request;
 
 /**
@@ -265,6 +266,14 @@ class GroupController extends Controller implements FrontCrudControllerContract
      * @param $action
      * @return string
      */
+    /**
+     * The public team pages have their own headings; no admin page chrome.
+     */
+    protected function getPageChrome(Request $request, string $action, ?RESTResource $resource = null): array
+    {
+        return [];
+    }
+
     protected function getView($action)
     {
         switch ($action) {

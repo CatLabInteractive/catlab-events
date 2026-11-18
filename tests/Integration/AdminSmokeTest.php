@@ -76,6 +76,43 @@ class AdminSmokeTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * Ticket categories live under an event: their pages say which event,
+     * and saving one from the event's page goes back there.
+     */
+    public function testTicketCategoryPagesLeadBackToTheirEvent()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $category = $this->createTicketCategory($event, 10.0);
+        $admin = $this->adminOf($organisation);
+
+        $date = new \App\Models\EventDate();
+        $date->event()->associate($event);
+        $date->startDate = new \DateTime('+1 month');
+        $date->endDate = new \DateTime('+1 month +3 hours');
+        $date->save();
+
+        $base = '/admin/events/' . $event->id . '/ticketCategories/' . $category->id;
+
+        $this->actingAs($admin)->get($base . '/edit?return=admin/events/' . $event->id)
+            ->assertStatus(200)
+            ->assertSee('<li class="breadcrumb-item"><a href="http://localhost/admin/events/' . $event->id, false)
+            ->assertSee('">' . e($event->name) . '</a></li>', false)
+            ->assertSee('<input type="hidden" name="return" value="/admin/events/' . $event->id . '">', false);
+
+        $this->actingAs($admin)->put($base, [
+            'return' => '/admin/events/' . $event->id,
+            'fields' => [
+                'name' => 'Early bird',
+                'price' => '8',
+                'eventDates' => [ 'ids' => [ '', (string) $date->id ] ],
+            ],
+        ])->assertRedirect('http://localhost/admin/events/' . $event->id);
+
+        $this->assertSame('Early bird', $category->fresh()->name);
+    }
+
     public function testAdminCanSetATicketDescription()
     {
         $organisation = $this->createOrganisation();
