@@ -62,6 +62,7 @@ class GuestRegistrationController extends Controller
             ->get();
 
         return view('admin.guests.index', [
+            'hub' => (new EventController())->getHubChrome(request(), $event->id, 'guests'),
             'event' => $event,
             'ticketCategories' => $event->getTicketCategoriesChronologically(),
             'orders' => $orders,

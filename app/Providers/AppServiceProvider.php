@@ -49,8 +49,22 @@ class AppServiceProvider extends ServiceProvider
             $config = \HTMLPurifier_Config::createDefault();
             $config->set('Cache.SerializerPath', $cachePath);
             $config->set('Attr.AllowedFrameTargets', [ '_blank' ]);
+            // Anchors such as the series FAQ (<h2 id="faq">, see Series::hasFaq()).
+            $config->set('Attr.EnableID', true);
+            // Embedded video, music and maps from known players only.
+            $config->set('HTML.SafeIframe', true);
+            $config->set('URI.SafeIframeRegexp', '%^(https?:)?//(www\.youtube(-nocookie)?\.com/embed/|player\.vimeo\.com/video/|open\.spotify\.com/embed/|w\.soundcloud\.com/player/|www\.google\.com/maps/embed|www\.facebook\.com/plugins/)%');
 
-            return new \HTMLPurifier($config);
+            return new class($config) extends \HTMLPurifier {
+                // An emptied editor (<p><br></p>, or nothing at all) is
+                // stored empty, so @if($event->description) stays false.
+                public function purify($html, $config = null)
+                {
+                    $clean = parent::purify($html, $config);
+                    $text = trim(str_replace([ '&nbsp;', "\xc2\xa0" ], ' ', strip_tags($clean, '<img><iframe>')));
+                    return $text === '' ? '' : $clean;
+                }
+            };
         });
 
         if (isset($_SERVER['HTTP_HOST'])) {

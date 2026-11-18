@@ -2,8 +2,12 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-    <h3>Gasten</h3>
+    @if($hub)
+        @include('charonfrontend::crud.hub-header', [ 'hub' => $hub ])
+    @else
+        <h2>{{ $event->name }}</h2>
+        <h3>Gasten</h3>
+    @endif
 
     <p>
         Schrijf gasten in zonder dat ze een account moeten aanmaken. Ze krijgen
