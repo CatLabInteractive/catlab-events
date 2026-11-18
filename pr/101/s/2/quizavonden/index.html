@@ -15,7 +15,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="xcEuj0nnNtvIAR7vU6cXhWJWAErgeUVZpToMTpdJ">
+<meta name="csrf-token" content="zRt4y5HqTNlZgduJq1PcZm9s4xyl80hhJIx1pmxn">
 
             <title>Quizavonden – De Quizfabriek</title>
     
@@ -169,16 +169,11 @@
                                                             </a>
                         </li>
                     
-                    <li class="kv-nav-item kv-nav-group">
-                        <button type="button" class="kv-nav-toggle" aria-expanded="false">
-                            Quizzes <i class="kv-nav-caret" aria-hidden="true"></i>
-                        </button>
-                        <ul class="kv-nav-sub">
-                            <li><a href="../../../calendar/">Kalender</a></li>
-                                                                                                                    <li><a href="../../../blog/">Blog</a></li>
-                                                                                </ul>
-                    </li>
+                    <li class="kv-nav-item"><a href="../../../calendar/">Kalender</a></li>
 
+                    
+                                                                <li class="kv-nav-item"><a href="../../../blog/">Blog</a></li>
+                    
                                             <li class="kv-nav-item"><a href="../../../preview-info/unavailable.html">Login</a></li>
                                     </ul>
             </nav>
@@ -242,15 +237,9 @@
     
 
     
-    <div class="kv-pagehead kv-pagehead-series kv-field-2">
-        <div class="kv-wrap">
-            <p class="kv-series"><i aria-hidden="true"></i>Quizreeks</p>
-            <h1 class="kv-pagehead-title">Quizavonden</h1>
-        </div>
-    </div>
+            <div class="kv-hero kv-hero-tall  kv-field-2">
 
-            <div class="kv-hero kv-hero-tall kv-field-2">
-
+    
             <div class="kv-hero-field">
             <a class="kv-poster image-popup "
    href="../../../preview-assets/square__width_1600.jpg"
@@ -265,9 +254,9 @@
         </div>
     
     <div class="kv-hero-info">
-                    <p class="kv-series"><i aria-hidden="true"></i>Volgende quiz</p>
+                    <h1 class="kv-series kv-series-h1"><i aria-hidden="true"></i>Quizavonden<span class="kv-series-sub">volgende quiz</span></h1>
         
-                    <h2 class="kv-title"><a href="../../../events/3/query-pubquiz/">Pubquiz</a></h2>
+                    <h2 class="kv-title"><a href="../../../preview-info/unavailable.html">Pubquiz</a></h2>
         
         <ul class="kv-hero-facts"><li>Woensdag 30 december 2026</li><li>Zaal De Kring, Gent</li><li>Max 4 spelers per team</li></ul>
 
@@ -288,7 +277,8 @@
                             </div>
         
                             <p class="kv-links">
-                                    <a href="../../../events/3/query-pubquiz/">Praktisch &amp; tickets</a>
+                                    
+                    <a href="../../../preview-info/unavailable.html#over">Praktisch &amp; tickets</a>
                 
                 
                 
@@ -297,6 +287,45 @@
             </div>
 
 </div>
+
+    <script>
+        // Hero slideshow: a slow crossfade between the series photos. Each photo
+        // only loads just before it is shown; reduced motion keeps the first one.
+        (function () {
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) {
+                return;
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
+                var images = show.querySelectorAll('img');
+                var current = 0;
+
+                function prepare(img) {
+                    if (img.dataset.src) {
+                        img.srcset = img.dataset.srcset;
+                        img.src = img.dataset.src;
+                        delete img.dataset.src;
+                    }
+                }
+
+                prepare(images[1]);
+                setInterval(function () {
+                    if (document.hidden) {
+                        return;
+                    }
+                    var next = (current + 1) % images.length;
+                    var img = images[next];
+                    if (!img.complete) {
+                        return;
+                    }
+                    images[current].classList.remove('is-shown');
+                    img.classList.add('is-shown');
+                    current = next;
+                    prepare(images[(current + 1) % images.length]);
+                }, 6500);
+            });
+        })();
+    </script>
     
             <section class="kv-sec">
             <div class="kv-wrap">
@@ -313,7 +342,7 @@
                 
                 <div>
                                             <div class="kv-cards">
-                                                            <a class="kv-card kv-field-2" href="../../../events/3/query-pubquiz/">
+                                                            <a class="kv-card kv-field-2" href="../../../preview-info/unavailable.html">
     <span class="kv-card-image">
                     <img src="../../../preview-assets/square__width_400.jpg" alt="Poster 'Pubquiz'" loading="lazy" />
             </span>
@@ -326,7 +355,7 @@
             Quizavonden             &middot;             Zaal De Kring, Gent        </span>
     </span>
 </a>
-                                                            <a class="kv-card kv-field-2" href="../../../events/4/query-zomerquiz/">
+                                                            <a class="kv-card kv-field-2" href="../../../preview-info/unavailable.html">
     <span class="kv-card-image">
                     <img src="../../../preview-assets/panorama__width_400.jpg" alt="Poster 'Zomerquiz'" loading="lazy" />
             </span>
@@ -339,7 +368,7 @@
             Quizavonden             &middot;             Zaal De Kring, Gent        </span>
     </span>
 </a>
-                                                            <a class="kv-card kv-field-2" href="../../../events/5/query-quiz-zonder-poster/">
+                                                            <a class="kv-card kv-field-2" href="../../../preview-info/unavailable.html">
     <span class="kv-card-image">
             </span>
     <span class="kv-card-body">
@@ -431,14 +460,14 @@
             <div class="kv-footer-grid">
                 <div>
                     <span class="kv-footer-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                    <p class="kv-footer-claim">Quizzen met plezier.</p>
+                    <p class="kv-footer-claim">De perfecte quiz op ieders maat.</p>
                 </div>
 
                 <div>
                     <h4>Tickets</h4>
                     <ul>
                         <li><a href="../../../calendar/">Kalender</a></li>
-                        <li><a href="../../../preview-info/unavailable.html">Mijn tickets</a></li>
+                                                <li><a href="../../../preview-info/unavailable.html">Mijn tickets</a></li>
                         <li><a href="../../../preview-info/unavailable.html" target="_blank" rel="noopener">Mijn account</a></li>
                     </ul>
                 </div>
@@ -466,11 +495,6 @@
                             </div>
         </div>
 
-        <div id="back-to-top" data-spy="affix" data-offset-top="10" class="back-to-top affix" style="display: block;">
-            <button class="btn btn-primary" title="Terug naar boven">
-                <i class="fa fa-angle-up"></i>
-            </button>
-        </div>
     </footer>
 
     <script type="text/javascript" src="../../../js/app.js"></script>
