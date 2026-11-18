@@ -28,7 +28,8 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * The CMS pages in the site menu: top-level pages marked show_in_menu with
- * a published translation in the locale, by sort_order. The home page is
+ * a published translation in the locale, by sort_order, each with its
+ * subpages that are marked show_in_menu too (shown as a dropdown). The home page is
  * left out (the logo links there). Cached per organisation and locale, and
  * forgotten whenever a page or page translation of the organisation changes.
  *
@@ -42,13 +43,68 @@ class Menu
     /**
      * @param Organisation $organisation
      * @param string|null $locale
-     * @return array list of [ title, url ]
+     * @return array list of [ title, url, children => list of [ title, url ] ]
      */
     public function items(Organisation $organisation, ?string $locale = null): array
     {
         $locale = in_array($locale, config('cms.locales'), true) ? $locale : config('cms.default_locale');
 
         return Cache::remember(self::cacheKey($organisation->id, $locale), self::CACHE_TTL, function () use ($organisation, $locale) {
+            $translations = PageTranslation::query()
+                ->select('page_translations.*', 'pages.parent_id as menu_parent_id')
+                ->join('pages', 'pages.id', '=', 'page_translations.page_id')
+                ->where('page_translations.organisation_id', '=', $organisation->id)
+                ->where('pages.organisation_id', '=', $organisation->id)
+                ->where('page_translations.locale', '=', $locale)
+                ->where('page_translations.is_published', '=', true)
+                ->where('pages.show_in_menu', '=', true)
+                ->whereNull('pages.deleted_at')
+                // Read from the table: the organisation model may be an older copy.
+                ->whereNotExists(function ($query) {
+                    $query->selectRaw('1')
+                        ->from('organisations')
+                        ->whereColumn('organisations.home_page_id', 'pages.id');
+                })
+                ->orderBy('pages.sort_order')
+                ->orderBy('pages.id')
+                ->get();
+
+            // Top-level pages, each with its menu subpages (one level).
+            $children = [];
+            foreach ($translations as $translation) {
+                if ($translation->menu_parent_id !== null) {
+                    $children[(int) $translation->menu_parent_id][] = [ 'title' => $translation->title, 'url' => $translation->getUrl() ];
+                }
+            }
+
+            return $translations
+                ->filter(function (PageTranslation $translation) {
+                    return $translation->menu_parent_id === null;
+                })
+                ->map(function (PageTranslation $translation) use ($children) {
+                    return [
+                        'title' => $translation->title,
+                        'url' => $translation->getUrl(),
+                        'children' => $children[(int) $translation->page_id] ?? [],
+                    ];
+                })
+                ->values()
+                ->all();
+        });
+    }
+
+    /**
+     * The pages marked show_in_footer (any level) with a published
+     * translation in the locale, by sort_order. The home page is left out.
+     * @param Organisation $organisation
+     * @param string|null $locale
+     * @return array list of [ title, url ]
+     */
+    public function footerItems(Organisation $organisation, ?string $locale = null): array
+    {
+        $locale = in_array($locale, config('cms.locales'), true) ? $locale : config('cms.default_locale');
+
+        return Cache::remember(self::cacheKey($organisation->id, $locale) . ':footer', self::CACHE_TTL, function () use ($organisation, $locale) {
             return PageTranslation::query()
                 ->select('page_translations.*')
                 ->join('pages', 'pages.id', '=', 'page_translations.page_id')
@@ -56,10 +112,8 @@ class Menu
                 ->where('pages.organisation_id', '=', $organisation->id)
                 ->where('page_translations.locale', '=', $locale)
                 ->where('page_translations.is_published', '=', true)
-                ->where('pages.show_in_menu', '=', true)
-                ->whereNull('pages.parent_id')
+                ->where('pages.show_in_footer', '=', true)
                 ->whereNull('pages.deleted_at')
-                // Read from the table: the organisation model may be an older copy.
                 ->whereNotExists(function ($query) {
                     $query->selectRaw('1')
                         ->from('organisations')
@@ -82,6 +136,7 @@ class Menu
     {
         foreach (config('cms.locales') as $locale) {
             Cache::forget(self::cacheKey($organisationId, $locale));
+            Cache::forget(self::cacheKey($organisationId, $locale) . ':footer');
         }
     }
 

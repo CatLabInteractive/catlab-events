@@ -40,9 +40,26 @@
                     <li class="kv-nav-item"><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
 
                     {{-- CMS pages marked "toon in menu", in their own order. --}}
+                    {{-- Subpages in the menu open as a dropdown under their page. --}}
                     @foreach(app(\App\Cms\Menu::class)->items($navOrganisation, $cmsLocale ?? null) as $navPage)
                         <?php $navActive = rtrim(url()->current(), '/') === $navPage['url']; ?>
-                        <li class="kv-nav-item @if($navActive) is-active @endif"><a href="{{ $navPage['url'] }}" @if($navActive) aria-current="page" @endif>{{ $navPage['title'] }}</a></li>
+                        @if(empty($navPage['children']))
+                            <li class="kv-nav-item @if($navActive) is-active @endif"><a href="{{ $navPage['url'] }}" @if($navActive) aria-current="page" @endif>{{ $navPage['title'] }}</a></li>
+                        @else
+                            <?php $navChildActive = in_array(rtrim(url()->current(), '/'), array_column($navPage['children'], 'url'), true); ?>
+                            <li class="kv-nav-item kv-nav-group kv-nav-pages @if($navActive || $navChildActive) is-active @endif">
+                                <a href="{{ $navPage['url'] }}" @if($navActive) aria-current="page" @endif>{{ $navPage['title'] }}</a>
+                                <button type="button" class="kv-nav-toggle" aria-expanded="false">
+                                    <i class="kv-nav-caret" aria-hidden="true"></i><span class="sr-only">{{ $navPage['title'] }}: meer</span>
+                                </button>
+                                <ul class="kv-nav-sub">
+                                    @foreach($navPage['children'] as $navChild)
+                                        <?php $navActive = rtrim(url()->current(), '/') === $navChild['url']; ?>
+                                        <li><a href="{{ $navChild['url'] }}" @if($navActive) aria-current="page" @endif>{{ $navChild['title'] }}</a></li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @endif
                     @endforeach
 
                     {{-- The organisation's own blog, only once it has posts (no external links in the menu). --}}

@@ -133,7 +133,8 @@
                 </div>
 
                 @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'number', 'label' => 'Volgorde', 'name' => 'sort_order', 'value' => old('sort_order', $page->sort_order ?? 0), 'error' => 'sort_order', 'help' => 'Lager staat eerst, in het menu en in deze lijst.' ] ])
-                @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'checkbox', 'label' => 'Toon in het menu', 'name' => 'show_in_menu', 'value' => old('show_in_menu', $page->show_in_menu), 'error' => 'show_in_menu' ] ])
+                @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'checkbox', 'label' => 'Toon in het menu', 'name' => 'show_in_menu', 'value' => old('show_in_menu', $page->show_in_menu), 'error' => 'show_in_menu', 'help' => 'Een subpagina verschijnt in het uitklapmenu van haar hoofdpagina.' ] ])
+                @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'checkbox', 'label' => 'Toon in de footer', 'name' => 'show_in_footer', 'value' => old('show_in_footer', $page->show_in_footer), 'error' => 'show_in_footer' ] ])
             </div>
         </div>
 

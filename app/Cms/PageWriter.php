@@ -60,7 +60,7 @@ class PageWriter
     /**
      * Fields of a page that can be written.
      */
-    const PAGE_FIELDS = [ 'parent_id', 'sort_order', 'show_in_menu' ];
+    const PAGE_FIELDS = [ 'parent_id', 'sort_order', 'show_in_menu', 'show_in_footer' ];
 
     /**
      * @var BlockValidator
@@ -78,7 +78,7 @@ class PageWriter
     /**
      * Create a page and its first translation.
      * @param Organisation $organisation
-     * @param array $pageAttributes parent_id, sort_order, show_in_menu
+     * @param array $pageAttributes parent_id, sort_order, show_in_menu, show_in_footer
      * @param string $locale
      * @param array $translationAttributes see TRANSLATION_FIELDS
      * @return PageTranslation
@@ -361,14 +361,17 @@ class PageWriter
             'parent_id' => $page->parent_id,
             'sort_order' => $page->sort_order,
             'show_in_menu' => $page->show_in_menu,
+            'show_in_footer' => $page->show_in_footer,
         ], [
             'parent_id' => [ 'nullable', 'integer' ],
             'sort_order' => [ 'nullable', 'integer', 'between:-100000,100000' ],
             'show_in_menu' => [ 'nullable', 'boolean' ],
+            'show_in_footer' => [ 'nullable', 'boolean' ],
         ])->validate();
 
         $page->sort_order = (int) $page->sort_order;
         $page->show_in_menu = (bool) $page->show_in_menu;
+        $page->show_in_footer = (bool) $page->show_in_footer;
 
         if (!$page->parent_id) {
             $page->parent_id = null;

@@ -55,6 +55,7 @@ class PageTranslationRequest extends FormRequest
             'parent_id' => [ 'nullable', 'integer' ],
             'sort_order' => [ 'nullable', 'integer' ],
             'show_in_menu' => [ 'nullable', 'boolean' ],
+            'show_in_footer' => [ 'nullable', 'boolean' ],
 
             'slug' => [ 'required', 'string', 'max:191' ],
             'title' => [ 'required', 'string', 'max:255' ],
@@ -101,6 +102,7 @@ class PageTranslationRequest extends FormRequest
             'parent_id' => $this->input('parent_id') ?: null,
             'sort_order' => (int) $this->input('sort_order', 0),
             'show_in_menu' => $this->boolean('show_in_menu'),
+            'show_in_footer' => $this->boolean('show_in_footer'),
         ];
     }
 

@@ -809,3 +809,27 @@ body.kv-page .body-inner .kv-cms-hero + section.kv-sec { padding-top: 56px; }
   .kv-cms-cards-people .kv-tiles-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .kv-cms-reviews-list > .kv-wrap > .kv-reviews { max-width: 1000px; margin: 0 auto; }
 }
+
+/* ---------- Menu pages with subpages (layouts/blocks/header) ---------- */
+
+/* The page stays a link; the caret next to it opens the subpages. */
+.kv-nav-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  > a { flex: 1 1 auto; width: auto; }
+  > .kv-nav-toggle { flex: 0 0 auto; width: 44px; justify-content: center; }
+  > .kv-nav-sub { flex: 0 0 100%; }
+}
+
+@media (min-width: 992px) {
+  .kv-nav-pages {
+    flex-wrap: nowrap;
+    gap: 2px;
+
+    > .kv-nav-toggle { width: 20px; padding: 10px 0; }
+  }
+
+  .kv-header .kv-nav-pages .kv-nav-sub { left: -20px; right: auto; }
+}

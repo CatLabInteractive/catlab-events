@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $parent_id
  * @property int $sort_order
  * @property bool $show_in_menu
+ * @property bool $show_in_footer
  * @property int|null $wp_post_id
  *
  * Class Page
@@ -50,6 +51,7 @@ class Page extends Model
     protected $casts = [
         'sort_order' => 'int',
         'show_in_menu' => 'bool',
+        'show_in_footer' => 'bool',
     ];
 
     /**

@@ -58,6 +58,11 @@ class PageResourceDefinition extends BaseResourceDefinition
             ->visible(true, true)
             ->writeable(true, true);
 
+        $this->field('show_in_footer')
+            ->bool()
+            ->visible(true, true)
+            ->writeable(true, true);
+
         // Always expanded, in the translation's index context (locale, slug,
         // path, url, title, published; not the blocks), like the admin index.
         $this->relationship('translations', PageTranslationResourceDefinition::class)
