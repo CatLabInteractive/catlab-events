@@ -1,4 +1,8 @@
-# Static preview of the public site for every pull request.
+# Static preview of the public site for front-end pull requests.
+#
+# Only runs for branches named ui/<something>, or for any pull request with
+# the "preview" label (for branches whose name you cannot choose). Backend
+# pull requests skip it.
 #
 # Boots the app against MySQL with demo data (database/seeds/PreviewSeeder.php),
 # mirrors the public pages to static HTML (.github/preview/mirror.py) and
@@ -20,20 +24,25 @@ name: Preview
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [ opened, synchronize, reopened, labeled ]
 
 permissions:
   contents: write
   pull-requests: write
 
-concurrency:
-  group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 jobs:
   build:
     name: Build static preview
+    if: >-
+      (startsWith(github.event.pull_request.head.ref, 'ui/')
+        || contains(github.event.pull_request.labels.*.name, 'preview'))
+      && (github.event.action != 'labeled' || github.event.label.name == 'preview')
     runs-on: ubuntu-latest
+    # On the job, not the workflow: a skipped run (another label added)
+    # must not cancel a build that is running.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
 
     services:
       mysql:
