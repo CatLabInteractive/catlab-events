@@ -23,6 +23,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Admin\CentralStorageUploadHandler;
 use Illuminate\Http\Request;
 
 /**
@@ -48,8 +49,7 @@ class AssetController extends Controller
                 abort(400, 'File not valid: ' . $file->getErrorMessage());
             }
 
-            $asset = \CentralStorage::store($file);
-            $asset->save();
+            CentralStorageUploadHandler::storeForActiveOrganisation($file);
         }
 
         return redirect(action('Admin\AssetController@index'));

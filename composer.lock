@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67e8fb9c4e25674b4b50867c433c46a7",
+    "content-hash": "04fda6ed177c7a3815a9a06d44e4f9c8",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -698,16 +698,16 @@
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v2.0.4",
+            "version": "dev-claude/project-thread-w8ie00",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "5dd4219ee97d17e485082762d36b0bd00a543a8e"
+                "reference": "6fb19b56f7e7d4cc5c3fa56358f3b18ac84bc559"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/5dd4219ee97d17e485082762d36b0bd00a543a8e",
-                "reference": "5dd4219ee97d17e485082762d36b0bd00a543a8e",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/6fb19b56f7e7d4cc5c3fa56358f3b18ac84bc559",
+                "reference": "6fb19b56f7e7d4cc5c3fa56358f3b18ac84bc559",
                 "shasum": ""
             },
             "require": {
@@ -740,9 +740,9 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v2.0.4"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/claude/project-thread-w8ie00"
             },
-            "time": "2026-11-18T15:27:20+00:00"
+            "time": "2026-11-18T15:41:12+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",
@@ -10290,9 +10290,17 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "catlabinteractive/laravel-charon-frontend",
+            "version": "dev-claude/project-thread-w8ie00",
+            "alias": "2.0.6",
+            "alias_normalized": "2.0.6.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "catlabinteractive/laravel-charon-frontend": 20,
         "fab1en/rocket-chat-rest-client": 20
     },
     "prefer-stable": false,

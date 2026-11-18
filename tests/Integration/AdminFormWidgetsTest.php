@@ -30,9 +30,10 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         return $admin;
     }
 
-    private function createAsset(string $name): Asset
+    private function createAsset(string $name, ?Organisation $organisation = null): Asset
     {
         $asset = new Asset();
+        $asset->organisation_id = $organisation ? $organisation->id : null;
         $asset->name = $name;
         $asset->mimetype = 'image/png';
         $asset->type = 'image';
@@ -77,8 +78,8 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
-        $older = $this->createAsset('older.png');
-        $newer = $this->createAsset('newer.png');
+        $older = $this->createAsset('older.png', $organisation);
+        $newer = $this->createAsset('newer.png', $organisation);
         $series->logo()->associate($older);
         $series->save();
 
@@ -129,6 +130,71 @@ class AdminFormWidgetsTest extends IntegrationTestCase
 
         $this->assertNotNull($stored->id);
         $this->assertSame($stored->id, $series->fresh()->logo_asset_id);
+        $this->assertSame($organisation->id, (int) $stored->fresh()->organisation_id);
+        $this->assertSame($admin->id, (int) $stored->fresh()->user_id);
+    }
+
+    /**
+     * The save fails (an organisation name needs 3 characters): the stored
+     * asset is removed again, here and on the storage server, and the file
+     * is offered on the form for the next try.
+     */
+    public function testAFailedSaveRemovesTheUploadedAsset()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+
+        $stored = new Asset();
+        $stored->name = 'logo.png';
+        $stored->asset_key = 'uploaded';
+        \CentralStorage::shouldReceive('store')->once()->andReturn($stored);
+        \CentralStorage::shouldReceive('deleteAsset')->once()->andReturn(true);
+
+        $edit = '/admin/organisations/' . $organisation->id . '/edit';
+        $this->actingAs($admin)
+            ->from($edit)
+            ->put('/admin/organisations/' . $organisation->id, [
+                'fields' => [
+                    'name' => 'ab',
+                    'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('logo.png', 300, 300) ],
+                ],
+            ])
+            ->assertRedirect($edit);
+
+        $this->assertNotNull($stored->id);
+        $this->assertNull(Asset::find($stored->id));
+        $this->assertNull($organisation->fresh()->logo_id);
+
+        $this->actingAs($admin)->get($edit)
+            ->assertStatus(200)
+            ->assertSee('name="fields[logo][kept]"', false)
+            ->assertSee('logo.png');
+    }
+
+    /**
+     * The picker offers the active organisation's files only; a file that
+     * is already linked stays selected.
+     */
+    public function testThePickerOnlyOffersTheActiveOrganisationsFiles()
+    {
+        $organisation = $this->createOrganisation();
+        $other = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $ours = $this->createAsset('ours.png', $organisation);
+        $theirs = $this->createAsset('theirs.png', $other);
+        $nobodys = $this->createAsset('nobodys.png');
+        $linked = $this->createAsset('linked.png', $other);
+        $series->logo()->associate($linked);
+        $series->save();
+
+        $this->actingAs($admin)->get('/admin/series/' . $series->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('ours.png')
+            ->assertDontSee('theirs.png')
+            ->assertDontSee('nobodys.png')
+            ->assertSee('<option value="' . $linked->id . '" selected>', false);
     }
 
     public function testPickingAnExistingFileLinksIt()
@@ -136,7 +202,7 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
-        $asset = $this->createAsset('header.png');
+        $asset = $this->createAsset('header.png', $organisation);
 
         $this->updateSeries($admin, $series, [
             'header' => [ 'id' => (string) $asset->id ],
