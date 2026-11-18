@@ -77,11 +77,6 @@
             </div>
         </div>
 
-        <div id="back-to-top" data-spy="affix" data-offset-top="10" class="back-to-top affix" style="display: block;">
-            <button class="btn btn-primary" title="Terug naar boven">
-                <i class="fa fa-angle-up"></i>
-            </button>
-        </div>
     </footer>
 
     <script type="text/javascript" src="{{ mix('js/app.js') }}"></script>
