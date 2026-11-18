@@ -1,0 +1,176 @@
+# Static preview of the public site for every pull request.
+#
+# Boots the app against MySQL with demo data (database/seeds/PreviewSeeder.php),
+# mirrors the public pages to static HTML (.github/preview/mirror.py) and
+# publishes them on the gh-pages branch at /pr/<number>/, the same way the
+# CatLab frontend repos do their previews. cleanup-preview.yml removes the
+# folder when the pull request closes.
+#
+# It shows how the pages look, nothing more: login, ordering and other forms
+# do not work in the snapshot. The mirror is also uploaded as a build
+# artifact, so it can be downloaded even when Pages is not set up.
+#
+# One-time setup: Settings > Pages > Build and deployment > Deploy from a
+# branch > gh-pages / (root). The branch is created by the first run.
+#
+# Pull requests from forks are built but not published: their token cannot
+# push to gh-pages.
+
+name: Preview
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static preview
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: catlab_events_preview
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: catlab_events_preview
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      # Some listings (the calendar) group in ways ONLY_FULL_GROUP_BY rejects.
+      DB_STRICT: false
+      APP_ENV: local
+      APP_DEBUG: false
+      DEBUGBAR_ENABLED: false
+      # Stand-in for CentralStorage, serving the demo posters.
+      CENTRALSTORAGE_FRONT: http://127.0.0.1:8099
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mysqli, pdo_mysql, bcmath, zip, intl, gd, mbstring
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          npm ci
+          pip install pillow
+
+      - name: Build frontend assets
+        run: npm run production
+
+      - name: Prepare app with demo data
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --no-interaction
+          php artisan migrate --force --no-interaction
+          php artisan db:seed --class='\PreviewSeeder' --force --no-interaction
+
+      - name: Start app and asset server
+        run: |
+          python .github/preview/assetserver.py 8099 &
+          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/serve.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null -H 'X-Forwarded-Proto: http' http://127.0.0.1:8000/ && exit 0
+            sleep 1
+          done
+          echo "The app did not start"; cat storage/logs/*.log; exit 1
+
+      - name: Mirror public pages
+        run: |
+          python .github/preview/mirror.py \
+            --site http://127.0.0.1:8000 \
+            --assets http://127.0.0.1:8099 \
+            --out _site \
+            --banner "Preview of #${{ github.event.pull_request.number }} · demo data"
+
+      - name: Show app errors
+        if: always()
+        run: grep -h -A3 'ERROR' storage/logs/laravel*.log | head -200 || true
+
+      - name: Upload mirror
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-pr-${{ github.event.pull_request.number }}
+          path: _site
+          retention-days: 14
+
+  publish:
+    name: Publish preview
+    needs: build
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # Every preview pushes to the same gh-pages branch: let them take turns.
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
+
+    steps:
+      - name: Download mirror
+        uses: actions/download-artifact@v4
+        with:
+          name: preview-pr-${{ github.event.pull_request.number }}
+          path: _site
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          destination_dir: pr/${{ github.event.pull_request.number }}
+          commit_message: "Preview #${{ github.event.pull_request.number }}"
+
+      - name: Comment preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- catlab-events-preview -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const url = `https://${owner.toLowerCase()}.github.io/${repo}/pr/${issue_number}/`;
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const body = `${marker}\n**Static preview:** ${url}\n\n` +
+              `Built from ${sha} with demo data. It only shows how the public pages look: ` +
+              `login, ordering and other forms do not work. GitHub Pages can take a minute to serve a new build.`;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
