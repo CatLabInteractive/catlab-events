@@ -143,34 +143,24 @@ class OrderController extends BaseAdminController
     }
 
     /**
+     * The ticket categories an order can move to are its own event's, not
+     * whatever TicketCategoryController's index would list.
+     * @param Request $request
      * @param RelationshipField $field
-     * @return array
-     * @throws \CatLab\Charon\Exceptions\InvalidResourceDefinition
+     * @return string[]
      */
-    protected function resolveValues(RelationshipField $field)
+    protected function resolveLinkableOptions(Request $request, RelationshipField $field): array
     {
-        $childResource = $field->getChildResource();
-        $entity = $childResource->getEntityClassName();
-
-        $entities = [];
-        switch ($entity) {
-            case TicketCategory::class:
-                /** @var Order $parent */
-                $parent = Order::find(\Request::instance()->route('order'));
-                if ($parent && $parent->event) {
-                    $entities = $parent->event->ticketCategories()->get();
-                }
-                break;
-
-            default:
-                $entities = call_user_func([ $entity, 'all' ]);
-                break;
+        if ($field->getChildResource()->getEntityClassName() !== TicketCategory::class) {
+            return [];
         }
 
-        $out = [];
-        foreach ($entities as $entity) {
-            $out[$entity->id] = $entity->name;
+        /** @var Order $order */
+        $order = Order::find($request->route(static::getRouteIdParameterName()));
+        if (!$order || !$order->event) {
+            return [];
         }
-        return $out;
+
+        return $order->event->ticketCategories()->pluck('name', 'id')->all();
     }
 }

@@ -328,36 +328,3 @@ $sidebar-active-bg: $admin-accent;
     text-align: left;
   }
 }
-
-// File fields in the admin forms (BaseAdminController / admin/crud/asset-field)
-.asset-field-body {
-  display: flex;
-  align-items: flex-start;
-}
-
-.asset-field-preview {
-  flex: 0 0 160px;
-  margin-right: 1rem;
-  padding: .25rem;
-  border: 1px solid $admin-border-color;
-  border-radius: .25rem;
-  background: #fff;
-  text-align: center;
-
-  img {
-    max-width: 100%;
-    max-height: 200px;
-  }
-
-  .asset-field-empty {
-    display: block;
-    padding: 2rem 0;
-    color: $admin-text-color;
-    font-size: 90%;
-  }
-}
-
-.asset-field-controls {
-  flex: 1 1 auto;
-  min-width: 0;
-}
