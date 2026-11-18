@@ -55,9 +55,8 @@ abstract class BaseAdminController extends Controller implements FrontCrudContro
             new FileWidget(new CentralStorageUploadHandler(), 'image/*')
         );
 
-        // Free text that spans lines (descriptions, teasers, addresses).
-        foreach ([ 'description', 'teaser', 'address' ] as $field) {
-            $this->widgets()->forField($field, new TextareaWidget());
-        }
+        // Addresses span lines. Descriptions and teasers are html() fields
+        // in their definitions and get the rich textarea by type.
+        $this->widgets()->forField('address', new TextareaWidget());
     }
 }
