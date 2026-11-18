@@ -62,6 +62,9 @@ $routes->group(
         \App\Http\Api\V1\Controllers\Cms\PostController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\Cms\PostTranslationController::setRoutes($routes);
 
+        // The library of named mail templates
+        \App\Http\Api\V1\Controllers\EmailTemplateController::setRoutes($routes);
+
         \App\Http\Api\V1\Controllers\AssetController::setRoutes($routes);
 
     }

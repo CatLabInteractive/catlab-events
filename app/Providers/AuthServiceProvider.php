@@ -85,6 +85,7 @@ class AuthServiceProvider extends ServiceProvider
         SeriesPhoto::class      => SeriesPhotoPolicy::class,
         Order::class            => OrderPolicy::class,
         Page::class             => PagePolicy::class,
+        \App\Models\EmailTemplate::class => \App\Policies\EmailTemplatePolicy::class,
         PageTranslation::class  => PageTranslationPolicy::class,
         Post::class             => PostPolicy::class,
         PostTranslation::class  => PostTranslationPolicy::class,

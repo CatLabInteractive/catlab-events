@@ -63,14 +63,14 @@ class EmailLibraryTest extends IntegrationTestCase
         $this->actingAs($this->admin)->get('/admin/emails/templates')->assertStatus(200);
         $this->actingAs($this->admin)->get('/admin/emails/templates/create?type=' . EmailTemplates::CANCELLATION)
             ->assertStatus(200)
-            ->assertSee('name="name"', false);
+            ->assertSee('name="fields[name]"', false);
 
-        $this->actingAs($this->admin)->post('/admin/emails/templates', [
+        $this->actingAs($this->admin)->post('/admin/emails/templates', [ 'fields' => [
             'type' => EmailTemplates::CONFIRMATION,
             'name' => 'Warm welcome',
             'subject' => 'Welkom!',
             'content' => '<p>Tot dan</p>'
-        ])->assertRedirect(action('Admin\EmailLibraryController@index'));
+        ] ])->assertRedirect(action('Admin\EmailLibraryController@index'));
 
         $template = $this->organisation->emailTemplates()->library()->first();
         $this->assertNotNull($template);
@@ -80,11 +80,11 @@ class EmailLibraryTest extends IntegrationTestCase
             ->assertStatus(200)
             ->assertSee('Warm welcome');
 
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}", [
+        $this->actingAs($this->admin)->put("/admin/emails/templates/{$template->id}", [ 'fields' => [
             'name' => 'Warmer welcome',
             'subject' => 'Nieuw onderwerp',
             'content' => '<p>Nieuw</p>'
-        ])->assertRedirect(action('Admin\EmailLibraryController@index'));
+        ] ])->assertRedirect(action('Admin\EmailLibraryController@index'));
 
         $template->refresh();
         $this->assertEquals('Warmer welcome', $template->name);
@@ -93,7 +93,7 @@ class EmailLibraryTest extends IntegrationTestCase
 
         $this->actingAs($this->admin)->get('/admin/emails/templates')->assertSee('Warmer welcome');
 
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}/delete")
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}")
             ->assertRedirect(action('Admin\EmailLibraryController@index'));
         $this->assertNull(EmailTemplate::find($template->id));
     }
@@ -102,32 +102,32 @@ class EmailLibraryTest extends IntegrationTestCase
     {
         $this->createTemplate($this->organisation);
 
-        $this->actingAs($this->admin)->post('/admin/emails/templates', [
+        $this->actingAs($this->admin)->post('/admin/emails/templates', [ 'fields' => [
             'type' => EmailTemplates::CONFIRMATION,
             'name' => 'Warm welcome',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ])->assertSessionHasErrors('name');
+        ] ])->assertSessionHas('message');
         $this->assertEquals(1, $this->organisation->emailTemplates()->library()->count());
 
         // Same name for another type is fine.
-        $this->actingAs($this->admin)->post('/admin/emails/templates', [
+        $this->actingAs($this->admin)->post('/admin/emails/templates', [ 'fields' => [
             'type' => EmailTemplates::CANCELLATION,
             'name' => 'Warm welcome',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ])->assertSessionHasNoErrors();
+        ] ])->assertRedirect(action('Admin\EmailLibraryController@index'));
         $this->assertEquals(2, $this->organisation->emailTemplates()->library()->count());
     }
 
     public function testAGroupInviteTemplateCannotBeCreated()
     {
-        $this->actingAs($this->admin)->post('/admin/emails/templates', [
+        $this->actingAs($this->admin)->post('/admin/emails/templates', [ 'fields' => [
             'type' => EmailTemplates::GROUP_INVITE,
             'name' => 'Invite',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ])->assertSessionHasErrors('type');
+        ] ])->assertSessionHas('message');
 
         $this->assertEquals(0, $this->organisation->emailTemplates()->library()->count());
     }
@@ -138,9 +138,10 @@ class EmailLibraryTest extends IntegrationTestCase
         $event = $this->createEvent($this->organisation);
         $this->useTemplate($template, $event);
 
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}/delete")
-            ->assertRedirect(action('Admin\EmailLibraryController@index'))
-            ->assertSessionHas('error', 'Dit sjabloon wordt nog gebruikt door: Test quiz night.');
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}")
+            ->assertSessionHas('message', function ($message) {
+                return (string) $message === 'Dit sjabloon wordt nog gebruikt door: Test quiz night.';
+            });
 
         $this->assertNotNull(EmailTemplate::find($template->id));
     }
@@ -152,28 +153,29 @@ class EmailLibraryTest extends IntegrationTestCase
         $this->useTemplate($template, $event);
         $event->delete();
 
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}/delete")
-            ->assertRedirect(action('Admin\EmailLibraryController@index'))
-            ->assertSessionMissing('error');
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}")
+            ->assertRedirect(action('Admin\EmailLibraryController@index'));
 
         $this->assertNull(EmailTemplate::find($template->id));
         $this->assertEquals(0, EventEmail::where('email_template_id', $template->id)->count());
     }
 
-    public function testAnotherOrganisationsTemplateIsNotFound()
+    public function testAnotherOrganisationsTemplateIsRefused()
     {
         $other = new Organisation();
         $other->name = 'Other';
         $other->save();
         $template = $this->createTemplate($other);
 
-        $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/edit")->assertStatus(404);
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}", [
+        $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/edit")->assertStatus(403);
+        $this->actingAs($this->admin)->put("/admin/emails/templates/{$template->id}", [ 'fields' => [
             'name' => 'Hijack', 'subject' => 'x', 'content' => '<p>x</p>'
-        ])->assertStatus(404);
-        $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}/delete")->assertStatus(404);
+        ] ]);
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}");
+        $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/preview")->assertStatus(404);
 
         $this->assertEquals('Warm welcome', $template->fresh()->name);
+        $this->assertNotNull(EmailTemplate::find($template->id));
     }
 
     public function testTheLibraryPreviewIsSandboxed()
@@ -184,16 +186,16 @@ class EmailLibraryTest extends IntegrationTestCase
         $stored->assertStatus(200);
         $stored->assertHeader('Content-Security-Policy', 'sandbox');
 
-        $draft = $this->actingAs($this->admin)->post("/admin/emails/templates/{$template->id}/preview", [
+        $draft = $this->actingAs($this->admin)->put("/admin/emails/templates/{$template->id}/preview", [ 'fields' => [
             'subject' => 'Draft', 'content' => '<p>Concept tekst</p>'
-        ]);
+        ] ]);
         $draft->assertStatus(200);
         $draft->assertHeader('Content-Security-Policy', 'sandbox');
         $this->assertStringContainsString('Concept tekst', $draft->getContent());
 
-        $new = $this->actingAs($this->admin)->post('/admin/emails/templates/create/preview', [
+        $new = $this->actingAs($this->admin)->post('/admin/emails/templates/create/preview?type=' . EmailTemplates::CONFIRMATION, [ 'fields' => [
             'type' => EmailTemplates::CONFIRMATION, 'subject' => 'Draft', 'content' => '<p>Nieuw concept</p>'
-        ]);
+        ] ]);
         $new->assertStatus(200);
         $new->assertHeader('Content-Security-Policy', 'sandbox');
         $this->assertStringContainsString('Nieuw concept', $new->getContent());

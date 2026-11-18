@@ -1,228 +1,288 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
+ * Copyright (C) 2017 Thijs Van der Schaeghe
+ * CatLab Interactive bvba, Gent, Belgium
+ * http://www.catlab.eu/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\AdministersEmails;
-use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
+use App\Services\Admin\Widgets\EmailContentWidget;
+use App\Services\Admin\Widgets\EmailSubjectWidget;
+use App\Services\Admin\Widgets\EmailTypeWidget;
 use App\Services\EmailTemplates;
+use CatLab\Charon\Collections\ResourceCollection;
+use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Widgets\FormField;
+use CatLab\CharonFrontend\Widgets\TextWidget;
+use CatLab\Laravel\Table\Table;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\HtmlString;
 
 /**
- * Class EmailLibraryController
- *
- * Lets organisation admins keep a library of named mail templates. An event
- * can pick one of them instead of the organisation's version of a mail.
- * The group invitation is not tied to an event, so it has no templates.
+ * The library of named mail templates ("Sjablonen") that events can choose
+ * instead of the standard mail: a Charon admin resource on top of the
+ * EmailTemplate api controller, with the mail editor (placeholders, preview)
+ * as the widget of its content.
  *
  * @package App\Http\Controllers\Admin
  */
-class EmailLibraryController extends Controller
+class EmailLibraryController extends BaseAdminController
 {
     use AdministersEmails;
 
-    /**
-     * @var EmailTemplates
-     */
-    private $templates;
-
-    /**
-     * @param EmailTemplates $templates
-     */
-    public function __construct(EmailTemplates $templates)
+    public function __construct()
     {
-        $this->templates = $templates;
+        parent::__construct();
+
+        $this->widgets()
+            ->forField('type', new EmailTypeWidget())
+            ->forField('name', new TextWidget([ 'maxlength' => 100, 'required' => 'required' ]))
+            ->forField('subject', new EmailSubjectWidget([ 'required' => 'required' ]))
+            ->forField('content', new EmailContentWidget(function (FormField $field, string $type) {
+                $resource = $field->getResource();
+
+                return $resource
+                    ? action('Admin\EmailLibraryController@preview', [ 'id' => $resource->getIdentifiers()->getValues()[0]->getValue() ])
+                    : action('Admin\EmailLibraryController@previewNew', [ 'type' => $type ]);
+            }));
     }
 
     /**
-     * Every template, and the events that use it.
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $path
+     * @param $controller
      */
-    public function index()
+    public static function routes($path, $controller)
     {
-        $organisation = $this->getAdministeredOrganisation();
+        // The form posts to the preview with its own method field (put on edit).
+        \Route::match([ 'get', 'post', 'put' ], $path . '/create/preview', $controller . '@previewNew');
+        \Route::match([ 'get', 'post', 'put' ], $path . '/{id}/preview', $controller . '@preview');
 
-        $templates = $organisation->emailTemplates()
-            ->library()
-            ->with('eventEmails.event')
-            ->orderBy('name')
-            ->get();
+        static::traitRoutes($path, $controller);
+    }
 
-        $events = [];
-        foreach ($templates as $template) {
-            $events[$template->id] = $this->getEventNames($template);
+    /**
+     * @return \App\Http\Api\V1\Controllers\EmailTemplateController
+     */
+    public function createApiController()
+    {
+        return new \App\Http\Api\V1\Controllers\EmailTemplateController();
+    }
+
+    public static function getRouteIdParameterName(): string
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\EmailTemplateController::RESOURCE_ID;
+    }
+
+    /**
+     * Listed and created within the active organisation.
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getApiControllerParameters(Request $request, $method)
+    {
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    'organisation' => $this->getAdministeredOrganisation()->id
+                ];
         }
 
-        return view('admin.emails.library.index', [
-            'templates' => $templates,
-            'events' => $events,
-            'labels' => $this->getTypeLabels()
-        ]);
+        return null;
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $method
+     * @return array|null
      */
-    public function create(Request $request)
+    protected function getAuthorizeParameters(Request $request, $method)
+    {
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    $this->getAdministeredOrganisation()
+                ];
+        }
+
+        return null;
+    }
+
+    /**
+     * By name, unless the list is sorted otherwise.
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function index(Request $request)
     {
         $this->getAdministeredOrganisation();
 
-        $type = $request->input('type');
-        if (!$this->isLibraryType($type)) {
-            $type = EmailTemplates::CONFIRMATION;
+        return parent::index($request);
+    }
+
+    /**
+     * "Gebruikt door" links each event to its e-mails page.
+     * @param Request $request
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
+     */
+    public function getTableForResourceCollection(
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        foreach ($collection as $resource) {
+            $template = $resource->getSource();
+            if (!$template instanceof EmailTemplate) {
+                continue;
+            }
+
+            $links = [];
+            foreach ($template->getEventNames() as $eventId => $name) {
+                $links[] = '<a href="' . e(action('Admin\EventEmailController@index', [ $eventId ])) . '">' . e($name) . '</a>';
+            }
+
+            foreach ($resource->getProperties()->getResourceFields()->getValues() as $property) {
+                if ($property->getField()->getDisplayName() === 'used_by') {
+                    $property->setValue(new HtmlString(implode(', ', $links)));
+                }
+            }
         }
 
-        return view('admin.emails.library.create', [
-            'type' => $type,
-            'types' => $this->getTypeLabels(),
-            'subject' => $this->templates->getDefaultSubject($type),
-            'content' => $this->templates->getDefaultContent($type),
-            'placeholders' => $this->templates->getPlaceholders($type)
-        ]);
+        return parent::getTableForResourceCollection($request, $collection, $resourceDefinition, $context);
     }
 
     /**
+     * A template opens in its editor.
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function show(Request $request)
     {
-        $organisation = $this->getAdministeredOrganisation();
-
-        $this->validate($request, [
-            'type' => [ 'required', Rule::in($this->getLibraryTypes()) ],
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('email_templates', 'name')
-                    ->where('organisation_id', $organisation->id)
-                    ->where('type', $request->input('type'))
-            ],
-            'subject' => 'required|string|max:255',
-            'content' => 'required|string'
-        ], [
-            'name.unique' => 'Er is al een sjabloon met deze naam voor deze mail.'
-        ]);
-
-        $organisation->emailTemplates()->create([
-            'type' => $request->input('type'),
-            'name' => $request->input('name'),
-            'subject' => $request->input('subject'),
-            'content' => $request->input('content')
-        ]);
-
-        return redirect(action('Admin\EmailLibraryController@index'))
-            ->with('message', 'Het sjabloon "' . $request->input('name') . '" is aangemaakt.');
+        return redirect($this->action('edit'));
     }
 
     /**
-     * @param int $id
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function edit($id)
-    {
-        $template = $this->getTemplate($id);
-
-        return view('admin.emails.library.edit', [
-            'template' => $template,
-            'label' => $this->templates->getLabel($template->type),
-            'subject' => $template->subject,
-            'content' => $template->content,
-            'placeholders' => $this->templates->getPlaceholders($template->type)
-        ]);
-    }
-
-    /**
+     * No "view" next to "edit" in the list.
      * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @param $model
+     * @return bool
      */
-    public function update(Request $request, $id)
+    protected function canViewModel(Request $request, $model)
     {
-        $template = $this->getTemplate($id);
-
-        $this->validate($request, [
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('email_templates', 'name')
-                    ->where('organisation_id', $template->organisation_id)
-                    ->where('type', $template->type)
-                    ->ignore($template->id)
-            ],
-            'subject' => 'required|string|max:255',
-            'content' => 'required|string'
-        ], [
-            'name.unique' => 'Er is al een sjabloon met deze naam voor deze mail.'
-        ]);
-
-        $template->name = $request->input('name');
-        $template->subject = $request->input('subject');
-        $template->content = $request->input('content');
-        $template->save();
-
-        return redirect(action('Admin\EmailLibraryController@index'))
-            ->with('message', 'Het sjabloon "' . $template->name . '" is aangepast.');
+        return false;
     }
 
     /**
-     * Delete a template, unless an event that still exists uses it. Rows of
-     * deleted events go with it.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * A template an event still uses is refused: say so instead of "deleted".
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $template = $this->getTemplate($id)->load('eventEmails.event');
+        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
+        $response = $this->dispatchToApi(Action::DESTROY, $request);
 
-        $names = $this->getEventNames($template);
-        if (count($names) > 0) {
-            return redirect(action('Admin\EmailLibraryController@index'))
-                ->with('error', 'Dit sjabloon wordt nog gebruikt door: ' . implode(', ', $names) . '.');
+        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
+            return $this->handleErrorResponse($response, 'destroy');
         }
 
-        // The foreign key restricts deleting a template that is still referenced.
-        $template->eventEmails()->delete();
-        $template->delete();
-
-        return redirect(action('Admin\EmailLibraryController@index'))
-            ->with('message', 'Het sjabloon "' . $template->name . '" is verwijderd.');
+        return $this->afterDestroy($request, $resource);
     }
 
     /**
-     * The stored template, or with a POST the unsaved version from the form.
-     *
+     * The api's validation messages, without its generic English first line.
+     * @param JsonResponse $response
+     * @param $redirectMethod
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
+    {
+        $data = $response->getData(true);
+
+        $lines = [];
+        foreach (($data['error']['issues'] ?? []) as $errors) {
+            foreach ((array) $errors as $error) {
+                $lines[] = e($error);
+            }
+        }
+
+        if (count($lines) === 0) {
+            $lines[] = e($data['error']['message'] ?? 'Er ging iets mis.');
+        }
+
+        return redirect()->back()
+            ->with('message', new HtmlString(implode('<br>', $lines)))
+            ->withInput();
+    }
+
+    /**
+     * Back to the list after saving.
      * @param Request $request
-     * @param int $id
+     * @param RESTResource $resource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function redirectAfterSave(Request $request, RESTResource $resource)
+    {
+        return redirect(action('Admin\EmailLibraryController@index'));
+    }
+
+    /**
+     * The mail as it would go out, with made-up data: the stored template
+     * (GET) or what is in the form (POST), without saving it.
+     * @param Request $request
+     * @param $id
      * @return \Illuminate\Http\Response
      */
     public function preview(Request $request, $id)
     {
-        $template = $this->getTemplate($id);
+        $template = $this->getAdministeredOrganisation()
+            ->emailTemplates()
+            ->library()
+            ->findOrFail($id);
 
-        if ($request->isMethod('post')) {
-            $template = new EmailTemplate([
-                'type' => $template->type,
-                'subject' => (string) $request->input('subject', ''),
-                'content' => (string) $request->input('content', '')
-            ]);
+        if (!$request->isMethod('get')) {
+            $template = $this->draft($request, $template->type, $template->subject, $template->content);
         }
 
         return $this->renderPreview($template);
     }
 
     /**
-     * The unsaved version of a template that does not exist yet.
-     *
+     * The preview of a template that isn't saved yet: the standard text of
+     * the mail (GET) or what is in the form (POST).
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -231,35 +291,51 @@ class EmailLibraryController extends Controller
         $this->getAdministeredOrganisation();
 
         $type = $request->input('type');
-        if (!$this->isLibraryType($type)) {
+        if (!is_string($type) || !in_array($type, EmailTemplates::EVENT_TYPES, true)) {
             abort(404);
         }
 
-        $template = new EmailTemplate([
-            'type' => $type,
-            'subject' => $request->isMethod('post')
-                ? (string) $request->input('subject', '')
-                : $this->templates->getDefaultSubject($type),
-            'content' => $request->isMethod('post')
-                ? (string) $request->input('content', '')
-                : $this->templates->getDefaultContent($type)
-        ]);
+        $templates = app(EmailTemplates::class);
 
-        return $this->renderPreview($template);
+        return $this->renderPreview($request->isMethod('get')
+            ? new EmailTemplate([
+                'type' => $type,
+                'subject' => $templates->getDefaultSubject($type),
+                'content' => $templates->getDefaultContent($type),
+            ])
+            : $this->draft($request, $type, '', ''));
     }
 
     /**
-     * @param EmailTemplate $template Stored or unsaved.
+     * An unsaved template from what the form posts (fields[subject], fields[content]).
+     * @param Request $request
+     * @param string $type
+     * @param string $subject
+     * @param string $content
+     * @return EmailTemplate
+     */
+    private function draft(Request $request, $type, $subject, $content)
+    {
+        return new EmailTemplate([
+            'type' => $type,
+            'subject' => (string) $request->input('fields.subject', $request->input('subject', '')),
+            'content' => (string) $request->input('fields.content', $request->input('content', '')),
+        ]);
+    }
+
+    /**
+     * @param EmailTemplate $template
      * @return \Illuminate\Http\Response
      */
     private function renderPreview(EmailTemplate $template)
     {
         $organisation = $this->getAdministeredOrganisation();
+        $templates = app(EmailTemplates::class);
 
-        $mail = $this->templates->render(
+        $mail = $templates->render(
             $organisation,
             $template->type,
-            $this->templates->getSampleAttributes($organisation, $template->type),
+            $templates->getSampleAttributes($organisation, $template->type),
             $template
         );
 
@@ -267,68 +343,38 @@ class EmailLibraryController extends Controller
     }
 
     /**
-     * A library template of the active organisation, or a 404.
-     *
-     * @param int $id
-     * @return EmailTemplate
+     * @param $action
+     * @return string
      */
-    private function getTemplate($id)
+    protected function getView($action)
     {
-        return $this->getAdministeredOrganisation()
-            ->emailTemplates()
-            ->library()
-            ->findOrFail($id);
-    }
+        switch ($action) {
+            case 'index':
+                return 'admin.emails.library.index';
 
-    /**
-     * Names of the events that use a template, not counting deleted events.
-     * Needs eventEmails.event to be loaded.
-     *
-     * @param EmailTemplate $template
-     * @return string[] name by event id
-     */
-    private function getEventNames(EmailTemplate $template)
-    {
-        $names = [];
-        foreach ($template->eventEmails as $eventEmail) {
-            // A soft-deleted event does not load.
-            if ($eventEmail->event) {
-                $names[$eventEmail->event->id] = $eventEmail->event->name;
-            }
+            case 'form':
+                return 'admin.emails.library.form';
         }
 
-        return $names;
+        return parent::getView($action);
+    }
+
+    protected function getEntityLabel(): string
+    {
+        return 'sjabloon';
+    }
+
+    protected function getIndexTitle(): string
+    {
+        return 'Sjablonen';
     }
 
     /**
-     * The mails an event can have its own version of.
-     *
-     * @return string[]
+     * @param ResourceDefinition $resourceDefinition
+     * @return string
      */
-    private function getLibraryTypes()
+    protected function getCreateActionLabel(ResourceDefinition $resourceDefinition)
     {
-        return EmailTemplates::EVENT_TYPES;
-    }
-
-    /**
-     * @param mixed $type
-     * @return bool
-     */
-    private function isLibraryType($type)
-    {
-        return is_string($type) && in_array($type, $this->getLibraryTypes(), true);
-    }
-
-    /**
-     * @return string[] Label by type
-     */
-    private function getTypeLabels()
-    {
-        $labels = [];
-        foreach ($this->getLibraryTypes() as $type) {
-            $labels[$type] = $this->templates->getLabel($type);
-        }
-
-        return $labels;
+        return __('charonfrontend::crud.create_entity', [ 'entity' => $this->getEntityLabel() ]);
     }
 }

@@ -5,7 +5,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Services\EmailTemplates;
+use CatLab\Charon\Laravel\Database\Model;
 
 /**
  * Class EmailTemplate
@@ -63,5 +64,40 @@ class EmailTemplate extends Model
     public function scopeLibrary($query)
     {
         return $query->where('name', '<>', '');
+    }
+
+    /**
+     * The mail this is a template for, in words ("Bevestiging van inschrijving").
+     * @return string|null
+     */
+    public function getTypeLabelAttribute()
+    {
+        $templates = app(EmailTemplates::class);
+        return $templates->exists($this->type) ? $templates->getLabel($this->type) : $this->type;
+    }
+
+    /**
+     * The (not deleted) events that use this template, by id.
+     * @return string[]
+     */
+    public function getEventNames(): array
+    {
+        $names = [];
+        foreach ($this->eventEmails()->with('event')->get() as $eventEmail) {
+            // A soft-deleted event does not load.
+            if ($eventEmail->event) {
+                $names[$eventEmail->event->id] = $eventEmail->event->name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUsedByAttribute()
+    {
+        return implode(', ', $this->getEventNames());
     }
 }

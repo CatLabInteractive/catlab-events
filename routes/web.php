@@ -123,14 +123,7 @@ Route::group([
             Route::get('emails', 'Admin\EmailTemplateController@index');
 
             // The library of named templates. Before the `emails/{type}` routes.
-            Route::get('emails/templates', 'Admin\EmailLibraryController@index');
-            Route::get('emails/templates/create', 'Admin\EmailLibraryController@create');
-            Route::post('emails/templates', 'Admin\EmailLibraryController@store');
-            Route::match([ 'get', 'post' ], 'emails/templates/create/preview', 'Admin\EmailLibraryController@previewNew');
-            Route::get('emails/templates/{id}/edit', 'Admin\EmailLibraryController@edit');
-            Route::match([ 'get', 'post' ], 'emails/templates/{id}/preview', 'Admin\EmailLibraryController@preview');
-            Route::post('emails/templates/{id}/delete', 'Admin\EmailLibraryController@destroy');
-            Route::post('emails/templates/{id}', 'Admin\EmailLibraryController@update');
+            \App\Http\Controllers\Admin\EmailLibraryController::routes('emails/templates', 'Admin\EmailLibraryController');
 
             // The mail layout. Before the `emails/{type}` routes.
             Route::get('emails/layout', 'Admin\EmailLayoutController@edit');
