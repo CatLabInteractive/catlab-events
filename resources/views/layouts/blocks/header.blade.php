@@ -24,7 +24,7 @@
 
             <nav class="kv-nav" id="kv-nav" aria-label="Hoofdmenu">
                 <ul class="kv-nav-list">
-                    @foreach($navOrganisation->series()->active()->get() as $navSeries)
+                    @foreach($navOrganisation->series()->active()->with('organisation')->get() as $navSeries)
                         <?php $navActive = \Str::endsWith(url()->current(), $navSeries->getUrl()); ?>
                         <li class="kv-nav-item {{ $navSeries->getColourClass() }} @if($navActive) is-active @endif @if(!$navSeries->hasNextEvent()) is-quiet @endif">
                             <a href="{{ $navSeries->getUrl() }}" @if($navActive) aria-current="page" @endif>

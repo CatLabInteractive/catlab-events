@@ -16,7 +16,7 @@
                     </ul>
                 </div>
 
-                <?php $footerSeries = organisation()->series()->active()->get(); ?>
+                <?php $footerSeries = organisation()->series()->active()->with('organisation')->get(); ?>
                 @if($footerSeries->count() > 0)
                     <div>
                         <h4>Quizreeksen</h4>
