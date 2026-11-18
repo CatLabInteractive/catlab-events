@@ -36,8 +36,6 @@
         <div class="kv-hero-field">
             @include('blocks.poster', [ 'poster' => $heroEvent->poster, 'alt' => $heroEvent->name, 'width' => 1000 ])
         </div>
-    @else
-        <div class="kv-hero-field kv-hero-field-empty" aria-hidden="true"></div>
     @endif
 
     <div class="kv-hero-info">

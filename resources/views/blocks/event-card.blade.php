@@ -13,7 +13,7 @@
     <span class="kv-card-body">
         <span class="kv-card-date">
             @if($cardEvent->isPackage())
-                <b>Quizpakket</b> &middot; speel wanneer je wil
+                <b>Quizpakket</b>
             @elseif($cardEvent->startDate)
                 <b>{{ ucfirst($cardEvent->startDate->translatedFormat('D j M')) }}</b> &middot; {{ $cardEvent->startDate->format('H:i') }}
             @endif

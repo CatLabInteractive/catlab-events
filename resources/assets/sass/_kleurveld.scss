@@ -219,11 +219,45 @@ body.kv-page {
   }
 }
 
-.kv-hero-field-empty {
-  min-height: 96px;
+/*
+ * Without a poster the whole hero becomes the colour field, like a page head,
+ * instead of an empty block next to the text.
+ */
+.kv-hero-noposter {
+  position: relative;
+  overflow: hidden;
+  background: var(--kv-field);
+  color: var(--kv-on-field);
 
-  &:before { width: 200px; left: auto; right: -40px; bottom: -150px; }
-  &:after { width: 40px; right: auto; left: 20px; top: 20px; }
+  &:before {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: var(--kv-field-2);
+    right: -150px;
+    bottom: -170px;
+  }
+
+  &:after {
+    content: "";
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: $kv-paper;
+    opacity: .9;
+    right: 20px;
+    top: 18px;
+  }
+
+  .kv-hero-info { position: relative; z-index: 1; padding-top: 32px; }
+  .kv-series, .kv-facts, .kv-price small, .kv-price strike, .kv-price-details { color: var(--kv-on-field); opacity: .9; }
+  .kv-title, .kv-title a, .kv-price { color: var(--kv-on-field); }
+  .kv-series i { background: $kv-paper; }
+  .kv-links a, .kv-links a:hover, .kv-links a:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
+  .kv-btn-dot { background: var(--kv-field-2); color: $kv-ink; }
 }
 
 /*
@@ -794,8 +828,9 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 @media (min-width: 992px) {
   .kv-hero { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); min-height: 560px; }
   .kv-hero-tall { grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); }
-  .kv-hero-noposter { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); min-height: 440px; }
-  .kv-hero-noposter .kv-hero-field { padding: 0; }
+  .kv-hero-noposter { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .kv-hero-noposter:before { width: 520px; height: 520px; right: -140px; bottom: -300px; }
+  .kv-hero-noposter:after { width: 80px; height: 80px; right: 380px; top: 48px; }
 
   .kv-hero-field {
     padding: 72px 64px 72px max(40px, calc((100vw - 1200px) / 2 + 40px));
@@ -807,7 +842,7 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-hero-tall .kv-hero-field:before { width: 95%; bottom: -30%; }
 
   .kv-hero-info { padding: 64px max(40px, calc((100vw - 1200px) / 2 + 40px)) 64px 56px; }
-  .kv-hero-noposter .kv-hero-info { padding-left: 64px; }
+  .kv-hero-noposter .kv-hero-info { padding: 72px max(40px, calc((100vw - 1200px) / 2 + 40px)); padding-right: 45%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -977,11 +1012,12 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 .kv-pagehead.kv-pagehead-series {
   --kv-on-field: #{$kv-ink};
   background: $kv-bg;
-  padding-bottom: 40px;
+  padding: 20px 0 20px;
 
-  &:before { background: var(--kv-field); }
-  &:after { background: var(--kv-field-2); opacity: 1; }
+  &:before, &:after { display: none; }
   .kv-series i { background: var(--kv-field); }
+
+  @media (min-width: 768px) { padding: 32px 0 28px; }
 }
 
 .kv-pagehead-lead {
@@ -1005,9 +1041,10 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 
-  > div { background: $kv-paper; padding: 18px 20px; display: flex; flex-direction: column-reverse; }
+  > div { container-type: inline-size; min-width: 0; background: $kv-paper; padding: 18px 20px; display: flex; flex-direction: column-reverse; }
   dt { font-weight: 400; color: $kv-muted; }
-  dd { margin: 0; font-size: 38px; font-weight: 500; line-height: 1.1; letter-spacing: -.02em; }
+  /* Scales down with the box so "11.232" still fits a quarter of the row. */
+  dd { margin: 0; font-size: min(38px, 22cqw); font-weight: 500; line-height: 1.1; letter-spacing: -.02em; white-space: nowrap; }
 }
 
 .kv-posts {
@@ -1041,7 +1078,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 @media (min-width: 768px) {
   .kv-pagehead-lead { font-size: 22px; }
   .kv-facts-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .kv-facts-grid dd { font-size: 48px; }
+  .kv-facts-grid dd { font-size: min(48px, 22cqw); }
   .kv-posts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
@@ -1070,4 +1107,67 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   color: $kv-paper;
 
   &:hover, &:focus { background: $kv-ink-hover; border-color: $kv-ink-hover; color: $kv-paper; }
+}
+
+/* ---------- Past events, grouped by year ---------- */
+
+.kv-past-year {
+  border-top: 1px solid $kv-line;
+
+  &:last-child { border-bottom: 1px solid $kv-line; }
+
+  summary {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: 22px;
+    font-weight: 500;
+
+    &::-webkit-details-marker { display: none; }
+
+    &:after {
+      content: "+";
+      margin-left: auto;
+      font-size: 22px;
+      color: $kv-muted;
+    }
+
+    small { font-size: 14px; font-weight: 400; color: $kv-muted; }
+  }
+
+  &[open] summary:after { content: "\2212"; }
+
+  ul { list-style: none; margin: 0 0 12px; padding: 0; }
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 16px;
+    padding: 10px 0 10px 22px;
+    position: relative;
+
+    &:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 17px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--kv-field);
+    }
+  }
+}
+
+.kv-past-date { font-size: 14px; color: $kv-muted; }
+.kv-page .kv-past-name { color: $kv-ink; font-weight: 500; }
+.kv-page .kv-past-name:hover, .kv-page .kv-past-name:focus { color: $kv-ink; text-decoration: underline; }
+.kv-past-meta { font-size: 14px; color: $kv-muted; }
+
+@media (min-width: 768px) {
+  .kv-past-year li { grid-template-columns: 110px minmax(0, 1fr) minmax(0, 14em); align-items: baseline; }
+  .kv-past-meta { text-align: right; }
 }
