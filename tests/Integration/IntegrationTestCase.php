@@ -51,9 +51,14 @@ abstract class IntegrationTestCase extends TestCase
         $this->eukles = new FakeEuklesClient();
         $this->app->instance(EuklesClientInterface::class, $this->eukles);
 
+        // A proxy around the fake: tests can still add expectations with
+        // \CentralStorage::shouldReceive(), and every other call (getAssetUrl,
+        // ...) goes to the fake instead of failing as unexpected.
         $this->centralStorage = new FakeCentralStorage();
-        $this->app->instance(CentralStorageClientInterface::class, $this->centralStorage);
+        $proxy = \Mockery::mock($this->centralStorage);
+        $this->app->instance(CentralStorageClientInterface::class, $proxy);
         \Illuminate\Support\Facades\Facade::clearResolvedInstance(CentralStorageClientInterface::class);
+        \CentralStorage::swap($proxy);
     }
 
     protected function tearDown(): void

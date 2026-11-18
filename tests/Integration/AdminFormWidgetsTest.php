@@ -122,7 +122,7 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $stored = new Asset();
         $stored->name = 'poster.png';
         $stored->asset_key = 'uploaded';
-        \CentralStorage::partialMock()->shouldReceive('store')->once()->andReturn($stored);
+        \CentralStorage::shouldReceive('store')->once()->andReturn($stored);
 
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('poster.png', 600, 900) ],
@@ -147,8 +147,8 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $stored = new Asset();
         $stored->name = 'logo.png';
         $stored->asset_key = 'uploaded';
-        \CentralStorage::partialMock()->shouldReceive('store')->once()->andReturn($stored);
-        \CentralStorage::partialMock()->shouldReceive('deleteAsset')->once()->andReturn(true);
+        \CentralStorage::shouldReceive('store')->once()->andReturn($stored);
+        \CentralStorage::shouldReceive('deleteAsset')->once()->andReturn(true);
 
         $edit = '/admin/organisations/' . $organisation->id . '/edit';
         $this->actingAs($admin)
@@ -238,7 +238,7 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
 
-        \CentralStorage::partialMock()->shouldReceive('store')->never();
+        \CentralStorage::shouldReceive('store')->never();
 
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf') ],
