@@ -6,12 +6,10 @@
 
 @section('content')
 
-    <h2>Competities</h2>
-    <p>Sommige quizzen worden gegroepeerd in competities waarbij een competitie-winnaar bepaald wordt.</p>
+    <p class="kv-lead">Sommige quizzen worden gegroepeerd in competities waarbij een competitie-winnaar bepaald wordt.</p>
 
     @if (count($competitions) > 0)
-        <h3>Competities</h3>
-        <ul>
+        <ul class="kv-list">
             @foreach($competitions as $competition)
 
                 <li>

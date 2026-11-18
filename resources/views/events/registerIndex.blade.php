@@ -6,12 +6,11 @@
 
 @section('content')
 
-    <h2>Inschrijven</h2>
-    <p>Voor welke editie wilt u registreren?</p>
+    <p class="kv-lead">Voor welke editie wil je inschrijven?</p>
     @if (count($events) === 0)
-        <p>Er zijn nog geen evenementen gepland.
+        <p>Er zijn nog geen quizzen gepland.</p>
     @else
-        <table class="table">
+        <div class="kv-table-scroll"><table class="table">
             @foreach($events as $v)
 
                 <tr>
@@ -29,10 +28,10 @@
                         </a>
 
                         @if($v->isSoldOut())
-                            <span class="lastTickets">Uitverkocht!</span>
+                            <span class="kv-flag">Uitverkocht</span>
                         @elseif($v->isLastTicketsWarning())
                             <?php $availableTickets = $v->countAvailableTickets(); ?>
-                            <span class="lastTickets">Laatste {{ $availableTickets }} tickets!</span>
+                            <span class="kv-flag">Laatste {{ $availableTickets }} tickets</span>
                         @endif
                     </td>
 
@@ -44,7 +43,7 @@
 
                     <td>
                         @if($v->isSelling())
-                            <a href="{{ action('EventController@selectTicketCategory', [ $v->id ] ) }}" class="btn btn-default">{{ $v->getOrderLabel() }}</a>
+                            <a href="{{ action('EventController@selectTicketCategory', [ $v->id ] ) }}" class="btn btn-primary btn-sm">{{ $v->getOrderLabel() }}</a>
                         @elseif($v->isSoldOut())
                             Uitverkocht
                         @else
@@ -54,7 +53,7 @@
                 </tr>
 
             @endforeach
-        </table>
+        </table></div>
     @endif
 
 @endsection

@@ -6,11 +6,9 @@
 
 @section('content')
 
-    <h2>{{ $competition->name }}</h2>
-
     @if (count($upcoming) > 0)
         <h3>Agenda</h3>
-        <table class="table agenda">
+        <div class="kv-table-scroll"><table class="table agenda">
             @foreach($upcoming as $v)
 
                 <tr>
@@ -32,11 +30,13 @@
                 </tr>
 
             @endforeach
-        </table>
+        </table></div>
     @endif
 
     <h3>Tussenstand</h3>
+    <div class="kv-table-scroll">
     <table class="table competition">
+        <thead>
         <tr>
             <th>#</th>
             <th>Player</th>
@@ -49,12 +49,13 @@
             @endforeach
             <th>Seizoenscore</th>
         </tr>
+        </thead>
 
         <tr>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
             @foreach($eventDates as $v)
-                <td style="font-size: 80%;">
+                <td class="kv-table-note">
                     L: {{ $statistics[$v->id]['limit'] }}, MED: {{ $statistics[$v->id]['average'] }}, D: {{ $statistics[$v->id]['difficulty'] }}
                 </td>
             @endforeach
@@ -88,9 +89,10 @@
             </tr>
         @endforeach
     </table>
+    </div>
 
     <h3>Berekening</h3>
-    <p style="font-family: monospace">
+    <p class="kv-formula">
         <span title="Quiz moeilijkheid">D<sub>quiz</sub></span> = 0.8 + ((
         <span title="Theoretisch haalbare maximumscore">L<sub>quiz</sub></span> /
         <span title="Gemiddelde van alle behaalde punten">MED(P<sub>quiz</sub>)</span>) / (2 * 5))
@@ -110,7 +112,7 @@
         <span title="Op één na hoogst behaalde S-score">S<sub>speler.quiz(max - 1)</sub></span>
     </p>
 
-    <p style="font-family: monospace; font-size: 80%;">
+    <p class="kv-formula kv-formula-legend">
         D: Quiz moeilijkheid<br>
         L: Theoretisch haalbare maximumscore<br>
         P: punten behaald op quiz<br>

@@ -233,11 +233,11 @@ class EventController extends Controller
         $events = $organisation->events()->published()->upcoming()->orderByStartDate()->withListRelations()->get();
         $pastEvents = $organisation->events()->published()->finished()->orderByStartDateDesc()->withListRelations()->get();
 
-        return view('events.publisher', [
+        return view('events.archive', [
+            'pageTitle' => $organisation->name,
             'events' => $events,
             'pastEvents' => $pastEvents,
             'nextEvent' => $this->getNextEvent($events),
-            'countdownEvent' => $events->first(),
             'cities' => $this->getCities($events),
             'canonicalUrl' => action('EventController@fromPublisher', [ $organisationId ])
         ]);

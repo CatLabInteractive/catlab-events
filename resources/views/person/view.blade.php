@@ -6,13 +6,12 @@
 
 @section('content')
 
-    <h2>{{ $person->name }}</h2>
     @if($person)
         {!! $person->description !!}
     @endif
 
     <h3>Evenementen</h3>
-    <ul>
+    <ul class="kv-list">
     @foreach ($person->getPersonEvents() as $personEvent)
         <?php $event = $personEvent->getEvent(); ?>
         <li>

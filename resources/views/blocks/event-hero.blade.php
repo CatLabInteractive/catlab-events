@@ -131,7 +131,7 @@
                 @endif
 
                 @if($heroEvent->getLiveStreamUrl() && !$heroEvent->hasTickets())
-                    <a href="{{ $heroEvent->getLiveStreamUrl() }}"><i class="fa fa-play" aria-hidden="true"></i>Livestream</a>
+                    <a href="{{ $heroEvent->getLiveStreamUrl() }}">@include('blocks.icon', [ 'name' => 'play' ])Livestream</a>
                 @endif
 
                 @if($heroEvent->hasScores())
@@ -151,43 +151,3 @@
 
 </div>
 
-@once
-    <script>
-        // Hero slideshow: a slow crossfade between the series photos. Each photo
-        // only loads just before it is shown; reduced motion keeps the first one.
-        (function () {
-            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduce) {
-                return;
-            }
-            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
-                var images = show.querySelectorAll('img');
-                var current = 0;
-
-                function prepare(img) {
-                    if (img.dataset.src) {
-                        img.srcset = img.dataset.srcset;
-                        img.src = img.dataset.src;
-                        delete img.dataset.src;
-                    }
-                }
-
-                prepare(images[1]);
-                setInterval(function () {
-                    if (document.hidden) {
-                        return;
-                    }
-                    var next = (current + 1) % images.length;
-                    var img = images[next];
-                    if (!img.complete) {
-                        return;
-                    }
-                    images[current].classList.remove('is-shown');
-                    img.classList.add('is-shown');
-                    current = next;
-                    prepare(images[(current + 1) % images.length]);
-                }, 6500);
-            });
-        })();
-    </script>
-@endonce

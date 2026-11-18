@@ -1,89 +1,15 @@
-@import "bootstrap.min.css";
-@import "style.css";
-@import "responsive.css";
-@import "font-awesome.min.css";
-@import "colorbox.css";
-
-.lastTickets {
-  color: white;
-  background: red;
-  font-variant: small-caps;
-  border: 1px solid red;
-  border-radius: 5px;
-  font-size: 90%;
-  padding: 3px 5px;
-  margin-left: 10px;
-  font-weight: bold;
-  animation: rotateLastTickets 10s infinite;
-  display: inline-block;
-  animation-delay: 2s;
-}
-
-@keyframes rotateLastTickets {
-  5% {
-    transform: rotateX(180deg);
-  }
-
-  10% {
-    transform: rotateX(0deg);
-  }
-}
-
-.banner-content .lastTickets {
-  font-size: 200%;
-}
-
-.price {
-  margin-top: 10px;
-
-}
-
-.price .details {
-  font-size: 80%;
-}
-
-a.plain {
-  color: white;
-}
-
-a.plain:hover {
-  color: white;
-  text-decoration: underline;
-}
-
-table tr.total {
-  border-top: 2px solid gray;
-}
-
-table .small {
-  color: gray;
-}
-
-.header-transparent ul.navbar-nav > li.no-next-event > a {
-  color: #aaa;
-}
-
-.header-transparent ul.navbar-nav > li a .badge {
-  display: inline-block;
-  min-width: 8px;
-  padding: 2px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  color: #fff;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: top;
-  background-color: #777;
-  border-radius: 10px;
-  margin-left: 1px;
-}
+/*
+ * The public site's stylesheet (Kleurveld). Admin pages use admin.scss.
+ *
+ * _kv-tokens   colours and type
+ * _kv-base     element defaults and the few Bootstrap class names shared markup prints
+ * (this file)  order confirmation and register form
+ * _kleurveld   the kv-* components
+ */
+@import "kv-tokens";
+@import "kv-base";
 
 /* Order thanks page: ticket stub + "what now" steps */
-$ticket-pink: #1f3326;
-$ticket-dark: #1f3326;
-$ticket-line: #d9d8cc;
-$ticket-muted: #5d6b60;
 
 .order-thanks {
   max-width: 560px;
@@ -93,7 +19,7 @@ $ticket-muted: #5d6b60;
 }
 
 .order-ticket {
-  background: $ticket-dark;
+  background: $kv-ink;
   color: #fff;
   border-radius: 12px;
   overflow: hidden;
@@ -110,7 +36,7 @@ $ticket-muted: #5d6b60;
   position: relative;
   overflow: hidden;
   background-color: var(--kv-field, #78b46c);
-  color: $ticket-dark;
+  color: $kv-ink;
   background-size: cover;
   background-position: center;
 
@@ -213,7 +139,7 @@ $ticket-muted: #5d6b60;
       border: 0;
       line-height: 30px;
       background: var(--kv-field, #61cc6f);
-      color: var(--kv-on-field, #{$ticket-dark});
+      color: var(--kv-on-field, #{$kv-ink});
       font-weight: 900;
     }
 
@@ -224,18 +150,18 @@ $ticket-muted: #5d6b60;
       top: 30px;
       bottom: 0;
       width: 2px;
-      background: $ticket-line;
+      background: $kv-line;
     }
 
     > strong {
       display: block;
       font-size: 16px;
       line-height: 30px;
-      color: $ticket-dark;
+      color: $kv-ink;
     }
 
     p {
-      color: $ticket-muted;
+      color: $kv-muted;
       margin: 0 0 10px;
     }
   }
@@ -248,13 +174,13 @@ $ticket-muted: #5d6b60;
   padding: 12px 16px;
   font-size: 16px;
   font-weight: 700;
-  background: $ticket-pink;
-  border-color: $ticket-pink;
+  background: $kv-ink;
+  border-color: $kv-ink;
   color: #fff;
 
   &:hover, &:focus {
-    background: darken($ticket-pink, 8%);
-    border-color: darken($ticket-pink, 8%);
+    background: darken($kv-ink, 8%);
+    border-color: darken($kv-ink, 8%);
     color: #fff;
   }
 }
@@ -270,10 +196,10 @@ $ticket-muted: #5d6b60;
     font-family: Menlo, Consolas, monospace;
     font-size: 12px;
     padding: 6px 10px;
-    border: 1px dashed $ticket-line;
+    border: 1px dashed $kv-line;
     border-radius: 4px;
     background: #f5f5f5;
-    color: $ticket-dark;
+    color: $kv-ink;
   }
 }
 
@@ -286,8 +212,8 @@ $ticket-muted: #5d6b60;
   padding: 14px 16px;
   margin-bottom: 30px;
 
-  .fa {
-    color: $ticket-pink;
+  .kv-icon {
+    color: $kv-ink;
     font-size: 22px;
     margin-top: 2px;
   }
@@ -297,10 +223,10 @@ $ticket-muted: #5d6b60;
 
 .order-thanks-footer {
   text-align: center;
-  color: $ticket-muted;
+  color: $kv-muted;
 
   p { margin-top: 16px; }
-  a:not(.btn) { color: $ticket-pink; }
+  a:not(.btn) { color: $kv-ink; }
 }
 
 @media (max-width: 480px) {
@@ -312,34 +238,28 @@ $ticket-muted: #5d6b60;
  * Register form (events/{id}/register). Mobile first: one column, big tap
  * targets, 16px inputs (smaller makes iOS zoom in on focus).
  */
-// Kleurveld palette (see _kleurveld.scss): ink is the accent, the series colour marks the steps.
-$rf-pink: #1f3326;
-$rf-dark: #1f3326;
-$rf-line: #d9d8cc;
-$rf-muted: #5d6b60;
-$rf-soft: #fbfaf5;
 
 .rf {
   max-width: 560px;
   margin: 0 auto 40px;
   font-size: 16px;
-  color: $rf-dark;
+  color: $kv-ink;
 
   *, *:before, *:after { box-sizing: border-box; }
 
-  a:not(.rf-button) { color: $rf-pink; text-decoration: underline; }
+  a:not(.rf-button) { color: $kv-ink; text-decoration: underline; }
 }
 
 .rf-title {
   font-size: 22px;
   font-weight: 900;
   margin: 0 0 20px;
-  color: $rf-dark;
+  color: $kv-ink;
 }
 
 .rf-alert {
-  background: $rf-soft;
-  border-left: 4px solid $rf-muted;
+  background: $kv-paper;
+  border-left: 4px solid $kv-muted;
   border-radius: 6px;
   padding: 12px 14px;
   margin-bottom: 20px;
@@ -353,7 +273,7 @@ $rf-soft: #fbfaf5;
 }
 
 .rf-returning {
-  background: $rf-soft;
+  background: $kv-paper;
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 28px;
@@ -363,7 +283,7 @@ $rf-soft: #fbfaf5;
   .rf-returning-first {
     margin: 12px 0 0;
     font-size: 14px;
-    color: $rf-muted;
+    color: $kv-muted;
   }
 }
 
@@ -390,7 +310,7 @@ $rf-soft: #fbfaf5;
   padding: 0;
   font-size: 18px;
   font-weight: 900;
-  color: $rf-dark;
+  color: $kv-ink;
 
   &:before {
     content: counter(rf-step);
@@ -399,7 +319,7 @@ $rf-soft: #fbfaf5;
     line-height: 28px;
     text-align: center;
     border-radius: 50%;
-    background: $rf-pink;
+    background: $kv-ink;
     color: #fff;
     font-size: 14px;
   }
@@ -426,25 +346,25 @@ $rf-soft: #fbfaf5;
   left: 16px;
   width: 20px;
   height: 20px;
-  accent-color: $rf-pink;
+  accent-color: $kv-ink;
 }
 
 .rf-choice-body {
   display: block;
   padding: 14px 16px 14px 48px;
-  border: 2px solid $rf-line;
+  border: 2px solid $kv-line;
   border-radius: 10px;
   background: #fff;
   transition: border-color .15s, background-color .15s;
 }
 
 .rf-choice-input:checked + .rf-choice-body {
-  border-color: $rf-pink;
+  border-color: $kv-ink;
   background: #fbfaf5;
 }
 
 .rf-choice-input:focus-visible + .rf-choice-body {
-  outline: 3px solid rgba($rf-pink, .35);
+  outline: 3px solid rgba($kv-ink, .35);
   outline-offset: 2px;
 }
 
@@ -463,7 +383,7 @@ $rf-soft: #fbfaf5;
   margin-top: 4px;
   font-size: 15px;
   line-height: 1.4;
-  color: $rf-dark;
+  color: $kv-ink;
 }
 
 .rf-choice-meta,
@@ -471,10 +391,10 @@ $rf-soft: #fbfaf5;
   display: block;
   margin-top: 4px;
   font-size: 14px;
-  color: $rf-muted;
+  color: $kv-muted;
 }
 
-.rf-choice-warning { color: $rf-pink; font-weight: 700; }
+.rf-choice-warning { color: $kv-ink; font-weight: 700; }
 
 /* Text fields: label on top, a real box around the input. */
 .rf-field { margin-bottom: 16px; }
@@ -484,12 +404,12 @@ $rf-soft: #fbfaf5;
   margin: 0 0 6px;
   font-size: 15px;
   font-weight: 700;
-  color: $rf-dark;
+  color: $kv-ink;
 }
 
 .rf-optional {
   font-weight: normal;
-  color: $rf-muted;
+  color: $kv-muted;
   font-size: 14px;
 }
 
@@ -499,9 +419,9 @@ $rf-soft: #fbfaf5;
   height: 50px;
   padding: 0 14px;
   font-size: 16px;
-  color: $rf-dark;
+  color: $kv-ink;
   background: #fff;
-  border: 2px solid $rf-line;
+  border: 2px solid $kv-line;
   border-radius: 8px;
   box-shadow: none;
   -webkit-appearance: none;
@@ -510,12 +430,12 @@ $rf-soft: #fbfaf5;
 
   &:focus {
     outline: none;
-    border-color: $rf-pink;
-    box-shadow: 0 0 0 3px rgba($rf-pink, .2);
+    border-color: $kv-ink;
+    box-shadow: 0 0 0 3px rgba($kv-ink, .2);
   }
 }
 
-.rf-input-error { border-color: $rf-pink; background: #fbfaf5; }
+.rf-input-error { border-color: $kv-ink; background: #fbfaf5; }
 
 select.rf-input {
   padding-right: 40px;
@@ -527,20 +447,20 @@ select.rf-input {
 .rf-help {
   margin: 6px 0 0;
   font-size: 14px;
-  color: $rf-muted;
+  color: $kv-muted;
 }
 
 .rf-new-team {
   padding: 14px;
   border-radius: 10px;
   background: #fbfaf5;
-  border: 2px dashed rgba($rf-pink, .45);
+  border: 2px dashed rgba($kv-ink, .45);
 
   &[hidden] { display: none; }
 }
 
 .rf-signed-in {
-  background: $rf-soft;
+  background: $kv-paper;
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 16px;
@@ -552,7 +472,7 @@ select.rf-input {
 
   summary {
     cursor: pointer;
-    color: $rf-pink;
+    color: $kv-ink;
     font-size: 15px;
     padding: 6px 0;
   }
@@ -570,9 +490,9 @@ select.rf-input {
   width: 100%;
   min-height: 52px;
   padding: 14px 20px;
-  border: 2px solid $rf-pink;
+  border: 2px solid $kv-ink;
   border-radius: 8px;
-  background: $rf-pink;
+  background: $kv-ink;
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -582,8 +502,8 @@ select.rf-input {
   transition: background-color .15s, border-color .15s;
 
   &:hover, &:focus {
-    background: darken($rf-pink, 8%);
-    border-color: darken($rf-pink, 8%);
+    background: darken($kv-ink, 8%);
+    border-color: darken($kv-ink, 8%);
     color: #fff;
     text-decoration: none;
   }
@@ -591,9 +511,9 @@ select.rf-input {
 
 .rf-button-secondary {
   background: #fff;
-  color: $rf-pink;
+  color: $kv-ink;
 
-  &:hover, &:focus { background: $rf-pink; border-color: $rf-pink; }
+  &:hover, &:focus { background: $kv-ink; border-color: $kv-ink; }
 }
 
 .rf-submit { font-size: 18px; }
@@ -602,7 +522,7 @@ select.rf-input {
   margin-top: 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: $rf-muted;
+  color: $kv-muted;
 
   p { margin: 0 0 8px; }
 }
@@ -610,7 +530,7 @@ select.rf-input {
 .rf-login {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid $rf-line;
+  border-top: 1px solid $kv-line;
   text-align: center;
 }
 
@@ -623,6 +543,5 @@ select.rf-input {
     .rf-button { display: inline-block; width: auto; }
   }
 }
-
 
 @import "kleurveld";
