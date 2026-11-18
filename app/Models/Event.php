@@ -86,7 +86,11 @@ class Event extends Model implements EuklesModel
      */
     public function getUrl()
     {
-        return action('EventController@view', [ $this->id, Str::slug($this->name) ]);
+        $slug = Str::slug($this->name);
+        if ($slug === '') {
+            return action('EventController@view', [ $this->id ]);
+        }
+        return route('event_view', [ $this->id, $slug ]);
     }
 
     /**

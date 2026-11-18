@@ -173,6 +173,11 @@ Route::get('events/register', 'EventController@registerIndex');
 Route::get('archive', 'EventController@archive');
 Route::get('calendar', 'EventController@calendar');
 Route::get('events/{id}', 'EventController@view');
+// Readable event links: /events/86/quiz-in-cafe-sekuurne. The slug is cosmetic; the
+// lookahead keeps the other /events/{event}/... pages (scores, register, ...) theirs.
+Route::get('events/{id}/{slug}', 'EventController@view')
+    ->where('slug', '(?!(scores|waitinglist|register|register-auth)$)[a-z0-9-]+')
+    ->name('event_view');
 Route::get('s/{series}/{slug?}', 'SeriesController@view');
 Route::get('e/{event}/{slug?}', 'EventController@view');
 Route::get('events/{event}/scores', 'EventController@scores');
