@@ -84,6 +84,7 @@ class PageController extends Controller
 
         \Route::delete('pages/{page}', 'Admin\PageController@destroy')->where('page', '[0-9]+');
         \Route::post('pages/{page}/home', 'Admin\PageController@setHome')->where('page', '[0-9]+');
+        \Route::post('pages/fixed-links', 'Admin\PageController@addFixedLinks');
     }
 
     /**
@@ -104,6 +105,7 @@ class PageController extends Controller
         return view('admin.cms.pages.index', [
             'organisation' => $organisation,
             'rows' => $this->tree($pages),
+            'unmanagedLinks' => array_values(array_diff(Page::FIXED_LINKS, $pages->pluck('link')->filter()->all())),
             'locales' => config('cms.locales'),
             'defaultLocale' => config('cms.default_locale'),
         ]);
@@ -273,6 +275,62 @@ class PageController extends Controller
 
         return redirect(action('Admin\PageController@index'))
             ->with('message', 'De pagina is verwijderd.');
+    }
+
+    /**
+     * Add the fixed parts of the menu (quiz series, calendar, blog) that no
+     * menu link manages yet as menu links, at their current position and
+     * published in every language, so they can be moved, renamed or hidden.
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addFixedLinks()
+    {
+        $organisation = $this->getActiveOrganisation();
+        $this->authorize('create', [ Page::class, $organisation ]);
+
+        $existing = Page::forOrganisation($organisation)->whereIn('link', Page::FIXED_LINKS)->pluck('link')->all();
+        $slugs = [ Page::LINK_SERIES => 'menu-quizreeksen', Page::LINK_CALENDAR => 'menu-kalender', Page::LINK_BLOG => 'menu-blog' ];
+        $defaultLocale = config('cms.default_locale');
+
+        foreach (Page::FIXED_LINK_POSITIONS as $link => $position) {
+            if (in_array($link, $existing, true)) {
+                continue;
+            }
+
+            $slug = $slugs[$link];
+            $taken = PageTranslation::forOrganisation($organisation)->pluck('path')->all();
+            for ($i = 2; in_array($slug, $taken, true); $i++) {
+                $slug = $slugs[$link] . '-' . $i;
+            }
+
+            $translation = $this->writer->createPage($organisation, [
+                'parent_id' => null,
+                'sort_order' => $position,
+                'show_in_menu' => true,
+                'show_in_footer' => false,
+                'link' => $link,
+            ], $defaultLocale, [
+                'slug' => $slug,
+                'title' => Page::FIXED_LINK_TITLES[$link][$defaultLocale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
+                'is_published' => true,
+                'blocks' => [],
+            ]);
+
+            // In every language, so the menu stays the same everywhere.
+            foreach (config('cms.locales') as $locale) {
+                if ($locale !== $defaultLocale) {
+                    $this->writer->saveTranslation($translation->page, $locale, [
+                        'slug' => $slug,
+                        'title' => Page::FIXED_LINK_TITLES[$link][$locale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
+                        'is_published' => true,
+                        'blocks' => [],
+                    ]);
+                }
+            }
+        }
+
+        return redirect(action('Admin\PageController@index'))
+            ->with('message', 'De vaste onderdelen staan nu als menulinks in de lijst.');
     }
 
     /**

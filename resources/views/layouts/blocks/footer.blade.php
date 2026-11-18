@@ -20,7 +20,7 @@
                 </div>
 
                 {{-- CMS pages marked "toon in footer". --}}
-                @php($footerPages = app(\App\Cms\Menu::class)->footerItems(organisation(), $cmsLocale ?? null))
+                @php($footerPages = app(\App\Cms\Menu::class)->footerItems(organisation(), $cmsLocale ?? null, app(\App\Cms\Blog::class)->navigationUrl(organisation(), $cmsLocale ?? null)))
                 @if(count($footerPages) > 0)
                     <div>
                         <h4>{{ organisation()->name }}</h4>

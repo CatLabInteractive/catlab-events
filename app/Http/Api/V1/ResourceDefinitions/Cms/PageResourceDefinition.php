@@ -63,6 +63,12 @@ class PageResourceDefinition extends BaseResourceDefinition
             ->visible(true, true)
             ->writeable(true, true);
 
+        // A menu link instead of content: @series, @calendar, @blog or a URL.
+        $this->field('link')
+            ->string()
+            ->visible(true, true)
+            ->writeable(true, true);
+
         // Always expanded, in the translation's index context (locale, slug,
         // path, url, title, published; not the blocks), like the admin index.
         $this->relationship('translations', PageTranslationResourceDefinition::class)

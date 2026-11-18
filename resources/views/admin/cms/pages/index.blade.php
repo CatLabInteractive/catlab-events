@@ -23,6 +23,21 @@
         <a href="{{ action('Admin\PageController@create') }}" class="btn btn-success">Nieuwe pagina</a>
     </p>
 
+    {{-- Fixed parts of the menu that no menu link manages yet. --}}
+    @if(count($unmanagedLinks) > 0)
+        <div class="alert alert-light border">
+            <p class="mb-2">
+                Deze vaste onderdelen staan nu op een vaste plaats in het menu
+                ({{ implode(', ', array_map(function ($link) { return \App\Models\Page::FIXED_LINK_TITLES[$link]['nl']; }, $unmanagedLinks)) }}).
+                Voeg ze toe als menulink om ze te verplaatsen, te hernoemen of te verbergen.
+            </p>
+            <form method="POST" action="{{ action('Admin\PageController@addFixedLinks') }}" class="mb-0">
+                {{ csrf_field() }}
+                <button type="submit" class="btn btn-sm btn-outline-primary">Vaste onderdelen als menulinks toevoegen</button>
+            </form>
+        </div>
+    @endif
+
     @if(count($rows) === 0)
         <p class="alert alert-info">Er zijn nog geen pagina's.</p>
     @else
@@ -57,6 +72,9 @@
                         @endif
                         @if($page->show_in_menu)
                             <span class="badge badge-light">in menu</span>
+                        @endif
+                        @if($page->isLink())
+                            <span class="badge badge-info">menulink: {{ [ '@series' => 'quizreeksen', '@calendar' => 'kalender', '@blog' => 'blog' ][$page->link] ?? $page->link }}</span>
                         @endif
                         @if($page->show_in_footer)
                             <span class="badge badge-light">in footer</span>

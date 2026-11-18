@@ -56,6 +56,9 @@ class PageTranslationRequest extends FormRequest
             'sort_order' => [ 'nullable', 'integer' ],
             'show_in_menu' => [ 'nullable', 'boolean' ],
             'show_in_footer' => [ 'nullable', 'boolean' ],
+            // '' (content), @series, @calendar, @blog or 'url' (then link_url).
+            'link_kind' => [ 'nullable', 'string', 'in:@series,@calendar,@blog,url' ],
+            'link_url' => [ 'nullable', 'string', 'max:1024', 'required_if:link_kind,url' ],
 
             'slug' => [ 'required', 'string', 'max:191' ],
             'title' => [ 'required', 'string', 'max:255' ],
@@ -80,6 +83,7 @@ class PageTranslationRequest extends FormRequest
             'og_image_id' => 'deelafbeelding',
             'parent_id' => 'bovenliggende pagina',
             'sort_order' => 'volgorde',
+            'link_url' => 'link',
         ];
     }
 
@@ -103,6 +107,7 @@ class PageTranslationRequest extends FormRequest
             'sort_order' => (int) $this->input('sort_order', 0),
             'show_in_menu' => $this->boolean('show_in_menu'),
             'show_in_footer' => $this->boolean('show_in_footer'),
+            'link' => $this->input('link_kind') === 'url' ? $this->input('link_url') : ($this->input('link_kind') ?: null),
         ];
     }
 
