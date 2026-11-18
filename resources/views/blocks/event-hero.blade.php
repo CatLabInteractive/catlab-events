@@ -124,7 +124,8 @@
         @if($hasLinks)
             <p class="kv-links">
                 @if($heroOnSeriesPage)
-                    <a href="{{ $heroEvent->getUrl() }}">Praktisch &amp; tickets</a>
+                    {{-- The event page starts with the same hero, so land on the details below it. --}}
+                    <a href="{{ $heroEvent->getUrl() }}#{{ ($heroEvent->description || $heroEvent->competition) ? 'over' : 'tickets' }}">Praktisch &amp; tickets</a>
                 @elseif($heroCanRegister)
                     <a href="#tickets">Alle tickets</a>
                 @endif
