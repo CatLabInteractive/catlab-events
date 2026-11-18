@@ -233,11 +233,6 @@ body.kv-page {
 
 .kv-nav-group.is-open .kv-nav-sub { display: block; }
 
-/* "Quizzen op maat": the one highlighted item, an outlined pill. */
-.kv-nav-highlight > a {
-  font-weight: 500;
-}
-
 /* From desktop width the links sit in one row. */
 @media (min-width: 992px) {
   .kv-header-inner { padding: 0 40px; min-height: 88px; flex-wrap: nowrap; gap: 32px; }
@@ -282,15 +277,6 @@ body.kv-page {
   }
 
   .kv-nav-group:hover .kv-nav-sub { display: block; }
-
-  .kv-nav-highlight > a {
-    padding: 8px 16px;
-    border: 2px solid $kv-ink;
-    border-radius: 999px;
-    color: $kv-ink;
-  }
-
-  .kv-nav-highlight > a:hover, .kv-nav-highlight > a:focus-visible { background: $kv-ink; color: $kv-paper; }
   .kv-nav-group:hover .kv-nav-caret { transform: translateY(3px) rotate(-135deg); }
 }
 
@@ -459,8 +445,10 @@ body.kv-page {
 }
 
 /* Event name on a colour field or photo: the field's text colour, also when it's a link. */
-.kv-site .kv-hero-photo .kv-title, .kv-site .kv-hero-noposter .kv-title,
-.kv-page .kv-hero-photo .kv-title a, .kv-page .kv-hero-photo .kv-title a:hover, .kv-page .kv-hero-photo .kv-title a:focus,
+.kv-site .kv-hero.kv-hero-photo .kv-title,
+.kv-page .kv-hero.kv-hero-photo .kv-title a, .kv-page .kv-hero.kv-hero-photo .kv-title a:hover, .kv-page .kv-hero.kv-hero-photo .kv-title a:focus { color: #fff; }
+
+.kv-site .kv-hero-noposter .kv-title,
 .kv-page .kv-hero-noposter .kv-title a, .kv-page .kv-hero-noposter .kv-title a:hover, .kv-page .kv-hero-noposter .kv-title a:focus { color: var(--kv-on-field); }
 
 /* The series name as the page's h1, in the small kicker line above the event name. */
@@ -485,16 +473,14 @@ body.kv-page {
 .kv-hero-photo {
   position: relative;
   overflow: hidden;
-  background: var(--kv-field);
-  color: var(--kv-on-field);
+  background: #141414;
+  color: #fff;
 
   &:before, &:after { display: none; }
 
   .kv-hero-photos {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    max-height: 36vh;
-    width: 100%;
+    position: absolute;
+    inset: 0;
     overflow: hidden;
 
     img {
@@ -509,22 +495,24 @@ body.kv-page {
 
     img.is-shown { opacity: 1; }
 
+    /* A dark veil: the photo stays visible, the white text stays readable. */
     &:after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, transparent 40%, var(--kv-field) 98%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .66) 34%, rgba(0, 0, 0, .78) 100%);
     }
   }
 
-  .kv-hero-info { position: relative; z-index: 1; padding-top: 0; margin-top: -28px; }
-  .kv-series, .kv-hero-facts { color: var(--kv-on-field); opacity: .92; }
-  .kv-series i, .kv-hero-facts li:before { background: var(--kv-on-field); }
-  .kv-links a, .kv-links a:hover, .kv-links a:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
-  .kv-buy { border-color: transparent; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .5); }
+  /* On phones a strip of photo shows above the text. */
+  .kv-hero-info { position: relative; z-index: 1; padding-top: 150px; }
+  &.kv-hero .kv-series, &.kv-hero .kv-hero-facts, &.kv-hero .kv-series a, &.kv-hero .kv-series a:hover { color: #fff; opacity: .92; }
+  .kv-series i, .kv-hero-facts li:before { background: var(--kv-field); }
+  .kv-links a, .kv-links a:hover, .kv-links a:focus { color: #fff; text-decoration-color: var(--kv-field); }
+  .kv-buy { border-color: transparent; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .7); }
 
-  /* The poster sits on the colour below the text on phones, on the photo on desktop. */
-  .kv-hero-field { order: 3; background: transparent; padding-top: 0; min-height: 0; }
+  /* The poster sits below the text on phones, beside it on desktop. */
+  .kv-hero-field { order: 3; position: relative; z-index: 1; background: transparent; padding-top: 0; min-height: 0; }
   .kv-hero-field:before, .kv-hero-field:after { display: none; }
 }
 
@@ -1091,19 +1079,11 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-hero.kv-hero-photo { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); min-height: 600px; }
   .kv-hero-photo.kv-hero-noposter { grid-template-columns: minmax(0, 1fr); }
 
-  .kv-hero-photo .kv-hero-photos {
-    position: absolute;
-    inset: 0;
-    aspect-ratio: auto;
-    max-height: none;
-
-    &:after { background: linear-gradient(90deg, var(--kv-field) 0%, var(--kv-field) 40%, transparent 72%); }
-  }
+  .kv-hero-photo .kv-hero-photos:after { background: linear-gradient(90deg, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .64) 45%, rgba(0, 0, 0, .32) 100%); }
 
   .kv-hero-photo .kv-hero-info {
     grid-column: 1;
     grid-row: 1;
-    margin-top: 0;
     padding: 72px 48px 72px max(40px, calc((100vw - 1200px) / 2 + 40px));
   }
 
@@ -1144,23 +1124,6 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-map { height: 100%; min-height: 300px; }
 }
 
-.kv-footer #back-to-top .btn.btn-primary {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 0;
-  padding: 0;
-  background: $kv-gold;
-  color: $kv-ink;
-  font-size: 20px;
-}
-
-.kv-footer #back-to-top { position: fixed; left: auto !important; right: 20px; bottom: 20px; }
-
-@media (max-width: 767px) {
-  /* Phones have the order bar and native scrolling; the button only covers content there. */
-  .kv-footer #back-to-top { display: none !important; }
-}
 
 /* ---------- Page head (every page without its own hero) ---------- */
 

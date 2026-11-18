@@ -43,14 +43,6 @@
                         <li class="kv-nav-item"><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
                     @endif
 
-                    @if($navOrganisation->blog_url)
-                        <li class="kv-nav-item"><a href="{{ $navOrganisation->blog_url }}">Blog</a></li>
-                    @endif
-
-                    @if($navOrganisation->custom_quiz_url)
-                        <li class="kv-nav-item kv-nav-highlight"><a href="{{ $navOrganisation->custom_quiz_url }}">Quizzen op maat</a></li>
-                    @endif
-
                     @if(!Auth::guest())
                         <li class="kv-nav-item kv-nav-group">
                             <button type="button" class="kv-nav-toggle" aria-expanded="false">
