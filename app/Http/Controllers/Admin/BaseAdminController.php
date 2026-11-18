@@ -22,15 +22,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Api\V1\ResourceDefinitions\AssetResourceDefinition;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\CentralStorageUploadHandler;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
+use CatLab\CharonFrontend\Widgets\FileWidget;
 
 /**
  * Shared base for the admin CRUD controllers: carries the FrontCrudController
  * trait and the admin layout, so the controllers themselves only declare what
  * is actually theirs (their api controller, their child controllers, their
  * extra table actions).
+ *
+ * Relationships to an Asset (posters, logos, headers, ...) are edited with a
+ * file widget: preview, upload to CentralStorage, pick existing, remove.
  *
  * @package App\Http\Controllers\Admin
  */
@@ -41,5 +47,10 @@ abstract class BaseAdminController extends Controller implements FrontCrudContro
     public function __construct()
     {
         $this->setLayout('layouts.admin');
+
+        $this->widgets()->forRelationship(
+            AssetResourceDefinition::class,
+            new FileWidget(new CentralStorageUploadHandler(), 'image/*')
+        );
     }
 }

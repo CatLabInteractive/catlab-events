@@ -91,19 +91,15 @@ class AdminSmokeTest extends IntegrationTestCase
 
         $this->actingAs($admin)
             ->get('/admin/events/' . $event->id . '/ticketCategories/' . $category->id . '/edit')
-            ->assertSee('name="fields[description][input][0][value]"', false);
+            ->assertSee('name="fields[description]"', false);
 
-        $field = function ($type, $value) {
-            return [ 'type' => $type, 'multiple' => '0', 'input' => [ [ 'value' => $value ] ] ];
-        };
         $this->actingAs($admin)->put('/admin/events/' . $event->id . '/ticketCategories/' . $category->id, [
             'fields' => [
-                'name' => $field('string', 'Single player'),
-                'description' => $field('string', 'Je speelt de quiz alleen. Je hebt twee toestellen nodig.'),
-                'price' => $field('number', '10'),
+                'name' => 'Single player',
+                'description' => 'Je speelt de quiz alleen. Je hebt twee toestellen nodig.',
+                'price' => '10',
+                'eventDates' => [ 'ids' => [ '', (string) $date->id ] ],
             ],
-            'linkableFields' => 'eventDates',
-            'linkable' => [ 'eventDates' => [ [ 'id' => $date->id ] ] ],
         ]);
 
         $this->assertSame('Je speelt de quiz alleen. Je hebt twee toestellen nodig.', $category->fresh()->description);
