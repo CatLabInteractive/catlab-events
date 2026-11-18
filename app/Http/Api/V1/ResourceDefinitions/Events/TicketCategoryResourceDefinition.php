@@ -72,7 +72,7 @@ class TicketCategoryResourceDefinition extends BaseResourceDefinition
             ->number();
 
         $this->field('max_players')
-            ->visible()
+            ->visible(true)
             ->writeable(true, true)
             ->number();
 
