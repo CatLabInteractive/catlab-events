@@ -240,4 +240,8 @@ Route::get('sitemap.xml', 'SitemapController@sitemap');
 // config/cms.php 'reserved_slugs' (ReservedSlugsTest enforces both).
 // ---------------------------------------------------------------------------
 \App\Http\Controllers\PageController::routes();
-Route::fallback('RedirectController@fallback');
+// Every method, not just GET (Route::fallback): a POST to an unknown path
+// stays a 404 instead of a 405 caused by the GET-only fallback matching it.
+Route::any('{fallbackPlaceholder}', 'RedirectController@fallback')
+    ->where('fallbackPlaceholder', '.*')
+    ->fallback();

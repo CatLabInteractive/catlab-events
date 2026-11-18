@@ -79,15 +79,7 @@ class PageController extends Controller
         Route::get('{year}/{month}/{day}/{slug}', 'PostController@show')
             ->where([ 'year' => '[0-9]{4}', 'month' => '[0-9]{2}', 'day' => '[0-9]{2}', 'slug' => '[a-z0-9\-]+' ]);
 
-        // Paths under a reserved first segment (admin, api, ...) are never
-        // pages. Leaving them out keeps the router's answer for those paths
-        // as it was: e.g. a POST to an unknown admin URL is a 404, not a 405
-        // because this GET route matched the path.
-        $reserved = implode('|', array_map(function ($slug) {
-            return preg_quote($slug, '/');
-        }, config('cms.reserved_slugs')));
-        Route::get('{path}', 'PageController@show')
-            ->where('path', '(?!(?:' . $reserved . ')(?:/|$))[a-z0-9\-]+(?:/[a-z0-9\-]+)*');
+        Route::get('{path}', 'PageController@show')->where('path', '[a-z0-9\-]+(?:/[a-z0-9\-]+)*');
     }
 
     /**

@@ -43,7 +43,9 @@ class RedirectController extends Controller
     {
         $organisation = $this->getOrganisation();
 
-        if ($organisation && ($redirect = $redirects->resolve($organisation, $request))) {
+        // Only page views follow a redirect; any other method on an unknown path is a 404.
+        $isPageView = $request->isMethod('GET') || $request->isMethod('HEAD');
+        if ($isPageView && $organisation && ($redirect = $redirects->resolve($organisation, $request))) {
             return $redirect;
         }
 
