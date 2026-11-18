@@ -20,6 +20,8 @@ class ContentRewriterTest extends TestCase
             . '<img src="http://quizfabriek.be/wp-content/uploads/b.jpg?x=1">'
             . '<img src="//www.quizfabriek.be/wp-content/uploads/c.jpg">'
             . '<a href="/wp-content/uploads/d.pdf">d</a>'
+            . '<img src="https://blog.quizfabriek.be/wp-content/uploads/h.jpg">'
+            . '<img src="https://notquizfabriek.be/wp-content/uploads/i.jpg">'
             . '<img src="https://evil.example/wp-content/uploads/e.jpg">'
             . '<img src="https://www.quizfabriek.be/wp-content/themes/f.jpg">'
             . '<img src="https://www.quizfabriek.be/wp-content/uploads/../../etc/passwd">'
@@ -31,6 +33,7 @@ class ContentRewriterTest extends TestCase
             'https://www.quizfabriek.be/wp-content/uploads/b.jpg',
             'https://www.quizfabriek.be/wp-content/uploads/c.jpg',
             'https://www.quizfabriek.be/wp-content/uploads/d.pdf',
+            'https://www.quizfabriek.be/wp-content/uploads/h.jpg',
         ], $urls);
     }
 
