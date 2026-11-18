@@ -1564,3 +1564,14 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
   .kv-order-dot { margin-top: 0; align-self: start; margin-top: 8px; }
   .kv-order-action { grid-column: 3; text-align: right; }
 }
+
+/* ---------- Keyboard focus, everywhere on the site ---------- */
+.kv-site a:focus-visible,
+.kv-site button:focus-visible,
+.kv-site summary:focus-visible {
+  outline: 3px solid $kv-ink;
+  outline-offset: 3px;
+}
+.kv-hero-photo a:focus-visible, .kv-footer a:focus-visible { outline-color: #fff; }
+
+.kv-orders-intro { margin: 0 0 24px; color: $kv-muted; }

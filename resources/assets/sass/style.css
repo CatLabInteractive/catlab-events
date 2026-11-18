@@ -34,7 +34,6 @@
 	
 */
 
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i,900,900i|Lato:400,400i,700,700i,900,900i');
 
 
 .logo img {
@@ -223,9 +222,6 @@ div.compact section {
 }
 .pab {
     padding-bottom: 0;
-}
-a:focus {
-    outline: 0;
 }
 img.pull-left {
     margin-right: 20px;
