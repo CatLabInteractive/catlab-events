@@ -20,6 +20,7 @@
                     class="kv-map"
                     data-coordinates="{{ json_encode([ 'lat' => floatval($venue->lat), 'lng' => floatval($venue->long) ]) }}"
                     data-address="{{ $venue->getAddressFull("<br>") }}"
+                    data-maps-key="{{ config('services.google.maps_api_key') }}"
                 ></div>
             @endif
         </div>

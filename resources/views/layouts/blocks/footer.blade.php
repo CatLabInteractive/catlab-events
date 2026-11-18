@@ -91,7 +91,4 @@
         });
     </script>
 
-    @if(config('services.google.maps_api_key'))
-        <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key={{config('services.google.maps_api_key')}}"></script>
-    @endif
 @endif

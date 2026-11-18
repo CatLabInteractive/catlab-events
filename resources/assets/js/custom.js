@@ -48,21 +48,27 @@ jQuery(function($) {
 	/*  Event Map 
 	/* -----------------------------------------------------------*/
 
-	// Plain Google Maps API: the old gmap3 plugin called the API's classes without
-	// 'new', which the current API no longer allows.
+	// Venue map. The Google Maps API is only loaded on pages that show a map,
+	// asynchronously, and the map is drawn from its callback.
 	var mapElement = document.getElementById('map');
-	if (mapElement && window.google && google.maps) {
-		var eventPosition = JSON.parse(mapElement.getAttribute('data-coordinates'));
-		var eventMap = new google.maps.Map(mapElement, {
-			zoom: 16,
-			center: eventPosition,
-			scrollwheel: false
-		});
-		var eventMarker = new google.maps.Marker({ position: eventPosition, map: eventMap });
-		var eventInfo = new google.maps.InfoWindow({ content: mapElement.getAttribute('data-address') });
-		eventMarker.addListener('click', function () {
-			eventInfo.open(eventMap, eventMarker);
-		});
+	if (mapElement && mapElement.getAttribute('data-maps-key')) {
+		window.kvInitMap = function () {
+			var eventPosition = JSON.parse(mapElement.getAttribute('data-coordinates'));
+			var eventMap = new google.maps.Map(mapElement, {
+				zoom: 16,
+				center: eventPosition,
+				scrollwheel: false
+			});
+			var eventMarker = new google.maps.Marker({ position: eventPosition, map: eventMap });
+			var eventInfo = new google.maps.InfoWindow({ content: mapElement.getAttribute('data-address') });
+			eventMarker.addListener('click', function () {
+				eventInfo.open(eventMap, eventMarker);
+			});
+		};
+		var mapsScript = document.createElement('script');
+		mapsScript.async = true;
+		mapsScript.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(mapElement.getAttribute('data-maps-key')) + '&callback=kvInitMap&loading=async';
+		document.head.appendChild(mapsScript);
 	}
 
 
@@ -91,17 +97,6 @@ jQuery(function($) {
 
 
 
-	/* ----------------------------------------------------------- */
-	/*  Counter
-	/* ----------------------------------------------------------- */
-
-		$('.counterUp').counterUp({
-		 delay: 10,
-		 time: 1000
-		});
-
-
-	
 	/* ----------------------------------------------------------- */
 	/*  Contact form
 	/* ----------------------------------------------------------- */
