@@ -29,8 +29,7 @@
             @if (count($pastEvents) === 0)
                 <p class="kv-text">Er zijn geen voorbije edities.</p>
             @else
-                @component('blocks.eventtable', [ 'events' => $pastEvents ])
-                @endcomponent
+                @include('blocks.past-events', [ 'pastEvents' => $pastEvents ])
             @endif
         </div>
     </section>

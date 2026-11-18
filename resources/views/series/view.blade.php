@@ -7,17 +7,20 @@
 
 @section('content')
 
-    {{-- Series intro: name and teaser on the series colour. --}}
+<?php
+    // A series of packages lists "other packages"; a series of dated quizzes lists all dates.
+    $isPackageSeries = $events && count($events) > 0 && collect($events)->every(function ($e) { return $e->isPackage(); });
+    $listedEvents = $events ? collect($events) : collect();
+    if ($isPackageSeries && $nextEvent) {
+        $listedEvents = $listedEvents->reject(function ($e) use ($nextEvent) { return $e->id === $nextEvent->id; });
+    }
+?>
+
+    {{-- Series name only, so the next quiz and its order button stay near the top. --}}
     <div class="kv-pagehead kv-pagehead-series {{ $series->getColourClass() }}">
         <div class="kv-wrap">
             <p class="kv-series"><i aria-hidden="true"></i>Quizreeks</p>
             <h1 class="kv-pagehead-title">{{ $series->name }}</h1>
-            @if($series->teaser)
-                <div class="kv-pagehead-lead">{!! $series->teaser !!}</div>
-            @endif
-            @if($series->hasVideo())
-                <p class="kv-links"><a class="popup" href="{{ $series->getVideoUrl() }}"><i class="fa fa-play" aria-hidden="true"></i>Bekijk de video</a></p>
-            @endif
         </div>
     </div>
 
@@ -25,17 +28,35 @@
         @include('blocks.event-hero', [ 'heroEvent' => $nextEvent, 'heroOnSeriesPage' => true ])
     @endif
 
-    @if($events)
+    @if($series->teaser || $series->hasVideo())
+        <section class="kv-sec">
+            <div class="kv-wrap">
+                <h2 class="kv-sec-title">Wat kan je verwachten?</h2>
+                <div class="kv-text">
+                    {!! $series->teaser !!}
+                    @if($series->hasVideo())
+                        <p class="kv-links"><a class="popup" href="{{ $series->getVideoUrl() }}"><i class="fa fa-play" aria-hidden="true"></i>Bekijk de video</a></p>
+                    @endif
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if($events && !($isPackageSeries && $listedEvents->count() === 0))
         <section class="kv-sec" id="tickets">
             <div class="kv-wrap">
-                <h2 class="kv-sec-title">Alle data <small>Kies een quiz voor praktische info en tickets.</small></h2>
+                @if($isPackageSeries)
+                    <h2 class="kv-sec-title">Andere quizpakketten <small>Kies een pakket voor meer info en tickets.</small></h2>
+                @else
+                    <h2 class="kv-sec-title">Alle data <small>Kies een quiz voor praktische info en tickets.</small></h2>
+                @endif
 
                 <div>
-                    @if(count($events) === 0)
+                    @if($listedEvents->count() === 0)
                         <p class="kv-text">Er zijn nog geen quizzen aangekondigd, maar hou deze pagina in de gaten.</p>
                     @else
                         <div class="kv-cards">
-                            @foreach($events as $event)
+                            @foreach($listedEvents as $event)
                                 @include('blocks.event-card', [ 'cardEvent' => $event ])
                             @endforeach
                         </div>
@@ -50,10 +71,7 @@
             <section class="kv-sec">
                 <div class="kv-wrap">
                     <h2 class="kv-sec-title">Reeds voorbij</h2>
-                    <div class="table-responsive">
-                        @component('blocks.eventtable', [ 'events' => $pastEvents ])
-                        @endcomponent
-                    </div>
+                    @include('blocks.past-events', [ 'pastEvents' => $pastEvents ])
                 </div>
             </section>
         @endif
