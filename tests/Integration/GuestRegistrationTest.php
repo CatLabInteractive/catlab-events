@@ -27,7 +27,7 @@ class GuestRegistrationTest extends IntegrationTestCase
         return $admin;
     }
 
-    public function testTheGuestsPageRendersAndIsLinkedFromTheEventList()
+    public function testTheGuestsPageRendersAndIsATabOfTheEvent()
     {
         $organisation = $this->createOrganisation();
         $event = $this->createEvent($organisation);
@@ -38,9 +38,11 @@ class GuestRegistrationTest extends IntegrationTestCase
         $response->assertStatus(200);
         $response->assertSee($category->name);
 
-        $this->actingAs($admin)->get('/admin/events')
+        $response->assertSee('<a class="nav-link active" aria-current="page" href="' . action('Admin\GuestRegistrationController@index', [ $event->id ]) . '">Gasten</a>', false);
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id)
             ->assertStatus(200)
-            ->assertSee(action('Admin\GuestRegistrationController@index', [ $event->id ]), false);
+            ->assertSee('<a class="nav-link" href="' . action('Admin\GuestRegistrationController@index', [ $event->id ]) . '">Gasten</a>', false);
     }
 
     public function testAGuestIsRegisteredWithoutAnAccount()

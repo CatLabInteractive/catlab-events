@@ -2,8 +2,12 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-    <h3>E-mails</h3>
+    @if($hub)
+        @include('charonfrontend::crud.hub-header', [ 'hub' => $hub ])
+    @else
+        <h2>{{ $event->name }}</h2>
+        <h3>E-mails</h3>
+    @endif
 
     <p>
         Zonder aanpassing verstuurt dit evenement de standaardversie van de organisatie.

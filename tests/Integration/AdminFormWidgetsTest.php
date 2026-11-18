@@ -255,6 +255,55 @@ class AdminFormWidgetsTest extends IntegrationTestCase
     }
 
     /**
+     * People have no name field; the event form lists them by their first
+     * and last name, not as "#12".
+     */
+    public function testPeopleAreListedByName()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        $person = $this->createPerson($organisation, $admin, 'Anna', 'Peeters');
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('>Anna Peeters</label>', false)
+            ->assertDontSee('>#' . $person->id . '</label>', false);
+    }
+
+    /**
+     * With more than a handful of people, the producers, authors, ... are a
+     * searchable picker, not a wall of checkboxes.
+     */
+    public function testLongPeopleListsUseThePicker()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        for ($i = 1; $i <= 8; $i++) {
+            $this->createPerson($organisation, $admin, 'Persoon', (string) $i);
+        }
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('data-charon-picker', false)
+            ->assertSee('>Persoon 8</option>', false)
+            ->assertDontSee('>Persoon 8</label>', false);
+    }
+
+    private function createPerson(Organisation $organisation, $user, string $firstName, string $lastName): \App\Models\Person
+    {
+        $person = new \App\Models\Person();
+        $person->first_name = $firstName;
+        $person->last_name = $lastName;
+        $person->organisation()->associate($organisation);
+        $person->user()->associate($user);
+        $person->save();
+
+        return $person;
+    }
+
+    /**
      * Descriptions are html() fields: a rich textarea, and the HTML is
      * cleaned on save (they're printed unescaped on the public pages).
      */
@@ -281,5 +330,57 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $this->assertStringContainsString('Hallo <a href="https://example.org" target="_blank"', $description);
         $this->assertStringNotContainsString('script', $description);
         $this->assertStringNotContainsString('onclick', $description);
+    }
+
+    /**
+     * Existing content survives a save: anchors (the series FAQ link looks
+     * for id="faq"), embedded players; an emptied editor is stored empty.
+     */
+    public function testHtmlFieldsKeepAnchorsAndEmbedsAndStoreEmptyAsEmpty()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $save = function (string $description) use ($admin, $series) {
+            $this->actingAs($admin)->put('/admin/series/' . $series->id, [
+                'fields' => [
+                    'slug' => $series->slug,
+                    'name' => $series->name,
+                    'active' => '1',
+                    'description' => $description,
+                ],
+            ])->assertRedirect();
+            return $series->fresh()->description;
+        };
+
+        $description = $save('<h2 id="faq">FAQ</h2><iframe src="https://www.youtube.com/embed/abc"></iframe><iframe src="https://evil.example/x"></iframe>');
+        $this->assertStringContainsString('<h2 id="faq">', $description);
+        $this->assertStringContainsString('src="https://www.youtube.com/embed/abc"', $description);
+        $this->assertStringNotContainsString('evil.example', $description);
+        $this->assertTrue($series->fresh()->hasFaq());
+
+        $this->assertSame('', (string) $save('<p><br></p>'));
+        $this->assertSame('', (string) $save(''));
+    }
+
+    /**
+     * The public team page lists members and scores as tabs.
+     */
+    public function testTheTeamPageRenders()
+    {
+        $this->createOrganisation();
+        $user = $this->createUser();
+
+        $this->actingAs($user)->post('/groups', [ 'fields' => [ 'name' => 'De Quizvogels' ] ]);
+        $group = \App\Models\Group::where('name', 'De Quizvogels')->firstOrFail();
+
+        $this->actingAs($user)->get('/groups/' . $group->id)
+            ->assertStatus(200)
+            ->assertSee('De Quizvogels')
+            ->assertSee('?tab=members', false);
+
+        $this->actingAs($user)->get('/groups/' . $group->id . '?tab=members')
+            ->assertStatus(200);
     }
 }
