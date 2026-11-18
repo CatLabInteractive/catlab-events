@@ -131,6 +131,7 @@ class Series extends Model
             ->upcoming()
             ->published()
             ->orderByStartDate()
+            ->withListRelations()
             ->get();
 
         foreach ($upcomingEvents as $upcomingEvent) {

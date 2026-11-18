@@ -137,6 +137,7 @@
             ->where('id', '!=', $event->id)
             ->upcoming()
             ->published()
+            ->withListRelations()
             ->get();
     ?>
     @if(count($alternatives) > 0)

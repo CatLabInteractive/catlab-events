@@ -86,7 +86,7 @@ class EventController extends Controller
     public function index(Request $request)
     {
         /*
-        $events = Event::upcoming()->orderByStartDate()->get();
+        $events = Event::upcoming()->orderByStartDate()->withListRelations()->get();
         $pastEvents = Event::finished()->orderByStartDateDesc()->limit(5)->get();
 
         return view('events.publisher', [
@@ -195,8 +195,8 @@ class EventController extends Controller
     {
         $organisation = $this->getOrganisation();
 
-        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->get();
-        $pastEvents = $organisation->events()->finished()->published()->orderByStartDateDesc()->get();
+        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->withListRelations()->get();
+        $pastEvents = $organisation->events()->finished()->published()->orderByStartDateDesc()->withListRelations()->get();
 
         return view('events.archive', [
             'events' => $events,
@@ -215,7 +215,7 @@ class EventController extends Controller
     {
         $organisation = $this->getOrganisation();
 
-        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->get();
+        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->withListRelations()->get();
         return view('events.registerIndex', [
             'events' => $events,
             'nextEvent' => $this->getNextEvent($events),
@@ -230,8 +230,8 @@ class EventController extends Controller
         /** @var Organisation $organisation */
         $organisation = Organisation::findOrFail($organisationId);
 
-        $events = $organisation->events()->published()->upcoming()->orderByStartDate()->get();
-        $pastEvents = $organisation->events()->published()->finished()->orderByStartDateDesc()->get();
+        $events = $organisation->events()->published()->upcoming()->orderByStartDate()->withListRelations()->get();
+        $pastEvents = $organisation->events()->published()->finished()->orderByStartDateDesc()->withListRelations()->get();
 
         return view('events.publisher', [
             'events' => $events,
@@ -261,8 +261,8 @@ class EventController extends Controller
         /** @var Venue $venue */
         $venue = Venue::findOrFail($venueId);
 
-        $events = $venue->events()->published()->upcoming()->orderByStartDate()->get();
-        $previousEvents = $venue->events()->published()->finished()->orderByStartDateDesc()->get();
+        $events = $venue->events()->published()->upcoming()->orderByStartDate()->withListRelations()->get();
+        $previousEvents = $venue->events()->published()->finished()->orderByStartDateDesc()->withListRelations()->get();
 
         return view('events.venue', [
             'venue' => $venue,
