@@ -81,10 +81,10 @@ table .small {
 }
 
 /* Order thanks page: ticket stub + "what now" steps */
-$ticket-pink: #ff0763;
-$ticket-dark: #1c1c24;
-$ticket-line: #e4e4e8;
-$ticket-muted: #777480;
+$ticket-pink: #1f3326;
+$ticket-dark: #1f3326;
+$ticket-line: #d9d8cc;
+$ticket-muted: #5d6b60;
 
 .order-thanks {
   max-width: 560px;
@@ -108,7 +108,10 @@ $ticket-muted: #777480;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background: radial-gradient(120% 140% at 0% 0%, $ticket-pink 0%, #8b0b5e 45%, #2a1440 100%);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--kv-field, #78b46c);
+  color: $ticket-dark;
   background-size: cover;
   background-position: center;
 
@@ -208,9 +211,10 @@ $ticket-muted: #777480;
       line-height: 26px;
       text-align: center;
       border-radius: 50%;
-      border: 2px solid $ticket-pink;
-      background: #fff;
-      color: $ticket-pink;
+      border: 0;
+      line-height: 30px;
+      background: var(--kv-field, #61cc6f);
+      color: var(--kv-on-field, #{$ticket-dark});
       font-weight: 900;
     }
 
@@ -309,11 +313,12 @@ $ticket-muted: #777480;
  * Register form (events/{id}/register). Mobile first: one column, big tap
  * targets, 16px inputs (smaller makes iOS zoom in on focus).
  */
-$rf-pink: #ff0763;
-$rf-dark: #1c1c24;
-$rf-line: #d4d4da;
-$rf-muted: #6b6875;
-$rf-soft: #f6f6f8;
+// Kleurveld palette (see _kleurveld.scss): ink is the accent, the series colour marks the steps.
+$rf-pink: #1f3326;
+$rf-dark: #1f3326;
+$rf-line: #d9d8cc;
+$rf-muted: #5d6b60;
+$rf-soft: #fbfaf5;
 
 .rf {
   max-width: 560px;
@@ -344,8 +349,8 @@ $rf-soft: #f6f6f8;
 }
 
 .rf-alert-error {
-  background: #fff1f4;
-  border-left-color: $rf-pink;
+  background: #fbfaf5;
+  border-left-color: #c4553a;
 }
 
 .rf-returning {
@@ -436,7 +441,7 @@ $rf-soft: #f6f6f8;
 
 .rf-choice-input:checked + .rf-choice-body {
   border-color: $rf-pink;
-  background: #fff7fa;
+  background: #fbfaf5;
 }
 
 .rf-choice-input:focus-visible + .rf-choice-body {
@@ -511,7 +516,7 @@ $rf-soft: #f6f6f8;
   }
 }
 
-.rf-input-error { border-color: $rf-pink; background: #fff7fa; }
+.rf-input-error { border-color: $rf-pink; background: #fbfaf5; }
 
 select.rf-input {
   padding-right: 40px;
@@ -529,7 +534,7 @@ select.rf-input {
 .rf-new-team {
   padding: 14px;
   border-radius: 10px;
-  background: #fff7fa;
+  background: #fbfaf5;
   border: 2px dashed rgba($rf-pink, .45);
 
   &[hidden] { display: none; }
@@ -619,3 +624,6 @@ select.rf-input {
     .rf-button { display: inline-block; width: auto; }
   }
 }
+
+
+@import "kleurveld";

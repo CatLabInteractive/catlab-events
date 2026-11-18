@@ -73,6 +73,21 @@ class Series extends Model
         return $query->where('active', '=', 1);
     }
 
+    /**
+     * The colour field class this series uses in the site design, picked
+     * from its organisation's palette.
+     * @return string
+     */
+    public function getColourClass()
+    {
+        $palette = $this->organisation ? $this->organisation->getColourPalette() : new \App\Tools\ColourPalette();
+        return $palette->getClassFor($this->id);
+    }
+
+    /**
+     * @param Event|null $focusEvent
+     * @return string
+     */
     public function getUrl(Event $focusEvent = null)
     {
         $parameters = [ $this->id, $this->slug ];

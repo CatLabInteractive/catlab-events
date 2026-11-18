@@ -1,41 +1,27 @@
-<section>
-    <div class="container">
+<section class="kv-sec" id="locatie">
+    <div class="kv-wrap">
+        <h2 class="kv-sec-title">Locatie <small>{{ $venue->name }}, {{ $venue->city }}</small></h2>
 
-        <div class="row">
-
-            @if($venue->lat && $venue->long)
-                <div class="col-md-6">
-
-                    <div
-                            id="map"
-                            style="height: 400px"
-                            data-coordinates="{{ json_encode([ 'lat' => floatval($venue->lat), 'lng' => floatval($venue->long) ]) }}"
-                            data-address="{{ $venue->getAddressFull("<br>") }}"
-                    ></div>
-
-                </div>
-            @endif
-
-            <div class="col-md-6">
-
-                <h2 class="intro-title">Locatie</h2>
-                <h3 class="intro-sub-title">{{ $venue->name }}</h3>
-
+        <div class="kv-venue">
+            <div class="kv-text">
                 {!! $venue->description !!}
 
-                <address>
+                <address class="kv-address">
                     {{ $venue->name }}<br />
                     {{ $venue->address }}<br />
                     {{ $venue->postalCode }} {{ $venue->city }}<br />
-                    {{ $event->venue->country }}
+                    {{ $venue->country }}
                 </address>
             </div>
 
-
-
+            @if($venue->lat && $venue->long)
+                <div
+                    id="map"
+                    class="kv-map"
+                    data-coordinates="{{ json_encode([ 'lat' => floatval($venue->lat), 'lng' => floatval($venue->long) ]) }}"
+                    data-address="{{ $venue->getAddressFull("<br>") }}"
+                ></div>
+            @endif
         </div>
-
-
     </div>
-    <!-- Container end -->
 </section>

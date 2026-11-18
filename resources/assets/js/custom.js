@@ -101,7 +101,8 @@ jQuery(function($) {
 	  $(document).ready(function(){
 
 			$(".gallery-popup").colorbox({photo: true, rel:'gallery-popup', transition:"fade", innerHeight:"700"});
-          	$(".image-popup").colorbox({ photo: true, innerHeight: 700});
+          	// Posters come in any aspect ratio: let colorbox size the photo to fit the screen.
+          	$(".image-popup").colorbox({ photo: true, maxWidth: "95%", maxHeight: "95%" });
 			$(".popup").colorbox({iframe:true, innerWidth:650, innerHeight:450});
 
 	  });

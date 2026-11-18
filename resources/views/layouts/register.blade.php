@@ -4,67 +4,42 @@
     {{ $event->name }}
 @endsection
 
-@section('content')
+@section('bodyClass')kv-page {{ $event->getColourClass() }}@endsection
 
-    <section>
-
-        <div class="row">
-
-            <div class="col-md-12">
-                @if($event->eventDates->count() > 0)
-
-                    <?php $_eventDates = isset($ticketCategory) ? $ticketCategory->eventDates : $event->eventDates; ?>
-
-                    @if(count($_eventDates) === 1)
-                        <div class="col-md-3 hero-small-date text-center">
-                            <h3>{{ $_eventDates[0]->startDate->format('d') }}</h3>
-                            <h4>{{ $_eventDates[0]->startDate->translatedFormat('F Y') }}</h4>
-                        </div>
-                        <div class="col-md-9 hero-small-date-content">
-                    @else
-                        @foreach($_eventDates as $eventDate)
-                            <div class="col-md-{{ ceil(12 / count($_eventDates)) }} hero-small-date text-center">
-                                <h3>{{ $eventDate->startDate->format('d') }}</h3>
-                                <h4>{{ $eventDate->startDate->translatedFormat('F Y') }}</h4>
-                            </div>
-                        @endforeach
-                        <div class="col-md-12 hero-small-date-content">
-                    @endif
-
-                @else
-                    <div class="col-md-12 hero-small-date-content">
-                @endif
-
-                    <h1 class="banner-title">
-                        <a href="{{ $event->getUrl() }}">{{ $event->name }}</a>
-                    </h1>
-                    <h2 class="banner-subtitle">
-                        @if($event->venue)
-
-                            @if(count($_eventDates) === 1)
-                                {{ $event->startDate->format('H:i') }} -
-                            @endif
-
-                            {{ $event->venue->getShortLocation() }}
-
-                        @endif
-                    </h2>
-                </div>
-            </div>
-
-        </div><br />
-
-        <div class="row">
-
-            <div class="col-md-12">
-
-                @yield('register-content')
-
-            </div>
-
+@section('banner')
+    <?php
+        $_eventDates = isset($ticketCategory) ? $ticketCategory->eventDates : $event->eventDates;
+        $_facts = [];
+        if ($event->isPackage()) {
+            $_facts[] = 'Quizpakket, speel wanneer je wil';
+        } else {
+            foreach ($_eventDates as $_eventDate) {
+                if ($_eventDate->startDate) {
+                    $_facts[] = ucfirst($_eventDate->startDate->translatedFormat('l j F Y, H:i'));
+                }
+            }
+        }
+        if ($event->venue) {
+            $_facts[] = $event->venue->getShortLocation();
+        }
+    ?>
+    <div class="kv-pagehead kv-pagehead-event">
+        <div class="kv-wrap">
+            @if($event->series)
+                <p class="kv-series"><i aria-hidden="true"></i>{{ $event->series->name }}</p>
+            @endif
+            <p class="kv-pagehead-title"><a href="{{ $event->getUrl() }}">{{ $event->name }}</a></p>
+            @if(count($_facts) > 0)
+                <p class="kv-facts">@foreach($_facts as $_fact)<span>{{ $_fact }}</span>@endforeach</p>
+            @endif
         </div>
+    </div>
+@endsection
 
+@section('content')
+    <section class="kv-sec kv-sec-form">
+        <div class="kv-wrap">
+            @yield('register-content')
+        </div>
     </section>
-
-
 @endsection

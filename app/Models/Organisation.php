@@ -23,6 +23,7 @@
 namespace App\Models;
 
 use App\Exceptions\NoOrganisationsFoundException;
+use App\Tools\ColourPalette;
 use App\Tools\StringHelper;
 use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
@@ -44,6 +45,11 @@ class Organisation extends Model
      * @var int[]
      */
     private $userRoleCache = [];
+
+    /**
+     * @var ColourPalette
+     */
+    private $colourPaletteCache;
 
     /**
      * @return Organisation
@@ -265,6 +271,21 @@ class Organisation extends Model
 
     /**
      * @return mixed
+     */
+    /**
+     * The series colours used by the site design.
+     * @return ColourPalette
+     */
+    public function getColourPalette()
+    {
+        if (!isset($this->colourPaletteCache)) {
+            $this->colourPaletteCache = new ColourPalette($this->theme_colours);
+        }
+        return $this->colourPaletteCache;
+    }
+
+    /**
+     * @return string
      */
     public function getLegalName()
     {

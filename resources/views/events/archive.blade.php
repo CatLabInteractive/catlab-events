@@ -4,6 +4,8 @@
     Quiz kalender
 @endsection
 
+@section('bodyClass')kv-page @endsection
+
 @section('content')
 
     @include('blocks.agenda')
