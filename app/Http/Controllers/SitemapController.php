@@ -82,7 +82,7 @@ class SitemapController
         $urls = [];
 
         // Events
-        foreach (Event::published()->orderByStartDateDesc()->get() as $event) {
+        foreach (Event::published()->orderByStartDateDesc()->withListRelations()->get() as $event) {
             $urls[] = $this->url($event->getUrl(), $event->updated_at, $this->eventPriority($event), 'weekly');
         }
 

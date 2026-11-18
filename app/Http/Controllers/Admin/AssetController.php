@@ -23,6 +23,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Admin\CentralStorageUploadHandler;
 use Illuminate\Http\Request;
 
 /**
@@ -48,19 +49,7 @@ class AssetController extends Controller
                 abort(400, 'File not valid: ' . $file->getErrorMessage());
             }
 
-            $asset = \CentralStorage::store($file);
-
-            // Assets are scoped to organisations (the CMS picker lists only
-            // the active organisation's images).
-            $organisation = \Auth::user() ? \Auth::user()->getActiveOrganisation() : null;
-            if ($organisation) {
-                $asset->organisation_id = $organisation->id;
-            }
-            if (\Auth::user()) {
-                $asset->user_id = \Auth::id();
-            }
-
-            $asset->save();
+            CentralStorageUploadHandler::storeForActiveOrganisation($file);
         }
 
         return redirect(action('Admin\AssetController@index'));

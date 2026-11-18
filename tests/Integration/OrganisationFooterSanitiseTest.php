@@ -59,7 +59,7 @@ class OrganisationFooterSanitiseTest extends IntegrationTestCase
                 ],
             ])
             ->assertStatus(302)
-            ->assertSessionHas('message', 'Saved.');
+            ->assertSessionHas('message', 'Opgeslagen.');
 
         $stored = DB::table('organisations')->where('id', $organisation->id)->value('footer_html');
         $this->assertSame('<p>Volg ons</p>', $stored);

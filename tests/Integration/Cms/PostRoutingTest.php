@@ -278,7 +278,8 @@ class PostRoutingTest extends IntegrationTestCase
         $organisation->save();
         $this->createPage($organisation, 'over-ons');
 
-        $this->get('/over-ons')->assertSee('href="https://blog.example.test/"', false);
+        // The menu has no external links: no Blog item until there are local posts.
+        $this->get('/over-ons')->assertDontSee('https://blog.example.test/')->assertDontSee('href="http://localhost/blog"', false);
 
         $this->createPost($organisation, 'eerste', $this->march14());
 

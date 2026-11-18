@@ -1,8 +1,8 @@
 {{--
     The site header: logo, the quiz series and a few menus. Mobile first: on
-    small screens the links fold into a panel behind the menu button. Menus
-    open on hover (with a mouse) and on click or tap; kv-nav.js handles the
-    toggling. No Bootstrap navbar classes, so the old theme styles don't apply.
+    small screens the links fold into a panel behind the menu button. The
+    account menu opens on hover (with a mouse) and on click or tap; the script
+    below handles the toggling. No Bootstrap navbar classes, so the old theme styles don't apply.
 --}}
 <?php $navOrganisation = organisation(); ?>
 <header id="header" class="kv-header">
@@ -24,7 +24,7 @@
 
             <nav class="kv-nav" id="kv-nav" aria-label="Hoofdmenu">
                 <ul class="kv-nav-list">
-                    @foreach($navOrganisation->series()->active()->get() as $navSeries)
+                    @foreach($navOrganisation->series()->active()->with('organisation')->get() as $navSeries)
                         <?php $navActive = \Str::endsWith(url()->current(), $navSeries->getUrl()); ?>
                         <li class="kv-nav-item {{ $navSeries->getColourClass() }} @if($navActive) is-active @endif @if(!$navSeries->hasNextEvent()) is-quiet @endif">
                             <a href="{{ $navSeries->getUrl() }}" @if($navActive) aria-current="page" @endif>
@@ -37,26 +37,13 @@
                         </li>
                     @endforeach
 
-                    <li class="kv-nav-item kv-nav-group">
-                        <button type="button" class="kv-nav-toggle" aria-expanded="false">
-                            Quizzes <i class="kv-nav-caret" aria-hidden="true"></i>
-                        </button>
-                        <ul class="kv-nav-sub">
-                            <li><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
-                            @if($navOrganisation->competitions()->count() > 0)
-                                <li><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
-                            @endif
-                            @php($navBlogUrl = app(\App\Cms\Blog::class)->navigationUrl($navOrganisation, $cmsLocale ?? null))
-                            @if($navBlogUrl)
-                                <li><a href="{{ $navBlogUrl }}">{{ __('cms.blog') }}</a></li>
-                            @elseif($navOrganisation->blog_url)
-                                <li><a href="{{ $navOrganisation->blog_url }}">Blog <i class="fa fa-external-link" aria-hidden="true"></i></a></li>
-                            @endif
-                            @if($navOrganisation->support_email)
-                                <li><a href="mailto:{{ $navOrganisation->support_email }}">Contact</a></li>
-                            @endif
-                        </ul>
-                    </li>
+                    <li class="kv-nav-item"><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
+
+                    {{-- The organisation's own blog, only once it has posts (no external links in the menu). --}}
+                    @php($navBlogUrl = app(\App\Cms\Blog::class)->navigationUrl($navOrganisation, $cmsLocale ?? null))
+                    @if($navBlogUrl)
+                        <li class="kv-nav-item"><a href="{{ $navBlogUrl }}">{{ __('cms.blog') }}</a></li>
+                    @endif
 
                     @if(!Auth::guest())
                         <li class="kv-nav-item kv-nav-group">

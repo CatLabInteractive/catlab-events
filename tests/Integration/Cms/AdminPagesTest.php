@@ -230,7 +230,7 @@ class AdminPagesTest extends IntegrationTestCase
                 ],
             ])
             ->assertStatus(302)
-            ->assertSessionHas('message', 'Saved.');
+            ->assertSessionHas('message', 'Opgeslagen.');
 
         $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
     }

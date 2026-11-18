@@ -53,6 +53,24 @@ class StringHelper
     }
 
     /**
+     * Join a list the Dutch way: "Gent", "Balegem en Gent", "Balegem, Berchem en Gent".
+     * @param string[] $items
+     * @param string $and
+     * @return string
+     */
+    public static function joinList(array $items, string $and = 'en'): string
+    {
+        $items = array_values(array_filter(array_map('trim', $items), 'strlen'));
+
+        if (count($items) <= 1) {
+            return $items[0] ?? '';
+        }
+
+        $last = array_pop($items);
+        return implode(', ', $items) . ' ' . $and . ' ' . $last;
+    }
+
+    /**
      * @param \DateTime[] $dates
      */
     public static function datesToDescription(Collection $dates)

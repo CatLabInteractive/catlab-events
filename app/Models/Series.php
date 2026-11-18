@@ -131,6 +131,7 @@ class Series extends Model
             ->upcoming()
             ->published()
             ->orderByStartDate()
+            ->withListRelations()
             ->get();
 
         foreach ($upcomingEvents as $upcomingEvent) {
@@ -165,6 +166,36 @@ class Series extends Model
     public function header()
     {
         return $this->belongsTo(Asset::class, 'header_asset_id');
+    }
+
+    /**
+     * The photos of the hero slideshow, in the order set in the admin.
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function photos()
+    {
+        return $this->hasMany(SeriesPhoto::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * The photos to show in the hero: the slideshow photos, or else the old
+     * single header photo, or nothing.
+     * @return Asset[]
+     */
+    public function getHeroPhotos(): array
+    {
+        $photos = [];
+        foreach ($this->photos as $seriesPhoto) {
+            if ($seriesPhoto->photo) {
+                $photos[] = $seriesPhoto->photo;
+            }
+        }
+
+        if (count($photos) === 0 && $this->header) {
+            $photos[] = $this->header;
+        }
+
+        return $photos;
     }
 
     /**

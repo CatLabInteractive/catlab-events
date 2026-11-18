@@ -4,19 +4,22 @@
             <div class="kv-footer-grid">
                 <div>
                     <span class="kv-footer-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                    <p class="kv-footer-claim">Quizzen met plezier.</p>
+                    <p class="kv-footer-claim">De perfecte quiz op ieders maat.</p>
                 </div>
 
                 <div>
                     <h4>Tickets</h4>
                     <ul>
                         <li><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
+                        @if(organisation()->competitions()->count() > 0)
+                            <li><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
+                        @endif
                         <li><a href="{{ action('OrderController@index') }}">Mijn tickets</a></li>
                         <li><a href="{{ action('CatLabAccountController@redirect', [ 'myaccount' ]) }}" target="_blank" rel="noopener">Mijn account</a></li>
                     </ul>
                 </div>
 
-                <?php $footerSeries = organisation()->series()->active()->get(); ?>
+                <?php $footerSeries = organisation()->series()->active()->with('organisation')->get(); ?>
                 @if($footerSeries->count() > 0)
                     <div>
                         <h4>Quizreeksen</h4>
@@ -77,11 +80,6 @@
             </div>
         </div>
 
-        <div id="back-to-top" data-spy="affix" data-offset-top="10" class="back-to-top affix" style="display: block;">
-            <button class="btn btn-primary" title="Terug naar boven">
-                <i class="fa fa-angle-up"></i>
-            </button>
-        </div>
     </footer>
 
     <script type="text/javascript" src="{{ mix('js/app.js') }}"></script>
@@ -91,7 +89,4 @@
         });
     </script>
 
-    @if(config('services.google.maps_api_key'))
-        <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key={{config('services.google.maps_api_key')}}"></script>
-    @endif
 @endif

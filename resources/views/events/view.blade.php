@@ -24,7 +24,7 @@
 @section('content')
 
     @if($event->description || $event->competition)
-        <section class="kv-sec">
+        <section class="kv-sec" id="over">
             <div class="kv-wrap">
                 <h2 class="kv-sec-title">Over deze quiz</h2>
                 <div class="kv-text">
@@ -137,6 +137,7 @@
             ->where('id', '!=', $event->id)
             ->upcoming()
             ->published()
+            ->withListRelations()
             ->get();
     ?>
     @if(count($alternatives) > 0)

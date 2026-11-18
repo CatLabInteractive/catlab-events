@@ -4,7 +4,10 @@
     the series page.
 
     @param \App\Models\Event $heroEvent
-    @param bool $heroOnSeriesPage  adds a link to the event page
+    @param bool $heroOnSeriesPage  adds a link to the event page; the series name becomes the page's h1
+
+    When the series has photos (Series > Photos in the admin), they fill the
+    hero as a slow crossfade, fading into the series colour behind the text.
 --}}
 <?php
     $heroOnSeriesPage = $heroOnSeriesPage ?? false;
@@ -13,6 +16,7 @@
         ? $heroEvent->poster->width / $heroEvent->poster->height
         : null;
     // Wide posters get the bigger column on desktop, tall ones share it evenly.
+    $heroPhotos = $heroEvent->series ? $heroEvent->series->getHeroPhotos() : [];
     $heroShape = $heroEvent->poster ? (($posterRatio !== null && $posterRatio >= 1.15) ? 'kv-hero-wide' : 'kv-hero-tall') : 'kv-hero-noposter';
 
     $heroCanRegister = $heroEvent->canRegister();
@@ -30,7 +34,24 @@
         $heroFacts[] = 'Max ' . $heroEvent->team_size . ' spelers per team';
     }
 ?>
-<div class="kv-hero {{ $heroShape }} {{ $heroEvent->getColourClass() }}">
+<div class="kv-hero {{ $heroShape }} @if(count($heroPhotos) > 0) kv-hero-photo @endif {{ $heroEvent->getColourClass() }}">
+
+    @if(count($heroPhotos) > 0)
+        <div class="kv-hero-photos" @if(count($heroPhotos) > 1) data-kv-slideshow @endif aria-hidden="true">
+            @foreach($heroPhotos as $photoIndex => $heroPhoto)
+                <?php
+                    $photoSrcset = implode(', ', array_map(function ($w) use ($heroPhoto) {
+                        return $heroPhoto->getUrl([ 'width' => $w ]) . ' ' . $w . 'w';
+                    }, [ 800, 1400, 2000 ]));
+                ?>
+                @if($photoIndex === 0)
+                    <img class="is-shown" src="{{ $heroPhoto->getUrl([ 'width' => 1400 ]) }}" srcset="{{ $photoSrcset }}" sizes="100vw" alt="" fetchpriority="high" />
+                @else
+                    <img data-src="{{ $heroPhoto->getUrl([ 'width' => 1400 ]) }}" data-srcset="{{ $photoSrcset }}" sizes="100vw" alt="" />
+                @endif
+            @endforeach
+        </div>
+    @endif
 
     @if($heroEvent->poster)
         <div class="kv-hero-field">
@@ -39,8 +60,8 @@
     @endif
 
     <div class="kv-hero-info">
-        @if($heroOnSeriesPage)
-            <p class="kv-series"><i aria-hidden="true"></i>Volgende quiz</p>
+        @if($heroOnSeriesPage && $heroEvent->series)
+            <h1 class="kv-series kv-series-h1"><i aria-hidden="true"></i>{{ $heroEvent->series->name }}<span class="kv-series-sub">volgende quiz</span></h1>
         @elseif($heroEvent->series)
             <p class="kv-series"><i aria-hidden="true"></i><a href="{{ $heroEvent->series->getUrl($heroEvent) }}">{{ $heroEvent->series->name }}</a></p>
         @elseif($heroEvent->isPackage())
@@ -103,7 +124,8 @@
         @if($hasLinks)
             <p class="kv-links">
                 @if($heroOnSeriesPage)
-                    <a href="{{ $heroEvent->getUrl() }}">Praktisch &amp; tickets</a>
+                    {{-- The event page starts with the same hero, so land on the details below it. --}}
+                    <a href="{{ $heroEvent->getUrl() }}#{{ ($heroEvent->description || $heroEvent->competition) ? 'over' : 'tickets' }}">Praktisch &amp; tickets</a>
                 @elseif($heroCanRegister)
                     <a href="#tickets">Alle tickets</a>
                 @endif
@@ -128,3 +150,44 @@
     </div>
 
 </div>
+
+@once
+    <script>
+        // Hero slideshow: a slow crossfade between the series photos. Each photo
+        // only loads just before it is shown; reduced motion keeps the first one.
+        (function () {
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) {
+                return;
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('[data-kv-slideshow]'), function (show) {
+                var images = show.querySelectorAll('img');
+                var current = 0;
+
+                function prepare(img) {
+                    if (img.dataset.src) {
+                        img.srcset = img.dataset.srcset;
+                        img.src = img.dataset.src;
+                        delete img.dataset.src;
+                    }
+                }
+
+                prepare(images[1]);
+                setInterval(function () {
+                    if (document.hidden) {
+                        return;
+                    }
+                    var next = (current + 1) % images.length;
+                    var img = images[next];
+                    if (!img.complete) {
+                        return;
+                    }
+                    images[current].classList.remove('is-shown');
+                    img.classList.add('is-shown');
+                    current = next;
+                    prepare(images[(current + 1) % images.length]);
+                }, 6500);
+            });
+        })();
+    </script>
+@endonce

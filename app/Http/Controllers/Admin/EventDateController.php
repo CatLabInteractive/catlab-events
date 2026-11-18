@@ -39,6 +39,15 @@ use Illuminate\Http\Request;
  */
 class EventDateController extends BaseAdminController
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Nested under /events/{event}: breadcrumbs start with the event,
+        // and saving from the event's page goes back there.
+        $this->setParentController(EventController::class, 'event');
+    }
+
     /**
      * @param $path
      * @param $controller

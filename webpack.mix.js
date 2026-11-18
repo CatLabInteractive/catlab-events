@@ -24,12 +24,9 @@ mix
     .scripts([
         'resources/assets/js/jquery.js',
         'resources/assets/js/bootstrap.min.js',
-        'resources/assets/js/jquery.counterup.min.js',
         'resources/assets/js/jquery.jCounter.js',
-        'resources/assets/js/waypoints.min.js',
         'resources/assets/js/jquery.colorbox.js',
         //'resources/assets/js/smoothscroll.js',
-        'resources/assets/js/jquery.easypiechart.js',
         'resources/assets/js/custom.js',
         'resources/assets/js/lazyload.js',
         'resources/assets/js/livestream.js'

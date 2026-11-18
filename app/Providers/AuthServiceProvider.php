@@ -25,6 +25,7 @@ namespace App\Providers;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\EventDate;
+use App\Models\SeriesPhoto;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\LiveStream;
@@ -52,6 +53,7 @@ use App\Policies\PostPolicy;
 use App\Policies\PostTranslationPolicy;
 use App\Policies\PersonPolicy;
 use App\Policies\SeriesPolicy;
+use App\Policies\SeriesPhotoPolicy;
 use App\Policies\TicketCategoriesPolicy;
 use App\Policies\VenuePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -80,6 +82,7 @@ class AuthServiceProvider extends ServiceProvider
         Person::class           => PersonPolicy::class,
         LiveStream::class       => LiveStreamPolicy::class,
         EventDate::class        => EventDatePolicy::class,
+        SeriesPhoto::class      => SeriesPhotoPolicy::class,
         Order::class            => OrderPolicy::class,
         Page::class             => PagePolicy::class,
         PageTranslation::class  => PageTranslationPolicy::class,

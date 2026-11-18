@@ -202,7 +202,9 @@ class Event extends Model implements EuklesModel
      */
     public function getStartDateAttribute()
     {
-        $out = $this->eventDates()->min('startDate');
+        // Read from the (eager) loaded dates: a min() query here ran once per
+        // access, hundreds of times on the calendar.
+        $out = $this->eventDates->min('startDate');
         if ($out) {
             $out = new Carbon($out);
         }
@@ -214,7 +216,7 @@ class Event extends Model implements EuklesModel
      */
     public function getEndDateAttribute()
     {
-        $out = $this->eventDates()->max('endDate');
+        $out = $this->eventDates->max('endDate');
         if ($out) {
             $out = new Carbon($out);
         }
@@ -347,6 +349,24 @@ class Event extends Model implements EuklesModel
             ->leftJoin('event_dates', 'events.id', '=', 'event_dates.event_id')
             ->where('event_dates.endDate', '<', new \DateTime())
             ->groupBy('event_dates.event_id');
+    }
+
+    /**
+     * Eager load what an event card, a past-events row or the series page
+     * reads, so a list costs a handful of queries instead of several per event.
+     * @param $builder
+     * @return mixed
+     */
+    public function scopeWithListRelations($builder)
+    {
+        return $builder->with([
+            'eventDates.ticketCategories',
+            'ticketCategories',
+            'venue',
+            'poster',
+            'organisation',
+            'series.organisation',
+        ]);
     }
 
     /**

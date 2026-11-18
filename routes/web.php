@@ -83,6 +83,7 @@ Route::group([
 
             \App\Http\Controllers\Admin\TicketCategoryController::routes('events/{event}/ticketCategories', 'Admin\TicketCategoryController', 'ticketCategory');
             \App\Http\Controllers\Admin\EventDateController::routes('events/{event}/eventDates', 'Admin\EventDateController', 'id');
+            \App\Http\Controllers\Admin\SeriesPhotoController::routes('series/{series}/photos', 'Admin\SeriesPhotoController', 'id');
 
             Route::get('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@generateUrlsForm');
             Route::post('/livestreams/{id}/generateUrls', 'Admin\LiveStreamController@processGenerateUrls');

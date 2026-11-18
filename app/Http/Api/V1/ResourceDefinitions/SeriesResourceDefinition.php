@@ -87,5 +87,10 @@ class SeriesResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->expanded()
             ->linkable();
+
+        // Slideshow photos for the hero; managed under Series > Photos.
+        $this->relationship('photos', SeriesPhotoResourceDefinition::class)
+            ->visible()
+            ->expanded();
     }
 }

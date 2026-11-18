@@ -38,6 +38,7 @@ use CatLab\Charon\Collections\ResourceCollection;
 use CatLab\Charon\Enums\Action;
 use CatLab\Charon\Interfaces\ResourceDefinition;
 use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Models\RESTResource;
 use CatLab\CharonFrontend\Models\Table\ResourceAction;
 use CatLab\Laravel\Table\Table;
 use GuzzleHttp\Client;
@@ -74,6 +75,51 @@ class EventController extends BaseAdminController
         $this->setChildController(SeriesResourceDefinition::class, SeriesController::class);
         $this->setChildController(LiveStreamResourceDefinition::class, LiveStreamController::class);
         $this->setChildController(PersonResourceDefinition::class, PeopleController::class);
+
+        // The long event form, in sections.
+        $this->addFieldGroup('Tickets en inschrijving', [ 'registration', 'max_tickets', 'requires_team', 'team_size', 'vat_percentage', 'include_ticket_fee' ]);
+        $this->addFieldGroup('Afbeeldingen', [ 'logo', 'poster' ]);
+        $this->addFieldGroup('Mensen', [ 'producers', 'authors', 'presenters', 'musicians', 'technicians' ]);
+        $this->addFieldGroup('Koppelingen', [ 'fb_event_id', 'uitdb_event_id', 'quizwitz_campaign_id', 'livestream', 'livestream_url' ]);
+
+        // Pages of their own, shown as tabs of the event.
+        $tabs = [
+            'waitinglist' => [ 'Wachtlijst', 'Admin\WaitingListController@index' ],
+            'guests' => [ 'Gasten', 'Admin\GuestRegistrationController@index' ],
+            'emails' => [ 'E-mails', 'Admin\EventEmailController@index' ],
+        ];
+        foreach ($tabs as $key => [ $label, $action ]) {
+            $this->addTab($key, $label, function (Request $request, RESTResource $event) use ($action) {
+                return action($action, [ 'event' => $event->getIdentifiers()->getValues()[0]->getValue() ]);
+            });
+        }
+    }
+
+    /**
+     * The exports live in an Export menu on the event page.
+     */
+    protected function getPageActions(Request $request, string $action, ?RESTResource $resource = null): array
+    {
+        $actions = parent::getPageActions($request, $action, $resource);
+        if ($action !== Action::VIEW || !$resource) {
+            return $actions;
+        }
+
+        $id = $resource->getIdentifiers()->getValues()[0]->getValue();
+        $exports = [
+            'exportMembers' => 'Email csv',
+            'exportSales' => 'Teams',
+            'exportSalesTimeline' => 'Historiek registraties',
+            'exportClearing' => 'Clearing',
+        ];
+
+        $items = [];
+        foreach ($exports as $method => $label) {
+            $items[] = [ 'label' => $label, 'url' => action('Admin\EventController@' . $method, [ 'id' => $id ]) ];
+        }
+
+        array_unshift($actions, [ 'label' => 'Export', 'style' => 'secondary', 'items' => $items ]);
+        return $actions;
     }
 
     /**
@@ -122,42 +168,7 @@ class EventController extends BaseAdminController
         ResourceDefinition $resourceDefinition,
         ContextContract $context
     ): Table {
-        $table = $this->traitGetTableForResourceCollection($request, $collection, $resourceDefinition, $context);
-
-        $methods = [
-            'exportMembers' => 'Email csv',
-            'exportSales' => 'Teams',
-            'exportSalesTimeline' => 'Historiek registraties',
-            'exportClearing' => 'Clearing'
-        ];
-
-        foreach ($methods as $method => $description) {
-            $table->modelAction(
-                (new ResourceAction('Admin\EventController@' . $method, $description))
-                    ->setRouteParameters($this->getShowRouteParameters($request))
-                    ->setQueryParameters($this->getShowQueryParameters($request))
-            );
-        }
-
-        $table->modelAction(
-            (new ResourceAction('Admin\WaitingListController@index', 'Wachtlijst', 'event'))
-                ->setRouteParameters($this->getShowRouteParameters($request))
-                ->setQueryParameters($this->getShowQueryParameters($request))
-        );
-
-        $table->modelAction(
-            (new ResourceAction('Admin\GuestRegistrationController@index', 'Gasten', 'event'))
-                ->setRouteParameters($this->getShowRouteParameters($request))
-                ->setQueryParameters($this->getShowQueryParameters($request))
-        );
-
-        $table->modelAction(
-            (new ResourceAction('Admin\EventEmailController@index', 'E-mails', 'event'))
-                ->setRouteParameters($this->getShowRouteParameters($request))
-                ->setQueryParameters($this->getShowQueryParameters($request))
-        );
-
-        return $table;
+        return $this->traitGetTableForResourceCollection($request, $collection, $resourceDefinition, $context);
     }
 
     protected function getRouteParameters(Request $request, $method)
@@ -213,7 +224,7 @@ class EventController extends BaseAdminController
     public function exportMembers($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
 
         $ticketCategories = $event->getTicketCategoriesChronologically();
 
@@ -270,7 +281,7 @@ class EventController extends BaseAdminController
     public function exportSales($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $out) = $this->prepareExportSales($event);
 
         return $this->outputCsv(
@@ -283,7 +294,7 @@ class EventController extends BaseAdminController
     public function exportSalesTimeline($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $out) = $this->prepareExportSalesOverTime($event);
 
         return $this->outputCsv(
@@ -296,7 +307,7 @@ class EventController extends BaseAdminController
     public function exportClearing($eventId)
     {
         /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        $event = $this->findEditableEvent($eventId);
         list ($columns, $teams, $sumTotal, $columnsSum) = $this->prepareExportSales($event, true);
 
         $organisation = $event->organisation;
@@ -519,5 +530,19 @@ class EventController extends BaseAdminController
             200,
             $headers
         );
+    }
+
+    /**
+     * An event of an organisation the user administers; 404 otherwise.
+     * @param $eventId
+     * @return Event
+     */
+    private function findEditableEvent($eventId)
+    {
+        $event = Event::findOrFail($eventId);
+        if (!\Auth::user() || !\Auth::user()->can('edit', $event)) {
+            abort(404);
+        }
+        return $event;
     }
 }

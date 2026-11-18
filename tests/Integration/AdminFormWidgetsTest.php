@@ -30,9 +30,10 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         return $admin;
     }
 
-    private function createAsset(string $name): Asset
+    private function createAsset(string $name, ?Organisation $organisation = null): Asset
     {
         $asset = new Asset();
+        $asset->organisation_id = $organisation ? $organisation->id : null;
         $asset->name = $name;
         $asset->mimetype = 'image/png';
         $asset->type = 'image';
@@ -77,8 +78,8 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
-        $older = $this->createAsset('older.png');
-        $newer = $this->createAsset('newer.png');
+        $older = $this->createAsset('older.png', $organisation);
+        $newer = $this->createAsset('newer.png', $organisation);
         $series->logo()->associate($older);
         $series->save();
 
@@ -118,16 +119,82 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
 
+        $stored = new Asset();
+        $stored->name = 'poster.png';
+        $stored->asset_key = 'uploaded';
+        \CentralStorage::partialMock()->shouldReceive('store')->once()->andReturn($stored);
+
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('poster.png', 600, 900) ],
         ])->assertRedirect();
 
-        // FakeCentralStorage (IntegrationTestCase) records the upload and
-        // returns an unsaved Asset, like the real client.
-        $this->assertCount(1, $this->centralStorage->stored);
-        $logo = $series->fresh()->logo;
-        $this->assertNotNull($logo);
-        $this->assertSame('poster.png', $logo->name);
+        $this->assertNotNull($stored->id);
+        $this->assertSame($stored->id, $series->fresh()->logo_asset_id);
+        $this->assertSame($organisation->id, (int) $stored->fresh()->organisation_id);
+        $this->assertSame($admin->id, (int) $stored->fresh()->user_id);
+    }
+
+    /**
+     * The save fails (an organisation name needs 3 characters): the stored
+     * asset is removed again, here and on the storage server, and the file
+     * is offered on the form for the next try.
+     */
+    public function testAFailedSaveRemovesTheUploadedAsset()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+
+        $stored = new Asset();
+        $stored->name = 'logo.png';
+        $stored->asset_key = 'uploaded';
+        \CentralStorage::partialMock()->shouldReceive('store')->once()->andReturn($stored);
+        \CentralStorage::partialMock()->shouldReceive('deleteAsset')->once()->andReturn(true);
+
+        $edit = '/admin/organisations/' . $organisation->id . '/edit';
+        $this->actingAs($admin)
+            ->from($edit)
+            ->put('/admin/organisations/' . $organisation->id, [
+                'fields' => [
+                    'name' => 'ab',
+                    'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('logo.png', 300, 300) ],
+                ],
+            ])
+            ->assertRedirect($edit);
+
+        $this->assertNotNull($stored->id);
+        $this->assertNull(Asset::find($stored->id));
+        $this->assertNull($organisation->fresh()->logo_id);
+
+        $this->actingAs($admin)->get($edit)
+            ->assertStatus(200)
+            ->assertSee('name="fields[logo][kept]"', false)
+            ->assertSee('logo.png');
+    }
+
+    /**
+     * The picker offers the active organisation's files only; a file that
+     * is already linked stays selected.
+     */
+    public function testThePickerOnlyOffersTheActiveOrganisationsFiles()
+    {
+        $organisation = $this->createOrganisation();
+        $other = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $ours = $this->createAsset('ours.png', $organisation);
+        $theirs = $this->createAsset('theirs.png', $other);
+        $nobodys = $this->createAsset('nobodys.png');
+        $linked = $this->createAsset('linked.png', $other);
+        $series->logo()->associate($linked);
+        $series->save();
+
+        $this->actingAs($admin)->get('/admin/series/' . $series->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('ours.png')
+            ->assertDontSee('theirs.png')
+            ->assertDontSee('nobodys.png')
+            ->assertSee('<option value="' . $linked->id . '" selected>', false);
     }
 
     public function testPickingAnExistingFileLinksIt()
@@ -135,7 +202,7 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
-        $asset = $this->createAsset('header.png');
+        $asset = $this->createAsset('header.png', $organisation);
 
         $this->updateSeries($admin, $series, [
             'header' => [ 'id' => (string) $asset->id ],
@@ -171,11 +238,12 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $admin = $this->adminOf($organisation);
         $series = $this->createSeries($organisation);
 
+        \CentralStorage::partialMock()->shouldReceive('store')->never();
+
         $this->updateSeries($admin, $series, [
             'logo' => [ 'id' => '', 'file' => UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf') ],
         ])->assertRedirect()->assertSessionHasErrors('fields.logo.file');
 
-        $this->assertCount(0, $this->centralStorage->stored);
         $this->assertNull($series->fresh()->logo_asset_id);
     }
 
@@ -253,6 +321,55 @@ class AdminFormWidgetsTest extends IntegrationTestCase
     }
 
     /**
+     * People have no name field; the event form lists them by their first
+     * and last name, not as "#12".
+     */
+    public function testPeopleAreListedByName()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        $person = $this->createPerson($organisation, $admin, 'Anna', 'Peeters');
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('>Anna Peeters</label>', false)
+            ->assertDontSee('>#' . $person->id . '</label>', false);
+    }
+
+    /**
+     * With more than a handful of people, the producers, authors, ... are a
+     * searchable picker, not a wall of checkboxes.
+     */
+    public function testLongPeopleListsUseThePicker()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        for ($i = 1; $i <= 8; $i++) {
+            $this->createPerson($organisation, $admin, 'Persoon', (string) $i);
+        }
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('data-charon-picker', false)
+            ->assertSee('>Persoon 8</option>', false)
+            ->assertDontSee('>Persoon 8</label>', false);
+    }
+
+    private function createPerson(Organisation $organisation, $user, string $firstName, string $lastName): \App\Models\Person
+    {
+        $person = new \App\Models\Person();
+        $person->first_name = $firstName;
+        $person->last_name = $lastName;
+        $person->organisation()->associate($organisation);
+        $person->user()->associate($user);
+        $person->save();
+
+        return $person;
+    }
+
+    /**
      * Descriptions are html() fields: a rich textarea, and the HTML is
      * cleaned on save (they're printed unescaped on the public pages).
      */
@@ -279,5 +396,57 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $this->assertStringContainsString('Hallo <a href="https://example.org" target="_blank"', $description);
         $this->assertStringNotContainsString('script', $description);
         $this->assertStringNotContainsString('onclick', $description);
+    }
+
+    /**
+     * Existing content survives a save: anchors (the series FAQ link looks
+     * for id="faq"), embedded players; an emptied editor is stored empty.
+     */
+    public function testHtmlFieldsKeepAnchorsAndEmbedsAndStoreEmptyAsEmpty()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $save = function (string $description) use ($admin, $series) {
+            $this->actingAs($admin)->put('/admin/series/' . $series->id, [
+                'fields' => [
+                    'slug' => $series->slug,
+                    'name' => $series->name,
+                    'active' => '1',
+                    'description' => $description,
+                ],
+            ])->assertRedirect();
+            return $series->fresh()->description;
+        };
+
+        $description = $save('<h2 id="faq">FAQ</h2><iframe src="https://www.youtube.com/embed/abc"></iframe><iframe src="https://evil.example/x"></iframe>');
+        $this->assertStringContainsString('<h2 id="faq">', $description);
+        $this->assertStringContainsString('src="https://www.youtube.com/embed/abc"', $description);
+        $this->assertStringNotContainsString('evil.example', $description);
+        $this->assertTrue($series->fresh()->hasFaq());
+
+        $this->assertSame('', (string) $save('<p><br></p>'));
+        $this->assertSame('', (string) $save(''));
+    }
+
+    /**
+     * The public team page lists members and scores as tabs.
+     */
+    public function testTheTeamPageRenders()
+    {
+        $this->createOrganisation();
+        $user = $this->createUser();
+
+        $this->actingAs($user)->post('/groups', [ 'fields' => [ 'name' => 'De Quizvogels' ] ]);
+        $group = \App\Models\Group::where('name', 'De Quizvogels')->firstOrFail();
+
+        $this->actingAs($user)->get('/groups/' . $group->id)
+            ->assertStatus(200)
+            ->assertSee('De Quizvogels')
+            ->assertSee('?tab=members', false);
+
+        $this->actingAs($user)->get('/groups/' . $group->id . '?tab=members')
+            ->assertStatus(200);
     }
 }

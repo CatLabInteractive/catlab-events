@@ -444,6 +444,82 @@ body.kv-page {
   span + span:before { content: " · "; }
 }
 
+/* Event name on a colour field or photo: the field's text colour, also when it's a link. */
+.kv-site .kv-hero.kv-hero-photo .kv-title,
+.kv-page .kv-hero.kv-hero-photo .kv-title a, .kv-page .kv-hero.kv-hero-photo .kv-title a:hover, .kv-page .kv-hero.kv-hero-photo .kv-title a:focus { color: #fff; }
+
+.kv-site .kv-hero-noposter .kv-title,
+.kv-page .kv-hero-noposter .kv-title a, .kv-page .kv-hero-noposter .kv-title a:hover, .kv-page .kv-hero-noposter .kv-title a:focus { color: var(--kv-on-field); }
+
+/* The series name as the page's h1, in the small kicker line above the event name. */
+.kv-site h1.kv-series-h1 {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  margin: 0 0 6px;
+  color: inherit;
+
+  .kv-series-sub { font-weight: 400; opacity: .85; }
+  .kv-series-sub:before { content: "\00b7"; margin-right: 8px; }
+}
+
+/*
+ * Photo hero: the series photos fill the hero and fade into the series colour
+ * where the text sits, so the text is always on a solid colour. Phones: the
+ * photo on top, fading down into the colour. Desktop: the photo behind the
+ * whole hero, fading in from the left.
+ */
+.kv-hero-photo {
+  position: relative;
+  overflow: hidden;
+  background: #141414;
+  color: #fff;
+
+  &:before, &:after { display: none; }
+
+  .kv-hero-photos {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+    }
+
+    img.is-shown { opacity: 1; }
+
+    /* A dark veil: the photo stays visible, the white text stays readable. */
+    &:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, .66) 34%, rgba(0, 0, 0, .78) 100%);
+    }
+  }
+
+  /* On phones a strip of photo shows above the text. */
+  .kv-hero-info { position: relative; z-index: 1; padding-top: 150px; }
+  &.kv-hero .kv-series, &.kv-hero .kv-hero-facts, &.kv-hero .kv-series a, &.kv-hero .kv-series a:hover { color: #fff; opacity: .92; }
+  .kv-series i, .kv-hero-facts li:before { background: var(--kv-field); }
+  .kv-links a, .kv-links a:hover, .kv-links a:focus { color: #fff; text-decoration-color: var(--kv-field); }
+  .kv-buy { border-color: transparent; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .7); }
+
+  /* The poster sits below the text on phones, beside it on desktop. */
+  .kv-hero-field { order: 3; position: relative; z-index: 1; background: transparent; padding-top: 0; min-height: 0; }
+  .kv-hero-field:before, .kv-hero-field:after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-hero-photos img { transition: none; }
+}
+
 /* The facts as a short list, each with a dot in the series colour. */
 .kv-hero-facts {
   list-style: none;
@@ -587,6 +663,7 @@ body.kv-page {
     display: block;
     margin-top: 10px;
     font-size: 16px;
+    line-height: 1.5;
     letter-spacing: 0;
     color: $kv-muted;
     font-weight: 400;
@@ -998,6 +1075,29 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
   .kv-hero-info { padding: 64px max(40px, calc((100vw - 1200px) / 2 + 40px)) 64px 56px; }
   .kv-hero-noposter .kv-hero-info { padding: 72px max(40px, calc((100vw - 1200px) / 2 + 40px)); padding-right: 45%; }
+
+  .kv-hero.kv-hero-photo { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); min-height: 600px; }
+  .kv-hero-photo.kv-hero-noposter { grid-template-columns: minmax(0, 1fr); }
+
+  .kv-hero-photo .kv-hero-photos:after { background: linear-gradient(90deg, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .64) 45%, rgba(0, 0, 0, .32) 100%); }
+
+  .kv-hero-photo .kv-hero-info {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 72px 48px 72px max(40px, calc((100vw - 1200px) / 2 + 40px));
+  }
+
+  .kv-hero-photo.kv-hero-noposter .kv-hero-info { padding-right: 50%; }
+
+  .kv-hero-photo .kv-hero-field {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    z-index: 1;
+    padding: 72px max(40px, calc((100vw - 1200px) / 2 + 40px)) 72px 24px;
+  }
+
+  .kv-hero-photo .kv-poster img { filter: drop-shadow(0 24px 40px rgba(0, 0, 0, .45)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1024,23 +1124,6 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-map { height: 100%; min-height: 300px; }
 }
 
-.kv-footer #back-to-top .btn.btn-primary {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 0;
-  padding: 0;
-  background: $kv-gold;
-  color: $kv-ink;
-  font-size: 20px;
-}
-
-.kv-footer #back-to-top { position: fixed; left: auto !important; right: 20px; bottom: 20px; }
-
-@media (max-width: 767px) {
-  /* Phones have the order bar and native scrolling; the button only covers content there. */
-  .kv-footer #back-to-top { display: none !important; }
-}
 
 /* ---------- Page head (every page without its own hero) ---------- */
 
@@ -1325,4 +1408,66 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 @media (min-width: 768px) {
   .kv-past-year li { grid-template-columns: 110px minmax(0, 1fr) minmax(0, 14em); align-items: baseline; }
   .kv-past-meta { text-align: right; }
+}
+
+/* ---------- Cookie banner (cookies.catlab.eu) in the Kleurveld style ---------- */
+/* The id keeps these rules ahead of the banner's own stylesheet. */
+
+#cookieConsentModal .cookie-consent-modal {
+  font-family: $kv-font;
+
+  .modal-content-wrap { margin: 0; left: 0; right: 0; }
+
+  .modal-content {
+    max-width: none;
+    width: 100%;
+    border: 0;
+    border-top: 1px solid $kv-line;
+    border-radius: 0;
+    background: $kv-paper;
+    color: $kv-ink;
+    box-shadow: 0 -12px 32px -20px rgba(31, 51, 38, .5);
+  }
+
+  .modal-body {
+    padding: 18px 20px 4px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: $kv-ink;
+
+    a { color: $kv-ink; text-decoration: underline; text-decoration-color: $kv-violet; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    a:hover, a:focus { color: $kv-ink; text-decoration-color: $kv-ink; }
+  }
+
+  .modal-footer { padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border: 0; }
+
+  .buttons { display: flex; flex-direction: column-reverse; gap: 8px; justify-content: flex-end; }
+
+  .buttons button {
+    width: 100%;
+    margin: 0;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 0;
+    font-family: $kv-font;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+  }
+
+  .buttons .kv-cc-primary { background: $kv-ink; border: 2px solid $kv-ink; color: $kv-paper; }
+  .buttons .kv-cc-primary:hover, .buttons .kv-cc-primary:focus { background: $kv-ink-hover; border-color: $kv-ink-hover; color: $kv-paper; }
+  .buttons .kv-cc-secondary { background: transparent; border: 2px solid $kv-ink; color: $kv-ink; }
+  .buttons .kv-cc-secondary:hover, .buttons .kv-cc-secondary:focus { background: $kv-bg; color: $kv-ink; }
+  .buttons button:focus-visible { outline: 3px solid $kv-violet; outline-offset: 2px; }
+
+  @media (min-width: 768px) {
+    .modal-content-wrap { left: auto; right: 0; margin: 24px; max-width: 440px; }
+    .modal-content { border: 1px solid $kv-line; box-shadow: 0 18px 40px -22px rgba(31, 51, 38, .5); }
+    .modal-body { padding: 22px 24px 4px; }
+    .modal-footer { padding: 14px 24px 22px; }
+    .buttons { flex-direction: row-reverse; flex-wrap: wrap; }
+    .buttons button { width: auto; flex: 1 1 auto; }
+  }
 }

@@ -29,16 +29,18 @@
 
     @include('blocks.agenda')
 
-    <section id="contact">
-        <script>
-            var GEO_LOCATION = <?php echo json_encode($venue->getGeo()); ?>;
-        </script>
-        <div id="map">
-            <div id="gmap-wrap">
-                <div id="gmap">
-                </div>
+    @if($venue->lat && $venue->long)
+        <section class="kv-sec" id="contact">
+            <div class="kv-wrap">
+                <div
+                    id="map"
+                    class="kv-map"
+                    data-coordinates="{{ json_encode([ 'lat' => floatval($venue->lat), 'lng' => floatval($venue->long) ]) }}"
+                    data-address="{{ $venue->getAddressFull("<br>") }}"
+                    data-maps-key="{{ config('services.google.maps_api_key') }}"
+                ></div>
             </div>
-        </div><!--/#map-->
-    </section>
+        </section>
+    @endif
 
 @endsection
