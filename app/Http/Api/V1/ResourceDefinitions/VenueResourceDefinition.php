@@ -87,7 +87,7 @@ class VenueResourceDefinition extends BaseResourceDefinition
         ;
 
         $this->field('description')
-            ->string()
+            ->html()
             ->visible()
             ->writeable(true, true)
         ;

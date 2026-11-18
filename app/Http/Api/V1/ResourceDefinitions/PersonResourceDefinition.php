@@ -57,7 +57,7 @@ class PersonResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true);
 
         $this->field('description')
-            ->string()
+            ->html()
             ->visible()
             ->writeable(true, true)
         ;

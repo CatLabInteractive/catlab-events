@@ -78,7 +78,7 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->filterable()
             ->writeable(true, true)
             ->required()
-            ->string()
+            ->html()
             ->min(3)
         ;
 

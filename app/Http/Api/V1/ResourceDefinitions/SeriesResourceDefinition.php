@@ -50,10 +50,12 @@ class SeriesResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true);
 
         $this->field('teaser')
+            ->html()
             ->visible()
             ->writeable(true, true);
 
         $this->field('description')
+            ->html()
             ->visible()
             ->writeable(true, true);
 

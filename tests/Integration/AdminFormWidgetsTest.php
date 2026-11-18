@@ -255,36 +255,31 @@ class AdminFormWidgetsTest extends IntegrationTestCase
     }
 
     /**
-     * People have no name field; the event form lists them by their first
-     * and last name, not as "#12".
+     * Descriptions are html() fields: a rich textarea, and the HTML is
+     * cleaned on save (they're printed unescaped on the public pages).
      */
-    public function testPeopleAreListedByName()
+    public function testDescriptionsAreHtmlFields()
     {
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
-        $event = $this->createEvent($organisation);
+        $series = $this->createSeries($organisation);
 
-        $person = new \App\Models\Person();
-        $person->first_name = 'Anna';
-        $person->last_name = 'Peeters';
-        $person->organisation()->associate($organisation);
-        $person->user()->associate($admin);
-        $person->save();
-
-        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+        $this->actingAs($admin)->get('/admin/series/' . $series->id . '/edit')
             ->assertStatus(200)
-            ->assertSee('>Anna Peeters</label>', false)
-            ->assertDontSee('>#' . $person->id . '</label>', false);
-    }
+            ->assertSee('class="form-control html-richtext-input"', false);
 
-    public function testDescriptionsAreEditedInATextarea()
-    {
-        $organisation = $this->createOrganisation();
-        $admin = $this->adminOf($organisation);
-        $event = $this->createEvent($organisation);
+        $this->actingAs($admin)->put('/admin/series/' . $series->id, [
+            'fields' => [
+                'slug' => $series->slug,
+                'name' => $series->name,
+                'active' => '1',
+                'description' => '<p onclick="alert(1)">Hallo <a href="https://example.org" target="_blank">daar</a></p><script>alert(2)</script>',
+            ],
+        ])->assertRedirect();
 
-        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
-            ->assertStatus(200)
-            ->assertSee('<textarea id="field-description" name="fields[description]"', false);
+        $description = $series->fresh()->description;
+        $this->assertStringContainsString('Hallo <a href="https://example.org" target="_blank"', $description);
+        $this->assertStringNotContainsString('script', $description);
+        $this->assertStringNotContainsString('onclick', $description);
     }
 }
