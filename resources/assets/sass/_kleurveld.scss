@@ -587,6 +587,7 @@ body.kv-page {
     display: block;
     margin-top: 10px;
     font-size: 16px;
+    line-height: 1.5;
     letter-spacing: 0;
     color: $kv-muted;
     font-weight: 400;
@@ -1325,4 +1326,66 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 @media (min-width: 768px) {
   .kv-past-year li { grid-template-columns: 110px minmax(0, 1fr) minmax(0, 14em); align-items: baseline; }
   .kv-past-meta { text-align: right; }
+}
+
+/* ---------- Cookie banner (cookies.catlab.eu) in the Kleurveld style ---------- */
+/* The id keeps these rules ahead of the banner's own stylesheet. */
+
+#cookieConsentModal .cookie-consent-modal {
+  font-family: $kv-font;
+
+  .modal-content-wrap { margin: 0; left: 0; right: 0; }
+
+  .modal-content {
+    max-width: none;
+    width: 100%;
+    border: 0;
+    border-top: 1px solid $kv-line;
+    border-radius: 0;
+    background: $kv-paper;
+    color: $kv-ink;
+    box-shadow: 0 -12px 32px -20px rgba(31, 51, 38, .5);
+  }
+
+  .modal-body {
+    padding: 18px 20px 4px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: $kv-ink;
+
+    a { color: $kv-ink; text-decoration: underline; text-decoration-color: $kv-violet; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    a:hover, a:focus { color: $kv-ink; text-decoration-color: $kv-ink; }
+  }
+
+  .modal-footer { padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border: 0; }
+
+  .buttons { display: flex; flex-direction: column-reverse; gap: 8px; justify-content: flex-end; }
+
+  .buttons button {
+    width: 100%;
+    margin: 0;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 0;
+    font-family: $kv-font;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+  }
+
+  .buttons .kv-cc-primary { background: $kv-ink; border: 2px solid $kv-ink; color: $kv-paper; }
+  .buttons .kv-cc-primary:hover, .buttons .kv-cc-primary:focus { background: $kv-ink-hover; border-color: $kv-ink-hover; color: $kv-paper; }
+  .buttons .kv-cc-secondary { background: transparent; border: 2px solid $kv-ink; color: $kv-ink; }
+  .buttons .kv-cc-secondary:hover, .buttons .kv-cc-secondary:focus { background: $kv-bg; color: $kv-ink; }
+  .buttons button:focus-visible { outline: 3px solid $kv-violet; outline-offset: 2px; }
+
+  @media (min-width: 768px) {
+    .modal-content-wrap { left: auto; right: 0; margin: 24px; max-width: 440px; }
+    .modal-content { border: 1px solid $kv-line; box-shadow: 0 18px 40px -22px rgba(31, 51, 38, .5); }
+    .modal-body { padding: 22px 24px 4px; }
+    .modal-footer { padding: 14px 24px 22px; }
+    .buttons { flex-direction: row-reverse; flex-wrap: wrap; }
+    .buttons button { width: auto; flex: 1 1 auto; }
+  }
 }
