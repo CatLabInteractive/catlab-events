@@ -25,6 +25,7 @@ namespace App\Cms;
 use App\Http\Controllers\SitemapController;
 use App\Models\Organisation;
 use App\Models\Page;
+use App\Rules\SafeUrl;
 use App\Models\PageTranslation;
 use App\Rules\OrganisationAsset;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -60,7 +61,7 @@ class PageWriter
     /**
      * Fields of a page that can be written.
      */
-    const PAGE_FIELDS = [ 'parent_id', 'sort_order', 'show_in_menu', 'show_in_footer' ];
+    const PAGE_FIELDS = [ 'parent_id', 'sort_order', 'show_in_menu', 'show_in_footer', 'link' ];
 
     /**
      * @var BlockValidator
@@ -362,16 +363,28 @@ class PageWriter
             'sort_order' => $page->sort_order,
             'show_in_menu' => $page->show_in_menu,
             'show_in_footer' => $page->show_in_footer,
+            'link' => $page->link,
         ], [
             'parent_id' => [ 'nullable', 'integer' ],
             'sort_order' => [ 'nullable', 'integer', 'between:-100000,100000' ],
             'show_in_menu' => [ 'nullable', 'boolean' ],
             'show_in_footer' => [ 'nullable', 'boolean' ],
+            'link' => [
+                'nullable',
+                'string',
+                'max:1024',
+                function ($attribute, $value, $fail) {
+                    if (is_string($value) && $value !== '' && !in_array($value, Page::FIXED_LINKS, true) && !SafeUrl::isSafe($value)) {
+                        $fail('De link moet een pad (/...), een http(s)-adres of mailto: zijn.');
+                    }
+                },
+            ],
         ])->validate();
 
         $page->sort_order = (int) $page->sort_order;
         $page->show_in_menu = (bool) $page->show_in_menu;
         $page->show_in_footer = (bool) $page->show_in_footer;
+        $page->link = is_string($page->link) && trim($page->link) !== '' ? trim($page->link) : null;
 
         if (!$page->parent_id) {
             $page->parent_id = null;

@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $sort_order
  * @property bool $show_in_menu
  * @property bool $show_in_footer
+ * @property string|null $link a menu link instead of content: @series, @calendar, @blog or a URL
  * @property int|null $wp_post_id
  *
  * Class Page
@@ -46,6 +47,30 @@ class Page extends Model
     use SoftDeletes;
 
     /**
+     * Menu links to the site's fixed parts (Page::$link).
+     */
+    const LINK_SERIES = '@series';
+    const LINK_CALENDAR = '@calendar';
+    const LINK_BLOG = '@blog';
+
+    const FIXED_LINKS = [ self::LINK_SERIES, self::LINK_CALENDAR, self::LINK_BLOG ];
+
+    /**
+     * Where the fixed parts sit in the menu as long as no link page manages
+     * them (as a sort_order).
+     */
+    const FIXED_LINK_POSITIONS = [ self::LINK_SERIES => -20, self::LINK_CALENDAR => -10, self::LINK_BLOG => 1000 ];
+
+    /**
+     * Default titles of the fixed links, per locale.
+     */
+    const FIXED_LINK_TITLES = [
+        self::LINK_SERIES => [ 'nl' => 'Quizreeksen', 'en' => 'Quiz series', 'fr' => 'Séries de quiz' ],
+        self::LINK_CALENDAR => [ 'nl' => 'Kalender', 'en' => 'Calendar', 'fr' => 'Calendrier' ],
+        self::LINK_BLOG => [ 'nl' => 'Blog', 'en' => 'Blog', 'fr' => 'Blog' ],
+    ];
+
+    /**
      * @var string[]
      */
     protected $casts = [
@@ -53,6 +78,36 @@ class Page extends Model
         'show_in_menu' => 'bool',
         'show_in_footer' => 'bool',
     ];
+
+    /**
+     * @return bool whether the page is a menu link instead of content
+     */
+    public function isLink(): bool
+    {
+        return is_string($this->link) && $this->link !== '';
+    }
+
+    /**
+     * The URL a link page points to; null for @series (several links, see
+     * the menu) and for content pages.
+     * @param string|null $blogUrl
+     * @return string|null
+     */
+    public static function linkUrl(?string $link, ?string $blogUrl = null): ?string
+    {
+        switch ($link) {
+            case null:
+            case '':
+            case self::LINK_SERIES:
+                return null;
+            case self::LINK_CALENDAR:
+                return action('EventController@calendar');
+            case self::LINK_BLOG:
+                return $blogUrl;
+            default:
+                return $link;
+        }
+    }
 
     /**
      * Keep materialised paths and the organisation's home page in sync.

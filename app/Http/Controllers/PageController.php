@@ -27,6 +27,7 @@ use App\Cms\BlockRenderer;
 use App\Cms\Blocks\BlockContext;
 use App\Cms\Redirects;
 use App\Models\Organisation;
+use App\Models\Page;
 use App\Models\PageTranslation;
 use Auth;
 use Illuminate\Http\Request;
@@ -147,6 +148,18 @@ class PageController extends Controller
                 return $redirect;
             }
             abort(404);
+        }
+
+        // A menu link has no content of its own: its address leads to the link.
+        $page = $translation->page;
+        if ($page->isLink()) {
+            $target = $page->link === Page::LINK_SERIES
+                ? self::localeRootUrl($translation->locale)
+                : Page::linkUrl($page->link, app(Blog::class)->navigationUrl($organisation, $translation->locale));
+            if (!$target) {
+                abort(404);
+            }
+            return redirect()->to($target, 302);
         }
 
         // One URL per home page: its own path redirects to the locale root.

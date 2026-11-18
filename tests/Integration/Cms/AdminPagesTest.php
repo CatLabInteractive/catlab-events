@@ -548,4 +548,65 @@ class AdminPagesTest extends IntegrationTestCase
             $response->assertSee('data-block-type="' . $type . '"', false);
         }
     }
+
+    public function testAPageCanBeAMenuLink()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+
+        $this->actingAs($admin)
+            ->post('/admin/pages', $this->formInput([ 'link_kind' => '@calendar', 'link_url' => 'ignored' ]))
+            ->assertSessionHasNoErrors();
+        $page = PageTranslation::where('organisation_id', $organisation->id)->where('path', 'over-ons')->firstOrFail()->page;
+        $this->assertSame(Page::LINK_CALENDAR, $page->link);
+
+        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit/nl')->assertStatus(200)->getContent();
+        $this->assertMatchesRegularExpression('/<option value="@calendar"\s+selected/', $form);
+
+        // Another address must be a safe one.
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => 'url', 'link_url' => 'javascript:alert(1)' ]))
+            ->assertSessionHasErrors('link');
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => 'url', 'link_url' => 'https://shop.example' ]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('https://shop.example', $page->fresh()->link);
+
+        // Back to a page with content.
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => '' ]))
+            ->assertSessionHasNoErrors();
+        $this->assertNull($page->fresh()->link);
+    }
+
+    public function testFixedPartsCanBeAddedAsMenuLinksOnce()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $this->createPage($organisation, 'menu-kalender');
+
+        $this->actingAs($admin)->get('/admin/pages')
+            ->assertSee('Vaste onderdelen als menulinks toevoegen');
+
+        $this->actingAs($admin)->post('/admin/pages/fixed-links')->assertRedirect('/admin/pages');
+
+        $pages = Page::forOrganisation($organisation)->whereNotNull('link')->get()->keyBy('link');
+        $this->assertEquals([ '@blog', '@calendar', '@series' ], $pages->keys()->sort()->values()->all());
+        $this->assertSame(-10, (int) $pages['@calendar']->sort_order);
+        $this->assertTrue((bool) $pages['@calendar']->show_in_menu);
+
+        // Every language, published; a taken address gets a number.
+        $calendar = $pages['@calendar']->translations->keyBy('locale');
+        $this->assertEqualsCanonicalizing(config('cms.locales'), $calendar->keys()->all());
+        $this->assertSame('menu-kalender-2', $calendar['nl']->slug);
+        $this->assertSame('Calendar', $calendar['en']->title);
+        $this->assertTrue((bool) $calendar['fr']->is_published);
+
+        // A second click adds nothing, and the box is gone.
+        $this->actingAs($admin)->post('/admin/pages/fixed-links');
+        $this->assertSame(3, Page::forOrganisation($organisation)->whereNotNull('link')->count());
+        $this->actingAs($admin)->get('/admin/pages')
+            ->assertDontSee('Vaste onderdelen als menulinks toevoegen')
+            ->assertSee('menulink: kalender');
+    }
 }

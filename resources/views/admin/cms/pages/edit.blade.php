@@ -133,6 +133,19 @@
                 </div>
 
                 @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'number', 'label' => 'Volgorde', 'name' => 'sort_order', 'value' => old('sort_order', $page->sort_order ?? 0), 'error' => 'sort_order', 'help' => 'Lager staat eerst, in het menu en in deze lijst.' ] ])
+                <?php
+                    $linkValue = old('link_kind') !== null ? (old('link_kind') === 'url' ? old('link_url') : old('link_kind')) : $page->link;
+                    $linkKind = in_array($linkValue, \App\Models\Page::FIXED_LINKS, true) ? $linkValue : ($linkValue ? 'url' : '');
+                    $linkOptions = [
+                        '' => 'Pagina met inhoud',
+                        '@series' => 'Menulink: de quizreeksen',
+                        '@calendar' => 'Menulink: de kalender',
+                        '@blog' => 'Menulink: de blog',
+                        'url' => 'Menulink: een ander adres',
+                    ];
+                ?>
+                @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'select', 'label' => 'Soort', 'name' => 'link_kind', 'value' => $linkKind, 'error' => 'link_kind', 'options' => $linkOptions, 'help' => 'Een menulink heeft geen eigen inhoud: in het menu en de footer leidt hij naar zijn doel. Zo zet je de vaste onderdelen van de site waar je wil, of verberg je ze.' ] ])
+                @include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Adres van de link', 'name' => 'link_url', 'value' => $linkKind === 'url' ? $linkValue : '', 'error' => 'link_url', 'max' => 1024, 'placeholder' => '/kalender, https://...', 'help' => 'Alleen bij "een ander adres".' ] ])
                 @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'checkbox', 'label' => 'Toon in het menu', 'name' => 'show_in_menu', 'value' => old('show_in_menu', $page->show_in_menu), 'error' => 'show_in_menu', 'help' => 'Een subpagina verschijnt in het uitklapmenu van haar hoofdpagina.' ] ])
                 @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'checkbox', 'label' => 'Toon in de footer', 'name' => 'show_in_footer', 'value' => old('show_in_footer', $page->show_in_footer), 'error' => 'show_in_footer' ] ])
             </div>
