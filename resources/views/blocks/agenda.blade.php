@@ -4,8 +4,8 @@
             Binnenkort
             @if(!empty($cities))
                 <small>
-                    Op zoek naar een leuke groepsactiviteit in {{ implode(', ', $cities) }}?
-                    Wij organiseren vast de leukste quizzes van {{ implode(', ', $cities) }}!
+                    Op zoek naar een leuke groepsactiviteit in {{ \App\Tools\StringHelper::joinList($cities) }}?
+                    Bij ons vind je vast de leukste quiz in de buurt!
                 </small>
             @endif
         </h2>
