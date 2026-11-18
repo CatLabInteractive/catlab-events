@@ -104,11 +104,127 @@ class PreviewSeeder extends Seeder
 
         $e = $this->event($organisation, 'Quiz zonder poster', 'event', null, $venue, 5, $quizavonden, $first->copy()->addWeeks(7));
         $this->ticketCategory($e, 'Ploegticket', 25);
+
+        $this->cms($organisation);
     }
 
-    private function asset($key, $width, $height)
+    /**
+     * CMS content: a page that uses every block type, a plain text page and
+     * a few blog posts (one with a featured image). Shown at /quizzen-op-maat,
+     * /over-ons and /blog.
+     */
+    private function cms(Organisation $organisation)
+    {
+        $wide = $this->asset('wide.jpg', 1600, 900, $organisation);
+        $square = $this->asset('square.jpg', 1200, 1200, $organisation);
+        $logo = $this->asset('logo.png', 160, 180, $organisation);
+        $n = 0;
+        $block = function ($type, array $data) use (&$n) {
+            return [ 'id' => sprintf('%06x', ++$n), 'type' => $type, 'data' => $data ];
+        };
+
+        $posts = app(\App\Cms\PostWriter::class);
+        $postBody = '<p class="cms-lead">Een quiz in je eigen woonkamer, met vrienden of familie, wanneer het jou past.</p>'
+            . '<p>We maakten dit jaar drie nieuwe <a href="/events">quizpakketten</a>. Elk pakket heeft acht rondes en duurt ongeveer anderhalf uur.</p>'
+            . '<h2>Wat zit erin?</h2><ul><li>Acht rondes met beeld en geluid</li><li>Een scorebord op je tv</li><li>Antwoorden met je smartphone</li></ul>'
+            . '<blockquote><p>De leukste avond van het jaar, en we moesten niet eens de deur uit.</p></blockquote>'
+            . '<h3>Hoe begin je?</h3><ol><li>Koop een pakket</li><li>Open de link op je laptop</li><li>Scan de QR-code</li></ol>';
+        foreach ([
+            [ 'Drie nieuwe quizpakketten', 'drie-nieuwe-quizpakketten', 2, $wide->id ],
+            [ 'Terugblik op de Grote Kerstquiz', 'terugblik-grote-kerstquiz', 20, null ],
+            [ 'Zo maken we een quizronde', 'zo-maken-we-een-quizronde', 45, $square->id ],
+            [ 'Quizfabriek in de pers', 'quizfabriek-in-de-pers', 80, null ],
+        ] as [ $title, $slug, $daysAgo, $imageId ]) {
+            $posts->createPost($organisation, [
+                'published_at' => Carbon::now()->subDays($daysAgo)->setTime(10, 0),
+                'featured_image_id' => $imageId,
+            ], 'nl', [
+                'slug' => $slug, 'title' => $title, 'is_published' => true,
+                'excerpt' => 'Een korte inleiding van een paar regels, zodat je weet waar het bericht over gaat.',
+                'body' => $postBody,
+            ]);
+        }
+
+        $pages = app(\App\Cms\PageWriter::class);
+        $pages->createPage($organisation, [ 'show_in_menu' => true ], 'nl', [
+            'slug' => 'quizzen-op-maat', 'title' => 'Quizzen op maat', 'is_published' => true,
+            'blocks' => [
+                $block('hero', [
+                    'title' => 'Een quiz op maat van jouw feest', 'align' => 'left', 'image_id' => $wide->id,
+                    'subtitle' => 'Voor bedrijven, verenigingen en verjaardagen. Wij schrijven de vragen, jij kiest het thema.',
+                    'buttons' => [
+                        [ 'label' => 'Vraag een offerte', 'url' => 'mailto:hallo@example.test', 'style' => 'primary' ],
+                        [ 'label' => 'Bekijk de kalender', 'url' => '/calendar', 'style' => 'secondary' ],
+                    ],
+                ]),
+                $block('cards', [
+                    'title' => 'Drie formules', 'intro' => 'Van een korte quiz op je teambuilding tot een avondvullend programma.', 'columns' => 3,
+                    'items' => [
+                        [ 'title' => 'Op locatie', 'text' => 'Wij komen met presentator, scherm en geluid.', 'icon' => 'map-marker' ],
+                        [ 'title' => 'Online', 'text' => 'Live gepresenteerd, iedereen speelt mee van thuis.', 'icon' => 'video-camera' ],
+                        [ 'title' => 'Quizpakket', 'text' => 'Zelf spelen wanneer het past, met je smartphone.', 'icon' => 'tv', 'url' => '/events' ],
+                    ],
+                ]),
+                $block('text_image', [
+                    'title' => 'Onze presentatoren', 'image_id' => $square->id, 'image_position' => 'right',
+                    'html' => '<p>Kim en Wietse presenteren al meer dan tien jaar quizzen in heel Vlaanderen.</p><ul><li>Vragen op maat van je groep</li><li>Toegankelijk voor iedereen</li><li>Met de nodige kwinkslag</li></ul>',
+                    'button' => [ 'label' => 'Maak kennis', 'url' => '/over-ons' ],
+                ]),
+                $block('reviews', [
+                    'title' => 'Wat klanten zeggen',
+                    'items' => [
+                        [ 'quote' => 'Iedereen sprak er de week erna nog over. Perfect georganiseerd.', 'author' => 'Sofie', 'source' => 'Personeelsfeest' ],
+                        [ 'quote' => 'Moeilijk genoeg voor de fanatiekelingen, leuk voor de rest.', 'author' => 'Pieter', 'source' => 'Google' ],
+                    ],
+                ]),
+                $block('upcoming_events', [ 'title' => 'Volgende quizzen', 'limit' => 4, 'event_type' => 'all' ]),
+                $block('cta', [
+                    'title' => 'Klaar om te quizzen?', 'text' => 'Stuur ons een mailtje en we maken samen een plan.', 'background' => 'primary',
+                    'buttons' => [ [ 'label' => 'Mail ons', 'url' => 'mailto:hallo@example.test', 'style' => 'primary' ] ],
+                ]),
+                $block('faq', [
+                    'title' => 'Veelgestelde vragen',
+                    'items' => [
+                        [ 'question' => 'Hoeveel spelers kunnen meedoen?', 'answer' => '<p>Van tien tot vijfhonderd. Grotere groepen spelen in ploegen.</p>' ],
+                        [ 'question' => 'Hoe lang op voorhand moet ik boeken?', 'answer' => '<p>Liefst <strong>zes weken</strong>, voor een quiz op maat iets meer.</p>' ],
+                        [ 'question' => 'Kunnen we het thema kiezen?', 'answer' => '<p>Ja, elke ronde kan over jullie bedrijf, vereniging of jarige gaan.</p>' ],
+                    ],
+                ]),
+                $block('video', [ 'title' => 'Zo ziet een livestream eruit', 'youtube_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'caption' => 'Een fragment uit de Grote Kerstquiz.' ]),
+                $block('logo_grid', [
+                    'title' => 'Ze gingen je voor',
+                    'items' => [
+                        [ 'name' => 'Bibliotheek Gent', 'image_id' => $logo->id ], [ 'name' => 'Jeugdhuis De Kring' ],
+                        [ 'name' => 'Quizclub Noord', 'image_id' => $logo->id ], [ 'name' => 'Stad Gent' ],
+                        [ 'name' => 'Sportclub', 'image_id' => $logo->id ], [ 'name' => 'Cultuurcentrum' ],
+                    ],
+                ]),
+                $block('latest_posts', [ 'title' => 'Uit de blog', 'limit' => 3 ]),
+                $block('cta', [
+                    'title' => 'Liever bellen?', 'text' => 'We zijn bereikbaar op weekdagen tussen 9 en 17 uur.', 'background' => 'dark',
+                    'buttons' => [ [ 'label' => 'Bel ons', 'url' => 'tel:+3291234567', 'style' => 'primary' ], [ 'label' => 'Of mail', 'url' => 'mailto:hallo@example.test', 'style' => 'secondary' ] ],
+                ]),
+            ],
+        ]);
+
+        $pages->createPage($organisation, [ 'show_in_menu' => true ], 'nl', [
+            'slug' => 'over-ons', 'title' => 'Over ons', 'is_published' => true,
+            'blocks' => [
+                $block('rich_text', [ 'html' => $postBody ]),
+                $block('cta', [
+                    'title' => 'Speel mee', 'text' => 'Bekijk welke quizzen er binnenkort zijn.', 'background' => 'light',
+                    'buttons' => [ [ 'label' => 'Naar de kalender', 'url' => '/calendar', 'style' => 'primary' ] ],
+                ]),
+            ],
+        ]);
+    }
+
+    private function asset($key, $width, $height, $organisation = null)
     {
         $asset = new Asset();
+        if ($organisation) {
+            $asset->organisation_id = $organisation->id;
+        }
         $asset->name = $key;
         $asset->asset_key = $key;
         $asset->mimetype = str_ends_with($key, '.png') ? 'image/png' : 'image/jpeg';

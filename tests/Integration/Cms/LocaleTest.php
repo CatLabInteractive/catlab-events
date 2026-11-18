@@ -32,7 +32,7 @@ class LocaleTest extends IntegrationTestCase
         $response->assertStatus(200);
         $response->assertSee('<html lang="nl">', false);
         $response->assertSee('<title>Blog – Test organisation</title>', false);
-        $response->assertSee('Lees meer');
+        $response->assertSee('Nieuws en verhalen van Test organisation.');
         $response->assertSee('14 maart 2019');
 
         $this->get('/2019/03/14/quiz')->assertSee('Gepubliceerd op')->assertSee('14 maart 2019');
@@ -45,9 +45,9 @@ class LocaleTest extends IntegrationTestCase
         $response = $this->get('/en/blog');
         $response->assertStatus(200);
         $response->assertSee('<html lang="en">', false);
-        $response->assertSee('Read more');
+        $response->assertSee('News and stories from Test organisation.');
         $response->assertSee('14 March 2019');
-        $response->assertDontSee('Lees meer');
+        $response->assertDontSee('Nieuws en verhalen');
         $response->assertDontSee('maart');
 
         $response = $this->get('/en/2019/03/14/quiz-night');
@@ -64,7 +64,7 @@ class LocaleTest extends IntegrationTestCase
         $response = $this->get('/fr/blog');
         $response->assertStatus(200);
         $response->assertSee('<html lang="fr">', false);
-        $response->assertSee('Lire la suite');
+        $response->assertSee('Actualités et récits de Test organisation.');
         $response->assertSee('14 mars 2019');
 
         $this->get('/fr/2019/03/14/soiree-quiz')->assertSee('Publié le', false)->assertSee('14 mars 2019');

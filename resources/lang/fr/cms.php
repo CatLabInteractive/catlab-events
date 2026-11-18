@@ -6,7 +6,6 @@
 return [
     'blog' => 'Blog',
     'blog_intro' => 'Actualités et récits de :organisation.',
-    'read_more' => 'Lire la suite',
     'published_on' => 'Publié le',
     'by' => 'par',
     'older_posts' => 'Articles plus anciens',

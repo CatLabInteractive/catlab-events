@@ -6,7 +6,6 @@
 return [
     'blog' => 'Blog',
     'blog_intro' => 'News and stories from :organisation.',
-    'read_more' => 'Read more',
     'published_on' => 'Published on',
     'by' => 'by',
     'older_posts' => 'Older posts',

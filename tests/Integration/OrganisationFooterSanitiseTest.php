@@ -44,15 +44,17 @@ class OrganisationFooterSanitiseTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->adminOf($organisation);
 
-        // The charon-frontend form posts every field as fields[name][input][0][value].
+        // The charon-frontend form posts every field as fields[name].
         $field = function ($value) {
-            return [ 'type' => 'string', 'multiple' => 0, 'input' => [ [ 'value' => $value ] ] ];
+            return $value;
         };
 
         $this->actingAs($admin)
             ->put('/admin/organisations/' . $organisation->id, [
                 'fields' => [
                     'name' => $field($organisation->name),
+                    // Fields left out of the form are saved as empty.
+                    'private_events_count' => $field((int) $organisation->private_events_count),
                     'footer_html' => $field('<p>Volg ons</p><script>alert(document.cookie)</script><img src="x" onerror="alert(1)">'),
                 ],
             ])

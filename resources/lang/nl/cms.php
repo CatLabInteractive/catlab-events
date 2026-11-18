@@ -6,7 +6,6 @@
 return [
     'blog' => 'Blog',
     'blog_intro' => 'Nieuws en verhalen van :organisation.',
-    'read_more' => 'Lees meer',
     'published_on' => 'Gepubliceerd op',
     'by' => 'door',
     'older_posts' => 'Oudere berichten',

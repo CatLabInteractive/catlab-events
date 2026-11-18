@@ -51,7 +51,7 @@ class PostRoutingTest extends IntegrationTestCase
         $response->assertStatus(200);
         $response->assertSee('<html lang="nl">', false);
         $response->assertSee('<title>Post quiz-van-het-jaar (nl) – Test organisation</title>', false);
-        $response->assertSee('<h1 class="cms-post-title">Post quiz-van-het-jaar (nl)</h1>', false);
+        $response->assertSee('<h1 class="kv-pagehead-title kv-cms-post-title">Post quiz-van-het-jaar (nl)</h1>', false);
         $response->assertSee('<p>Het was een <strong>topavond</strong>.</p>', false);
         $response->assertSee('14 maart 2019');
         $response->assertSee('<link rel="canonical" href="http://localhost/2019/03/14/quiz-van-het-jaar" />', false);
@@ -60,7 +60,7 @@ class PostRoutingTest extends IntegrationTestCase
         $response->assertSee('content="Excerpt of quiz-van-het-jaar"', false);
 
         // Byline: no author set, so the organisation.
-        $response->assertSee('<span class="cms-post-author">Test organisation</span>', false);
+        $response->assertSee('<span class="kv-cms-post-author">Test organisation</span>', false);
 
         $jsonLd = $this->jsonLd($response->getContent(), 'BlogPosting');
         $this->assertSame('Post quiz-van-het-jaar (nl)', $jsonLd['headline']);
@@ -83,7 +83,7 @@ class PostRoutingTest extends IntegrationTestCase
 
         $response = $this->get('/2019/03/14/verslag');
         $response->assertStatus(200);
-        $response->assertSee('<span class="cms-post-author">Jan Quizmaster</span>', false);
+        $response->assertSee('<span class="kv-cms-post-author">Jan Quizmaster</span>', false);
 
         $jsonLd = $this->jsonLd($response->getContent(), 'BlogPosting');
         $this->assertSame([ '@type' => 'Person', 'name' => 'Jan Quizmaster' ], $jsonLd['author']);

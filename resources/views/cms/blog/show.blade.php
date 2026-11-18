@@ -1,6 +1,7 @@
 @extends('layouts/home')
 
 @section('title'){{ $pageTitle }}@endsection
+@section('bodyClass')kv-page kv-cms @endsection
 
 @if($description)
     @section('description'){{ $description }}@endsection
@@ -20,37 +21,37 @@
 
 @section('content')
 
-    <article class="cms-page cms-post cms-post-{{ $post->id }}" lang="{{ $translation->locale }}">
+    <article class="kv-cms-post kv-cms-post-{{ $post->id }}" lang="{{ $translation->locale }}">
 
-        <section class="cms-page-header">
-            <div class="container">
-                <p class="cms-post-back"><a href="{{ \App\Cms\Blog::indexUrl($translation->locale) }}">&larr; {{ __('cms.back_to_blog') }}</a></p>
-                <h1 class="cms-post-title">{{ $translation->title }}</h1>
-                <p class="cms-post-meta">
+        <div class="kv-pagehead kv-pagehead-post {{ organisation()->getColourPalette()->getClassFor($post->id) }}">
+            <div class="kv-wrap">
+                <p class="kv-cms-back"><a href="{{ \App\Cms\Blog::indexUrl($translation->locale) }}">&larr; {{ __('cms.back_to_blog') }}</a></p>
+                <h1 class="kv-pagehead-title kv-cms-post-title">{{ $translation->title }}</h1>
+                <p class="kv-cms-post-meta">
                     @if($publishedAt)
-                        {{ __('cms.published_on') }}
+                        <span class="sr-only">{{ __('cms.published_on') }}</span>
                         <time datetime="{{ $publishedAt->toIso8601String() }}">{{ $publishedAt->copy()->locale($translation->locale)->translatedFormat('j F Y') }}</time>
                         &middot;
                     @endif
-                    <span class="cms-post-author">{{ $byline }}</span>
+                    <span class="kv-cms-post-author">{{ $byline }}</span>
                 </p>
             </div>
-        </section>
+        </div>
 
-        <section class="cms-block">
-            <div class="container">
+        <section class="kv-sec kv-cms-post-body">
+            <div class="kv-wrap kv-wrap-prose">
                 @if($imageUrl)
-                    <figure class="cms-post-image">
-                        <img class="img-fluid" src="{{ $imageUrl }}" alt="{{ $translation->title }}" />
+                    <figure class="kv-cms-post-image">
+                        <img src="{{ $imageUrl }}" alt="{{ $translation->title }}" />
                     </figure>
                 @endif
 
-                <div class="cms-prose">
+                <div class="kv-prose">
                     {!! $translation->body !!}
                 </div>
 
                 @if(count($otherTranslations) > 0)
-                    <p class="cms-post-translations">
+                    <p class="kv-cms-translations">
                         {{ __('cms.in_other_languages') }}:
                         @foreach($otherTranslations as $otherLocale => $otherUrl)
                             <a href="{{ $otherUrl }}" hreflang="{{ $otherLocale }}" lang="{{ $otherLocale }}">{{ __('cms.languages.' . $otherLocale) }}</a>@if(!$loop->last), @endif

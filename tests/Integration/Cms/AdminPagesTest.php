@@ -198,8 +198,9 @@ class AdminPagesTest extends IntegrationTestCase
         $page = $this->createPage($organisation, 'welkom');
         $foreign = $this->createPage($other, 'elders');
 
-        $field = function ($value, $type = 'string') {
-            return [ 'type' => $type, 'multiple' => 0, 'input' => [ [ 'value' => $value ] ] ];
+        // The charon-frontend form posts every field as fields[name].
+        $field = function ($value) {
+            return $value;
         };
 
         $this->actingAs($admin)->get('/admin/organisations/' . $organisation->id . '/edit')
@@ -210,7 +211,9 @@ class AdminPagesTest extends IntegrationTestCase
             ->put('/admin/organisations/' . $organisation->id, [
                 'fields' => [
                     'name' => $field($organisation->name),
-                    'home_page_id' => $field($foreign->id, 'number'),
+                    // Fields left out of the form are saved as empty.
+                    'private_events_count' => $field((int) $organisation->private_events_count),
+                    'home_page_id' => $field($foreign->id),
                 ],
             ])
             ->assertStatus(302);
@@ -221,7 +224,9 @@ class AdminPagesTest extends IntegrationTestCase
             ->put('/admin/organisations/' . $organisation->id, [
                 'fields' => [
                     'name' => $field($organisation->name),
-                    'home_page_id' => $field($page->id, 'number'),
+                    // Fields left out of the form are saved as empty.
+                    'private_events_count' => $field((int) $organisation->private_events_count),
+                    'home_page_id' => $field($page->id),
                 ],
             ])
             ->assertStatus(302)

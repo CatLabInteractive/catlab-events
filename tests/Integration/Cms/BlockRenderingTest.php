@@ -75,9 +75,9 @@ class BlockRenderingTest extends IntegrationTestCase
         $response = $this->get('/alles');
         $response->assertStatus(200);
 
-        $response->assertSee('<h1 class="banner-title">Hero titel</h1>', false);
+        $response->assertSee('<h1 class="kv-cms-hero-title">Hero titel</h1>', false);
         $response->assertSee('Hero ondertitel');
-        $response->assertSee('background-image', false);
+        $response->assertSee('class="kv-cms-hero-image"', false);
         $response->assertSee('test-asset-key', false);
         $response->assertSee('href="/calendar"', false);
         $response->assertSee('<p>Rijke <strong>tekst</strong></p>', false);
@@ -87,7 +87,7 @@ class BlockRenderingTest extends IntegrationTestCase
         $response->assertSee('fa-trophy', false);
         $response->assertSee('Partner NV');
         $response->assertSee('Fantastische avond');
-        $response->assertSee('cms-cta-dark', false);
+        $response->assertSee('kv-cms-cta-dark', false);
         $response->assertSee('href="tel:+3291234567"', false);
         $response->assertSee('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"', false);
         $response->assertSee('Grote Kerstquiz');
@@ -107,7 +107,7 @@ class BlockRenderingTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $this->createPage($organisation, 'tekst', [ $this->block('rich_text', [ 'html' => '<p>x</p>' ]) ]);
 
-        $this->get('/tekst')->assertSee('<h1 class="cms-page-title">Page tekst (nl)</h1>', false);
+        $this->get('/tekst')->assertSee('<h1 class="kv-pagehead-title">Page tekst (nl)</h1>', false);
     }
 
     public function testUnknownAndBrokenBlocksAreSkipped()
