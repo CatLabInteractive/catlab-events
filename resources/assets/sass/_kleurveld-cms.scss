@@ -620,3 +620,9 @@ body.kv-page .body-inner .kv-cms-hero + section.kv-sec { padding-top: 56px; }
   .kv-cms-split { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; }
   .kv-cms-image-left .kv-cms-split-image { order: -1; }
 }
+
+// A block without a title (imported pages often have none) uses the full
+// width instead of only the title column of the 4fr/8fr section grid.
+@media (min-width: 992px) {
+  .kv-sec[class*="kv-cms-"] > .kv-wrap > :only-child { grid-column: 1 / -1; }
+}

@@ -201,7 +201,7 @@ class WordPressImportTest extends IntegrationTestCase
 
         $this->import([ '--organisation' => $organisation->id, '--pages' => true, '--home' => 'over-ons' ])->assertExitCode(0);
 
-        $this->assertDatabaseCount('pages', 3);
+        $this->assertDatabaseCount('pages', 4);
         $this->assertNull(Page::where('wp_post_id', 203)->first(), '-nieuw pages are skipped');
 
         // "blog" is a route of the ticket site.
@@ -231,6 +231,83 @@ class WordPressImportTest extends IntegrationTestCase
 
         // Unpublished: not served.
         $this->get('/over-ons/team')->assertStatus(404);
+    }
+
+    public function testElementorPagesBecomeBlocks()
+    {
+        $organisation = $this->createOrganisation();
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ])->assertExitCode(0);
+
+        $blocks = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl')->blocks;
+        $this->assertSame(
+            [ 'hero', 'text_image', 'reviews', 'cards', 'video', 'upcoming_events', 'rich_text' ],
+            array_column($blocks, 'type')
+        );
+
+        [ $hero, $textImage, $reviews, $cards, $video, $events, $text ] = array_column($blocks, 'data');
+
+        $this->assertSame('De perfecte quiz', $hero['title']);
+        $this->assertSame('Voor iedereen een quiz.', $hero['subtitle']);
+        // Links to the site become paths; ALL CAPS labels sentence case.
+        $this->assertSame([ [ 'label' => 'Evenementen', 'url' => '/', 'style' => 'primary' ] ], $hero['buttons']);
+
+        $foto = Asset::query()->where('name', 'foto.jpg')->firstOrFail();
+        $this->assertSame('Quizevenementen', $textImage['title']);
+        $this->assertSame($foto->id, $textImage['image_id'], 'lazy image, original of the resize');
+        $this->assertSame('left', $textImage['image_position']);
+        $this->assertSame('<p>Een paar keer per jaar.</p>', $textImage['html'], 'a duplicated text once');
+        $this->assertSame([ 'label' => 'Meer', 'url' => '/evenementen' ], $textImage['button']);
+
+        // Two quote sections merged into one reviews block.
+        $this->assertSame([ 'Een topavond.', 'Heel vlot.' ], array_column($reviews['items'], 'quote'));
+        $this->assertSame([ 'An Peeters, HR', 'Jan Janssens' ], array_column($reviews['items'], 'author'));
+
+        $this->assertSame(2, $cards['columns']);
+        $this->assertSame([ 'Quizwitz', 'Gud Nuse' ], array_column($cards['items'], 'title'));
+        $this->assertSame('https://www.quizwitz.com/', $cards['items'][0]['url']);
+        $this->assertNotNull($cards['items'][1]['image_id']);
+
+        $this->assertSame('https://www.youtube.com/watch?v=-mH8ZUo5XZc', $video['youtube_url']);
+
+        // The hand-made list of coming events is the live list; past ones go.
+        $this->assertSame('komende evenementen', $events['title']);
+
+        $this->assertStringContainsString('<h2>Contact</h2>', $text['html']);
+        $this->assertStringContainsString('<li>Quizzen van overal</li>', $text['html']);
+        $this->assertStringNotContainsString('script', $text['html']);
+
+        // It renders.
+        $translation = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl');
+        $translation->is_published = true;
+        $translation->save();
+        $this->get('/quizzen')->assertStatus(200)->assertSee('De perfecte quiz')->assertSee('Een topavond.');
+    }
+
+    public function testRebuildPagesReplacesOnlyUnpublishedPages()
+    {
+        $organisation = $this->createOrganisation();
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ]);
+
+        $draft = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl');
+        $draft->blocks = [ [ 'id' => 'abcdef', 'type' => 'rich_text', 'data' => [ 'html' => '<p>Oud</p>' ] ] ];
+        $draft->save();
+
+        $published = Page::where('wp_post_id', 201)->firstOrFail()->translation('nl');
+        $published->blocks = [ [ 'id' => 'abcdef', 'type' => 'rich_text', 'data' => [ 'html' => '<p>Herwerkt</p>' ] ] ];
+        $published->is_published = true;
+        $published->save();
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ])->assertExitCode(0);
+        $this->assertSame('<p>Oud</p>', $draft->fresh()->blocks[0]['data']['html'], 'without --rebuild-pages nothing changes');
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true, '--rebuild-pages' => true ])
+            ->expectsOutputToContain('rebuilt page 206')
+            ->assertExitCode(0);
+
+        $this->assertSame('hero', $draft->fresh()->blocks[0]['type']);
+        $this->assertSame('<p>Herwerkt</p>', $published->fresh()->blocks[0]['data']['html'], 'published pages are kept');
+        $this->assertDatabaseCount('pages', 4);
     }
 
     public function testRedirectsListsUnmappedSitemapUrls()

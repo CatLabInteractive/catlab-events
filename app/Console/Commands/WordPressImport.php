@@ -32,7 +32,8 @@ use Illuminate\Console\Command;
  * Copies the blog posts and pages of an organisation's WordPress site into
  * the CMS (see App\Cms\Import\WordPressImporter). Without --posts, --pages
  * or --redirects it does all three. Safe to run again: posts are updated,
- * pages that were imported before are kept as they are.
+ * pages that were imported before are kept as they are (--rebuild-pages
+ * converts the ones that are still unpublished again).
  *
  * @package App\Console\Commands
  */
@@ -49,6 +50,7 @@ class WordPressImport extends Command
         {--redirects : List sitemap URLs that do not map onto an import}
         {--skip=sko_milk : Comma-separated page slugs to leave out (slugs ending in -nieuw always are)}
         {--home= : Slug of the WordPress page to make the home page}
+        {--rebuild-pages : Replace the blocks of imported pages that are still unpublished}
         {--dry-run : Show what would happen without writing anything}';
 
     /**
@@ -88,7 +90,7 @@ class WordPressImport extends Command
                 $importer->importPosts($organisation, $dryRun);
             }
             if ($all || $this->option('pages')) {
-                $importer->importPages($organisation, $skip, $home, $dryRun);
+                $importer->importPages($organisation, $skip, $home, $dryRun, (bool) $this->option('rebuild-pages'));
             }
             if ($all || $this->option('redirects')) {
                 $importer->redirects($organisation);
