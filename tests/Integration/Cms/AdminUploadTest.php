@@ -131,7 +131,12 @@ class AdminUploadTest extends IntegrationTestCase
             ->post('/admin/cms/upload', [ 'file' => UploadedFile::fake()->image('zaal.png') ])
             ->json('id');
 
-        $this->actingAs($admin)->post('/admin/pages', [
+        $page = new \App\Models\Page();
+        $page->organisation()->associate($organisation);
+        $page->save();
+
+        $this->actingAs($admin)->post('/admin/pages/' . $page->id . '/translations', [ 'fields' => [
+            'locale' => 'nl',
             'slug' => 'zaal',
             'title' => 'De zaal',
             'is_published' => '1',
@@ -140,7 +145,9 @@ class AdminUploadTest extends IntegrationTestCase
                     'html' => '<p>Onze zaal.</p>', 'image_id' => (string) $id, 'image_position' => 'right',
                 ] ],
             ],
-        ])->assertSessionHasNoErrors();
+        ] ])->assertSessionHas('message', 'Vertaling toegevoegd.');
+
+        $this->assertSame($id, $page->translation('nl')->blocks[0]['data']['image_id']);
     }
 
     public function testTheLegacyAssetUploadAlsoSetsTheOrganisation()
@@ -160,7 +167,11 @@ class AdminUploadTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
 
-        $response = $this->actingAs($admin)->get('/admin/pages/create');
+        $page = new \App\Models\Page();
+        $page->organisation()->associate($organisation);
+        $page->save();
+
+        $response = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create');
         $response->assertStatus(200);
         $response->assertSee('data-cms-upload-url="' . url('admin/cms/upload') . '"', false);
         $response->assertSee('data-cms-assets-url="' . url('admin/cms/assets') . '"', false);

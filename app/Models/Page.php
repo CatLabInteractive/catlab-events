@@ -73,6 +73,11 @@ class Page extends Model
     /**
      * @var string[]
      */
+    /**
+     * @var bool|null See setIsHomeAttribute().
+     */
+    protected $pendingIsHome;
+
     protected $casts = [
         'sort_order' => 'int',
         'show_in_menu' => 'bool',
@@ -134,6 +139,56 @@ class Page extends Model
             Organisation::where('home_page_id', '=', $page->id)
                 ->update([ 'home_page_id' => null ]);
         });
+    }
+
+    /**
+     * The link itself. Charon reads a field through get{Name}() before
+     * is{Name}(), and isLink() would answer `true` for every menu link.
+     * @return string|null
+     */
+    public function getLink(): ?string
+    {
+        return $this->isLink() ? $this->link : null;
+    }
+
+    /**
+     * The title in the default language, else the first translation's.
+     * @return string|null
+     */
+    public function getTitleAttribute()
+    {
+        $translation = $this->translation(config('cms.default_locale')) ?: $this->translations->first();
+        return $translation ? $translation->title : null;
+    }
+
+    /**
+     * Is this the organisation's home page?
+     * @return bool
+     */
+    public function getIsHomeAttribute()
+    {
+        $organisation = $this->organisation;
+        return $this->exists && $organisation && (int) $organisation->home_page_id === (int) $this->id;
+    }
+
+    /**
+     * Not a column: remembered until App\Cms\PageWriter::applyHomePage()
+     * (the API controller calls it after saving the page).
+     * @param mixed $value
+     */
+    public function setIsHomeAttribute($value)
+    {
+        $this->pendingIsHome = $value === null ? null : filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * @return bool|null null: not written.
+     */
+    public function pullPendingIsHome(): ?bool
+    {
+        $value = $this->pendingIsHome;
+        $this->pendingIsHome = null;
+        return $value;
     }
 
     /**

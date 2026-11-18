@@ -91,9 +91,13 @@ Route::group([
             Route::get('assets', 'Admin\AssetController@index');
             Route::post('assets', 'Admin\AssetController@upload');
 
-            // CMS pages and blog posts (custom editors, not Charon admin controllers)
-            \App\Http\Controllers\Admin\PageController::routes();
-            \App\Http\Controllers\Admin\PostController::routes();
+            // CMS pages and blog posts, each with its translations (the content per language)
+            \App\Http\Controllers\Admin\PageController::routes('pages', 'Admin\PageController');
+            \App\Http\Controllers\Admin\PageTranslationController::routes('pages/{page}/translations', 'Admin\PageTranslationController');
+            \App\Http\Controllers\Admin\PostController::routes('posts', 'Admin\PostController');
+            \App\Http\Controllers\Admin\PostTranslationController::routes('posts/{post}/translations', 'Admin\PostTranslationController');
+
+            // Image picker and uploads of the CMS widgets (json)
             \App\Http\Controllers\Admin\CmsAssetController::routes();
 
             Route::get('uitdb', 'Admin\UitDbController@index');

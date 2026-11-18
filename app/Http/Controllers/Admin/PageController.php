@@ -22,504 +22,265 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Cms\Blocks\BlockRegistry;
-use App\Cms\PageWriter;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\PageTranslationRequest;
-use App\Models\Organisation;
-use App\Models\Page;
-use App\Models\PageTranslation;
+use App\Http\Api\V1\ResourceDefinitions\Cms\PageTranslationResourceDefinition;
+use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Models\RESTResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use App\Cms\PageTree;
+use App\Cms\PageWriter;
+use App\Cms\Widgets\PageLinkWidget;
+use App\Cms\Widgets\ParentPageWidget;
+use App\Models\Page;
+use CatLab\Charon\Collections\ResourceCollection;
+use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Laravel\Table\Table;
 
 /**
- * Admin editor for CMS pages: the page tree, and one form per translation
- * with the section block editor. Not a Charon FrontCrudController: the block
- * editor (repeaters, rich text, image picker) does not fit the generated
- * forms. All writes go through App\Cms\PageWriter, like the API.
+ * CMS pages: the page itself (place in the tree, menu, footer, home page)
+ * is a Charon admin resource; its content lives in its translations
+ * (PageTranslationController), one per language, on the Talen tab.
  *
- * Every page is resolved within the acting admin's active organisation, and
- * a page of another organisation is a 404 (as in GuestRegistrationController).
- *
- * Class PageController
  * @package App\Http\Controllers\Admin
  */
-class PageController extends Controller
+class PageController extends CmsAdminController
 {
-    /**
-     * @var PageWriter
-     */
-    private $writer;
-
-    /**
-     * @param PageWriter $writer
-     */
-    public function __construct(PageWriter $writer)
+    public function __construct()
     {
-        $this->writer = $writer;
+        parent::__construct();
+
+        // The translations: a tab on the show page, links in the list.
+        $this->setChildController(PageTranslationResourceDefinition::class, PageTranslationController::class);
+
+        $this->widgets()
+            ->forField('parent_id', new ParentPageWidget())
+            ->forField('link', new PageLinkWidget());
     }
 
     /**
-     * Register the admin routes (inside the auth + admin group).
+     * @return \App\Http\Api\V1\Controllers\Cms\PageController
      */
-    public static function routes()
+    public function createApiController()
     {
-        $locales = implode('|', array_map('preg_quote', config('cms.locales')));
+        return new \App\Http\Api\V1\Controllers\Cms\PageController();
+    }
 
-        \Route::get('pages', 'Admin\PageController@index');
-        \Route::get('pages/create', 'Admin\PageController@create');
-        \Route::post('pages', 'Admin\PageController@store');
+    public static function getRouteIdParameterName(): string
+    {
+        return 'page';
+    }
 
-        \Route::get('pages/{page}/edit/{locale}', 'Admin\PageController@edit')
-            ->where([ 'page' => '[0-9]+', 'locale' => $locales ]);
-        \Route::put('pages/{page}/edit/{locale}', 'Admin\PageController@update')
-            ->where([ 'page' => '[0-9]+', 'locale' => $locales ]);
-
-        \Route::get('pages/{page}/translations/{locale}/create', 'Admin\PageController@createTranslation')
-            ->where([ 'page' => '[0-9]+', 'locale' => $locales ]);
-        \Route::post('pages/{page}/translations/{locale}/copy', 'Admin\PageController@copyTranslation')
-            ->where([ 'page' => '[0-9]+', 'locale' => $locales ]);
-        \Route::delete('pages/{page}/translations/{locale}', 'Admin\PageController@destroyTranslation')
-            ->where([ 'page' => '[0-9]+', 'locale' => $locales ]);
-
-        \Route::delete('pages/{page}', 'Admin\PageController@destroy')->where('page', '[0-9]+');
-        \Route::post('pages/{page}/home', 'Admin\PageController@setHome')->where('page', '[0-9]+');
-        \Route::post('pages/fixed-links', 'Admin\PageController@addFixedLinks');
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\Cms\PageController::RESOURCE_ID;
     }
 
     /**
-     * The page tree.
-     * @return \Illuminate\Contracts\View\View
-     */
-    public function index()
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('index', [ Page::class, $organisation ]);
-
-        $pages = Page::forOrganisation($organisation)
-            ->with('translations')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        return view('admin.cms.pages.index', [
-            'organisation' => $organisation,
-            'rows' => $this->tree($pages),
-            'unmanagedLinks' => array_values(array_diff(Page::FIXED_LINKS, $pages->pluck('link')->filter()->all())),
-            'locales' => config('cms.locales'),
-            'defaultLocale' => config('cms.default_locale'),
-        ]);
-    }
-
-    /**
-     * Form for a new page, starting with its default-locale translation.
-     * @return \Illuminate\Contracts\View\View
-     */
-    public function create()
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('create', [ Page::class, $organisation ]);
-
-        $page = new Page();
-        $page->organisation()->associate($organisation);
-        $page->setRelation('translations', new Collection());
-
-        $translation = new PageTranslation();
-        $translation->locale = config('cms.default_locale');
-        $translation->blocks = [];
-
-        return $this->form($organisation, $page, $translation);
-    }
-
-    /**
-     * @param PageTranslationRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(PageTranslationRequest $request)
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('create', [ Page::class, $organisation ]);
-
-        $locale = config('cms.default_locale');
-
-        $translation = $this->writer->createPage(
-            $organisation,
-            $request->pageAttributes(),
-            $locale,
-            $request->translationAttributes()
-        );
-
-        return $this->afterSave($request, $translation, 'De pagina is aangemaakt.');
-    }
-
-    /**
-     * @param int $pageId
-     * @param string $locale
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function edit($pageId, $locale)
-    {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        $translation = $page->translation($locale);
-        if (!$translation) {
-            return redirect(action('Admin\PageController@createTranslation', [ $page->id, $locale ]));
-        }
-
-        return $this->form($page->organisation, $page, $translation);
-    }
-
-    /**
-     * Save the page fields and the translation in $locale (creating it when
-     * it does not exist yet).
-     * @param PageTranslationRequest $request
-     * @param int $pageId
-     * @param string $locale
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(PageTranslationRequest $request, $pageId, $locale)
-    {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        $isNew = !$page->translation($locale);
-
-        $translation = \DB::transaction(function () use ($request, $page, $locale) {
-            $this->writer->updatePage($page, $request->pageAttributes());
-            return $this->writer->saveTranslation($page, $locale, $request->translationAttributes());
-        });
-
-        return $this->afterSave(
-            $request,
-            $translation,
-            $isNew ? 'De vertaling is aangemaakt.' : 'De pagina is opgeslagen.'
-        );
-    }
-
-    /**
-     * Form for a translation that does not exist yet.
-     * @param int $pageId
-     * @param string $locale
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function createTranslation($pageId, $locale)
-    {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        if ($page->translation($locale)) {
-            return redirect(action('Admin\PageController@edit', [ $page->id, $locale ]));
-        }
-
-        $translation = new PageTranslation();
-        $translation->locale = $locale;
-        $translation->blocks = [];
-
-        return $this->form($page->organisation, $page, $translation);
-    }
-
-    /**
-     * Create the $locale translation as an unpublished copy of another one.
+     * Listed and created within the active organisation.
      * @param Request $request
-     * @param int $pageId
-     * @param string $locale
-     * @return \Illuminate\Http\RedirectResponse
+     * @param $method
+     * @return array|null
      */
-    public function copyTranslation(Request $request, $pageId, $locale)
+    protected function getApiControllerParameters(Request $request, $method)
     {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        $this->validate($request, [
-            'from' => [ 'required', 'string', 'in:' . implode(',', config('cms.locales')) ],
-        ]);
-
-        $this->writer->copyTranslation($page, $request->input('from'), $locale);
-
-        return redirect(action('Admin\PageController@edit', [ $page->id, $locale ]))
-            ->with('message', 'De vertaling is gekopieerd. Ze is nog niet gepubliceerd.');
-    }
-
-    /**
-     * @param int $pageId
-     * @param string $locale
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroyTranslation($pageId, $locale)
-    {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        $translation = $page->translation($locale);
-        if (!$translation) {
-            abort(404);
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    'organisation' => $this->getActiveOrganisation($request)->id
+                ];
         }
 
-        $this->writer->deleteTranslation($translation);
-
-        return redirect(action('Admin\PageController@index'))
-            ->with('message', 'De vertaling "' . $locale . '" is verwijderd.');
+        return null;
     }
 
     /**
-     * @param int $pageId
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param $method
+     * @return array|null
      */
-    public function destroy($pageId)
+    protected function getAuthorizeParameters(Request $request, $method)
     {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('destroy', $page);
-
-        $this->writer->deletePage($page);
-
-        return redirect(action('Admin\PageController@index'))
-            ->with('message', 'De pagina is verwijderd.');
-    }
-
-    /**
-     * Add the fixed parts of the menu (quiz series, calendar, blog) that no
-     * menu link manages yet as menu links, at their current position and
-     * published in every language, so they can be moved, renamed or hidden.
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function addFixedLinks()
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('create', [ Page::class, $organisation ]);
-
-        $existing = Page::forOrganisation($organisation)->whereIn('link', Page::FIXED_LINKS)->pluck('link')->all();
-        $slugs = [ Page::LINK_SERIES => 'menu-quizreeksen', Page::LINK_CALENDAR => 'menu-kalender', Page::LINK_BLOG => 'menu-blog' ];
-        $defaultLocale = config('cms.default_locale');
-
-        foreach (Page::FIXED_LINK_POSITIONS as $link => $position) {
-            if (in_array($link, $existing, true)) {
-                continue;
-            }
-
-            $slug = $slugs[$link];
-            $taken = PageTranslation::forOrganisation($organisation)->pluck('path')->all();
-            for ($i = 2; in_array($slug, $taken, true); $i++) {
-                $slug = $slugs[$link] . '-' . $i;
-            }
-
-            $translation = $this->writer->createPage($organisation, [
-                'parent_id' => null,
-                'sort_order' => $position,
-                'show_in_menu' => true,
-                'show_in_footer' => false,
-                'link' => $link,
-            ], $defaultLocale, [
-                'slug' => $slug,
-                'title' => Page::FIXED_LINK_TITLES[$link][$defaultLocale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
-                'is_published' => true,
-                'blocks' => [],
-            ]);
-
-            // In every language, so the menu stays the same everywhere.
-            foreach (config('cms.locales') as $locale) {
-                if ($locale !== $defaultLocale) {
-                    $this->writer->saveTranslation($translation->page, $locale, [
-                        'slug' => $slug,
-                        'title' => Page::FIXED_LINK_TITLES[$link][$locale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
-                        'is_published' => true,
-                        'blocks' => [],
-                    ]);
-                }
-            }
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    $this->getActiveOrganisation($request)
+                ];
         }
+
+        return null;
+    }
+
+    protected function getEntityLabel(): string
+    {
+        return 'pagina';
+    }
+
+    protected function getIndexTitle(): string
+    {
+        return 'Pagina\'s';
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getResourceTitle(Request $request, RESTResource $resource): string
+    {
+        $title = $resource->toArray()['title'] ?? null;
+
+        return is_string($title) && $title !== ''
+            ? $title
+            : ucfirst($this->getEntityLabel()) . ' #' . $this->idOf($resource) . ' (zonder vertaling)';
+    }
+
+    /**
+     * A translation in the list links straight to its editor.
+     * @param Request $request
+     * @param RESTResource $related
+     * @return string|null
+     */
+    protected function getRelatedResourceUrl(Request $request, RESTResource $related)
+    {
+        if (!($related->getResourceDefinition() instanceof PageTranslationResourceDefinition)) {
+            return parent::getRelatedResourceUrl($request, $related);
+        }
+
+        $parentId = $related->toArray()['page_id'] ?? null;
+        if (!$parentId || !$request->user() || !$request->user()->can(Action::EDIT, $related->getSource())) {
+            return null;
+        }
+
+        return action('Admin\PageTranslationController@edit', [ 'page' => $parentId, 'id' => $this->idOf($related) ]);
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $related
+     * @return string|null
+     */
+    protected function getRelatedResourceLabel(Request $request, RESTResource $related): ?string
+    {
+        if ($related->getResourceDefinition() instanceof PageTranslationResourceDefinition) {
+            return $this->translationLabel($related);
+        }
+
+        return parent::getRelatedResourceLabel($request, $related);
+    }
+
+    /**
+     * A new pagina has no content yet: on to its first translation.
+     * @param Request $request
+     * @param RESTResource $newResource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function afterStore(Request $request, RESTResource $newResource)
+    {
+        \Session::flash('message', 'Pagina toegevoegd. Vul nu de inhoud in.');
+
+        return redirect(action('Admin\PageTranslationController@create', [ 'page' => $this->idOf($newResource) ]));
+    }
+
+    /**
+     * @param $path
+     * @param $controller
+     */
+    public static function routes($path, $controller)
+    {
+        \Route::post($path . '/fixed-links', $controller . '@addFixedLinks');
+
+        static::traitRoutes($path, $controller);
+    }
+
+    /**
+     * The list, with the offer to manage the fixed parts of the menu
+     * (quiz series, calendar, blog) as menu links while some aren't.
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function index(Request $request)
+    {
+        // The whole tree on one page.
+        if (!$request->query->has('records')) {
+            $request->query->set('records', 500);
+        }
+
+        $view = parent::index($request);
+
+        $managed = Page::forOrganisation($this->getActiveOrganisation($request))
+            ->whereIn('link', Page::FIXED_LINKS)
+            ->pluck('link')
+            ->all();
+
+        return $view->with('unmanagedLinks', array_values(array_diff(Page::FIXED_LINKS, $managed)));
+    }
+
+    /**
+     * Add the fixed parts of the menu that no menu link manages yet as menu
+     * links, so they can be moved, renamed or hidden.
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addFixedLinks(Request $request)
+    {
+        $organisation = $this->getActiveOrganisation($request);
+        $this->authorize(Action::CREATE, [ Page::class, $organisation ]);
+
+        app(PageWriter::class)->addFixedLinks($organisation);
 
         return redirect(action('Admin\PageController@index'))
             ->with('message', 'De vaste onderdelen staan nu als menulinks in de lijst.');
     }
 
     /**
-     * "Stel in als startpagina" (or, with `clear`, stop using it as such).
+     * The list of pages is a tree: children follow their parent, indented.
      * @param Request $request
-     * @param int $pageId
-     * @return \Illuminate\Http\RedirectResponse
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
      */
-    public function setHome(Request $request, $pageId)
-    {
-        $page = $this->getPageInOrganisation($pageId);
-        $this->authorize('edit', $page);
-
-        $organisation = $page->organisation;
-
-        if ($request->input('clear')) {
-            if ((int) $organisation->home_page_id === (int) $page->id) {
-                $this->writer->setHomePage($organisation, null);
+    public function getTableForResourceCollection(
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        $pages = [];
+        foreach ($collection as $resource) {
+            if ($resource->getSource() instanceof Page) {
+                $pages[] = $resource->getSource();
             }
-            $message = 'De organisatie heeft geen CMS-startpagina meer; / toont weer de kalender.';
-        } else {
-            $this->writer->setHomePage($organisation, $page);
-            $message = 'Deze pagina is nu de startpagina.';
         }
 
-        return redirect(action('Admin\PageController@index'))->with('message', $message);
-    }
+        $tree = app(PageTree::class);
+        $rows = $tree->rows($pages);
+        $position = array_flip(array_keys($rows));
 
-    /**
-     * @param Request $request
-     * @param PageTranslation $translation
-     * @param string $message
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    protected function afterSave(Request $request, PageTranslation $translation, string $message)
-    {
-        if ($request->input('preview')) {
-            return redirect($translation->getUrl() . '?preview=1');
-        }
-
-        return redirect(action('Admin\PageController@edit', [ $translation->page_id, $translation->locale ]))
-            ->with('message', $message);
-    }
-
-    /**
-     * @param Organisation $organisation
-     * @param Page $page
-     * @param PageTranslation $translation
-     * @return \Illuminate\Contracts\View\View
-     */
-    protected function form(Organisation $organisation, Page $page, PageTranslation $translation)
-    {
-        $translations = $page->exists ? $page->translations()->get()->keyBy('locale') : collect();
-
-        $blocks = old('blocks', $translation->blocks);
-
-        return view('admin.cms.pages.edit', [
-            'organisation' => $organisation,
-            'page' => $page,
-            'translation' => $translation,
-            'translations' => $translations,
-            'locale' => $translation->locale,
-            'locales' => config('cms.locales'),
-            'defaultLocale' => config('cms.default_locale'),
-            'blocks' => is_array($blocks) ? array_values(array_filter($blocks, 'is_array')) : [],
-            'blockTypes' => app(BlockRegistry::class)->all(),
-            'parentOptions' => $this->parentOptions($organisation, $page),
-            'isHome' => $page->exists && (int) $organisation->home_page_id === (int) $page->id,
-        ]);
-    }
-
-    /**
-     * Pages that can be the parent of $page (not itself or a descendant),
-     * in tree order.
-     * @param Organisation $organisation
-     * @param Page $page
-     * @return array[] [ 'page' => Page, 'depth' => int, 'title' => string ]
-     */
-    protected function parentOptions(Organisation $organisation, Page $page)
-    {
-        $pages = Page::forOrganisation($organisation)
-            ->with('translations')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        $rows = $this->tree($pages);
-
-        if (!$page->exists) {
-            return $rows;
-        }
-
-        $out = [];
-        $skipBelowDepth = null;
-        foreach ($rows as $row) {
-            if ($skipBelowDepth !== null) {
-                if ($row['depth'] > $skipBelowDepth) {
-                    continue;
-                }
-                $skipBelowDepth = null;
-            }
-
-            if ((int) $row['page']->id === (int) $page->id) {
-                $skipBelowDepth = $row['depth'];
-                continue;
-            }
-
-            $out[] = $row;
-        }
-
-        return $out;
-    }
-
-    /**
-     * Depth-first list of the pages with their depth. Pages whose parent is
-     * gone (deleted) are shown at the top level.
-     * @param Collection $pages
-     * @return array[]
-     */
-    protected function tree(Collection $pages)
-    {
-        $ids = $pages->pluck('id')->all();
-        $byParent = $pages->groupBy(function (Page $page) use ($ids) {
-            return $page->parent_id && in_array($page->parent_id, $ids) ? $page->parent_id : 0;
+        $collection->sort(function (RESTResource $a, RESTResource $b) use ($position) {
+            return ($position[$this->idOf($a)] ?? PHP_INT_MAX) <=> ($position[$this->idOf($b)] ?? PHP_INT_MAX);
         });
 
-        $rows = [];
-        $walk = function ($parentId, $depth) use (&$walk, &$rows, $byParent) {
-            foreach ($byParent->get($parentId, []) as $page) {
-                $rows[] = [
-                    'page' => $page,
-                    'depth' => $depth,
-                    'title' => $this->pageTitle($page),
-                ];
-                if ($depth < 20) {
-                    $walk($page->id, $depth + 1);
+        foreach ($collection as $resource) {
+            $row = $rows[$this->idOf($resource)] ?? null;
+            foreach ($resource->getProperties()->getResourceFields()->getValues() as $property) {
+                if ($row && $row['depth'] > 0 && $property->getField()->getDisplayName() === 'title') {
+                    $property->setValue(str_repeat('— ', $row['depth']) . $property->getValue());
                 }
             }
-        };
-        $walk(0, 0);
+        }
 
-        return $rows;
+        return parent::getTableForResourceCollection($request, $collection, $resourceDefinition, $context);
     }
 
     /**
-     * The default-locale title, else the first translation's, else a placeholder.
-     * @param Page $page
+     * @param $action
      * @return string
      */
-    protected function pageTitle(Page $page)
+    protected function getView($action)
     {
-        $translation = $page->translation(config('cms.default_locale')) ?: $page->translations->first();
-
-        return $translation ? $translation->title : ('Pagina #' . $page->id . ' (zonder vertaling)');
-    }
-
-    /**
-     * @return Organisation
-     */
-    protected function getActiveOrganisation()
-    {
-        $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$organisation) {
-            abort(404);
-        }
-
-        return $organisation;
-    }
-
-    /**
-     * The page, or 404. Scoped to the acting admin's active organisation and
-     * an admin role within it, like GuestRegistrationController.
-     * @param int $pageId
-     * @return Page
-     */
-    protected function getPageInOrganisation($pageId)
-    {
-        /** @var Page $page */
-        $page = Page::findOrFail($pageId);
-
-        $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$organisation
-            || (int) $page->organisation_id !== (int) $organisation->id
-            || !$organisation->isAdmin(\Auth::user())) {
-            abort(404);
-        }
-
-        $page->setRelation('organisation', $organisation);
-
-        return $page;
+        return $action === 'index' ? 'admin.cms.pages.index' : parent::getView($action);
     }
 }

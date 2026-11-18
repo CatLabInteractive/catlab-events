@@ -42,16 +42,37 @@ class PageTranslationResourceDefinition extends BaseResourceDefinition
 
         $this->identifier('id');
 
+        $this->field('page_id')
+            ->number()
+            ->describe('Id of the page. Read only.')
+            ->visible(true, true);
+
         $this->field('locale')
             ->enum(config('cms.locales'))
-            ->describe('Language; set on create only.')
+            ->label('Taal')
+            ->describe('De taal; ligt vast na het aanmaken.')
             ->filterable()
             ->visible(true, true)
             ->writeable(true, false);
 
+        // Create only: start from an unpublished copy of another translation
+        // of the page. Fields that are sent too win over the copied ones.
+        $this->field('copy_from')
+            ->enum(config('cms.locales'))
+            ->label('Kopieer uit')
+            ->describe('Begin met een kopie van een andere taal van deze pagina. Wat je hieronder zelf invult, gaat voor.')
+            ->writeable(true, false);
+
+        $this->field('title')
+            ->string()
+            ->label('Titel')
+            ->visible(true, true)
+            ->writeable(true, true);
+
         $this->field('slug')
             ->string()
-            ->describe('Last segment of the path: lowercase letters, digits and dashes.')
+            ->label('Adres')
+            ->describe('Het laatste deel van het adres: kleine letters, cijfers en koppeltekens, bv. over-ons.')
             ->visible(true, true)
             ->writeable(true, true);
 
@@ -65,29 +86,9 @@ class PageTranslationResourceDefinition extends BaseResourceDefinition
             ->describe('Public URL. Read only.')
             ->visible(true, true);
 
-        $this->field('title')
-            ->string()
-            ->visible(true, true)
-            ->writeable(true, true);
-
-        $this->field('meta_title')
-            ->string()
-            ->visible()
-            ->writeable(true, true);
-
-        $this->field('meta_description')
-            ->string()
-            ->visible()
-            ->writeable(true, true);
-
-        $this->field('og_image_id')
-            ->number()
-            ->describe('Asset id of the share image; an asset of the same organisation.')
-            ->visible()
-            ->writeable(true, true);
-
         $this->field('is_published')
             ->bool()
+            ->label('Gepubliceerd')
             ->filterable()
             ->visible(true, true)
             ->writeable(true, true);
@@ -99,7 +100,29 @@ class PageTranslationResourceDefinition extends BaseResourceDefinition
         $this->field('blocks')
             ->object()
             ->array()
+            ->label('Secties')
             ->describe('Section blocks: a list of { "id": 6 hex characters, "type": block type, "data": { ... } }.')
+            ->visible()
+            ->writeable(true, true);
+
+        $this->field('meta_title')
+            ->string()
+            ->label('SEO-titel')
+            ->describe('Leeg: de titel van de pagina.')
+            ->visible()
+            ->writeable(true, true);
+
+        $this->field('meta_description')
+            ->string()
+            ->label('SEO-beschrijving')
+            ->describe('Leeg: het begin van de eerste tekst.')
+            ->visible()
+            ->writeable(true, true);
+
+        $this->field('og_image_id')
+            ->number()
+            ->label('Deelafbeelding')
+            ->describe('Asset id of the share image; an asset of the same organisation.')
             ->visible()
             ->writeable(true, true);
     }

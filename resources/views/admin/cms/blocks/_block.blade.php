@@ -2,10 +2,10 @@
     One section block in the editor: frame, hidden id/type and the type's
     own fields. Also rendered inside <template> with $i = '__INDEX__' and
     id '__ID__' (cms-editor.js fills those in).
-    $i, $block ([id, type, data]), $blockType (BlockType)
+    $i, $block ([id, type, data]), $blockType (BlockType), $blocksName (name prefix, 'fields[blocks]')
 --}}
 @php
-    $blockName = 'blocks[' . $i . ']';
+    $blockName = ($blocksName ?? 'blocks') . '[' . $i . ']';
     $blockError = 'blocks.' . $i;
     $blockData = is_array($block['data'] ?? null) ? $block['data'] : [];
 @endphp

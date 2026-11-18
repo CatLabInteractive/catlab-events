@@ -40,16 +40,29 @@ class PostTranslationResourceDefinition extends BaseResourceDefinition
 
         $this->identifier('id');
 
+        $this->field('post_id')
+            ->number()
+            ->describe('Id of the post. Read only.')
+            ->visible(true, true);
+
         $this->field('locale')
             ->enum(config('cms.locales'))
-            ->describe('Language; set on create only.')
+            ->label('Taal')
+            ->describe('De taal; ligt vast na het aanmaken.')
             ->filterable()
             ->visible(true, true)
             ->writeable(true, false);
 
+        $this->field('title')
+            ->string()
+            ->label('Titel')
+            ->visible(true, true)
+            ->writeable(true, true);
+
         $this->field('slug')
             ->string()
-            ->describe('Last segment of the URL: lowercase letters, digits and dashes; unique per organisation and locale.')
+            ->label('Adres')
+            ->describe('Het laatste deel van het adres (/jjjj/mm/dd/…): kleine letters, cijfers en koppeltekens, bv. quiz-van-het-jaar. Uniek per taal.')
             ->visible(true, true)
             ->writeable(true, true);
 
@@ -58,41 +71,42 @@ class PostTranslationResourceDefinition extends BaseResourceDefinition
             ->describe('Public URL (/{locale/}YYYY/MM/DD/slug). Read only.')
             ->visible(true, true);
 
-        $this->field('title')
-            ->string()
-            ->visible(true, true)
-            ->writeable(true, true);
-
         $this->field('excerpt')
             ->string()
-            ->describe('Plain text summary, shown in lists and used as meta description.')
+            ->label('Samenvatting')
+            ->describe('Gewone tekst, getoond in de lijst van berichten en gebruikt als SEO-beschrijving.')
             ->visible(true, true)
             ->writeable(true, true);
 
         $this->field('author')
             ->string()
-            ->describe('Free text byline; empty shows the organisation name.')
+            ->label('Auteur')
+            ->describe('Leeg: de naam van de organisatie.')
             ->visible(true, true)
             ->writeable(true, true);
 
         $this->field('body')
             ->string()
-            ->describe('HTML; sanitised on write (scripts, event handlers, styles and foreign images are removed).')
+            ->label('Tekst')
+            ->describe('HTML; wordt bij het opslaan opgeschoond (scripts, event handlers, stijlen en vreemde afbeeldingen verdwijnen).')
             ->visible()
             ->writeable(true, true);
 
         $this->field('meta_title')
             ->string()
+            ->label('SEO-titel')
             ->visible()
             ->writeable(true, true);
 
         $this->field('meta_description')
             ->string()
+            ->label('SEO-beschrijving')
             ->visible()
             ->writeable(true, true);
 
         $this->field('is_published')
             ->bool()
+            ->label('Gepubliceerd')
             ->filterable()
             ->visible(true, true)
             ->writeable(true, true);

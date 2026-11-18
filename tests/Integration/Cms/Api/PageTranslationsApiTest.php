@@ -86,6 +86,36 @@ class PageTranslationsApiTest extends IntegrationTestCase
             ->assertJsonPath('blocks.1.type', 'rich_text');
     }
 
+    public function testCopyFromStartsFromAnotherTranslation()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
+
+        $this->actingAs($admin)
+            ->postJson('/api/v1/pages/' . $page->id . '/translations', $this->translationInput())
+            ->assertStatus(201);
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/pages/' . $page->id . '/translations', [ 'locale' => 'en', 'copy_from' => 'nl', 'title' => 'About us' ]);
+        $response->assertStatus(201);
+        $response->assertJsonPath('page_id', $page->id);
+        $response->assertJsonPath('title', 'About us');
+        $response->assertJsonPath('slug', 'over-ons');
+        $response->assertJsonPath('is_published', false);
+
+        $nl = $page->fresh()->translation('nl');
+        $en = $page->fresh()->translation('en');
+        $this->assertCount(2, $en->blocks);
+        $this->assertSame($nl->blocks[0]['data'], $en->blocks[0]['data']);
+        $this->assertNotSame($nl->blocks[0]['id'], $en->blocks[0]['id']);
+
+        // Nothing to copy from.
+        $this->actingAs($admin)
+            ->postJson('/api/v1/pages/' . $page->id . '/translations', [ 'locale' => 'fr', 'copy_from' => 'fr' ])
+            ->assertStatus(422);
+    }
+
     public function testPublishAndEdit()
     {
         $organisation = $this->createOrganisation();
