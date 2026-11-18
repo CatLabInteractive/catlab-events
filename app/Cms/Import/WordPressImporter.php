@@ -107,6 +107,12 @@ class WordPressImporter
     private $planned = [];
 
     /**
+     * Replace the blocks of imported pages that are still unpublished.
+     * @var bool
+     */
+    private $rebuild = false;
+
+    /**
      * WordPress page id => planned path, for the children's paths.
      * @var string[]
      */
@@ -156,8 +162,9 @@ class WordPressImporter
      * @param string|null $home slug of the page to make the organisation's home page
      * @param bool $dryRun
      */
-    public function importPages(Organisation $organisation, array $skip = self::DEFAULT_SKIP, ?string $home = null, bool $dryRun = false): void
+    public function importPages(Organisation $organisation, array $skip = self::DEFAULT_SKIP, ?string $home = null, bool $dryRun = false, bool $rebuild = false): void
     {
+        $this->rebuild = $rebuild;
         $items = [];
         foreach ($this->paginate('/wp-json/wp/v2/pages') as $item) {
             $slug = (string) ($item['slug'] ?? '');
@@ -390,8 +397,10 @@ class WordPressImporter
             ->where('organisation_id', '=', $organisation->id)
             ->where('wp_post_id', '=', $wpId)
             ->first();
-        if ($existing) {
-            // Editors rebuild imported pages: a re-run never overwrites them.
+        $existingTranslation = $existing && !$existing->trashed() ? $existing->translation(self::LOCALE) : null;
+        if ($existing && !($this->rebuild && $existingTranslation && !$existingTranslation->is_published)) {
+            // Editors rebuild imported pages: a re-run never overwrites them
+            // (--rebuild-pages replaces the blocks of unpublished ones).
             $this->report->items[] = 'kept page ' . $wpId . ' (' . $slug . ', already imported)';
             return $existing->trashed() ? null : $existing;
         }
@@ -413,35 +422,92 @@ class WordPressImporter
         $body = $this->body($html, true, $organisation, $dryRun);
         $this->reportDropped('page ' . $wpId, $body, $dryRun);
 
+        $flat = [ [ 'id' => PageWriter::newBlockId(), 'type' => 'rich_text', 'data' => [ 'html' => $body ] ] ];
+        $blocks = $this->elementorBlocks($html, $wpId, $organisation, $dryRun) ?? $flat;
+        $summary = implode(', ', array_map(function ($block) {
+            return $block['type'];
+        }, $blocks));
+
         if ($dryRun) {
-            $this->report->items[] = 'would create page ' . $wpId . ' (' . $slug . ', unpublished)';
+            $this->report->items[] = 'would ' . ($existing ? 'rebuild' : 'create') . ' page ' . $wpId . ' (' . $slug . ', unpublished): ' . $summary;
             return null;
         }
 
-        $page = DB::transaction(function () use ($organisation, $wpId, $slug, $item, $parentId, $body) {
-            $translation = $this->pages->createPage($organisation, [
-                'parent_id' => $parentId,
-                'sort_order' => (int) ($item['menu_order'] ?? 0),
-                'show_in_menu' => false,
-            ], self::LOCALE, [
-                'slug' => $slug,
-                'title' => Str::limit($this->text($item['title']['rendered'] ?? ''), 250, '…') ?: $slug,
-                'is_published' => false,
-                'blocks' => [
-                    [ 'id' => PageWriter::newBlockId(), 'type' => 'rich_text', 'data' => [ 'html' => $body ] ],
-                ],
-            ]);
+        $title = Str::limit($this->text($item['title']['rendered'] ?? ''), 250, '…') ?: $slug;
+        $save = function (array $blocks) use ($organisation, $existing, $wpId, $slug, $item, $parentId, $title) {
+            return DB::transaction(function () use ($organisation, $existing, $wpId, $slug, $item, $parentId, $title, $blocks) {
+                if ($existing) {
+                    $this->pages->saveTranslation($existing, self::LOCALE, [ 'blocks' => $blocks ]);
+                    return $existing;
+                }
 
-            $page = $translation->page;
-            $page->wp_post_id = $wpId;
-            $page->save();
+                $translation = $this->pages->createPage($organisation, [
+                    'parent_id' => $parentId,
+                    'sort_order' => (int) ($item['menu_order'] ?? 0),
+                    'show_in_menu' => false,
+                ], self::LOCALE, [
+                    'slug' => $slug,
+                    'title' => $title,
+                    'is_published' => false,
+                    'blocks' => $blocks,
+                ]);
 
-            return $page;
-        });
+                $page = $translation->page;
+                $page->wp_post_id = $wpId;
+                $page->save();
 
-        $this->report->items[] = 'created page ' . $wpId . ' → /' . $page->translation(self::LOCALE)->path . ' (unpublished)';
+                return $page;
+            });
+        };
+
+        try {
+            $page = $save($blocks);
+        } catch (ValidationException $e) {
+            if ($blocks === $flat) {
+                throw $e;
+            }
+            $this->report->warnings[] = 'page ' . $wpId . ': blocks not valid (' . implode(' ', array_merge(...array_values($e->errors())))
+                . '), imported as one text block';
+            $summary = 'rich_text';
+            $page = $save($flat);
+        }
+
+        $this->report->items[] = ($existing ? 'rebuilt' : 'created') . ' page ' . $wpId . ' → /' . $page->translation(self::LOCALE)->path . ' (unpublished): ' . $summary;
 
         return $page;
+    }
+
+    /**
+     * Blocks for an Elementor page, or null when it is not one. Section
+     * colours and background photos come from the CSS Elementor generates
+     * for the page (uploads/elementor/css/post-N.css).
+     * @param string $html
+     * @param int $wpId
+     * @param Organisation $organisation
+     * @param bool $dryRun
+     * @return array|null
+     */
+    private function elementorBlocks(string $html, int $wpId, Organisation $organisation, bool $dryRun): ?array
+    {
+        if (strpos($html, 'data-element_type') === false) {
+            return null;
+        }
+
+        $css = $this->get('/wp-content/uploads/elementor/css/post-' . $wpId . '.css');
+        $styles = new ElementorStyles($css ? $css->body() : '', $organisation->getColourPalette());
+
+        $converter = new ElementorConverter(
+            $this->site,
+            function (string $url) use ($organisation, $dryRun) {
+                return $this->media->import($url, $organisation, $dryRun);
+            },
+            function (string $fragment) use ($organisation, $dryRun) {
+                return $this->body($fragment, true, $organisation, $dryRun);
+            },
+            $styles
+        );
+
+        return $converter->convert($html);
     }
 
     /**

@@ -31,5 +31,9 @@
             'error' => $blockError . '.data',
             'data' => $blockData,
         ])
+
+        @if($blockType->hasColour())
+            @include('admin.cms.blocks._colour_field', [ 'field' => [ 'label' => 'Achtergrond', 'name' => $blockName . '[data][colour]', 'value' => $blockData['colour'] ?? '', 'error' => $blockError . '.data.colour', 'none' => 'Geen (pagina-achtergrond)' ] ])
+        @endif
     </div>
 </div>

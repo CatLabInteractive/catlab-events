@@ -50,9 +50,13 @@ class Cards extends BlockType
             'title' => [ 'nullable', 'string', 'max:120' ],
             'intro' => [ 'nullable', 'string', 'max:500' ],
             'columns' => [ 'required', 'integer', 'between:2,4' ],
+            // tiles: coloured tiles; people: round photos (a team);
+            // panels: each card a colour panel, image on top (prices, offers).
+            'style' => [ 'nullable', 'in:tiles,people,panels' ],
             'items' => [ 'nullable', 'array', 'max:12' ],
             'items.*.title' => [ 'required', 'string', 'max:120' ],
-            'items.*.text' => [ 'nullable', 'string', 'max:500' ],
+            'items.*.text' => [ 'nullable', 'string', 'max:1000' ],
+            'items.*.colour' => $this->colourRule(),
             // Font Awesome 4 icon name without the 'fa-' prefix, e.g. 'trophy'.
             'items.*.icon' => [ 'nullable', 'string', 'max:40', 'regex:/^[a-z0-9\-]+$/' ],
             'items.*.image_id' => [ 'nullable', 'integer' ],
@@ -67,17 +71,19 @@ class Cards extends BlockType
 
     public function defaults(): array
     {
-        return [ 'title' => '', 'intro' => '', 'columns' => 3, 'items' => [] ];
+        return [ 'title' => '', 'intro' => '', 'columns' => 3, 'style' => 'tiles', 'items' => [] ];
     }
 
     public function prepare(array $data, BlockContext $context): ?array
     {
         $columns = (int) ($data['columns'] ?? 3);
         $data['columns'] = max(2, min(4, $columns));
+        $data['style'] = in_array($data['style'] ?? null, [ 'people', 'panels' ], true) ? $data['style'] : 'tiles';
 
         $data['items'] = array_map(function (array $item) {
             $item['image'] = $this->resolveAsset($item['image_id'] ?? null);
             $item['url'] = SafeUrl::isSafe($item['url'] ?? null) ? $item['url'] : null;
+            $item['colour'] = self::colour($item['colour'] ?? null);
             $item['icon'] = preg_match('/^[a-z0-9\-]+$/', (string) ($item['icon'] ?? '')) ? $item['icon'] : null;
             return $item;
         }, $this->listOfArrays($data['items'] ?? []));

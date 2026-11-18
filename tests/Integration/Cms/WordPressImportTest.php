@@ -64,6 +64,8 @@ class WordPressImportTest extends IntegrationTestCase
                     return Http::response(base64_decode(self::GIF), 200, [ 'Content-Type' => 'image/jpeg' ]);
                 case '/wp-content/uploads/2019/03/vragen.pdf':
                     return Http::response("%PDF-1.4\n%fake\n", 200, [ 'Content-Type' => 'application/pdf' ]);
+                case '/wp-content/uploads/elementor/css/post-206.css':
+                    return Http::response(file_get_contents(__DIR__ . '/fixtures/wp-elementor-page.css'), 200, [ 'Content-Type' => 'text/css' ]);
                 case '/wp-sitemap.xml':
                     return Http::response(
                         '<?xml version="1.0"?><sitemapindex>'
@@ -201,7 +203,7 @@ class WordPressImportTest extends IntegrationTestCase
 
         $this->import([ '--organisation' => $organisation->id, '--pages' => true, '--home' => 'over-ons' ])->assertExitCode(0);
 
-        $this->assertDatabaseCount('pages', 3);
+        $this->assertDatabaseCount('pages', 4);
         $this->assertNull(Page::where('wp_post_id', 203)->first(), '-nieuw pages are skipped');
 
         // "blog" is a route of the ticket site.
@@ -231,6 +233,112 @@ class WordPressImportTest extends IntegrationTestCase
 
         // Unpublished: not served.
         $this->get('/over-ons/team')->assertStatus(404);
+    }
+
+    public function testElementorPagesBecomeBlocks()
+    {
+        $organisation = $this->createOrganisation();
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ])->assertExitCode(0);
+
+        $blocks = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl')->blocks;
+        $this->assertSame(
+            [ 'hero', 'text_image', 'reviews', 'cards', 'text_image', 'upcoming_events', 'cards', 'rich_text' ],
+            array_column($blocks, 'type')
+        );
+
+        [ $hero, $textImage, $reviews, $cards, $video, $events, $panels, $text ] = array_column($blocks, 'data');
+
+        $winnaars = Asset::query()->where('name', 'winnaars.jpg')->firstOrFail();
+
+        $this->assertSame('De perfecte quiz', $hero['title']);
+        $this->assertSame('Voor iedereen een quiz.', $hero['subtitle']);
+        // The section's background photo (from the page's Elementor CSS).
+        $this->assertSame($winnaars->id, $hero['image_id']);
+        $this->assertSame('cover', $hero['image_style']);
+        // Links to the site become paths; ALL CAPS labels sentence case.
+        // assertEquals: MySQL's JSON column reorders keys, MariaDB keeps them.
+        $this->assertEquals([ [ 'label' => 'Evenementen', 'url' => '/', 'style' => 'primary' ] ], $hero['buttons']);
+
+        $foto = Asset::query()->where('name', 'foto.jpg')->firstOrFail();
+        $this->assertSame('Quizevenementen', $textImage['title']);
+        $this->assertSame($foto->id, $textImage['image_id'], 'lazy image, original of the resize');
+        $this->assertSame('left', $textImage['image_position']);
+        $this->assertSame('<p>Een paar keer per jaar.</p>', $textImage['html'], 'a duplicated text once');
+        $this->assertEquals([ 'label' => 'Meer', 'url' => '/evenementen' ], $textImage['button']);
+        $this->assertSame('3', $textImage['panel_colour'], 'the rose text column, as palette colour 4');
+
+        // Two quote sections merged into one reviews block.
+        $this->assertSame([ 'Een topavond.', 'Heel vlot.' ], array_column($reviews['items'], 'quote'));
+        $this->assertSame([ 'An Peeters, HR', 'Jan Janssens' ], array_column($reviews['items'], 'author'));
+        $this->assertSame([ $winnaars->id, $foto->id ], array_column($reviews['items'], 'image_id'), 'the photos become logos');
+        $this->assertSame([ '2', 'peach' ], array_column($reviews['items'], 'colour'));
+
+        $this->assertSame(2, $cards['columns']);
+        $this->assertSame([ 'Quizwitz', 'Gud Nuse' ], array_column($cards['items'], 'title'));
+        $this->assertSame('https://www.quizwitz.com/', $cards['items'][0]['url']);
+        $this->assertNotNull($cards['items'][1]['image_id']);
+
+        // A video next to text: the text with the video beside it.
+        $this->assertSame('Missie', $video['title']);
+        $this->assertSame('https://www.youtube.com/watch?v=-mH8ZUo5XZc', $video['youtube_url']);
+        $this->assertSame('3', $video['panel_colour']);
+        $this->assertNull($video['image_id']);
+
+        // The hand-made list of coming events is the live list (in the
+        // section's colour, not the phone one); past ones go.
+        $this->assertSame('Komende evenementen', $events['title']);
+        $this->assertSame('2', $events['colour']);
+
+        // Coloured boxes with a heading: cards as colour panels.
+        $this->assertSame('De ultieme teambuilding', $panels['title']);
+        $this->assertSame('panels', $panels['style']);
+        $this->assertSame([ 'Unieke quiz', 'Op maat' ], array_column($panels['items'], 'title'));
+        $this->assertSame([ '1', '2' ], array_column($panels['items'], 'colour'));
+        $this->assertSame("€ 2200\nHelemaal nieuw.", $panels['items'][0]['text']);
+
+        $this->assertStringContainsString('<h2>Contact</h2>', $text['html']);
+        $this->assertStringContainsString('<li>Quizzen van overal</li>', $text['html']);
+        $this->assertStringNotContainsString('script', $text['html']);
+
+        // It renders.
+        $translation = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl');
+        $translation->is_published = true;
+        $translation->save();
+        $this->get('/quizzen')->assertStatus(200)
+            ->assertSee('De perfecte quiz')
+            ->assertSee('Een topavond.')
+            ->assertSee('kv-cms-hero-cover', false)
+            ->assertSee('kv-cms-reviews-list', false)
+            ->assertSee('kv-cms-cards-panels', false)
+            ->assertSee('youtube-nocookie.com/embed/-mH8ZUo5XZc', false)
+            ->assertSee('kv-cms-band kv-field-2', false);
+    }
+
+    public function testRebuildPagesReplacesOnlyUnpublishedPages()
+    {
+        $organisation = $this->createOrganisation();
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ]);
+
+        $draft = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl');
+        $draft->blocks = [ [ 'id' => 'abcdef', 'type' => 'rich_text', 'data' => [ 'html' => '<p>Oud</p>' ] ] ];
+        $draft->save();
+
+        $published = Page::where('wp_post_id', 201)->firstOrFail()->translation('nl');
+        $published->blocks = [ [ 'id' => 'abcdef', 'type' => 'rich_text', 'data' => [ 'html' => '<p>Herwerkt</p>' ] ] ];
+        $published->is_published = true;
+        $published->save();
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true ])->assertExitCode(0);
+        $this->assertSame('<p>Oud</p>', $draft->fresh()->blocks[0]['data']['html'], 'without --rebuild-pages nothing changes');
+
+        $this->import([ '--organisation' => $organisation->id, '--pages' => true, '--rebuild-pages' => true ])
+            ->expectsOutputToContain('rebuilt page 206')
+            ->assertExitCode(0);
+
+        $this->assertSame('hero', $draft->fresh()->blocks[0]['type']);
+        $this->assertSame('<p>Herwerkt</p>', $published->fresh()->blocks[0]['data']['html'], 'published pages are kept');
+        $this->assertDatabaseCount('pages', 4);
     }
 
     public function testRedirectsListsUnmappedSitemapUrls()
@@ -263,7 +371,8 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertSame(0, Asset::query()->count());
         $this->assertNull($organisation->fresh()->home_page_id);
         $this->assertEmpty(array_filter($this->requested, function ($url) {
-            return strpos($url, '/wp-content/uploads/') !== false;
+            // Elementor's CSS (colours) is read; no media is downloaded.
+            return strpos($url, '/wp-content/uploads/') !== false && strpos($url, '/uploads/elementor/css/') === false;
         }), 'a dry run downloads nothing');
     }
 

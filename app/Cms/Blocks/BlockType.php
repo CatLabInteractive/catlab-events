@@ -56,6 +56,51 @@ abstract class BlockType
     abstract public function rules(): array;
 
     /**
+     * Colours a block (or one of its items) can take: an index of the
+     * organisation's palette, or 'peach' for the light band colour.
+     */
+    const COLOURS = [ 'peach', '0', '1', '2', '3', '4', '5' ];
+
+    /**
+     * Whether the block can be a full-width colour band (data.colour).
+     * @return bool
+     */
+    public function hasColour(): bool
+    {
+        return true;
+    }
+
+    /**
+     * rules() plus the shared section options (colour).
+     * @return array
+     */
+    public function allRules(): array
+    {
+        return $this->hasColour()
+            ? array_merge($this->rules(), [ 'colour' => $this->colourRule() ])
+            : $this->rules();
+    }
+
+    /**
+     * @return array
+     */
+    protected function colourRule(): array
+    {
+        return [ 'nullable', 'string', 'in:' . implode(',', self::COLOURS) ];
+    }
+
+    /**
+     * A stored colour, or null when unset or no longer valid.
+     * @param mixed $colour
+     * @return string|null
+     */
+    public static function colour($colour): ?string
+    {
+        $colour = is_int($colour) ? (string) $colour : $colour;
+        return is_string($colour) && in_array($colour, self::COLOURS, true) ? $colour : null;
+    }
+
+    /**
      * Fields (dot paths, '*' for list items) that hold rich text. They are
      * run through HtmlSanitizer on save and are the only fields a view may
      * print unescaped.

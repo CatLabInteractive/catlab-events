@@ -50,6 +50,8 @@ class Hero extends BlockType
             'subtitle' => [ 'nullable', 'string', 'max:300' ],
             'image_id' => [ 'nullable', 'integer' ],
             'align' => [ 'required', 'in:left,center' ],
+            // side: the image next to the text; cover: a photo behind it.
+            'image_style' => [ 'nullable', 'in:side,cover' ],
         ], $this->buttonRules('buttons', 3));
     }
 
@@ -60,7 +62,7 @@ class Hero extends BlockType
 
     public function defaults(): array
     {
-        return [ 'title' => '', 'subtitle' => '', 'image_id' => null, 'align' => 'center', 'buttons' => [] ];
+        return [ 'title' => '', 'subtitle' => '', 'image_id' => null, 'align' => 'center', 'image_style' => 'side', 'buttons' => [] ];
     }
 
     public function prepare(array $data, BlockContext $context): ?array
@@ -68,6 +70,7 @@ class Hero extends BlockType
         $data['image'] = $this->resolveAsset($data['image_id'] ?? null);
         $data['buttons'] = $this->safeButtons($data['buttons'] ?? []);
         $data['align'] = ($data['align'] ?? null) === 'left' ? 'left' : 'center';
+        $data['image_style'] = ($data['image_style'] ?? null) === 'cover' && $data['image'] ? 'cover' : 'side';
 
         return $data;
     }

@@ -620,3 +620,192 @@ body.kv-page .body-inner .kv-cms-hero + section.kv-sec { padding-top: 56px; }
   .kv-cms-split { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; }
   .kv-cms-image-left .kv-cms-split-image { order: -1; }
 }
+
+// A block without a title (imported pages often have none) uses the full
+// width instead of only the title column of the 4fr/8fr section grid.
+@media (min-width: 992px) {
+  .kv-sec[class*="kv-cms-"] > .kv-wrap > :only-child { grid-column: 1 / -1; }
+}
+
+/* ---------- Colour bands, panels and block styles ---------- */
+
+/* A head (title, intro) stays at the top of its column. */
+.kv-cms-head { align-content: start; }
+
+/* A colour cta after another section keeps its top padding. */
+.kv-sec + .kv-sec.kv-cms-cta-primary,
+.kv-sec + .kv-sec.kv-cms-cta-dark { padding-top: 56px; }
+
+/* A block with a colour (data.colour) is a full-width band in it. */
+.kv-cms-panel-peach,
+.kv-cms-band-peach { --kv-field: #{$kv-peach}; --kv-field-2: #{$kv-gold}; --kv-on-field: #{$kv-ink}; }
+
+.kv-sec.kv-cms-band,
+.kv-sec + .kv-sec.kv-cms-band,
+.kv-cms-band + .kv-sec { padding-top: 56px; }
+
+.kv-sec.kv-cms-band { background: var(--kv-field); color: var(--kv-on-field); }
+
+.kv-cms-band,
+.kv-cms-panel {
+  .kv-sec-title, .kv-cms-intro, .kv-cms-empty { color: var(--kv-on-field); }
+
+  > .kv-wrap > .kv-prose, &.kv-cms-split-text .kv-prose, .kv-cms-split-text .kv-prose {
+    color: var(--kv-on-field);
+
+    h2, h3, h4, p, li, strong, blockquote { color: inherit; }
+    a, a:hover, a:focus { color: inherit; text-decoration-color: currentColor; }
+  }
+
+  .kv-cms-link, .kv-cms-link:hover, .kv-cms-link:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
+}
+
+/* On a band the image frame and dots take the second colour. */
+.kv-cms-band .kv-cms-split-image { background: var(--kv-field-2); }
+.kv-cms-band .kv-cms-split-image:before { background: var(--kv-field); }
+
+/* A band of running text (an intro) is centred, like a page head. */
+.kv-cms-band.kv-cms-rich-text > .kv-wrap { text-align: center; }
+.kv-cms-band.kv-cms-rich-text .kv-prose { max-width: 800px; margin: 0 auto; }
+.kv-cms-band.kv-cms-rich-text .kv-cms-buttons { justify-content: center; }
+
+/* Text in a colour panel next to the image or video. */
+.kv-cms-split-text.kv-cms-panel {
+  padding: 28px 24px;
+  background: var(--kv-field);
+  color: var(--kv-on-field);
+}
+
+.kv-cms-split-video { width: 100%; }
+
+/* Hero with a photo behind it: a dark veil, white text. */
+.kv-cms-hero.kv-cms-hero-cover {
+  --kv-on-field: #fff;
+  background: #141414;
+  color: #fff;
+
+  &:before, &:after { display: none; }
+
+  .kv-cms-hero-photo {
+    position: absolute;
+    inset: 0;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+
+    &:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, .45) 0%, rgba(0, 0, 0, .66) 100%);
+    }
+  }
+
+  .kv-cms-hero-inner { padding-top: 96px; padding-bottom: 88px; }
+  .kv-cms-hero-title, .kv-cms-hero-subtitle { max-width: 22ch; color: #fff; }
+  .kv-cms-hero-subtitle { max-width: 44ch; }
+  .kv-cms-link, .kv-cms-link:hover, .kv-cms-link:focus { color: #fff; }
+  .kv-btn { background: #fff; color: $kv-ink; }
+  .kv-btn .kv-btn-dot { background: var(--kv-field); color: $kv-ink; }
+}
+
+/* Reviews with logos: the logo, then the quote in a colour panel. */
+.kv-cms-reviews-list .kv-reviews { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+
+.kv-review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.kv-review-logo {
+  img { display: block; max-width: 140px; max-height: 96px; object-fit: contain; }
+}
+
+.kv-site .kv-review-panel {
+  background: var(--kv-field);
+  color: var(--kv-on-field);
+
+  &:before { content: none; }
+
+  .kv-review-quote, .kv-review-by, .kv-review-by a { color: var(--kv-on-field); }
+}
+
+.kv-site .kv-review-author {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--kv-on-field);
+}
+
+.kv-review-panel .kv-review-quote { font-size: 17px; }
+
+/* Cards as people: a round photo with a ring in the card's colour. */
+.kv-cms-cards-people {
+  .kv-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+
+  .kv-tile { padding: 0; background: transparent; align-items: center; text-align: center; }
+
+  .kv-tile-image {
+    width: 132px;
+    height: 132px;
+    margin: 0 0 8px;
+    padding: 0;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 6px solid var(--kv-field);
+    background: var(--kv-field);
+
+    img { width: 100%; height: 100%; max-height: none; object-fit: cover; }
+  }
+
+  .kv-tile-title { font-size: 26px; font-weight: 600; }
+
+  .kv-tile-title:after {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: 8px auto 0;
+    background: var(--kv-field);
+  }
+
+  .kv-tile-text { font-size: 15px; }
+}
+
+/* Cards as colour panels (offers, prices). */
+.kv-cms-cards-panels {
+  .kv-tile { padding: 26px 22px; background: var(--kv-field); color: var(--kv-on-field); }
+  .kv-tile-dot { display: none; }
+  .kv-tile-image { margin: -26px -22px 14px; background: var(--kv-field-2); }
+  .kv-tile-title, .kv-tile-title a, .kv-tile-title a:hover, .kv-tile-title a:focus { color: var(--kv-on-field); }
+  .kv-tile-text { color: var(--kv-on-field); }
+}
+
+/* Tiles and panels keep their own colour on a band of the same colour. */
+.kv-cms-band .kv-cms-cards-panels .kv-tile,
+.kv-cms-band.kv-cms-cards-panels .kv-tile { box-shadow: 0 0 0 2px rgba(255, 255, 255, .35); }
+
+@media (min-width: 768px) {
+  .kv-sec.kv-cms-band, .kv-sec + .kv-sec.kv-cms-band, .kv-cms-band + .kv-sec { padding-top: 88px; }
+  .kv-sec.kv-cms-band { padding-bottom: 88px; }
+
+  .kv-cms-split-text.kv-cms-panel { padding: 40px 36px; }
+
+  .kv-cms-hero.kv-cms-hero-cover .kv-cms-hero-inner { padding-top: 160px; padding-bottom: 140px; }
+
+  .kv-review-row { grid-template-columns: 180px minmax(0, 1fr); gap: 32px; }
+  .kv-review-logo { display: grid; place-items: center; }
+  .kv-review-logo img { max-width: 170px; max-height: 130px; }
+  .kv-site .kv-review-panel { padding: 30px 32px; }
+
+  .kv-cms-cards-people .kv-tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kv-cms-cards-people .kv-tile-image { width: 150px; height: 150px; }
+}
+
+@media (min-width: 992px) {
+  .kv-cms-cards-people .kv-tiles-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kv-cms-reviews-list > .kv-wrap > .kv-reviews { max-width: 1000px; margin: 0 auto; }
+}
