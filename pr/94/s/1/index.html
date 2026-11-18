@@ -14,7 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
 
 <!-- CSRF Token -->
-<meta name="csrf-token" content="viyeFwyXSf6GqoZ0mxe9yxo3T6Cf4OQaHgGx2gTY">
+<meta name="csrf-token" content="7trURmmX9bHSOAXi1gk6a0V9TZfNyLNJYcvChjDq">
 
             <title>Woonkamerquiz – De Quizfabriek</title>
     
@@ -131,94 +131,102 @@
 
 <div class="body-inner compact">
 
-    <header id="header" class="header kv-header">
-        <div class="container">
-            <div class="row">
+    <header id="header" class="kv-header">
+    <div class="kv-header-inner">
 
-                <div class="navbar-header">
-        <div class="logo">
-        <a href="../../">
-            <img src="../../preview-assets/logo__width_80.png" alt="De Quizfabriek" title="" />
-        </a>
-    </div><!-- logo end -->
-    </div><!-- Navbar header end -->
+        <a class="kv-header-logo" href="../../">
+                            <img src="../../preview-assets/logo__width_104.png" alt="De Quizfabriek" width="52" />
+                    </a>
 
-<div class="site-nav-inner">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-        <span class="sr-only">Toggle navigatie</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-    </button>
+                    <button type="button" class="kv-nav-button" aria-expanded="false" aria-controls="kv-nav">
+                <span class="kv-nav-button-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="sr-only">Menu</span>
+            </button>
 
-    <nav class="collapse navbar-collapse navbar-responsive-collapse pull-right">
+            <nav class="kv-nav" id="kv-nav" aria-label="Hoofdmenu">
+                <ul class="kv-nav-list">
+                                                                    <li class="kv-nav-item kv-field-1  ">
+                            <a href="woonkamerquiz/" >
+                                <i class="kv-nav-dot" aria-hidden="true"></i>
+                                Woonkamerquiz
+                                                                    <span class="kv-nav-count">2<span class="sr-only"> komende quizzen</span></span>
+                                                            </a>
+                        </li>
+                                                                    <li class="kv-nav-item kv-field-2  ">
+                            <a href="../2/quizavonden/" >
+                                <i class="kv-nav-dot" aria-hidden="true"></i>
+                                Quizavonden
+                                                                    <span class="kv-nav-count">3<span class="sr-only"> komende quizzen</span></span>
+                                                            </a>
+                        </li>
+                    
+                    <li class="kv-nav-item kv-nav-group">
+                        <button type="button" class="kv-nav-toggle" aria-expanded="false">
+                            Quizzes <i class="kv-nav-caret" aria-hidden="true"></i>
+                        </button>
+                        <ul class="kv-nav-sub">
+                            <li><a href="../../calendar/">Kalender</a></li>
+                                                                                                            </ul>
+                    </li>
 
-                <ul class="nav navbar-nav">
-
-
-                            <li
-                    class="kv-field-1  "
-                >
-                    <a
-                        href="woonkamerquiz/"
-                    >
-                        Woonkamerquiz
-
-                                                    <span class="badge badge-light">2</span>
-                            <span class="sr-only">komende evenementen</span>
-                                            </a>
-
-
-                </li>
-                            <li
-                    class="kv-field-2  "
-                >
-                    <a
-                        href="../2/quizavonden/"
-                    >
-                        Quizavonden
-
-                                                    <span class="badge badge-light">3</span>
-                            <span class="sr-only">komende evenementen</span>
-                                            </a>
-
-
-                </li>
-            
-
-            <!--
-            <li class="dropdown active">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Home <i class="fa fa-angle-down"></i></a>
-                <ul class="dropdown-menu menu-center" role="menu">
-                    <li><a href="../../preview-info/unavailable.html">Home One</a></li>
-                    <li><a href="../../preview-info/unavailable.html">Home Two</a></li>
-                    <li><a href="../../preview-info/unavailable.html">Home Three</a></li>
-                    <li class="active"><a href="../../preview-info/unavailable.html">Home Four</a></li>
-                    <li><a href="../../preview-info/unavailable.html">Home Five</a></li>
-                    <li><a href="../../preview-info/unavailable.html">Home Six</a></li>
-                </ul>
-            </li>
-            -->
-
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown">Quizzes <i class="fa fa-angle-down"></i></a>
-                <ul class="dropdown-menu menu-center" role="menu">
-                    <li><a href="../../calendar/">Kalender</a></li>
-                                                            <!--<li><a href="https://www.quizploeg.com/"><i class="fa fa-external-link"></i> Quizzer zkt ploeg</a></li>-->
+                                            <li class="kv-nav-item"><a href="../../preview-info/unavailable.html">Login</a></li>
                                     </ul>
-            </li>
-
-                            <li><a href="../../preview-info/unavailable.html">Login</a></li>
-            
-        </ul><!--/ Nav ul end -->
+            </nav>
         
-    </nav><!--/ Collapse end -->
+    </div>
+</header>
 
-</div><!--/ Site nav inner end -->
+<script>
+    (function () {
+        var header = document.getElementById('header');
+        if (!header) {
+            return;
+        }
+        var button = header.querySelector('.kv-nav-button');
+        var groups = header.querySelectorAll('.kv-nav-group');
 
-            </div><!--/ Row end -->
-        </div><!--/ Container end -->
-    </header><!--/ Header end -->
+        function setGroup(group, open) {
+            group.classList.toggle('is-open', open);
+            group.querySelector('.kv-nav-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function closeGroups(except) {
+            Array.prototype.forEach.call(groups, function (group) {
+                if (group !== except) {
+                    setGroup(group, false);
+                }
+            });
+        }
+
+        if (button) {
+            button.addEventListener('click', function () {
+                var open = !header.classList.contains('kv-nav-open');
+                header.classList.toggle('kv-nav-open', open);
+                button.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        }
+
+        Array.prototype.forEach.call(groups, function (group) {
+            group.querySelector('.kv-nav-toggle').addEventListener('click', function (e) {
+                e.stopPropagation();
+                closeGroups(group);
+                setGroup(group, !group.classList.contains('is-open'));
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!header.contains(e.target)) {
+                closeGroups(null);
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeGroups(null);
+            }
+        });
+    })();
+</script>
 
     
     
