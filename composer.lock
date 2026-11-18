@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56b266eff0b1e4f5baf4cf11dd3727aa",
+    "content-hash": "716ef310b74cd3bb100629f9ad5684e6",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -698,16 +698,16 @@
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v2.0.2",
+            "version": "v2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "eafd0bc5c43c9a9022ae5e4f9b9e513ae2bc985c"
+                "reference": "9b2b4f1425b45369fd7ff430c8c10407ac63b296"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/eafd0bc5c43c9a9022ae5e4f9b9e513ae2bc985c",
-                "reference": "eafd0bc5c43c9a9022ae5e4f9b9e513ae2bc985c",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/9b2b4f1425b45369fd7ff430c8c10407ac63b296",
+                "reference": "9b2b4f1425b45369fd7ff430c8c10407ac63b296",
                 "shasum": ""
             },
             "require": {
@@ -740,9 +740,9 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v2.0.2"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v2.0.3"
             },
-            "time": "2026-11-18T14:36:09+00:00"
+            "time": "2026-11-18T14:53:23+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",

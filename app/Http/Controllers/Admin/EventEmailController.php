@@ -96,6 +96,7 @@ class EventEmailController extends Controller
         }
 
         return view('admin.events.emails.index', [
+            'hub' => (new EventController())->getHubChrome(request(), $event->id, 'emails'),
             'event' => $event,
             'mails' => $mails
         ]);

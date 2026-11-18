@@ -340,9 +340,9 @@ class EventEmailTest extends IntegrationTestCase
             ->assertDontSee($this->url('/' . EmailTemplates::CONFIRMATION_PLAY_LINK . '/reset'));
     }
 
-    public function testTheEventsMenuLinksToItsMails()
+    public function testTheEventPageLinksToItsMails()
     {
-        $this->actingAs($this->admin)->get('/admin/events')
+        $this->actingAs($this->admin)->get('/admin/events/' . $this->event->id)
             ->assertStatus(200)
             ->assertSee(action('Admin\EventEmailController@index', [ $this->event->id ]));
     }

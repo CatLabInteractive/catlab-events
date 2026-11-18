@@ -67,6 +67,7 @@ class WaitingListController extends Controller
         }
 
         return view('admin.waitinglist.index', [
+            'hub' => (new EventController())->getHubChrome(request(), $event->id, 'waitinglist'),
             'event' => $event,
             'waitingList' => $waitingList
         ]);
