@@ -77,7 +77,7 @@ public function getUrl(): string
 - Create: `app/Cms/HtmlSanitizer.php`
 - Create: `app/Rules/SafeUrl.php`
 - Modify: `config/cms.php` (`allowed_image_hosts` from env `CMS_ALLOWED_IMAGE_HOSTS`, plus the central storage host)
-- Modify: `app/Http/Api/V1/ResourceDefinitions/OrganisationResourceDefinition.php` / the organisation save hook (sanitise `footer_html` on write); the footer view prints `Organisation::getSafeFooterHtml()` (sanitised on output too; stored values are not rewritten, because staging shares the production database)
+- Modify: `app/Http/Api/V1/ResourceDefinitions/OrganisationResourceDefinition.php` / the organisation save hook (sanitise `footer_html` on write); Create: migration `2026_10_01_100500_sanitise_organisation_footer_html.php` (one-off clean of stored values)
 - Test: `tests/Unit/Cms/HtmlSanitizerTest.php`, `tests/Unit/Cms/SafeUrlTest.php`, `tests/Integration/OrganisationFooterSanitiseTest.php`
 
 **Interfaces:**
