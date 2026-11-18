@@ -76,6 +76,12 @@ class EventController extends BaseAdminController
         $this->setChildController(LiveStreamResourceDefinition::class, LiveStreamController::class);
         $this->setChildController(PersonResourceDefinition::class, PeopleController::class);
 
+        // The long event form, in sections.
+        $this->addFieldGroup('Tickets en inschrijving', [ 'registration', 'max_tickets', 'requires_team', 'team_size', 'vat_percentage', 'include_ticket_fee' ]);
+        $this->addFieldGroup('Afbeeldingen', [ 'logo', 'poster' ]);
+        $this->addFieldGroup('Mensen', [ 'producers', 'authors', 'presenters', 'musicians', 'technicians' ]);
+        $this->addFieldGroup('Koppelingen', [ 'fb_event_id', 'uitdb_event_id', 'quizwitz_campaign_id', 'livestream', 'livestream_url' ]);
+
         // Pages of their own, shown as tabs of the event.
         $tabs = [
             'waitinglist' => [ 'Wachtlijst', 'Admin\WaitingListController@index' ],

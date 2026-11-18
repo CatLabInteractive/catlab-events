@@ -77,6 +77,32 @@ class AdminSmokeTest extends IntegrationTestCase
     }
 
     /**
+     * The event form comes in sections, and the admin speaks Dutch.
+     */
+    public function testTheEventFormIsGroupedAndInDutch()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $admin = $this->adminOf($organisation);
+
+        $html = $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('Tickets en inschrijving</legend>', false)
+            ->assertSee('Mensen</legend>', false)
+            ->assertSee('value="Opslaan"', false)
+            ->assertSee('>Annuleren</a>', false)
+            ->getContent();
+
+        $legend = strpos($html, 'Tickets en inschrijving</legend>');
+        $this->assertTrue($legend < strpos($html, 'name="fields[vat_percentage]"'));
+        $this->assertTrue($legend < strpos($html, 'name="fields[team_size]"'));
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id)
+            ->assertSee('>Bewerken</a>', false)
+            ->assertSee('>Verwijderen</a>', false);
+    }
+
+    /**
      * Ticket categories live under an event: their pages say which event,
      * and saving one from the event's page goes back there.
      */
