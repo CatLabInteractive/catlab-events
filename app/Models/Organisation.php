@@ -64,6 +64,13 @@ class Organisation extends Model
      */
     protected static function booted()
     {
+        // A new home page leaves the menu (and the old one may join it).
+        static::saved(function (Organisation $organisation) {
+            if ($organisation->wasChanged('home_page_id')) {
+                app(\App\Cms\Menu::class)->forget((int) $organisation->id);
+            }
+        });
+
         static::saving(function (Organisation $organisation) {
             if ($organisation->isDirty('footer_html') && $organisation->footer_html !== null) {
                 $clean = app(HtmlSanitizer::class)->sanitize($organisation->footer_html);

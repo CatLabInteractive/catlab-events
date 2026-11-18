@@ -39,6 +39,12 @@
 
                     <li class="kv-nav-item"><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
 
+                    {{-- CMS pages marked "toon in menu", in their own order. --}}
+                    @foreach(app(\App\Cms\Menu::class)->items($navOrganisation, $cmsLocale ?? null) as $navPage)
+                        <?php $navActive = rtrim(url()->current(), '/') === $navPage['url']; ?>
+                        <li class="kv-nav-item @if($navActive) is-active @endif"><a href="{{ $navPage['url'] }}" @if($navActive) aria-current="page" @endif>{{ $navPage['title'] }}</a></li>
+                    @endforeach
+
                     {{-- The organisation's own blog, only once it has posts (no external links in the menu). --}}
                     @php($navBlogUrl = app(\App\Cms\Blog::class)->navigationUrl($navOrganisation, $cmsLocale ?? null))
                     @if($navBlogUrl)

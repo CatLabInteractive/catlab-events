@@ -63,6 +63,15 @@ class Page extends Model
             }
         });
 
+        // The cached site menu must see the change.
+        $forgetMenu = function (Page $page) {
+            if ($page->organisation_id) {
+                app(\App\Cms\Menu::class)->forget((int) $page->organisation_id);
+            }
+        };
+        static::saved($forgetMenu);
+        static::deleted($forgetMenu);
+
         // Pages are soft deleted, so the FK's ON DELETE SET NULL never fires.
         static::deleted(function (Page $page) {
             Organisation::where('home_page_id', '=', $page->id)

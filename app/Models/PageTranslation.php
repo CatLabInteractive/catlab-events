@@ -99,6 +99,15 @@ class PageTranslation extends Model
             $translation->pathNeedsCascade = !$translation->exists || $translation->isDirty('path');
         });
 
+        // The cached site menu must see the change.
+        $forgetMenu = function (PageTranslation $translation) {
+            if ($translation->organisation_id) {
+                app(\App\Cms\Menu::class)->forget((int) $translation->organisation_id);
+            }
+        };
+        static::saved($forgetMenu);
+        static::deleted($forgetMenu);
+
         static::saved(function (PageTranslation $translation) {
             if ($translation->pathNeedsCascade) {
                 $translation->pathNeedsCascade = false;
