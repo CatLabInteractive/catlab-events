@@ -253,11 +253,11 @@ body.kv-page {
   }
 
   .kv-hero-info { position: relative; z-index: 1; padding-top: 32px; }
-  .kv-series, .kv-facts, .kv-price small, .kv-price strike, .kv-price-details { color: var(--kv-on-field); opacity: .9; }
-  .kv-title, .kv-title a, .kv-price { color: var(--kv-on-field); }
-  .kv-series i { background: $kv-paper; }
+  .kv-series, .kv-hero-facts { color: var(--kv-on-field); opacity: .9; }
+  .kv-title, .kv-title a { color: var(--kv-on-field); }
+  .kv-series i, .kv-hero-facts li:before { background: $kv-paper; }
   .kv-links a, .kv-links a:hover, .kv-links a:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
-  .kv-btn-dot { background: var(--kv-field-2); color: $kv-ink; }
+  .kv-buy { border-color: transparent; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .45); }
 }
 
 /*
@@ -337,26 +337,72 @@ body.kv-page {
   span + span:before { content: " · "; }
 }
 
+/* The facts as a short list, each with a dot in the series colour. */
+.kv-hero-facts {
+  list-style: none;
+  margin: 4px 0 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: $kv-ink;
+
+  li {
+    position: relative;
+    padding: 5px 0 5px 22px;
+
+    &:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: calc(5px + .7em - 5px);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--kv-field);
+    }
+  }
+}
+
+/* The order panel: price on top, the button full width, the fine print under it. */
 .kv-buy {
-  max-width: 540px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: $kv-paper;
+  border: 1px solid $kv-line;
+  color: $kv-ink;
+}
+
+.kv-buy-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  .kv-card-flag { margin: 0 0 6px; }
 }
 
 .kv-price {
+  margin: 0;
   line-height: 1.1;
+  color: $kv-ink;
 
-  small { display: block; font-size: 14px; color: $kv-muted; }
-  strong { font-weight: 500; font-size: 34px; letter-spacing: -.02em; white-space: nowrap; }
-  strike { font-size: 18px; color: $kv-muted; }
+  .kv-price-label { display: block; margin-bottom: 4px; font-size: 14px; color: $kv-muted; }
+  strong { font-weight: 500; font-size: 34px; letter-spacing: -.02em; }
+  .kv-price-unit { margin-left: 4px; font-size: 15px; color: $kv-muted; white-space: nowrap; }
+  strike { display: block; font-size: 16px; color: $kv-muted; }
+  strong strong { font-size: inherit; }
 }
 
 .kv-price-details {
-  grid-column: 1 / -1;
   margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid $kv-line;
   font-size: 14px;
+  line-height: 1.4;
   color: $kv-muted;
 }
 
@@ -794,6 +840,8 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-hero-info { padding: 40px; }
   .kv-page .kv-title { font-size: min(76px, calc(100cqw / 7.5)); margin-bottom: 14px; }
   .kv-facts { font-size: 18px; margin-bottom: 32px; }
+  .kv-hero-facts { font-size: 18px; margin-bottom: 32px; }
+  .kv-buy { padding: 22px 24px 20px; }
   .kv-price strong { font-size: 42px; }
   .kv-btn { min-height: 60px; font-size: 19px; padding: 0 18px 0 24px; }
 

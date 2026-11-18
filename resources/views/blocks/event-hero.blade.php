@@ -53,18 +53,25 @@
             <h1 class="kv-title">{{ $heroEvent->name }}</h1>
         @endif
 
-        <p class="kv-facts">@foreach($heroFacts as $fact)<span>{{ $fact }}</span>@endforeach</p>
+        <ul class="kv-hero-facts">@foreach($heroFacts as $fact)<li>{{ $fact }}</li>@endforeach</ul>
 
         @if($heroWillSell || $heroCanRegister)
             <div class="kv-buy" id="kv-cta">
-                @if($heroWillSell)
-                    <p class="kv-price">
-                        <small>Tickets vanaf</small>
-                        <strong>{!! $heroEvent->getFormattedPublishedPrice(true) !!}</strong>
-                        @if($heroEvent->team_size)
-                            <small>per team</small>
+                @if($heroWillSell || $heroUrgency)
+                    <div class="kv-buy-top">
+                        @if($heroWillSell)
+                            <p class="kv-price">
+                                <span class="kv-price-label">Tickets vanaf</span>
+                                <strong>{!! $heroEvent->getFormattedPublishedPrice(true) !!}</strong>
+                                @if($heroEvent->team_size)
+                                    <span class="kv-price-unit">per team</span>
+                                @endif
+                            </p>
                         @endif
-                    </p>
+                        @if($heroUrgency)
+                            <span class="kv-card-flag">{{ $heroUrgency }}</span>
+                        @endif
+                    </div>
                 @endif
 
                 @if($heroSoldOut)
@@ -79,12 +86,8 @@
                     </a>
                 @endif
 
-                @if($heroUrgency)
-                    <p class="kv-price-details"><span class="kv-card-flag">{{ $heroUrgency }}</span></p>
-                @endif
-
                 @if($heroPriceDetails)
-                    <p class="kv-price-details">*: {!! $heroPriceDetails !!}</p>
+                    <p class="kv-price-details">* {!! $heroPriceDetails !!}</p>
                 @endif
             </div>
         @endif
