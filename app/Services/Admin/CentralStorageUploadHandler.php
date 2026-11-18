@@ -10,7 +10,8 @@ use Illuminate\Http\UploadedFile;
 
 /**
  * Stores the files of the admin's file fields (posters, logos, ...) in
- * CentralStorage, as Assets.
+ * CentralStorage, as Assets of the active organisation. The picker only
+ * offers that organisation's assets.
  */
 class CentralStorageUploadHandler implements UploadHandler
 {
@@ -21,10 +22,43 @@ class CentralStorageUploadHandler implements UploadHandler
 
     public function store(UploadedFile $file, FormField $field)
     {
+        return self::storeForActiveOrganisation($file)->id;
+    }
+
+    /**
+     * Store an upload as an asset of the logged in user's active
+     * organisation.
+     *
+     * @param UploadedFile $file
+     * @return Asset
+     */
+    public static function storeForActiveOrganisation(UploadedFile $file): Asset
+    {
         $asset = \CentralStorage::store($file);
+
+        $user = \Auth::user();
+        if ($user) {
+            $asset->user_id = $user->id;
+            $asset->organisation_id = $user->getActiveOrganisation()->id;
+        }
+
         $asset->save();
 
-        return $asset->id;
+        return $asset;
+    }
+
+    /**
+     * The form that came with the upload failed to save: remove the asset,
+     * here and on the storage server.
+     *
+     * @param mixed $id
+     */
+    public function discard($id): void
+    {
+        $asset = Asset::find($id);
+        if ($asset) {
+            $asset->delete();
+        }
     }
 
     public function getPreviewUrl($id): ?string
@@ -35,7 +69,13 @@ class CentralStorageUploadHandler implements UploadHandler
 
     public function getOptions(Request $request, FormField $field): array
     {
+        $organisation = $request->user() ? $request->user()->getActiveOrganisation() : null;
+        if (!$organisation) {
+            return [];
+        }
+
         $assets = Asset::query()
+            ->where('organisation_id', '=', $organisation->id)
             ->orderByDesc('id')
             ->limit(self::PICKER_LIMIT)
             ->get();

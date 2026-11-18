@@ -72,4 +72,25 @@ class ScoreController implements FrontCrudControllerContract
     {
         return null;
     }
+
+    /**
+     * Scores aren't linked from forms.
+     * @param Request $request
+     * @return array
+     */
+    public function getLinkableOptions(Request $request): array
+    {
+        return [];
+    }
+
+    /**
+     * Scores have no pages of their own.
+     * @param Request $request
+     * @param mixed $id
+     * @return array
+     */
+    public function getBreadcrumbTrail(Request $request, $id = null): array
+    {
+        return [];
+    }
 }

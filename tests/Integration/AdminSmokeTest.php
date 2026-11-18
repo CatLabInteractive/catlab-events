@@ -76,6 +76,94 @@ class AdminSmokeTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * Another organisation's event: its waiting list, exports and create
+     * forms are out of reach.
+     */
+    public function testAnotherOrganisationsEventPagesAreRefused()
+    {
+        $ours = $this->createOrganisation();
+        $admin = $this->adminOf($ours);
+        $theirs = $this->createOrganisation();
+        $event = $this->createEvent($theirs);
+
+        foreach ([
+            '/admin/events/' . $event->id . '/waitinglist',
+            '/admin/events/' . $event->id . '/export/members',
+            '/admin/events/' . $event->id . '/export/sales',
+            '/admin/events/' . $event->id . '/export/clearing',
+            '/admin/events/' . $event->id . '/export/salesovertime',
+        ] as $url) {
+            $this->actingAs($admin)->get($url)->assertStatus(404);
+        }
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/ticketCategories/create')->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/eventDates/create')->assertStatus(403);
+    }
+
+    /**
+     * The event form comes in sections, and the admin speaks Dutch.
+     */
+    public function testTheEventFormIsGroupedAndInDutch()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $admin = $this->adminOf($organisation);
+
+        $html = $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('Tickets en inschrijving</legend>', false)
+            ->assertSee('Mensen</legend>', false)
+            ->assertSee('value="Opslaan"', false)
+            ->assertSee('>Annuleren</a>', false)
+            ->getContent();
+
+        $legend = strpos($html, 'Tickets en inschrijving</legend>');
+        $this->assertTrue($legend < strpos($html, 'name="fields[vat_percentage]"'));
+        $this->assertTrue($legend < strpos($html, 'name="fields[team_size]"'));
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id)
+            ->assertSee('>Bewerken</a>', false)
+            ->assertSee('>Verwijderen</a>', false);
+    }
+
+    /**
+     * Ticket categories live under an event: their pages say which event,
+     * and saving one from the event's page goes back there.
+     */
+    public function testTicketCategoryPagesLeadBackToTheirEvent()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+        $category = $this->createTicketCategory($event, 10.0);
+        $admin = $this->adminOf($organisation);
+
+        $date = new \App\Models\EventDate();
+        $date->event()->associate($event);
+        $date->startDate = new \DateTime('+1 month');
+        $date->endDate = new \DateTime('+1 month +3 hours');
+        $date->save();
+
+        $base = '/admin/events/' . $event->id . '/ticketCategories/' . $category->id;
+
+        $this->actingAs($admin)->get($base . '/edit?return=admin/events/' . $event->id)
+            ->assertStatus(200)
+            ->assertSee('<li class="breadcrumb-item"><a href="http://localhost/admin/events/' . $event->id, false)
+            ->assertSee('">' . e($event->name) . '</a></li>', false)
+            ->assertSee('<input type="hidden" name="return" value="/admin/events/' . $event->id . '">', false);
+
+        $this->actingAs($admin)->put($base, [
+            'return' => '/admin/events/' . $event->id,
+            'fields' => [
+                'name' => 'Early bird',
+                'price' => '8',
+                'eventDates' => [ 'ids' => [ '', (string) $date->id ] ],
+            ],
+        ])->assertRedirect('http://localhost/admin/events/' . $event->id);
+
+        $this->assertSame('Early bird', $category->fresh()->name);
+    }
+
     public function testAdminCanSetATicketDescription()
     {
         $organisation = $this->createOrganisation();

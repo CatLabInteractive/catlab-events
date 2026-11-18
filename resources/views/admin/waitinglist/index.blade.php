@@ -2,8 +2,12 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-    <h3>Wachtlijst</h3>
+    @if($hub)
+        @include('charonfrontend::crud.hub-header', [ 'hub' => $hub ])
+    @else
+        <h2>{{ $event->name }}</h2>
+        <h3>Wachtlijst</h3>
+    @endif
 
     <p>
         <a class="btn btn-primary" href="{{ action('Admin\WaitingListController@massInvite', [ $event->id ]) }}">

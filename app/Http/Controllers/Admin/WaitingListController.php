@@ -67,6 +67,7 @@ class WaitingListController extends Controller
         }
 
         return view('admin.waitinglist.index', [
+            'hub' => (new EventController())->getHubChrome(request(), $event->id, 'waitinglist'),
             'event' => $event,
             'waitingList' => $waitingList
         ]);
@@ -431,7 +432,12 @@ class WaitingListController extends Controller
      */
     private function getEvent($eventId)
     {
-        return Event::findOrFail($eventId);
+        // Only admins of the event's organisation.
+        $event = Event::findOrFail($eventId);
+        if (!\Auth::user() || !\Auth::user()->can('edit', $event)) {
+            abort(404);
+        }
+        return $event;
     }
 
     /**

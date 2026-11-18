@@ -34,6 +34,15 @@ use Illuminate\Http\Request;
  */
 class TicketCategoryController extends BaseAdminController
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Nested under /events/{event}: breadcrumbs start with the event,
+        // and saving from the event's page goes back there.
+        $this->setParentController(EventController::class, 'event');
+    }
+
     /**
      * @return \App\Http\Api\V1\Controllers\Events\TicketCategoryController
      */
