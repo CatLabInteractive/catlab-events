@@ -677,7 +677,7 @@ h1.kv-series-h1 {
   }
 
   strong { font-weight: 500; }
-  a { color: $kv-ink; text-decoration: underline; text-decoration-color: var(--kv-field); text-underline-offset: 3px; }
+  a:not([class*="btn"]) { color: $kv-ink; text-decoration: underline; text-decoration-color: var(--kv-field); text-underline-offset: 3px; }
   img { max-width: 100%; height: auto; }
 }
 
@@ -694,7 +694,7 @@ h1.kv-series-h1 {
   border-left: 4px solid $kv-muted;
 
   p:last-child { margin-bottom: 0; }
-  a { color: $kv-ink; text-decoration: underline; }
+  a:not([class*="btn"]) { color: $kv-ink; text-decoration: underline; }
 }
 
 .kv-notice-alert { border-left-color: $kv-alert; }
@@ -1384,8 +1384,8 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
     line-height: 1.5;
     color: $kv-ink;
 
-    a { color: $kv-ink; text-decoration: underline; text-decoration-color: $kv-violet; text-decoration-thickness: 2px; text-underline-offset: 3px; }
-    a:hover, a:focus { color: $kv-ink; text-decoration-color: $kv-ink; }
+    a:not([class*="btn"]) { color: $kv-ink; text-decoration: underline; text-decoration-color: $kv-violet; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    a:not([class*="btn"]):hover, a:not([class*="btn"]):focus { color: $kv-ink; text-decoration-color: $kv-ink; }
   }
 
   .modal-footer { padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border: 0; }

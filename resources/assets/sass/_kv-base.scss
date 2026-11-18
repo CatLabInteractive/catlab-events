@@ -209,7 +209,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 /* ---------- Buttons ---------- */
 
-.btn {
+/*
+ * Doubled class (.btn.btn) so a button keeps its colours inside text blocks
+ * whose link rules (".kv-prose a", ".kv-text a") are more specific than one class.
+ */
+
+.btn.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -235,22 +240,22 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   &:disabled, &.disabled { opacity: .5; pointer-events: none; }
 }
 
-.btn-primary, .btn-success {
+.btn.btn-primary, .btn.btn-success {
   background: $kv-ink;
   color: $kv-paper;
 
   &:hover, &:focus { background: $kv-ink-hover; border-color: $kv-ink-hover; color: $kv-paper; }
 }
 
-.btn-danger, .btn-outline-danger {
+.btn.btn-danger, .btn.btn-outline-danger {
   border-color: $kv-alert;
   color: $kv-alert;
 
   &:hover, &:focus { background: $kv-alert; border-color: $kv-alert; color: #fff; }
 }
-.btn-danger { background: $kv-alert; color: #fff; }
+.btn.btn-danger { background: $kv-alert; color: #fff; }
 
-.btn-link {
+.btn.btn-link {
   min-height: 0;
   padding: 0;
   border: 0;
@@ -261,8 +266,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   &:hover, &:focus { background: none; color: $kv-ink; }
 }
 
-.btn-sm { min-height: 36px; padding: 6px 12px; font-size: 14px; }
-.btn-sm .kv-icon { width: 16px; height: 16px; }
+.btn.btn-sm { min-height: 36px; padding: 6px 12px; font-size: 14px; }
+.btn.btn-sm .kv-icon { width: 16px; height: 16px; }
 .btn-group { display: inline-flex; position: relative; }
 
 /* ---------- Alerts ---------- */
