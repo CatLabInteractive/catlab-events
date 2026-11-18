@@ -7,6 +7,7 @@ use App\Models\Series;
 use App\Models\SeriesPhoto;
 use App\Models\User;
 use CatLab\CentralStorage\Client\Models\Asset;
+use Illuminate\Http\UploadedFile;
 use Tests\Integration\Concerns\CreatesEventFixtures;
 
 /**
@@ -74,6 +75,32 @@ class SeriesPhotosTest extends IntegrationTestCase
         $this->assertNotNull($photo);
         $this->assertSame($asset->id, $photo->photo_asset_id);
         $this->assertSame(2, (int) $photo->sort);
+    }
+
+    public function testAdminCanUploadANewPhoto()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $stored = new Asset();
+        $stored->name = 'zaal.jpg';
+        $stored->asset_key = 'uploaded-' . uniqid();
+        \CentralStorage::shouldReceive('store')->once()->andReturn($stored);
+
+        $this->actingAs($admin)
+            ->from('/admin/series/' . $series->id . '/photos/create')
+            ->post('/admin/series/' . $series->id . '/photos', [
+                'fields' => [
+                    'photo' => [ 'id' => '', 'file' => UploadedFile::fake()->image('zaal.jpg', 1600, 1000) ],
+                    'sort' => '1',
+                ],
+            ])
+            ->assertRedirect();
+
+        $photo = SeriesPhoto::where('series_id', $series->id)->first();
+        $this->assertNotNull($photo);
+        $this->assertSame($stored->id, $photo->photo_asset_id);
     }
 
     public function testOtherOrganisationsCannotSeeThePhotos()
