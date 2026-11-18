@@ -2,11 +2,13 @@
 
 @section('title')Mijn tickets @endsection
 
+@section('bodyClass')kv-page @endsection
+
 @section('content')
 
     <section class="kv-sec">
         <div class="kv-wrap">
-            <h2 class="kv-sec-title">Overzicht <small>Tickets zijn pas geldig zodra ze online betaald zijn.</small></h2>
+            <p class="kv-orders-intro">Tickets zijn pas geldig zodra ze online betaald zijn.</p>
 
             @if (count($orders) === 0)
                 <div class="kv-text">
