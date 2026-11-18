@@ -255,6 +255,55 @@ class AdminFormWidgetsTest extends IntegrationTestCase
     }
 
     /**
+     * People have no name field; the event form lists them by their first
+     * and last name, not as "#12".
+     */
+    public function testPeopleAreListedByName()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        $person = $this->createPerson($organisation, $admin, 'Anna', 'Peeters');
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('>Anna Peeters</label>', false)
+            ->assertDontSee('>#' . $person->id . '</label>', false);
+    }
+
+    /**
+     * With more than a handful of people, the producers, authors, ... are a
+     * searchable picker, not a wall of checkboxes.
+     */
+    public function testLongPeopleListsUseThePicker()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $event = $this->createEvent($organisation);
+        for ($i = 1; $i <= 8; $i++) {
+            $this->createPerson($organisation, $admin, 'Persoon', (string) $i);
+        }
+
+        $this->actingAs($admin)->get('/admin/events/' . $event->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('data-charon-picker', false)
+            ->assertSee('>Persoon 8</option>', false)
+            ->assertDontSee('>Persoon 8</label>', false);
+    }
+
+    private function createPerson(Organisation $organisation, $user, string $firstName, string $lastName): \App\Models\Person
+    {
+        $person = new \App\Models\Person();
+        $person->first_name = $firstName;
+        $person->last_name = $lastName;
+        $person->organisation()->associate($organisation);
+        $person->user()->associate($user);
+        $person->save();
+
+        return $person;
+    }
+
+    /**
      * Descriptions are html() fields: a rich textarea, and the HTML is
      * cleaned on save (they're printed unescaped on the public pages).
      */
