@@ -18,7 +18,7 @@
         "catlabinteractive/charon-laravel": "^1.12",
         "catlabinteractive/eukles-client": "^1.0.12",
         "catlabinteractive/laravel-catlab-accounts": "^4.5",
-        "catlabinteractive/laravel-charon-frontend": "dev-claude/project-thread-yxuxuc as 2.0.0",
+        "catlabinteractive/laravel-charon-frontend": "^2.0",
         "catlabinteractive/laravel-table": "^1.3",
         "fab1en/rocket-chat-rest-client": "dev-master",
         "guzzlehttp/oauth-subscriber": "^0.8.1",
