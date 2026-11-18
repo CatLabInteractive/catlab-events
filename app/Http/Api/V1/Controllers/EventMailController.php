@@ -27,6 +27,7 @@ use App\Http\Api\V1\Controllers\Cms\CmsApiValidation;
 use App\Http\Api\V1\ResourceDefinitions\EventMailResourceDefinition;
 use App\Models\Event;
 use App\Models\EventMail;
+use App\Services\EmailTemplates;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Charon\Enums\Action;
 use Illuminate\Database\Eloquent\Model;
@@ -181,7 +182,7 @@ class EventMailController extends ResourceController
                 ], [
                     'subject' => 'required|string|max:255',
                     'content' => 'required|string',
-                ], [], [
+                ], EmailTemplates::VALIDATION_MESSAGES, [
                     'subject' => 'onderwerp',
                     'content' => 'inhoud',
                 ])->validate();

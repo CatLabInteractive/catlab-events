@@ -45,6 +45,7 @@ class EmailTemplateResourceDefinition extends BaseResourceDefinition
             ->string()
             ->label('Naam')
             ->describe('Uniek per mail binnen de organisatie.')
+            ->sortable()
             ->visible(true, true)
             ->writeable(true, true);
 

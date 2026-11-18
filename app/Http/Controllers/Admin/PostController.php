@@ -172,18 +172,4 @@ class PostController extends CmsAdminController
 
         return redirect(action('Admin\PostTranslationController@create', [ 'post' => $this->idOf($newResource) ]));
     }
-
-    /**
-     * Newest first, unless the list is sorted otherwise.
-     * @param Request $request
-     * @return \Illuminate\Contracts\View\View
-     */
-    public function index(Request $request)
-    {
-        if (!$request->query->has('sort')) {
-            $request->query->set('sort', '!published_at');
-        }
-
-        return parent::index($request);
-    }
 }

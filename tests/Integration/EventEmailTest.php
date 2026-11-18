@@ -155,7 +155,9 @@ class EventEmailTest extends IntegrationTestCase
             'email_template_id' => '',
             'subject' => '',
             'content' => ''
-        ] ])->assertSessionHas('message');
+        ] ])->assertSessionHas('message', function ($message) {
+            return (string) $message === 'Vul onderwerp in.<br>Vul inhoud in.';
+        });
 
         $this->assertEquals(0, EventEmail::count());
     }

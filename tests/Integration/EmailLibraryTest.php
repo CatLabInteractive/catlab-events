@@ -107,7 +107,9 @@ class EmailLibraryTest extends IntegrationTestCase
             'name' => 'Warm welcome',
             'subject' => 'Welkom',
             'content' => '<p>x</p>'
-        ] ])->assertSessionHas('message');
+        ] ])->assertSessionHas('message', function ($message) {
+            return (string) $message === 'Er is al een sjabloon met deze naam voor deze mail.';
+        });
         $this->assertEquals(1, $this->organisation->emailTemplates()->library()->count());
 
         // Same name for another type is fine.
@@ -160,22 +162,82 @@ class EmailLibraryTest extends IntegrationTestCase
         $this->assertEquals(0, EventEmail::where('email_template_id', $template->id)->count());
     }
 
-    public function testAnotherOrganisationsTemplateIsRefused()
+    public function testAnotherOrganisationsTemplateIsNotFound()
     {
         $other = new Organisation();
         $other->name = 'Other';
         $other->save();
         $template = $this->createTemplate($other);
 
-        $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/edit")->assertStatus(403);
+        $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/edit")->assertStatus(404);
         $this->actingAs($this->admin)->put("/admin/emails/templates/{$template->id}", [ 'fields' => [
             'name' => 'Hijack', 'subject' => 'x', 'content' => '<p>x</p>'
-        ] ]);
-        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}");
+        ] ])->assertStatus(404);
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$template->id}")->assertStatus(404);
+
+        // Over the api the policy answers.
+        $this->actingAs($this->admin)->putJson("/api/v1/emailTemplates/{$template->id}", [ 'name' => 'Hijack' ])->assertStatus(403);
+        $this->actingAs($this->admin)->deleteJson("/api/v1/emailTemplates/{$template->id}")->assertStatus(403);
         $this->actingAs($this->admin)->get("/admin/emails/templates/{$template->id}/preview")->assertStatus(404);
 
         $this->assertEquals('Warm welcome', $template->fresh()->name);
         $this->assertNotNull(EmailTemplate::find($template->id));
+    }
+
+    public function testTheOrganisationsOwnVersionOfAMailIsNotALibraryTemplate()
+    {
+        $own = new EmailTemplate([
+            'type' => EmailTemplates::CONFIRMATION, 'name' => '', 'subject' => 'Eigen', 'content' => '<p>Eigen</p>'
+        ]);
+        $own->organisation()->associate($this->organisation);
+        $own->save();
+
+        $this->actingAs($this->admin)->get("/admin/emails/templates/{$own->id}/edit")->assertStatus(404);
+        $this->actingAs($this->admin)->delete("/admin/emails/templates/{$own->id}")->assertStatus(404);
+        $this->actingAs($this->admin)->getJson("/api/v1/emailTemplates/{$own->id}")->assertStatus(404);
+        $this->actingAs($this->admin)->patchJson("/api/v1/emailTemplates/{$own->id}", [ 'name' => 'x' ])->assertStatus(404);
+        $this->actingAs($this->admin)->deleteJson("/api/v1/emailTemplates/{$own->id}")->assertStatus(404);
+
+        $this->assertSame('', $own->fresh()->name);
+    }
+
+    public function testTheLibraryIsListedByName()
+    {
+        foreach ([ 'Zebra', 'Alfa', 'Midden' ] as $name) {
+            $this->createTemplate($this->organisation, $name);
+        }
+
+        $this->actingAs($this->admin)->get('/admin/emails/templates')
+            ->assertSeeInOrder([ 'Alfa', 'Midden', 'Zebra' ]);
+    }
+
+    public function testTheLibraryApiIsForAdminsOfTheOrganisation()
+    {
+        $template = $this->createTemplate($this->organisation);
+        $base = '/api/v1/organisations/' . $this->organisation->id . '/emailTemplates';
+
+        $member = $this->createUser();
+        $member->admin = true;
+        $member->save();
+        $this->organisation->users()->attach($member, [ 'role' => 1 ]);
+
+        $this->actingAs($member)->getJson($base)->assertStatus(403);
+        $this->actingAs($member)->postJson($base, [
+            'type' => EmailTemplates::CONFIRMATION, 'name' => 'X', 'subject' => 'x', 'content' => '<p>x</p>'
+        ])->assertStatus(403);
+        $this->actingAs($member)->getJson("/api/v1/emailTemplates/{$template->id}")->assertStatus(403);
+        $this->actingAs($member)->deleteJson("/api/v1/emailTemplates/{$template->id}")->assertStatus(403);
+        $this->actingAs($member)->getJson('/api/v1/organisations/' . $this->organisation->id . '/standardMails')->assertStatus(403);
+        $this->actingAs($member)->getJson('/api/v1/organisations/' . $this->organisation->id . '/emailLayout')->assertStatus(403);
+
+        $this->actingAs($this->admin)->getJson($base)->assertStatus(200)->assertJsonPath('items.0.name', 'Warm welcome');
+        $this->actingAs($this->admin)->deleteJson($base)->assertStatus(405);
+
+        // The mail a template is for is fixed.
+        $this->actingAs($this->admin)->putJson("/api/v1/emailTemplates/{$template->id}", [
+            'type' => EmailTemplates::CANCELLATION, 'name' => 'Warm welcome', 'subject' => 'Welkom', 'content' => '<p>Hallo</p>'
+        ]);
+        $this->assertSame(EmailTemplates::CONFIRMATION, $template->fresh()->type);
     }
 
     public function testTheLibraryPreviewIsSandboxed()

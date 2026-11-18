@@ -87,6 +87,23 @@ class EmailTemplateController extends ResourceController
     }
 
     /**
+     * A template without a name is not part of the library, also not by id.
+     * @param Request $request
+     * @return EmailTemplate
+     */
+    protected function findEntity(Request $request)
+    {
+        $id = $request->route()->parameter($this->getIdParameter());
+
+        $template = EmailTemplate::query()->library()->find($id);
+        if (!$template) {
+            $this->notFound($id, EmailTemplate::class);
+        }
+
+        return $template;
+    }
+
+    /**
      * @param Request $request
      * @return Model
      */
@@ -150,7 +167,7 @@ class EmailTemplateController extends ResourceController
             'content' => 'required|string',
         ], [
             'name.unique' => 'Er is al een sjabloon met deze naam voor deze mail.',
-        ], [
+        ] + EmailTemplates::VALIDATION_MESSAGES, [
             'name' => 'naam',
             'subject' => 'onderwerp',
             'content' => 'inhoud',

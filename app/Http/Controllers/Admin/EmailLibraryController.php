@@ -116,6 +116,17 @@ class EmailLibraryController extends BaseAdminController
                 ];
         }
 
+        // One template: only those of the active organisation exist here.
+        $known = $this->getAdministeredOrganisation()
+            ->emailTemplates()
+            ->library()
+            ->whereKey($request->route(static::getRouteIdParameterName()))
+            ->exists();
+
+        if (!$known) {
+            abort(404);
+        }
+
         return null;
     }
 
@@ -145,6 +156,10 @@ class EmailLibraryController extends BaseAdminController
     public function index(Request $request)
     {
         $this->getAdministeredOrganisation();
+
+        if (!$request->query->has('sort')) {
+            $request->query->set('sort', 'name');
+        }
 
         return parent::index($request);
     }

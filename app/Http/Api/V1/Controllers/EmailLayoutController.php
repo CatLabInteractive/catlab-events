@@ -117,7 +117,7 @@ class EmailLayoutController extends ResourceController
                 'footer_text' => 'nullable|string|max:2000',
             ], [
                 'accent_color.regex' => 'De accentkleur moet een kleur zijn zoals #4cb050.'
-            ], [
+            ] + \App\Services\EmailTemplates::VALIDATION_MESSAGES, [
                 'footer_text' => 'voettekst',
             ])->validate();
 

@@ -110,7 +110,7 @@ class PostTranslationController extends CmsAdminController
             case Action::INDEX:
             case Action::CREATE:
                 return [
-                    Post::find($request->route('post'))
+                    Post::findOrFail($request->route('post'))
                 ];
         }
 

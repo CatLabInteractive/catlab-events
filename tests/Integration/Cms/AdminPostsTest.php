@@ -100,11 +100,13 @@ class AdminPostsTest extends IntegrationTestCase
         $new = $this->createPost($organisation, 'nieuw', Carbon::create(2019, 5, 1, 12));
         $en = $this->createPostTranslation($new, 'en', 'new', '<p>x</p>', false);
         $this->createPost($other, 'van-de-buren', Carbon::create(2019, 1, 1, 12));
+        $this->createPost($organisation, 'kladje', null);
 
         $response = $this->actingAs($admin)->get('/admin/posts');
 
         $response->assertStatus(200);
-        $response->assertSeeInOrder([ 'Post nieuw (nl)', 'Post oud (nl)' ]);
+        // A post without a date (a draft) comes first, then the newest.
+        $response->assertSeeInOrder([ 'Post kladje (nl)', 'Post nieuw (nl)', 'Post oud (nl)' ]);
         $response->assertDontSee('van-de-buren');
         $response->assertSee('/admin/posts/' . $old->id . '/edit', false);
         $response->assertSee('Blogbericht toevoegen');
@@ -112,6 +114,15 @@ class AdminPostsTest extends IntegrationTestCase
         // Every translation links to its editor; drafts say so.
         $response->assertSee('Engels (concept)');
         $response->assertSee('/admin/posts/' . $new->id . '/translations/' . $en->id . '/edit', false);
+    }
+
+    public function testATranslationOfAMissingPostOrPageIsNotFound()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+
+        $this->actingAs($admin)->get('/admin/posts/999999/translations/create')->assertStatus(404);
+        $this->actingAs($admin)->get('/admin/pages/999999/translations/create')->assertStatus(404);
     }
 
     public function testCreatePostThenItsDutchTranslation()

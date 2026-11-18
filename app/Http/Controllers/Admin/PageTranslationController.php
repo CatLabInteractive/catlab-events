@@ -115,7 +115,7 @@ class PageTranslationController extends CmsAdminController
             case Action::INDEX:
             case Action::CREATE:
                 return [
-                    Page::find($request->route('page'))
+                    Page::findOrFail($request->route('page'))
                 ];
         }
 

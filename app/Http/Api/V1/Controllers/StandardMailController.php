@@ -27,6 +27,7 @@ use App\Http\Api\V1\Controllers\Cms\CmsApiValidation;
 use App\Http\Api\V1\ResourceDefinitions\StandardMailResourceDefinition;
 use App\Models\Organisation;
 use App\Models\StandardMail;
+use App\Services\EmailTemplates;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Charon\Enums\Action;
 use Illuminate\Database\Eloquent\Model;
@@ -162,7 +163,7 @@ class StandardMailController extends ResourceController
             ], [
                 'subject' => 'required|string|max:255',
                 'content' => 'required|string',
-            ], [], [
+            ], EmailTemplates::VALIDATION_MESSAGES, [
                 'subject' => 'onderwerp',
                 'content' => 'inhoud',
             ])->validate();
