@@ -24,8 +24,10 @@ namespace App\Cms\Import;
 
 /**
  * Recognises URLs of a WordPress site's uploads (`/wp-content/uploads/…`)
- * in absolute, protocol-relative or root-relative form, on the site's host
- * with or without `www.`. Anything else is not ours to fetch.
+ * in absolute, protocol-relative or root-relative form, on the site's
+ * domain or any subdomain of it (older posts use blog.quizfabriek.be).
+ * normalise() always returns the URL on the site's own origin, so nothing
+ * but the site itself is ever fetched.
  *
  * Class MediaUrl
  * @package App\Cms\Import
@@ -90,7 +92,9 @@ class MediaUrl
             return null;
         }
 
-        if ($this->bareHost(strtolower($parts['host'])) !== $this->bareHost($this->host)) {
+        $host = strtolower($parts['host']);
+        $domain = $this->bareHost($this->host);
+        if ($host !== $domain && substr($host, -strlen('.' . $domain)) !== '.' . $domain) {
             return null;
         }
 

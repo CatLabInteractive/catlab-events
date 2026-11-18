@@ -135,7 +135,9 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertStringNotContainsString('srcset', $body);
         $this->assertStringNotContainsString('<script', $body);
         $this->assertStringContainsString('src="' . $foto->getUrl() . '"', $body);
-        $this->assertStringContainsString('alt="Winnaars"', $body);
+        // An old blog.quizfabriek.be upload URL, fetched from the site itself.
+        $winnaars = Asset::query()->where('name', 'winnaars.jpg')->firstOrFail();
+        $this->assertStringContainsString('src="' . $winnaars->getUrl() . '" alt="Winnaars"', $body);
         $pdf = Asset::query()->where('name', 'vragen.pdf')->firstOrFail();
         $this->assertStringContainsString('href="' . $pdf->getUrl() . '"', $body);
 
