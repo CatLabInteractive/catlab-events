@@ -69,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
 
         if (isset($_SERVER['HTTP_HOST'])) {
 
-            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];
+            $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'] ?? (request()->isSecure() ? 'https' : 'http');
             $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
 
             // set app url

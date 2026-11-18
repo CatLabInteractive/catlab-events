@@ -79,8 +79,8 @@ class ColourPalette
             $classes[] = ".kv-field-{$i}{--kv-field:{$field['field']};--kv-field-2:{$field['circle']};--kv-on-field:{$field['text']}}";
         }
 
-        // Cycle the first colours so --kv-c0..--kv-c3 always exist.
-        for ($i = count($this->fields); $i < 4; $i ++) {
+        // Cycle the first colours so --kv-c0..--kv-c5 always exist.
+        for ($i = count($this->fields); $i < 6; $i ++) {
             $source = $this->fields[$i % count($this->fields)];
             $root[] = "--kv-c{$i}:{$source['field']};--kv-c{$i}-text:{$source['text']}";
         }
