@@ -6,6 +6,10 @@
     <link rel="canonical" href="{{ $canonicalUrl }}" />
 @endif
 
+@if(!config('seo.indexable'))
+    <meta name="robots" content="noindex, nofollow">
+@endif
+
 @stack('head')
 
 <!-- Mobile Specific Metas

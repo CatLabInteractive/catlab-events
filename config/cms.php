@@ -22,7 +22,7 @@ return [
         'admin', 'api', 'archive', 'author', 'blog', 'calendar', 'catlabaccount',
         'competitions', 'docs', 'documents', 'donate', 'doneer', 'e', 'en', 'events',
         'fr', 'groups', 'home', 'invitations', 'livestreams', 'login', 'logout', 'nl',
-        'orders', 'organisations', 'password', 'press', 'register', 's', 'sitemap.xml',
+        'orders', 'organisations', 'password', 'press', 'register', 'robots.txt', 'llms.txt', 's', 'sitemap.xml',
         'status', 'venues', 'css', 'js', 'fonts', 'images', 'storage',
     ],
 

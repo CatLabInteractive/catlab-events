@@ -236,6 +236,8 @@ Route::get('documents/nl/tos', 'DocumentController@tos');
 Route::get('docs', 'SwaggerController@swagger');
 
 Route::get('sitemap.xml', 'SitemapController@sitemap');
+Route::get('robots.txt', 'SeoController@robots');
+Route::get('llms.txt', 'SeoController@llms');
 
 // routes
 \App\Http\Controllers\ReferenceController::routes();

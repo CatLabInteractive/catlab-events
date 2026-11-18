@@ -373,6 +373,10 @@ class Organisation extends Model
     }
 
     /**
+     * Schema.org Organization: who we are, how to reach us and where else we
+     * live online. Search engines and AI assistants use this to tell what the
+     * organisation is, so it is the one Organization block on every page and
+     * the organizer of every event.
      * @return array
      */
     public function getJsonLd()
@@ -380,48 +384,52 @@ class Organisation extends Model
         $out = [
             "@context" => "http://schema.org",
             "@type" => "Organization",
-            "name" => $this->name ,
+            "name" => $this->name,
             "url" => request()->root(),
-            "sameAs" => [
-
-            ]
+            "description" => $this->getDescription(),
         ];
 
-        $sameAs = [
-            'website_url',
-            'facebook_url',
-            'youtube_url',
-            'instagram_url',
-            'googleplus_url',
-            'twitter_url'
-        ];
+        if ($this->legal_name && $this->legal_name !== $this->name) {
+            $out['legalName'] = $this->legal_name;
+        }
 
-        foreach ($sameAs as $v) {
-            if ($this->$v) {
-                $out['sameAs'][] = $this->$v;
-            }
+        if ($this->logo) {
+            $out['logo'] = $this->logo->getUrl();
+        }
+
+        if ($this->support_email) {
+            $out['email'] = $this->support_email;
+            $out['contactPoint'] = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $this->support_email,
+            ];
+        }
+
+        $address = trim(strip_tags((string) $this->address));
+        if ($address !== '') {
+            $out['address'] = preg_replace('/\s*\n\s*/', ', ', $address);
+        }
+
+        $sameAs = array_values($this->getSocialLinks());
+        if ($this->website_url && rtrim($this->website_url, '/') !== rtrim(request()->root(), '/')) {
+            $sameAs[] = $this->website_url;
+        }
+        if (count($sameAs) > 0) {
+            $out['sameAs'] = array_values(array_unique($sameAs));
         }
 
         return $out;
     }
 
     /**
-     * @return string[]
+     * One or two sentences on what the organisation does: the default meta
+     * description and the summary in llms.txt.
+     * @return string
      */
-    public function getOrganisationJsonLd()
+    public function getDescription(): string
     {
-        $out = [
-            "@context" => "http://schema.org",
-            "@type" => "Organization",
-            "name" => $this->name,
-            "url" => request()->root()
-        ];
-
-        if ($this->logo) {
-            $out['logo'] = $this->logo->getUrl();
-        }
-
-        return $out;
+        return (string) config('seo.default_description');
     }
 
     /**

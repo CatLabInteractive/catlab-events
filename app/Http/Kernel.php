@@ -63,7 +63,8 @@ class Kernel extends HttpKernel
             // VerifyCsrfToken::$except.
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\ValidDomain::class,
+            \App\Http\Middleware\CanonicalDomain::class,
+            \App\Http\Middleware\RobotsHeader::class,
             \Spatie\Referer\CaptureReferer::class,
         ],
 
