@@ -55,7 +55,8 @@ jobs:
       DB_DATABASE: catlab_events_preview
       DB_USERNAME: root
       DB_PASSWORD: root
-      # Some listings (the calendar) group in ways ONLY_FULL_GROUP_BY rejects.
+      # Some listings (the calendar) group in ways ONLY_FULL_GROUP_BY rejects,
+      # so the running app has strict mode off (migrations turn it back on).
       DB_STRICT: false
       APP_ENV: local
       APP_DEBUG: false
@@ -94,6 +95,10 @@ jobs:
         run: npm run production
 
       - name: Prepare app with demo data
+        env:
+          # Migrations need strict mode, as in tests.yml: on MySQL 8 one of
+          # them cannot make a foreign key column NOT NULL without it.
+          DB_STRICT: true
         run: |
           cp .env.example .env
           php artisan key:generate --no-interaction
