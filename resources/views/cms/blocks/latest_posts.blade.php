@@ -1,6 +1,6 @@
 {{-- Renders nothing when the organisation has no visible posts in this locale. --}}
 @if(count($data['posts']) > 0)
-    <section id="b-{{ $block['id'] }}" class="kv-sec kv-cms-latest-posts">
+    <section id="b-{{ $block['id'] }}" class="{{ $bandClass ?? '' }} kv-sec kv-cms-latest-posts">
         <div class="kv-wrap">
             <div class="kv-cms-head kv-cms-head-row">
                 @include('cms.blocks._heading', [ 'text' => $data['title'] ?? '' ])

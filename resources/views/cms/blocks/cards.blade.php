@@ -1,5 +1,9 @@
-{{-- Each card takes the next colour of the palette, starting at this section's colour. --}}
-<section id="b-{{ $block['id'] }}" class="kv-sec kv-cms-cards">
+{{--
+    Each card takes its own colour, or the next colour of the palette starting
+    at this section's colour. Styles: tiles, people (round photo, a team),
+    panels (the whole card in its colour).
+--}}
+<section id="b-{{ $block['id'] }}" class="{{ $bandClass ?? '' }} kv-sec kv-cms-cards kv-cms-cards-{{ $data['style'] ?? 'tiles' }}">
     <div class="kv-wrap">
         @if(!empty($data['title']) || !empty($data['intro']))
             <div class="kv-cms-head">
@@ -12,7 +16,8 @@
 
         <div class="kv-tiles kv-tiles-{{ $data['columns'] }}">
             @foreach($data['items'] as $item)
-                <div class="kv-tile {{ isset($palette) ? $palette->getClassFor(($fieldIndex ?? 0) + $loop->index) : '' }}">
+                @php($cardColour = $item['colour'] ?? null)
+                <div class="kv-tile {{ $cardColour === 'peach' ? 'kv-cms-panel-peach' : (isset($palette) ? $palette->getClassFor($cardColour !== null ? (int) $cardColour : ($fieldIndex ?? 0) + $loop->index) : '') }}">
                     @if($item['image'])
                         <span class="kv-tile-image">
                             <img src="{{ $item['image']->getUrl([ 'width' => 640 ]) }}" alt="" loading="lazy">

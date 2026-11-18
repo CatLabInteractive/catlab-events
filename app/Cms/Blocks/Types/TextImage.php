@@ -51,6 +51,19 @@ class TextImage extends BlockType
             'html' => [ 'nullable', 'string', 'max:' . (512 * 1024) ],
             'image_id' => [ 'nullable', 'integer' ],
             'image_position' => [ 'required', 'in:left,right' ],
+            // A YouTube video in the image's place.
+            'youtube_url' => [
+                'nullable',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    if (is_string($value) && $value !== '' && Video::youtubeId($value) === null) {
+                        $fail('Het veld :attribute moet een YouTube-link zijn.');
+                    }
+                },
+            ],
+            // The text in a colour panel.
+            'panel_colour' => $this->colourRule(),
             'button' => [ 'nullable', 'array' ],
             'button.label' => [ 'nullable', 'string', 'max:40', 'required_with:button.url' ],
             'button.url' => [ 'nullable', 'string', 'max:1024', 'required_with:button.label', new SafeUrl() ],
@@ -69,13 +82,16 @@ class TextImage extends BlockType
 
     public function defaults(): array
     {
-        return [ 'title' => '', 'html' => '', 'image_id' => null, 'image_position' => 'right', 'button' => null ];
+        return [ 'title' => '', 'html' => '', 'image_id' => null, 'image_position' => 'right', 'youtube_url' => '', 'panel_colour' => null, 'button' => null ];
     }
 
     public function prepare(array $data, BlockContext $context): ?array
     {
         $data['image'] = $this->resolveAsset($data['image_id'] ?? null);
         $data['image_position'] = ($data['image_position'] ?? null) === 'left' ? 'left' : 'right';
+        $videoId = is_string($data['youtube_url'] ?? null) ? Video::youtubeId($data['youtube_url']) : null;
+        $data['embed_url'] = $videoId ? 'https://www.youtube-nocookie.com/embed/' . $videoId : null;
+        $data['panel_colour'] = self::colour($data['panel_colour'] ?? null);
 
         $button = is_array($data['button'] ?? null) ? $data['button'] : null;
         $data['button'] = $button && !empty($button['label']) && SafeUrl::isSafe($button['url'] ?? null)

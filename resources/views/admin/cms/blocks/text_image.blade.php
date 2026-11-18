@@ -8,6 +8,14 @@
         @include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'select', 'label' => 'Afbeelding staat', 'name' => $name . '[image_position]', 'value' => $data['image_position'] ?? 'right', 'error' => $error . '.image_position', 'options' => [ 'right' => 'Rechts', 'left' => 'Links' ] ] ])
     </div>
 </div>
+<div class="form-row">
+    <div class="col-md-8">
+        @include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Of een YouTube-video in de plaats van de afbeelding', 'name' => $name . '[youtube_url]', 'value' => $data['youtube_url'] ?? '', 'error' => $error . '.youtube_url', 'max' => 255, 'placeholder' => 'https://www.youtube.com/watch?v=...' ] ])
+    </div>
+    <div class="col-md-4">
+        @include('admin.cms.blocks._colour_field', [ 'field' => [ 'label' => 'Tekst in een kleurvlak', 'name' => $name . '[panel_colour]', 'value' => $data['panel_colour'] ?? '', 'error' => $error . '.panel_colour' ] ])
+    </div>
+</div>
 @php($button = is_array($data['button'] ?? null) ? $data['button'] : [])
 <div class="form-row">
     <div class="col-md-4">

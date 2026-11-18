@@ -9,5 +9,6 @@
         @include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Link', 'name' => $rowName . '[url]', 'value' => $row['url'] ?? '', 'error' => $rowError . '.url', 'max' => 1024 ] ])
     </div>
 </div>
-@include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'textarea', 'label' => 'Tekst', 'name' => $rowName . '[text]', 'value' => $row['text'] ?? '', 'error' => $rowError . '.text', 'max' => 500, 'rows' => 2 ] ])
+@include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'textarea', 'label' => 'Tekst', 'name' => $rowName . '[text]', 'value' => $row['text'] ?? '', 'error' => $rowError . '.text', 'max' => 1000, 'rows' => 2 ] ])
+@include('admin.cms.blocks._colour_field', [ 'field' => [ 'label' => 'Kleur', 'name' => $rowName . '[colour]', 'value' => $row['colour'] ?? '', 'error' => $rowError . '.colour', 'none' => 'Automatisch' ] ])
 @include('admin.cms.blocks._image_field', [ 'field' => [ 'label' => 'Afbeelding', 'name' => $rowName . '[image_id]', 'value' => $row['image_id'] ?? null, 'error' => $rowError . '.image_id' ] ])

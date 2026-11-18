@@ -87,7 +87,7 @@ class BlockValidator
 
             $prefix = 'blocks.' . $index . '.data.';
 
-            foreach ($type->rules() as $field => $fieldRules) {
+            foreach ($type->allRules() as $field => $fieldRules) {
                 $fieldRules = is_string($fieldRules) ? explode('|', $fieldRules) : $fieldRules;
 
                 if (in_array($field, $type->assetFields(), true)) {
@@ -139,7 +139,7 @@ class BlockValidator
             $data = is_array($block['data'] ?? null) ? $block['data'] : [];
             $data = $this->filterKeys($data, $this->keyTree($type));
 
-            foreach ($type->rules() as $field => $fieldRules) {
+            foreach ($type->allRules() as $field => $fieldRules) {
                 $cast = $this->castFor($fieldRules);
                 if ($cast) {
                     $data = $this->castPath($data, explode('.', $field), $cast);
@@ -261,7 +261,7 @@ class BlockValidator
     {
         $tree = [];
 
-        foreach (array_keys($type->rules()) as $key) {
+        foreach (array_keys($type->allRules()) as $key) {
             $node = &$tree;
             foreach (explode('.', $key) as $segment) {
                 if (!isset($node[$segment])) {

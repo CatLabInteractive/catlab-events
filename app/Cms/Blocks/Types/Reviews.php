@@ -53,6 +53,9 @@ class Reviews extends BlockType
             'items.*.author' => [ 'nullable', 'string', 'max:120' ],
             'items.*.source' => [ 'nullable', 'string', 'max:120' ],
             'items.*.url' => [ 'nullable', 'string', 'max:1024', new SafeUrl() ],
+            // A logo or photo next to the quote, and the quote's colour.
+            'items.*.image_id' => [ 'nullable', 'integer' ],
+            'items.*.colour' => $this->colourRule(),
         ];
     }
 
@@ -65,9 +68,19 @@ class Reviews extends BlockType
     {
         $data['items'] = array_map(function (array $item) {
             $item['url'] = SafeUrl::isSafe($item['url'] ?? null) ? $item['url'] : null;
+            $item['image'] = $this->resolveAsset($item['image_id'] ?? null);
+            $item['colour'] = self::colour($item['colour'] ?? null);
             return $item;
         }, $this->listOfArrays($data['items'] ?? []));
 
+        // With logos the quotes are a list: logo, then the quote in a panel.
+        $data['layout'] = count(array_filter(array_column($data['items'], 'image'))) > 0 ? 'list' : 'grid';
+
         return $data;
+    }
+
+    public function assetFields(): array
+    {
+        return [ 'items.*.image_id' ];
     }
 }

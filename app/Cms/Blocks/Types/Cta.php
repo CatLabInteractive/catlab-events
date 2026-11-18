@@ -33,6 +33,14 @@ use App\Cms\Blocks\BlockType;
  */
 class Cta extends BlockType
 {
+    /**
+     * A cta has its own background setting.
+     */
+    public function hasColour(): bool
+    {
+        return false;
+    }
+
     public function type(): string
     {
         return 'cta';

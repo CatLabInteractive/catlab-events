@@ -30,14 +30,18 @@
         @endif
 
         {{-- Each section gets the next colour of the organisation's palette. --}}
+        {{-- A block with a colour is a full-width band in that colour. --}}
         @foreach($blocks as $block)
+            @php($bandColour = \App\Cms\Blocks\BlockType::colour($block['data']['colour'] ?? null))
+            @php($fieldIndex = ($bandColour !== null && $bandColour !== 'peach') ? (int) $bandColour : $loop->index)
             @include($block['view'], [
                 'data' => $block['data'],
                 'block' => $block['block'],
                 'headingLevel' => ($loop->first && $startsWithHero) ? 1 : 2,
                 'palette' => $cmsPalette,
-                'fieldIndex' => $loop->index,
-                'fieldClass' => $cmsPalette->getClassFor($loop->index),
+                'fieldIndex' => $fieldIndex,
+                'fieldClass' => $cmsPalette->getClassFor($fieldIndex),
+                'bandClass' => $bandColour === null ? '' : ('kv-cms-band ' . ($bandColour === 'peach' ? 'kv-cms-band-peach' : $cmsPalette->getClassFor($fieldIndex))),
             ])
         @endforeach
 

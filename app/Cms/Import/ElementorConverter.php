@@ -71,15 +71,22 @@ class ElementorConverter
     private $rewrite;
 
     /**
+     * @var ElementorStyles
+     */
+    private $styles;
+
+    /**
      * @param MediaUrl $site
      * @param callable $asset fn(string $uploadUrl): ?Asset
      * @param callable $rewrite fn(string $html): string
+     * @param ElementorStyles|null $styles the page's Elementor CSS (colours, photos)
      */
-    public function __construct(MediaUrl $site, callable $asset, callable $rewrite)
+    public function __construct(MediaUrl $site, callable $asset, callable $rewrite, ?ElementorStyles $styles = null)
     {
         $this->site = $site;
         $this->asset = $asset;
         $this->rewrite = $rewrite;
+        $this->styles = $styles ?? new ElementorStyles();
     }
 
     /**
@@ -109,7 +116,16 @@ class ElementorConverter
             if (!$widgets) {
                 continue;
             }
-            foreach ($this->sectionBlocks($widgets, $index === 0, $blocks) as $block) {
+            $sectionId = (string) $section->getAttribute('data-id');
+            $style = [
+                'colour' => $this->styles->colour($sectionId),
+                'image' => $this->styles->image($sectionId),
+            ];
+            foreach ($this->sectionBlocks($widgets, $index === 0, $blocks, $style) as $block) {
+                // The section's colour becomes the block's band colour.
+                if ($style['colour'] !== null && !isset($block['data']['colour']) && $block['type'] !== 'cta') {
+                    $block['data']['colour'] = $style['colour'];
+                }
                 $blocks[] = $block;
             }
             $index++;
@@ -167,11 +183,42 @@ class ElementorConverter
             if ($widget) {
                 $widget['column'] = $column;
                 $widget['columns'] = count($columns);
+                $widget['round'] = $this->styles->isRound((string) $element->getAttribute('data-id'));
+                [ $widget['panel'], $widget['panel_colour'], $widget['inner'] ] = $this->panel($element, $section, $columns[$column] ?? null);
                 $widgets[] = $widget;
             }
         }
 
         return $widgets;
+    }
+
+    /**
+     * The nearest coloured column or inner section around a widget (below
+     * the top section), and whether the widget sits in an inner section.
+     * @param DOMElement $element
+     * @param DOMElement $section
+     * @param DOMElement|null $topColumn
+     * @return array [ ?data-id, ?colour, bool inner ]
+     */
+    private function panel(DOMElement $element, DOMElement $section, ?DOMElement $topColumn): array
+    {
+        $panel = null;
+        $colour = null;
+        $inner = false;
+        for ($node = $element->parentNode; $node instanceof DOMElement && $node !== $section; $node = $node->parentNode) {
+            $type = $node->getAttribute('data-element_type');
+            if ($type === 'section') {
+                $inner = true;
+            }
+            if ($panel === null && in_array($type, [ 'column', 'section' ], true)) {
+                $nodeColour = $this->styles->colour((string) $node->getAttribute('data-id'));
+                if ($nodeColour !== null) {
+                    $panel = $node === $topColumn ? 'column:' . $node->getAttribute('data-id') : (string) $node->getAttribute('data-id');
+                    $colour = $nodeColour;
+                }
+            }
+        }
+        return [ $panel, $colour, $inner ];
     }
 
     /**
@@ -295,9 +342,10 @@ class ElementorConverter
      * @param array[] $widgets
      * @param bool $first
      * @param array[] $blocks the blocks so far (buttons-only sections join the last one)
+     * @param array $style the section's [ colour, image ]
      * @return array[] [ [ type, data ], ... ]
      */
-    private function sectionBlocks(array $widgets, bool $first, array &$blocks): array
+    private function sectionBlocks(array $widgets, bool $first, array &$blocks, array $style = [ 'colour' => null, 'image' => null ]): array
     {
         $types = array_column($widgets, 'type');
         $count = array_count_values($types);
@@ -322,11 +370,21 @@ class ElementorConverter
                 $blocks[$last]['data']['button'] = [ 'label' => $buttons[0]['label'], 'url' => $buttons[0]['url'] ];
                 return [];
             }
+            // After text: the buttons as links under it (a cta would repeat
+            // the button's label as its title).
+            if ($last >= 0 && $blocks[$last]['type'] === 'rich_text') {
+                $html = $blocks[$last]['data']['html'];
+                $new = array_filter($this->ofType($widgets, 'button'), function ($w) use ($html) {
+                    return strpos($html, 'href="' . e($w['url']) . '"') === false;
+                });
+                $blocks[$last]['data']['html'] .= $this->html(array_values($new));
+                return [];
+            }
             return [ $this->block('cta', [ 'title' => $buttons[0]['label'], 'text' => '', 'background' => 'primary', 'buttons' => $buttons ]) ];
         }
 
         if ($first && $headings) {
-            return $this->hero($widgets);
+            return $this->hero($widgets, $style['image'] ?? null);
         }
 
         // A hand-made list of events (buttons to /e/…): the live list instead,
@@ -347,6 +405,22 @@ class ElementorConverter
                 'show_sold_out' => true,
                 'empty_text' => null,
             ]) ];
+        }
+
+        // A video in one column next to text: text with the video beside it.
+        if (isset($count['video']) && $count['video'] === 1 && $widgets[0]['columns'] === 2) {
+            $video = $this->ofType($widgets, 'video')[0];
+            $textColumn = array_values(array_filter($widgets, function ($w) use ($video) {
+                return $w['column'] !== $video['column'];
+            }));
+            $videoColumn = array_filter($widgets, function ($w) use ($video) {
+                return $w['column'] === $video['column'];
+            });
+            if ($textColumn && count($videoColumn) === 1 && !$this->ofType($textColumn, 'image') && !$this->ofType($textColumn, 'gallery')) {
+                $block = $this->textImage($textColumn, null, $video['column'] === 0 ? 'left' : 'right', $style['colour'] ?? null);
+                $block['data']['youtube_url'] = $video['youtube'];
+                return [ $block ];
+            }
         }
 
         if (isset($count['video'])) {
@@ -376,9 +450,66 @@ class ElementorConverter
                 $textColumn = $byColumn[1 - $imageColumn];
                 if ($imageTypes === [ 'image' ] && $textColumn && !in_array('image', array_column($textColumn, 'type'), true)) {
                     $image = $byColumn[$imageColumn][0]['images'][0];
-                    return [ $this->textImage($textColumn, $image, $position) ];
+                    return [ $this->textImage($textColumn, $image, $position, $style['colour'] ?? null) ];
                 }
             }
+        }
+
+        // Coloured boxes (inner sections or columns) that each hold a
+        // heading → cards as colour panels; the rest of the section follows.
+        $panels = [];
+        foreach ($widgets as $widget) {
+            if ($widget['panel'] !== null && strpos($widget['panel'], 'column:') !== 0) {
+                $panels[$widget['panel']][] = $widget;
+            }
+        }
+        $panelItems = [];
+        foreach ($panels as $group) {
+            $item = $this->ofType($group, 'heading') ? $this->card($group) : null;
+            if ($item) {
+                $item['colour'] = $group[0]['panel_colour'];
+                $panelItems[] = $item;
+            }
+        }
+        if (count($panelItems) >= 2) {
+            $inPanel = function ($w) use ($panels, $panelItems) {
+                return $w['panel'] !== null && isset($panels[$w['panel']]) && $this->ofType($panels[$w['panel']], 'heading');
+            };
+            $before = [];
+            $after = [];
+            $seenPanel = false;
+            foreach ($widgets as $widget) {
+                if ($inPanel($widget)) {
+                    $seenPanel = true;
+                } elseif ($seenPanel) {
+                    $after[] = $widget;
+                } else {
+                    $before[] = $widget;
+                }
+            }
+            $beforeHeadings = $this->ofType($before, 'heading');
+            $title = $beforeHeadings[0]['text'] ?? null;
+            $intro = null;
+            if ($beforeHeadings && count($before) <= 2) {
+                $intro = isset($before[1]) ? $before[1]['text'] : null;
+                $before = [];
+            }
+            $out = [];
+            if ($before) {
+                $out[] = $this->richText($before);
+                $title = null;
+            }
+            $out[] = $this->block('cards', [
+                'title' => $this->limit($title !== null ? $this->label($title) : null, 120),
+                'intro' => $this->limit($intro, 500),
+                'columns' => max(2, min(4, count($panelItems) > 4 ? 3 : count($panelItems))),
+                'style' => 'panels',
+                'items' => array_slice($panelItems, 0, 12),
+            ]);
+            if ($after) {
+                $out[] = $this->richText($after);
+            }
+            return $out;
         }
 
         // Columns that each hold an image and a heading → cards.
@@ -414,7 +545,16 @@ class ElementorConverter
             }
             $items = array_values(array_filter(array_map([ $this, 'card' ], $groups)));
             if (count($items) >= 3) {
-                return [ $this->block('cards', [ 'title' => $this->limit($title, 120), 'intro' => null, 'columns' => count($items) % 3 === 0 ? 3 : 4, 'items' => $items ]) ];
+                $round = count(array_filter($imageWidgets, function ($w) {
+                    return $w['round'];
+                })) * 2 >= count($imageWidgets);
+                return [ $this->block('cards', [
+                    'title' => $this->limit($title, 120),
+                    'intro' => null,
+                    'columns' => count($items) % 3 === 0 ? 3 : 4,
+                    'style' => $round ? 'people' : 'tiles',
+                    'items' => $items,
+                ]) ];
             }
         }
 
@@ -425,7 +565,7 @@ class ElementorConverter
      * @param array[] $widgets
      * @return array[]
      */
-    private function hero(array $widgets): array
+    private function hero(array $widgets, ?string $photo = null): array
     {
         $title = null;
         $subtitle = null;
@@ -447,27 +587,47 @@ class ElementorConverter
             }
         }
 
+        $photoUrl = $photo !== null ? $this->site->normalise($photo) : null;
+        $asset = $photoUrl !== null ? ($this->asset)($photoUrl) : null;
+
         $hero = $this->block('hero', [
             'title' => $this->limit($title, 120),
             'subtitle' => $subtitle,
-            'image_id' => null,
+            'image_id' => $asset ? $asset->id : null,
+            'image_style' => $asset ? 'cover' : 'side',
             'align' => 'center',
             'buttons' => $buttons,
         ]);
 
-        $rest = array_values(array_diff_key($widgets, $used));
+        // What is left in an inner section of the hero is decoration (a
+        // floating box, social icons) and goes.
+        $rest = array_values(array_filter(array_diff_key($widgets, $used), function ($w) {
+            return !$w['inner'];
+        }));
 
         return $rest ? [ $hero, $this->richText($rest) ] : [ $hero ];
     }
 
     /**
      * @param array[] $widgets the text column
-     * @param array $image
+     * @param array|null $image
      * @param string $position
+     * @param string|null $sectionColour
      * @return array
      */
-    private function textImage(array $widgets, array $image, string $position): array
+    private function textImage(array $widgets, ?array $image, string $position, ?string $sectionColour = null): array
     {
+        // The text column's own colour (when the section has another one).
+        $panelColour = $widgets[0]['panel_colour'] ?? null;
+        foreach ($widgets as $widget) {
+            if ($widget['panel_colour'] !== $panelColour) {
+                $panelColour = null;
+            }
+        }
+        if ($panelColour === $sectionColour) {
+            $panelColour = null;
+        }
+
         $headings = $this->ofType($widgets, 'heading');
         $texts = $this->ofType($widgets, 'text-editor');
 
@@ -483,6 +643,8 @@ class ElementorConverter
                     'author' => $this->limit($headings[$i]['text'], 120),
                     'source' => null,
                     'url' => null,
+                    'image_id' => $i === 0 && $image && $image['asset'] ? $image['asset']->id : null,
+                    'colour' => $panelColour,
                 ];
             }
             return $this->block('reviews', [ 'title' => null, 'items' => $items ]);
@@ -498,10 +660,11 @@ class ElementorConverter
         }));
 
         return $this->block('text_image', [
-            'title' => $this->limit($title, 120),
+            'title' => $this->limit($title !== null ? $this->label($title) : null, 120),
             'html' => $this->html($rest),
-            'image_id' => $image['asset'] ? $image['asset']->id : null,
+            'image_id' => $image && $image['asset'] ? $image['asset']->id : null,
             'image_position' => $position,
+            'panel_colour' => $panelColour,
             'button' => $buttons ? [ 'label' => $buttons[0]['label'], 'url' => $buttons[0]['url'] ] : null,
         ]);
     }
@@ -539,7 +702,7 @@ class ElementorConverter
 
         return [
             'title' => $this->limit($this->label($title), 120),
-            'text' => $text ? $this->limit(implode(' · ', $text), 500) : null,
+            'text' => $text ? $this->limit(implode("\n", $text), 1000) : null,
             'icon' => null,
             'image_id' => $image && $image['asset'] ? $image['asset']->id : null,
             'url' => $buttons ? $buttons[0]['url'] : ($image['href'] ?? null),
@@ -733,6 +896,11 @@ class ElementorConverter
         if (mb_strlen($text) > 2 && $text === mb_strtoupper($text) && $text !== mb_strtolower($text)) {
             $lower = mb_strtolower($text);
             return mb_strtoupper(mb_substr($lower, 0, 1)) . mb_substr($lower, 1);
+        }
+
+        // 'komende evenementen' (shown in capitals by CSS) starts with a capital.
+        if (preg_match('/^\p{Ll}/u', $text)) {
+            return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
         }
 
         return $text;

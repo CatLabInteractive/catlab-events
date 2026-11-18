@@ -423,7 +423,7 @@ class WordPressImporter
         $this->reportDropped('page ' . $wpId, $body, $dryRun);
 
         $flat = [ [ 'id' => PageWriter::newBlockId(), 'type' => 'rich_text', 'data' => [ 'html' => $body ] ] ];
-        $blocks = $this->elementorBlocks($html, $organisation, $dryRun) ?? $flat;
+        $blocks = $this->elementorBlocks($html, $wpId, $organisation, $dryRun) ?? $flat;
         $summary = implode(', ', array_map(function ($block) {
             return $block['type'];
         }, $blocks));
@@ -478,14 +478,24 @@ class WordPressImporter
     }
 
     /**
-     * Blocks for an Elementor page, or null when it is not one.
+     * Blocks for an Elementor page, or null when it is not one. Section
+     * colours and background photos come from the CSS Elementor generates
+     * for the page (uploads/elementor/css/post-N.css).
      * @param string $html
+     * @param int $wpId
      * @param Organisation $organisation
      * @param bool $dryRun
      * @return array|null
      */
-    private function elementorBlocks(string $html, Organisation $organisation, bool $dryRun): ?array
+    private function elementorBlocks(string $html, int $wpId, Organisation $organisation, bool $dryRun): ?array
     {
+        if (strpos($html, 'data-element_type') === false) {
+            return null;
+        }
+
+        $css = $this->get('/wp-content/uploads/elementor/css/post-' . $wpId . '.css');
+        $styles = new ElementorStyles($css ? $css->body() : '', $organisation->getColourPalette());
+
         $converter = new ElementorConverter(
             $this->site,
             function (string $url) use ($organisation, $dryRun) {
@@ -493,7 +503,8 @@ class WordPressImporter
             },
             function (string $fragment) use ($organisation, $dryRun) {
                 return $this->body($fragment, true, $organisation, $dryRun);
-            }
+            },
+            $styles
         );
 
         return $converter->convert($html);

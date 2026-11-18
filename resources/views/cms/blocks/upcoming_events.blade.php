@@ -1,4 +1,4 @@
-<section id="b-{{ $block['id'] }}" class="kv-sec kv-cms-upcoming-events">
+<section id="b-{{ $block['id'] }}" class="{{ $bandClass ?? '' }} kv-sec kv-cms-upcoming-events">
     <div class="kv-wrap">
         @if(!empty($data['title']) || !empty($data['intro']))
             <div class="kv-cms-head">

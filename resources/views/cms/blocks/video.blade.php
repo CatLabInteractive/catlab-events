@@ -1,4 +1,4 @@
-<section id="b-{{ $block['id'] }}" class="kv-sec kv-cms-video">
+<section id="b-{{ $block['id'] }}" class="{{ $bandClass ?? '' }} kv-sec kv-cms-video">
     <div class="kv-wrap">
         @include('cms.blocks._heading', [ 'text' => $data['title'] ?? '' ])
 
