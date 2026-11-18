@@ -96,6 +96,12 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        // "Quizzen op maat" in the site menu; empty hides it.
+        $this->field('custom_quiz_url')
+            ->string()
+            ->visible()
+            ->writeable(true, true);
+
         $this->field('blog_rss_url')
             ->visible()
             ->writeable();

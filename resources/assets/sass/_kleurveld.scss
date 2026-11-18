@@ -233,6 +233,11 @@ body.kv-page {
 
 .kv-nav-group.is-open .kv-nav-sub { display: block; }
 
+/* "Quizzen op maat": the one highlighted item, an outlined pill. */
+.kv-nav-highlight > a {
+  font-weight: 500;
+}
+
 /* From desktop width the links sit in one row. */
 @media (min-width: 992px) {
   .kv-header-inner { padding: 0 40px; min-height: 88px; flex-wrap: nowrap; gap: 32px; }
@@ -277,6 +282,15 @@ body.kv-page {
   }
 
   .kv-nav-group:hover .kv-nav-sub { display: block; }
+
+  .kv-nav-highlight > a {
+    padding: 8px 16px;
+    border: 2px solid $kv-ink;
+    border-radius: 999px;
+    color: $kv-ink;
+  }
+
+  .kv-nav-highlight > a:hover, .kv-nav-highlight > a:focus-visible { background: $kv-ink; color: $kv-paper; }
   .kv-nav-group:hover .kv-nav-caret { transform: translateY(3px) rotate(-135deg); }
 }
 
@@ -442,6 +456,80 @@ body.kv-page {
   color: $kv-muted;
 
   span + span:before { content: " · "; }
+}
+
+/* Event name on a colour field or photo: the field's text colour, also when it's a link. */
+.kv-site .kv-hero-photo .kv-title, .kv-site .kv-hero-noposter .kv-title,
+.kv-page .kv-hero-photo .kv-title a, .kv-page .kv-hero-photo .kv-title a:hover, .kv-page .kv-hero-photo .kv-title a:focus,
+.kv-page .kv-hero-noposter .kv-title a, .kv-page .kv-hero-noposter .kv-title a:hover, .kv-page .kv-hero-noposter .kv-title a:focus { color: var(--kv-on-field); }
+
+/* The series name as the page's h1, in the small kicker line above the event name. */
+.kv-site h1.kv-series-h1 {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  margin: 0 0 6px;
+  color: inherit;
+
+  .kv-series-sub { font-weight: 400; opacity: .85; }
+  .kv-series-sub:before { content: "\00b7"; margin-right: 8px; }
+}
+
+/*
+ * Photo hero: the series photos fill the hero and fade into the series colour
+ * where the text sits, so the text is always on a solid colour. Phones: the
+ * photo on top, fading down into the colour. Desktop: the photo behind the
+ * whole hero, fading in from the left.
+ */
+.kv-hero-photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--kv-field);
+  color: var(--kv-on-field);
+
+  &:before, &:after { display: none; }
+
+  .kv-hero-photos {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: 36vh;
+    width: 100%;
+    overflow: hidden;
+
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+    }
+
+    img.is-shown { opacity: 1; }
+
+    &:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, var(--kv-field) 98%);
+    }
+  }
+
+  .kv-hero-info { position: relative; z-index: 1; padding-top: 0; margin-top: -28px; }
+  .kv-series, .kv-hero-facts { color: var(--kv-on-field); opacity: .92; }
+  .kv-series i, .kv-hero-facts li:before { background: var(--kv-on-field); }
+  .kv-links a, .kv-links a:hover, .kv-links a:focus { color: var(--kv-on-field); text-decoration-color: currentColor; }
+  .kv-buy { border-color: transparent; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .5); }
+
+  /* The poster sits on the colour below the text on phones, on the photo on desktop. */
+  .kv-hero-field { order: 3; background: transparent; padding-top: 0; min-height: 0; }
+  .kv-hero-field:before, .kv-hero-field:after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-hero-photos img { transition: none; }
 }
 
 /* The facts as a short list, each with a dot in the series colour. */
@@ -999,6 +1087,37 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
   .kv-hero-info { padding: 64px max(40px, calc((100vw - 1200px) / 2 + 40px)) 64px 56px; }
   .kv-hero-noposter .kv-hero-info { padding: 72px max(40px, calc((100vw - 1200px) / 2 + 40px)); padding-right: 45%; }
+
+  .kv-hero.kv-hero-photo { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); min-height: 600px; }
+  .kv-hero-photo.kv-hero-noposter { grid-template-columns: minmax(0, 1fr); }
+
+  .kv-hero-photo .kv-hero-photos {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    max-height: none;
+
+    &:after { background: linear-gradient(90deg, var(--kv-field) 0%, var(--kv-field) 40%, transparent 72%); }
+  }
+
+  .kv-hero-photo .kv-hero-info {
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 0;
+    padding: 72px 48px 72px max(40px, calc((100vw - 1200px) / 2 + 40px));
+  }
+
+  .kv-hero-photo.kv-hero-noposter .kv-hero-info { padding-right: 50%; }
+
+  .kv-hero-photo .kv-hero-field {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    z-index: 1;
+    padding: 72px max(40px, calc((100vw - 1200px) / 2 + 40px)) 72px 24px;
+  }
+
+  .kv-hero-photo .kv-poster img { filter: drop-shadow(0 24px 40px rgba(0, 0, 0, .45)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
