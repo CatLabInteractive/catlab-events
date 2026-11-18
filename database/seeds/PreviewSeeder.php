@@ -125,15 +125,15 @@ class PreviewSeeder extends Seeder
 
         $posts = app(\App\Cms\PostWriter::class);
         $postBody = '<p class="cms-lead">Een quiz in je eigen woonkamer, met vrienden of familie, wanneer het jou past.</p>'
-            . '<p>We maakten dit jaar drie nieuwe <a href="/events">quizpakketten</a>. Elk pakket heeft acht rondes en duurt ongeveer anderhalf uur.</p>'
-            . '<h2>Wat zit erin?</h2><ul><li>Acht rondes met beeld en geluid</li><li>Een scorebord op je tv</li><li>Antwoorden met je smartphone</li></ul>'
-            . '<blockquote><p>De leukste avond van het jaar, en we moesten niet eens de deur uit.</p></blockquote>'
+            . '<p>Voorbeeldtekst met een <a href="/events">link</a>. Deze tekst is demodata voor de preview en geen echte inhoud.</p>'
+            . '<h2>Wat zit erin?</h2><ul><li>Eerste punt</li><li>Tweede punt</li><li>Derde punt</li></ul>'
+            . '<blockquote><p>Een voorbeeldcitaat in de tekst.</p></blockquote>'
             . '<h3>Hoe begin je?</h3><ol><li>Koop een pakket</li><li>Open de link op je laptop</li><li>Scan de QR-code</li></ol>';
         foreach ([
             [ 'Drie nieuwe quizpakketten', 'drie-nieuwe-quizpakketten', 2, $wide->id ],
             [ 'Terugblik op de Grote Kerstquiz', 'terugblik-grote-kerstquiz', 20, null ],
             [ 'Zo maken we een quizronde', 'zo-maken-we-een-quizronde', 45, $square->id ],
-            [ 'Quizfabriek in de pers', 'quizfabriek-in-de-pers', 80, null ],
+            [ 'Voorbeeldbericht zonder afbeelding', 'voorbeeldbericht', 80, null ],
         ] as [ $title, $slug, $daysAgo, $imageId ]) {
             $posts->createPost($organisation, [
                 'published_at' => Carbon::now()->subDays($daysAgo)->setTime(10, 0),
@@ -166,15 +166,15 @@ class PreviewSeeder extends Seeder
                     ],
                 ]),
                 $block('text_image', [
-                    'title' => 'Onze presentatoren', 'image_id' => $square->id, 'image_position' => 'right',
-                    'html' => '<p>Kim en Wietse presenteren al meer dan tien jaar quizzen in heel Vlaanderen.</p><ul><li>Vragen op maat van je groep</li><li>Toegankelijk voor iedereen</li><li>Met de nodige kwinkslag</li></ul>',
+                    'title' => 'Voorbeeld: tekst en beeld', 'image_id' => $square->id, 'image_position' => 'right',
+                    'html' => '<p>Voorbeeldtekst naast een afbeelding, met een korte lijst eronder.</p><ul><li>Eerste punt</li><li>Tweede punt</li><li>Derde punt</li></ul>',
                     'button' => [ 'label' => 'Maak kennis', 'url' => '/over-ons' ],
                 ]),
                 $block('reviews', [
-                    'title' => 'Wat klanten zeggen',
+                    'title' => 'Voorbeeld: recensies',
                     'items' => [
-                        [ 'quote' => 'Iedereen sprak er de week erna nog over. Perfect georganiseerd.', 'author' => 'Sofie', 'source' => 'Personeelsfeest' ],
-                        [ 'quote' => 'Moeilijk genoeg voor de fanatiekelingen, leuk voor de rest.', 'author' => 'Pieter', 'source' => 'Google' ],
+                        [ 'quote' => 'Voorbeeldrecensie: een korte quote van een tevreden klant.', 'author' => 'Voorbeeldklant A', 'source' => 'Demo' ],
+                        [ 'quote' => 'Voorbeeldrecensie: nog een quote, iets langer, om te zien hoe twee kaarten naast elkaar staan.', 'author' => 'Voorbeeldklant B', 'source' => 'Demo' ],
                     ],
                 ]),
                 $block('upcoming_events', [ 'title' => 'Volgende quizzen', 'limit' => 4, 'event_type' => 'all' ]),
@@ -185,23 +185,23 @@ class PreviewSeeder extends Seeder
                 $block('faq', [
                     'title' => 'Veelgestelde vragen',
                     'items' => [
-                        [ 'question' => 'Hoeveel spelers kunnen meedoen?', 'answer' => '<p>Van tien tot vijfhonderd. Grotere groepen spelen in ploegen.</p>' ],
-                        [ 'question' => 'Hoe lang op voorhand moet ik boeken?', 'answer' => '<p>Liefst <strong>zes weken</strong>, voor een quiz op maat iets meer.</p>' ],
-                        [ 'question' => 'Kunnen we het thema kiezen?', 'answer' => '<p>Ja, elke ronde kan over jullie bedrijf, vereniging of jarige gaan.</p>' ],
+                        [ 'question' => 'Hoeveel spelers kunnen meedoen?', 'answer' => '<p>Voorbeeldantwoord.</p>' ],
+                        [ 'question' => 'Hoe lang op voorhand moet ik boeken?', 'answer' => '<p>Voorbeeldantwoord met <strong>vette tekst</strong>.</p>' ],
+                        [ 'question' => 'Kunnen we het thema kiezen?', 'answer' => '<p>Voorbeeldantwoord.</p>' ],
                     ],
                 ]),
-                $block('video', [ 'title' => 'Zo ziet een livestream eruit', 'youtube_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'caption' => 'Een fragment uit de Grote Kerstquiz.' ]),
+                $block('video', [ 'title' => 'Zo ziet een livestream eruit', 'youtube_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'caption' => 'Voorbeeldvideo.' ]),
                 $block('logo_grid', [
-                    'title' => 'Ze gingen je voor',
+                    'title' => 'Voorbeeld: logo\'s',
                     'items' => [
-                        [ 'name' => 'Bibliotheek Gent', 'image_id' => $logo->id ], [ 'name' => 'Jeugdhuis De Kring' ],
-                        [ 'name' => 'Quizclub Noord', 'image_id' => $logo->id ], [ 'name' => 'Stad Gent' ],
-                        [ 'name' => 'Sportclub', 'image_id' => $logo->id ], [ 'name' => 'Cultuurcentrum' ],
+                        [ 'name' => 'Voorbeeldpartner 1', 'image_id' => $logo->id ], [ 'name' => 'Voorbeeldpartner 2' ],
+                        [ 'name' => 'Voorbeeldpartner 3', 'image_id' => $logo->id ], [ 'name' => 'Voorbeeldpartner 4' ],
+                        [ 'name' => 'Voorbeeldpartner 5', 'image_id' => $logo->id ], [ 'name' => 'Voorbeeldpartner 6' ],
                     ],
                 ]),
                 $block('latest_posts', [ 'title' => 'Uit de blog', 'limit' => 3 ]),
                 $block('cta', [
-                    'title' => 'Liever bellen?', 'text' => 'We zijn bereikbaar op weekdagen tussen 9 en 17 uur.', 'background' => 'dark',
+                    'title' => 'Liever bellen?', 'text' => 'Voorbeeldtekst voor een donkere oproep.', 'background' => 'dark',
                     'buttons' => [ [ 'label' => 'Bel ons', 'url' => 'tel:+3291234567', 'style' => 'primary' ], [ 'label' => 'Of mail', 'url' => 'mailto:hallo@example.test', 'style' => 'secondary' ] ],
                 ]),
             ],
