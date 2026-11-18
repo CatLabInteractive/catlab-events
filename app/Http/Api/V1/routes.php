@@ -65,6 +65,11 @@ $routes->group(
         // The library of named mail templates
         \App\Http\Api\V1\Controllers\EmailTemplateController::setRoutes($routes);
 
+        // The automatic mails: the organisation's versions and layout, and each event's choice
+        \App\Http\Api\V1\Controllers\StandardMailController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\EmailLayoutController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\EventMailController::setRoutes($routes);
+
         \App\Http\Api\V1\Controllers\AssetController::setRoutes($routes);
 
     }

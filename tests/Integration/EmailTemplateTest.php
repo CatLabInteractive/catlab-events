@@ -48,8 +48,8 @@ class EmailTemplateTest extends IntegrationTestCase
     private function customise(string $type, string $subject, string $content): void
     {
         $this->actingAs($this->admin)
-            ->post("/admin/emails/{$type}", [ 'subject' => $subject, 'content' => $content ])
-            ->assertRedirect(action('Admin\EmailTemplateController@show', [ $type ]));
+            ->put("/admin/emails/{$type}", [ 'fields' => [ 'subject' => $subject, 'content' => $content ] ])
+            ->assertRedirect(action('Admin\EmailTemplateController@index'));
     }
 
     public function testTheOverviewListsEveryMailAndIsLinkedFromTheMenu()
@@ -69,7 +69,9 @@ class EmailTemplateTest extends IntegrationTestCase
     public function testEveryDefaultMailCanBePreviewedWithSampleData()
     {
         foreach (self::TYPES as $type) {
-            $this->actingAs($this->admin)->get("/admin/emails/{$type}")->assertStatus(200);
+            // A mail opens in its editor, which holds the preview.
+            $this->actingAs($this->admin)->get("/admin/emails/{$type}")
+                ->assertRedirect(action('Admin\EmailTemplateController@edit', [ $type ]));
 
             $preview = $this->actingAs($this->admin)->get("/admin/emails/{$type}/preview");
             $preview->assertStatus(200);
@@ -94,10 +96,10 @@ class EmailTemplateTest extends IntegrationTestCase
 
         foreach (self::TYPES as $type) {
             $body = $this->actingAs($this->admin)
-                ->post("/admin/emails/{$type}/preview", [
+                ->put("/admin/emails/{$type}/preview", [ 'fields' => [
                     'subject' => $templates->getDefaultSubject($type),
                     'content' => $templates->getDefaultContent($type)
-                ])
+                ] ])
                 ->assertStatus(200)
                 ->getContent();
 
@@ -109,7 +111,7 @@ class EmailTemplateTest extends IntegrationTestCase
     {
         $this->actingAs($this->admin)->get('/admin/emails/nope')->assertStatus(404);
         $this->actingAs($this->admin)
-            ->post('/admin/emails/nope', [ 'subject' => 'a', 'content' => 'b' ])
+            ->put('/admin/emails/nope', [ 'fields' => [ 'subject' => 'a', 'content' => 'b' ] ])
             ->assertStatus(404);
     }
 
@@ -123,7 +125,7 @@ class EmailTemplateTest extends IntegrationTestCase
 
         $this->actingAs($outsider)->get('/admin/emails')->assertStatus(404);
         $this->actingAs($outsider)
-            ->post('/admin/emails/' . EmailTemplates::CONFIRMATION, [ 'subject' => 'a', 'content' => 'b' ])
+            ->put('/admin/emails/' . EmailTemplates::CONFIRMATION, [ 'fields' => [ 'subject' => 'a', 'content' => 'b' ] ])
             ->assertStatus(404);
 
         $this->assertSame(0, EmailTemplate::query()->count());
@@ -132,10 +134,10 @@ class EmailTemplateTest extends IntegrationTestCase
     public function testPreviewingADraftSavesNothing()
     {
         $body = $this->actingAs($this->admin)
-            ->post('/admin/emails/' . EmailTemplates::CANCELLATION . '/preview', [
+            ->put('/admin/emails/' . EmailTemplates::CANCELLATION . '/preview', [ 'fields' => [
                 'subject' => 'Jammer',
                 'content' => '<p>Tot ziens op {{ event.name }}, {{ team.name }}!</p>'
-            ])
+            ] ])
             ->assertStatus(200)
             ->getContent();
 
@@ -206,21 +208,30 @@ class EmailTemplateTest extends IntegrationTestCase
         $this->customise(EmailTemplates::CANCELLATION, 'Eigen onderwerp', '<p>Eigen tekst</p>');
         $this->assertSame(1, EmailTemplate::query()->count());
 
-        $resetUrl = action('Admin\EmailTemplateController@reset', [ EmailTemplates::CANCELLATION ]);
+        $resetUrl = action('Admin\EmailTemplateController@confirmDelete', [ EmailTemplates::CANCELLATION ]);
 
         $this->actingAs($this->admin)
             ->get('/admin/emails/' . EmailTemplates::CANCELLATION . '/edit')
             ->assertSee('Eigen tekst', false)
-            ->assertSee($resetUrl);
+            ->assertSee('Je organisatie gebruikt een aangepaste versie van deze mail.');
 
-        // The overview offers the way back too, only for the customised mail.
+        // The overview offers the way back, only for the customised mail.
         $this->actingAs($this->admin)->get('/admin/emails')
-            ->assertSee($resetUrl)
-            ->assertDontSee(action('Admin\EmailTemplateController@reset', [ EmailTemplates::CONFIRMATION ]));
+            ->assertSee($resetUrl, false)
+            ->assertDontSee(action('Admin\EmailTemplateController@confirmDelete', [ EmailTemplates::CONFIRMATION ]), false);
+
+        $this->actingAs($this->admin)->get($resetUrl)
+            ->assertStatus(200)
+            ->assertSee('de standaardversie wordt weer verstuurd');
+
+        // A mail that was never rewritten has nothing to go back from.
+        $this->actingAs($this->admin)
+            ->delete('/admin/emails/' . EmailTemplates::CONFIRMATION)
+            ->assertStatus(403);
 
         $this->actingAs($this->admin)
-            ->post('/admin/emails/' . EmailTemplates::CANCELLATION . '/reset')
-            ->assertRedirect(action('Admin\EmailTemplateController@show', [ EmailTemplates::CANCELLATION ]));
+            ->delete('/admin/emails/' . EmailTemplates::CANCELLATION)
+            ->assertRedirect(action('Admin\EmailTemplateController@index'));
 
         $this->assertSame(0, EmailTemplate::query()->count());
 
@@ -315,12 +326,12 @@ class EmailTemplateTest extends IntegrationTestCase
         $response = $this->actingAs($this->admin)->get('/admin/emails');
         $response->assertStatus(200);
         $this->assertMatchesRegularExpression(
-            '/Inschrijving bevestigd<.*?Standaard/s',
+            '/Inschrijving bevestigd\s*<.*?Standaard/s',
             $response->getContent()
         );
         $response->assertDontSee('Aangepast');
 
-        $this->actingAs($this->admin)->post('/admin/emails/' . EmailTemplates::CONFIRMATION . '/reset');
+        $this->actingAs($this->admin)->delete('/admin/emails/' . EmailTemplates::CONFIRMATION);
         $this->assertSame(1, EmailTemplate::library()->count());
     }
 

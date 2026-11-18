@@ -230,22 +230,7 @@ class EmailLibraryController extends BaseAdminController
      */
     protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
     {
-        $data = $response->getData(true);
-
-        $lines = [];
-        foreach (($data['error']['issues'] ?? []) as $errors) {
-            foreach ((array) $errors as $error) {
-                $lines[] = e($error);
-            }
-        }
-
-        if (count($lines) === 0) {
-            $lines[] = e($data['error']['message'] ?? 'Er ging iets mis.');
-        }
-
-        return redirect()->back()
-            ->with('message', new HtmlString(implode('<br>', $lines)))
-            ->withInput();
+        return $this->refusedByApi($response);
     }
 
     /**
@@ -318,8 +303,8 @@ class EmailLibraryController extends BaseAdminController
     {
         return new EmailTemplate([
             'type' => $type,
-            'subject' => (string) $request->input('fields.subject', $request->input('subject', '')),
-            'content' => (string) $request->input('fields.content', $request->input('content', '')),
+            'subject' => $this->draftField($request, 'subject'),
+            'content' => $this->draftField($request, 'content'),
         ]);
     }
 

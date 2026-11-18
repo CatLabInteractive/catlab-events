@@ -1,6 +1,6 @@
 {{--
     App\Services\Admin\Widgets\EmailContentWidget: editor, placeholders and a
-    sandboxed preview. $content, $placeholders, $previewAction.
+    sandboxed preview. $content, $placeholders, $previewAction, $previewCaption.
 --}}
 <div class="form-group email-content-widget" data-email-editor>
     @include('charonfrontend::widgets.label', [ 'for' => $field->getId() ])
@@ -35,7 +35,7 @@
                 formtarget="email-preview" formnovalidate>
             Voorbeeld vernieuwen
         </button>
-        <small class="text-muted ml-2">Met verzonnen gegevens. Toont je wijzigingen zonder ze op te slaan.</small>
+        <small class="text-muted ml-2">{{ $previewCaption }}</small>
     </p>
     <iframe name="email-preview" id="email-preview"
             src="{{ $previewAction }}"

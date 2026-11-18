@@ -45,11 +45,20 @@ class EmailContentWidget extends BaseWidget
     private $previewUrl;
 
     /**
-     * @param callable $previewUrl function (FormField, string $type): string Where the preview is rendered (GET: as stored, POST: the form).
+     * @var string
      */
-    public function __construct(callable $previewUrl)
-    {
+    private $previewCaption;
+
+    /**
+     * @param callable $previewUrl function (FormField, string $type): string Where the preview is rendered (GET: as stored, POST: the form).
+     * @param string $previewCaption What the preview shows, next to its button.
+     */
+    public function __construct(
+        callable $previewUrl,
+        string $previewCaption = 'Met verzonnen gegevens. Toont je wijzigingen zonder ze op te slaan.'
+    ) {
         $this->previewUrl = $previewUrl;
+        $this->previewCaption = $previewCaption;
     }
 
     /**
@@ -70,6 +79,7 @@ class EmailContentWidget extends BaseWidget
             'content' => is_scalar($content) ? (string) $content : '',
             'placeholders' => $templates->getPlaceholders($type),
             'previewAction' => call_user_func($this->previewUrl, $field, $type),
+            'previewCaption' => $this->previewCaption,
         ];
     }
 

@@ -1,248 +1,370 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
+ * Copyright (C) 2017 Thijs Van der Schaeghe
+ * CatLab Interactive bvba, Gent, Belgium
+ * http://www.catlab.eu/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\AdministersEmails;
-use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventMail;
+use App\Services\Admin\Widgets\EmailContentWidget;
+use App\Services\Admin\Widgets\EmailSubjectWidget;
+use App\Services\Admin\Widgets\EventTemplateWidget;
 use App\Services\EmailTemplates;
 use App\Services\MailSource;
+use CatLab\Charon\Collections\ResourceCollection;
+use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Interfaces\Context as ContextContract;
+use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Widgets\FormField;
+use CatLab\Laravel\Table\Table;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Session;
 
 /**
- * Class EventEmailController
- *
- * Lets organisation admins choose, per event and per mail, which version goes
- * out: the organisation's version, a library template, or the event's own text.
- * Without a choice (no event_emails row) the organisation's version goes out.
- *
- * Each choice is its own action: the editor only edits the event's own text,
- * a template is picked on the overview, and "back to the organisation's
- * version" removes the event's choice.
+ * The mails of one event (the "E-mails" tab of the event): a Charon admin
+ * resource on top of the EventMail api controller. An event follows its
+ * organisation until it chooses a library template or writes an own text;
+ * deleting that choice goes back to the organisation's version.
  *
  * @package App\Http\Controllers\Admin
  */
-class EventEmailController extends Controller
+class EventEmailController extends BaseAdminController
 {
     use AdministersEmails;
 
-    /**
-     * @var EmailTemplates
-     */
-    private $templates;
-
-    /**
-     * @param EmailTemplates $templates
-     */
-    public function __construct(EmailTemplates $templates)
+    public function __construct()
     {
-        $this->templates = $templates;
+        parent::__construct();
+
+        $this->setParentController(EventController::class, 'event');
+
+        $this->widgets()
+            ->forField('email_template_id', new EventTemplateWidget())
+            ->forField('subject', new EmailSubjectWidget())
+            ->forField('content', new EmailContentWidget(function (FormField $field, string $type) {
+                return action('Admin\EventEmailController@preview', [
+                    'event' => request()->route('event'),
+                    'type' => $type,
+                ]);
+            }, 'Met de gegevens van dit evenement en een verzonnen speler. Toont je eigen tekst zonder hem op te slaan.'));
     }
 
     /**
-     * The mails this event sends, where each comes from, and what can be changed.
-     *
-     * @param int $eventId
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $path
+     * @param $controller
      */
-    public function index($eventId)
+    public static function routes($path, $controller)
     {
-        $event = $this->getEvent($eventId);
-        $applicable = EmailTemplates::getEventTypes($event);
-        $chosen = $event->emails()->pluck('type')->all();
-        $descriptions = $this->templates->getTypes();
+        $types = EmailTemplates::routePattern(EmailTemplates::EVENT_TYPES);
 
-        $mails = [];
-        foreach (EmailTemplates::EVENT_TYPES as $type) {
-            $isApplicable = in_array($type, $applicable, true);
-            $hasChoice = in_array($type, $chosen, true);
+        \Route::get($path, $controller . '@index');
+        \Route::get($path . '/{type}', $controller . '@show')->where('type', $types);
+        \Route::put($path . '/{type}', $controller . '@update')->where('type', $types);
+        \Route::delete($path . '/{type}', $controller . '@destroy')->where('type', $types);
+        \Route::get($path . '/{type}/edit', $controller . '@edit')->where('type', $types);
+        \Route::get($path . '/{type}/delete', $controller . '@confirmDelete')->where('type', $types);
 
-            // A mail this event does not send only shows up when it still has
-            // a choice of its own, so that choice can be removed.
-            if (!$isApplicable && !$hasChoice) {
+        // The form posts to the preview with its own method field (put).
+        \Route::match([ 'get', 'post', 'put' ], $path . '/{type}/preview', $controller . '@preview')->where('type', $types);
+    }
+
+    /**
+     * @return \App\Http\Api\V1\Controllers\EventMailController
+     */
+    public function createApiController()
+    {
+        return new \App\Http\Api\V1\Controllers\EventMailController();
+    }
+
+    public static function getRouteIdParameterName(): string
+    {
+        return 'type';
+    }
+
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\EventMailController::RESOURCE_ID;
+    }
+
+    /**
+     * The event of the url, when it belongs to the active organisation and
+     * the user administers that; a 404 otherwise.
+     * @param Request $request
+     * @return Event
+     */
+    protected function getEvent(Request $request)
+    {
+        /** @var Event $event */
+        $event = Event::findOrFail($request->route('event'));
+
+        if ((int) $event->organisation_id !== (int) $this->getAdministeredOrganisation()->id) {
+            abort(404);
+        }
+
+        return $event;
+    }
+
+    /**
+     * Every call to the api is about an event of the active organisation.
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getApiControllerParameters(Request $request, $method)
+    {
+        return [
+            'event' => $this->getEvent($request)->id
+        ];
+    }
+
+    /**
+     * The urls of the list are those of this event.
+     * @param Request $request
+     * @param $method
+     * @return array
+     */
+    protected function getRouteParameters(Request $request, $method)
+    {
+        return [
+            'event' => $request->route('event')
+        ];
+    }
+
+    /**
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getAuthorizeParameters(Request $request, $method)
+    {
+        return $method === Action::INDEX ? [ $this->getEvent($request) ] : null;
+    }
+
+    /**
+     * An event has one of each of its mails; none are added.
+     * @param Request $request
+     * @param ResourceDefinition $resourceDefinition
+     * @return bool
+     */
+    protected function canCreateModel(Request $request, ResourceDefinition $resourceDefinition)
+    {
+        return false;
+    }
+
+    /**
+     * The list is the "E-mails" tab of the event.
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function index(Request $request)
+    {
+        $event = $this->getEvent($request);
+
+        return parent::index($request)->with([
+            'chrome' => null,
+            'hub' => (new EventController())->getHubChrome($request, $event->id, 'emails'),
+            'event' => $event,
+        ]);
+    }
+
+    /**
+     * A mail the event doesn't send (any more) only shows up while it still
+     * has a choice, and says so.
+     * @param Request $request
+     * @param ResourceCollection $collection
+     * @param ResourceDefinition $resourceDefinition
+     * @param ContextContract $context
+     * @return Table
+     */
+    public function getTableForResourceCollection(
+        Request $request,
+        ResourceCollection $collection,
+        ResourceDefinition $resourceDefinition,
+        ContextContract $context
+    ): Table {
+        foreach ($collection as $resource) {
+            $mail = $resource->getSource();
+            if (!$mail instanceof EventMail || $mail->isApplicable()) {
                 continue;
             }
 
-            $source = $this->templates->resolve($event->organisation, $event, $type);
-
-            switch ($source->kind) {
-                case MailSource::EVENT:
-                    $origin = 'Eigen tekst';
-                    break;
-
-                case MailSource::LIBRARY:
-                    $origin = 'Sjabloon: ' . $source->libraryTemplate->name;
-                    break;
-
-                default:
-                    $origin = 'Standaard van de organisatie';
-                    break;
+            foreach ($resource->getProperties()->getResourceFields()->getValues() as $property) {
+                if ($property->getField()->getDisplayName() === 'version') {
+                    $property->setValue($property->getValue() . '. Dit evenement verstuurt deze mail niet. Je kan de aanpassing verwijderen.');
+                }
             }
-
-            $mails[$type] = [
-                'label' => $this->templates->getLabel($type),
-                'description' => $descriptions[$type]['description'],
-                'origin' => $origin,
-                'kind' => $source->kind,
-                'hasChoice' => $hasChoice,
-                'isApplicable' => $isApplicable,
-                'templateId' => $source->libraryTemplate ? $source->libraryTemplate->id : null,
-                'libraryTemplates' => $this->getLibraryTemplates($event, $type)
-            ];
         }
 
-        return view('admin.events.emails.index', [
-            'hub' => (new EventController())->getHubChrome(request(), $event->id, 'emails'),
-            'event' => $event,
-            'mails' => $mails
-        ]);
+        return parent::getTableForResourceCollection($request, $collection, $resourceDefinition, $context);
     }
 
     /**
-     * The editor for the event's own text. It starts from the version in use.
-     *
-     * @param int $eventId
-     * @param string $type
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function edit($eventId, $type)
-    {
-        $event = $this->getEvent($eventId);
-        $this->assertManageable($event, $type);
-        $organisation = $event->organisation;
-
-        $current = $this->templates->resolve($organisation, $event, $type);
-
-        return view('admin.events.emails.edit', [
-            'event' => $event,
-            'type' => $type,
-            'label' => $this->templates->getLabel($type),
-            'isOwnText' => $current->kind === MailSource::EVENT,
-            'subject' => $current->hasText() ? $current->subject : $this->templates->getDefaultSubject($type),
-            'content' => $this->templates->getStartingContent($organisation, $event, $type),
-            'placeholders' => $this->templates->getPlaceholders($type)
-        ]);
-    }
-
-    /**
-     * Store the event's own text.
-     *
+     * A mail opens in its editor, which shows the preview as well.
      * @param Request $request
-     * @param int $eventId
-     * @param string $type
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $eventId, $type)
+    public function show(Request $request)
     {
-        $event = $this->getEvent($eventId);
-        $this->assertManageable($event, $type);
+        $this->getEvent($request);
 
-        $this->validate($request, [
-            'subject' => 'required|string|max:255',
-            'content' => 'required|string'
-        ]);
-
-        $event->emails()->updateOrCreate([ 'type' => $type ], [
-            'email_template_id' => null,
-            'subject' => (string) $request->input('subject'),
-            'content' => (string) $request->input('content')
-        ]);
-
-        return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" heeft nu een eigen tekst voor dit evenement.');
+        return redirect($this->action('edit'));
     }
 
     /**
-     * Use a library template for this event. It replaces an own text.
-     *
      * @param Request $request
-     * @param int $eventId
-     * @param string $type
-     * @return \Illuminate\Http\RedirectResponse
+     * @param $model
+     * @return bool
      */
-    public function template(Request $request, $eventId, $type)
+    protected function canViewModel(Request $request, $model)
     {
-        $event = $this->getEvent($eventId);
-        $this->assertManageable($event, $type);
-
-        $this->validate($request, [
-            'email_template_id' => [
-                'required',
-                'integer',
-                Rule::exists('email_templates', 'id')
-                    ->where('organisation_id', $event->organisation_id)
-                    ->where('type', $type)
-                    ->where(function ($query) {
-                        $query->where('name', '<>', '');
-                    })
-            ]
-        ], [
-            'email_template_id.required' => 'Kies een sjabloon.',
-            'email_template_id.exists' => 'Dit sjabloon bestaat niet voor deze mail.'
-        ]);
-
-        $event->emails()->updateOrCreate([ 'type' => $type ], [
-            'email_template_id' => (int) $request->input('email_template_id'),
-            'subject' => null,
-            'content' => null
-        ]);
-
-        return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" gebruikt nu een sjabloon voor dit evenement.');
+        return false;
     }
 
     /**
-     * Remove the event's choice: the organisation's version goes out again.
-     *
-     * @param int $eventId
-     * @param string $type
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function reset($eventId, $type)
-    {
-        $event = $this->getEvent($eventId);
-        $this->assertManageable($event, $type);
-
-        $event->emails()->where('type', '=', $type)->delete();
-
-        return redirect(action('Admin\EventEmailController@index', [ $event->id ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" gebruikt weer de standaard van de organisatie.');
-    }
-
-    /**
-     * The mail with the real event. A GET shows the version in use, a POST
-     * the own text from the editor, without saving it.
-     *
+     * The choice for a mail the event doesn't send can only be removed.
      * @param Request $request
-     * @param int $eventId
-     * @param string $type
+     * @param $model
+     * @return bool
+     */
+    protected function canEditModel(Request $request, $model)
+    {
+        $source = $model instanceof RESTResource ? $model->getSource() : $model;
+        if ($source instanceof EventMail && !$source->isApplicable()) {
+            return false;
+        }
+
+        return parent::canEditModel($request, $model);
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function confirmDelete(Request $request)
+    {
+        return parent::confirmDelete($request)->with(
+            'question',
+            'De keuze van dit evenement (een sjabloon of een eigen tekst) gaat verloren. Dit evenement verstuurt weer de standaard van de organisatie. Doorgaan?'
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function destroy(Request $request)
+    {
+        $resource = $this->dispatchToApi(Action::VIEW, $request)->getResource();
+        $response = $this->dispatchToApi(Action::DESTROY, $request);
+
+        if ($response instanceof JsonResponse && $response->getStatusCode() >= 400) {
+            return $this->handleErrorResponse($response, 'destroy');
+        }
+
+        Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" gebruikt weer de standaard van de organisatie.');
+
+        return redirect($this->indexUrl($request));
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function afterUpdate(Request $request, RESTResource $resource)
+    {
+        $label = $this->getResourceTitle($request, $resource);
+
+        Session::flash('message', $resource->getSource() instanceof EventMail && $resource->getSource()->email_template_id
+            ? 'De mail "' . $label . '" gebruikt nu een sjabloon voor dit evenement.'
+            : 'De mail "' . $label . '" heeft nu een eigen tekst voor dit evenement.');
+
+        return redirect($this->indexUrl($request));
+    }
+
+    /**
+     * @param JsonResponse $response
+     * @param $redirectMethod
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function handleErrorResponse(JsonResponse $response, $redirectMethod)
+    {
+        return $this->refusedByApi($response);
+    }
+
+    /**
+     * Back to the list of the event, whatever page the form was opened from.
+     * @param Request $request
+     * @param RESTResource|null $resource
+     * @return string|null
+     */
+    protected function getCancelUrl(Request $request, ?RESTResource $resource = null): ?string
+    {
+        return $this->indexUrl($request);
+    }
+
+    /**
+     * @param Request $request
+     * @return string
+     */
+    private function indexUrl(Request $request)
+    {
+        return action('Admin\EventEmailController@index', [ 'event' => $request->route('event') ]);
+    }
+
+    /**
+     * The mail with the real event. A GET shows the version in use, the
+     * form its own text, without saving it.
+     * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function preview(Request $request, $eventId, $type)
+    public function preview(Request $request)
     {
-        $event = $this->getEvent($eventId);
-        $this->assertManageable($event, $type);
+        $event = $this->getEvent($request);
+        $type = $request->route('type');
+
+        if (!EventMail::of($event, $type)) {
+            abort(404);
+        }
+
         $organisation = $event->organisation;
+        $templates = app(EmailTemplates::class);
 
         // null: what resolve() picks for the event.
         $source = null;
-
-        if ($request->isMethod('post')) {
+        if (!$request->isMethod('get')) {
             $source = new MailSource(
                 MailSource::EVENT,
-                (string) $request->input('subject', ''),
-                (string) $request->input('content', '')
+                $this->draftField($request, 'subject'),
+                $this->draftField($request, 'content')
             );
         }
 
-        $mail = $this->templates->render(
+        $mail = $templates->render(
             $organisation,
             $type,
-            $this->templates->getSampleAttributes($organisation, $type, $event),
+            $templates->getSampleAttributes($organisation, $type, $event),
             $source
         );
 
@@ -250,57 +372,60 @@ class EventEmailController extends Controller
     }
 
     /**
-     * A 404 for a mail this event does not send, unless the event still has
-     * a choice for it (so that choice can be seen and removed).
-     *
-     * @param Event $event
-     * @param string $type
+     * @param $action
+     * @return string
      */
-    private function assertManageable(Event $event, $type)
+    protected function getView($action)
     {
-        if (in_array($type, EmailTemplates::getEventTypes($event), true)) {
-            return;
+        switch ($action) {
+            case 'index':
+                return 'admin.events.emails.index';
+
+            case 'form':
+                return 'admin.events.emails.form';
+
+            case Action::DESTROY:
+                return 'admin.emails.confirm-reset';
         }
 
-        if (!$event->emails()->where('type', '=', $type)->exists()) {
-            abort(404);
-        }
+        return parent::getView($action);
     }
 
     /**
-     * The organisation's library templates of this type, by name.
-     *
-     * @param Event $event
-     * @param string $type
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
      */
-    private function getLibraryTemplates(Event $event, $type)
+    protected function getResourceTitle(Request $request, RESTResource $resource): string
     {
-        return $event->organisation->emailTemplates()
-            ->library()
-            ->where('type', '=', $type)
-            ->orderBy('name')
-            ->get();
+        return (string) ($resource->toArray()['label'] ?? '');
+    }
+
+    protected function getEntityLabel(): string
+    {
+        return 'mail';
+    }
+
+    protected function getIndexTitle(): string
+    {
+        return 'E-mails';
     }
 
     /**
-     * The event, when it belongs to the active organisation and the user administers it, or a 404.
-     *
-     * @param int $eventId
-     * @return Event
+     * @param ResourceDefinition $resourceDefinition
+     * @return string
      */
-    private function getEvent($eventId)
+    protected function getEditActionLabel(ResourceDefinition $resourceDefinition)
     {
-        /** @var Event $event */
-        $event = Event::findOrFail($eventId);
+        return 'Aanpassen';
+    }
 
-        $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$organisation
-            || (int) $event->organisation_id !== (int) $organisation->id
-            || !$organisation->isAdmin(\Auth::user())) {
-            abort(404);
-        }
-
-        return $event;
+    /**
+     * @param ResourceDefinition $resourceDefinition
+     * @return string
+     */
+    protected function getDestroyActionLabel(ResourceDefinition $resourceDefinition)
+    {
+        return 'Terug naar standaard';
     }
 }

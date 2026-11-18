@@ -162,7 +162,7 @@ class EmailLayoutTest extends IntegrationTestCase
             ->assertSee('Geavanceerd');
 
         $this->actingAs($this->admin)
-            ->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf', 'footer_text' => 'Tot snel!' ])
+            ->put('/admin/emails/layout', [ 'fields' => [ 'accent_color' => '#7b3fbf', 'footer_text' => 'Tot snel!' ] ])
             ->assertRedirect();
 
         $layout = $this->stored();
@@ -176,8 +176,10 @@ class EmailLayoutTest extends IntegrationTestCase
     {
         foreach ([ 'red', '#12345', '#gggggg', 'red;background:url(//x)' ] as $color) {
             $this->actingAs($this->admin)
-                ->post('/admin/emails/layout', [ 'accent_color' => $color ])
-                ->assertSessionHasErrors('accent_color');
+                ->put('/admin/emails/layout', [ 'fields' => [ 'accent_color' => $color ] ])
+                ->assertSessionHas('message', function ($message) {
+                    return (string) $message === 'De accentkleur moet een kleur zijn zoals #4cb050.';
+                });
         }
 
         $this->assertNull($this->stored());
@@ -196,7 +198,7 @@ class EmailLayoutTest extends IntegrationTestCase
 
         // A draft is not limited by the column.
         $body = $this->actingAs($this->admin)
-            ->post('/admin/emails/layout/preview', [ 'accent_color' => 'red;background:url(//x)' ])
+            ->put('/admin/emails/layout/preview', [ 'fields' => [ 'accent_color' => 'red;background:url(//x)' ] ])
             ->assertStatus(200)
             ->getContent();
         $this->assertStringContainsString('#4cb050', $body);
@@ -209,15 +211,17 @@ class EmailLayoutTest extends IntegrationTestCase
             '<html><head><title>{{ content }}</title></head><body>{{ content }}</body></html>',
             '<!-- {{ content }} --><div>{{ content }}</div>' ] as $html) {
             $this->actingAs($this->admin)
-                ->post('/admin/emails/layout', [ 'custom_html' => $html ])
-                ->assertSessionHasErrors([ 'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.' ]);
+                ->put('/admin/emails/layout', [ 'fields' => [ 'custom_html' => $html ] ])
+                ->assertSessionHas('message', function ($message) {
+                    return (string) $message === 'De layout moet precies één keer {{ content }} bevatten.';
+                });
         }
         $this->assertNull($this->stored());
 
         foreach ([ '<p>{{content}}</p>', '<p>{{  content  }}</p>' ] as $html) {
             $this->actingAs($this->admin)
-                ->post('/admin/emails/layout', [ 'custom_html' => $html ])
-                ->assertSessionHasNoErrors();
+                ->put('/admin/emails/layout', [ 'fields' => [ 'custom_html' => $html ] ])
+                ->assertSessionHas('message', 'De layout is opgeslagen.');
             $this->assertSame($html, $this->stored()->custom_html);
         }
     }
@@ -232,7 +236,13 @@ class EmailLayoutTest extends IntegrationTestCase
         $layout->organisation()->associate($this->organisation);
         $layout->save();
 
-        $this->actingAs($this->admin)->post('/admin/emails/layout/reset')->assertRedirect();
+        // "Terug naar de standaardlayout" puts the standard HTML back in the form.
+        $this->actingAs($this->admin)->get('/admin/emails/layout')->assertSee('Terug naar de standaardlayout');
+        $this->actingAs($this->admin)->put('/admin/emails/layout', [ 'fields' => [
+            'accent_color' => '#7b3fbf',
+            'footer_text' => 'Hallo',
+            'custom_html' => app(\App\Services\EmailLayouts::class)->getDefaultHtml()
+        ] ])->assertRedirect();
 
         $layout = $this->stored();
         $this->assertNull($layout->custom_html);
@@ -246,23 +256,23 @@ class EmailLayoutTest extends IntegrationTestCase
         $default = app(\App\Services\EmailLayouts::class)->getDefaultHtml();
 
         $this->actingAs($this->admin)
-            ->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf', 'custom_html' => $default ])
-            ->assertSessionHasNoErrors();
+            ->put('/admin/emails/layout', [ 'fields' => [ 'accent_color' => '#7b3fbf', 'custom_html' => $default ] ])
+            ->assertSessionHas('message', 'De layout is opgeslagen.');
 
         $this->assertNull($this->stored()->custom_html);
 
         // Line endings of a browser post must not count as a change.
         $this->actingAs($this->admin)
-            ->post('/admin/emails/layout', [ 'custom_html' => str_replace("\n", "\r\n", $default) ])
-            ->assertSessionHasNoErrors();
+            ->put('/admin/emails/layout', [ 'fields' => [ 'custom_html' => str_replace("\n", "\r\n", $default) ] ])
+            ->assertSessionHas('message', 'De layout is opgeslagen.');
         $this->assertNull($this->stored()->custom_html);
     }
 
     public function testUnknownPlaceholdersInTheLayoutStayVisible()
     {
         $this->actingAs($this->admin)
-            ->post('/admin/emails/layout', [ 'custom_html' => '<div>{{ nope }}{{ content }}</div>' ])
-            ->assertSessionHasNoErrors();
+            ->put('/admin/emails/layout', [ 'fields' => [ 'custom_html' => '<div>{{ nope }}{{ content }}</div>' ] ])
+            ->assertSessionHas('message', 'De layout is opgeslagen.');
 
         $this->assertStringContainsString('{{ nope }}', $this->preview(EmailTemplates::CONFIRMATION));
     }
@@ -270,11 +280,11 @@ class EmailLayoutTest extends IntegrationTestCase
     public function testTheLayoutPreviewShowsTheDraftWithoutSaving()
     {
         $response = $this->actingAs($this->admin)
-            ->post('/admin/emails/layout/preview', [
+            ->put('/admin/emails/layout/preview', [ 'fields' => [
                 'accent_color' => '#7b3fbf',
                 'footer_text' => 'Concept voettekst',
                 'custom_html' => ''
-            ])
+            ] ])
             ->assertStatus(200);
 
         $this->assertStringContainsString('Content-Security-Policy', (string) $response->headers);
@@ -296,9 +306,8 @@ class EmailLayoutTest extends IntegrationTestCase
         $this->organisation->users()->attach($member, [ 'role' => 1 ]);
 
         $this->actingAs($member)->get('/admin/emails/layout')->assertStatus(404);
-        $this->actingAs($member)->post('/admin/emails/layout', [ 'accent_color' => '#7b3fbf' ])->assertStatus(404);
-        $this->actingAs($member)->post('/admin/emails/layout/preview', [])->assertStatus(404);
-        $this->actingAs($member)->post('/admin/emails/layout/reset')->assertStatus(404);
+        $this->actingAs($member)->put('/admin/emails/layout', [ 'fields' => [ 'accent_color' => '#7b3fbf' ] ])->assertStatus(404);
+        $this->actingAs($member)->put('/admin/emails/layout/preview', [])->assertStatus(404);
 
         $this->assertNull($this->stored());
     }

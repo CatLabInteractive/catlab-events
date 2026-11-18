@@ -47,4 +47,44 @@ trait AdministersEmails
             ->header('Content-Type', 'text/html; charset=UTF-8')
             ->header('Content-Security-Policy', 'sandbox');
     }
+
+    /**
+     * What the api refused, in its own (Dutch) words instead of the generic
+     * English first line, back on the form with the input kept.
+     *
+     * @param \Illuminate\Http\JsonResponse $response
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function refusedByApi(\Illuminate\Http\JsonResponse $response)
+    {
+        $data = $response->getData(true);
+
+        $lines = [];
+        foreach (($data['error']['issues'] ?? []) as $errors) {
+            foreach ((array) $errors as $error) {
+                $lines[] = e($error);
+            }
+        }
+
+        if (count($lines) === 0) {
+            $lines[] = e($data['error']['message'] ?? 'Er ging iets mis.');
+        }
+
+        return redirect()->back()
+            ->with('message', new \Illuminate\Support\HtmlString(implode('<br>', $lines)))
+            ->withInput();
+    }
+
+    /**
+     * A mail field of a posted Charon form (fields[subject]).
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param string $name
+     * @return string
+     */
+    protected function draftField(\Illuminate\Http\Request $request, $name)
+    {
+        $value = $request->input('fields.' . $name, '');
+        return is_string($value) ? $value : '';
+    }
 }

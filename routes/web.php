@@ -116,34 +116,15 @@ Route::group([
             Route::get('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@massInvite');
             Route::post('events/{event}/waitinglist/mass-invite', 'Admin\WaitingListController@sendMassInvite');
 
-            // Route constraints for the mail types, from one list.
-            $allEmailTypes = \App\Services\EmailTemplates::routePattern();
-            $eventEmailTypes = \App\Services\EmailTemplates::routePattern(\App\Services\EmailTemplates::EVENT_TYPES);
-
-            Route::get('emails', 'Admin\EmailTemplateController@index');
-
-            // The library of named templates. Before the `emails/{type}` routes.
+            // The library of named templates and the mail layout. Before the `emails/{type}` routes.
             \App\Http\Controllers\Admin\EmailLibraryController::routes('emails/templates', 'Admin\EmailLibraryController');
+            \App\Http\Controllers\Admin\EmailLayoutController::routes('emails/layout', 'Admin\EmailLayoutController');
 
-            // The mail layout. Before the `emails/{type}` routes.
-            Route::get('emails/layout', 'Admin\EmailLayoutController@edit');
-            Route::post('emails/layout', 'Admin\EmailLayoutController@update');
-            Route::match([ 'get', 'post' ], 'emails/layout/preview', 'Admin\EmailLayoutController@preview');
-            Route::post('emails/layout/reset', 'Admin\EmailLayoutController@reset');
-
-            Route::get('emails/{type}', 'Admin\EmailTemplateController@show')->where('type', $allEmailTypes);
-            Route::match([ 'get', 'post' ], 'emails/{type}/preview', 'Admin\EmailTemplateController@preview')->where('type', $allEmailTypes);
-            Route::get('emails/{type}/edit', 'Admin\EmailTemplateController@edit')->where('type', $allEmailTypes);
-            Route::post('emails/{type}', 'Admin\EmailTemplateController@update')->where('type', $allEmailTypes);
-            Route::post('emails/{type}/reset', 'Admin\EmailTemplateController@reset')->where('type', $allEmailTypes);
+            // The automatic mails as the organisation sends them.
+            \App\Http\Controllers\Admin\EmailTemplateController::routes('emails', 'Admin\EmailTemplateController');
 
             // One event's own choice per mail.
-            Route::get('events/{event}/emails', 'Admin\EventEmailController@index');
-            Route::get('events/{event}/emails/{type}', 'Admin\EventEmailController@edit')->where('type', $eventEmailTypes);
-            Route::post('events/{event}/emails/{type}', 'Admin\EventEmailController@update')->where('type', $eventEmailTypes);
-            Route::post('events/{event}/emails/{type}/template', 'Admin\EventEmailController@template')->where('type', $eventEmailTypes);
-            Route::post('events/{event}/emails/{type}/reset', 'Admin\EventEmailController@reset')->where('type', $eventEmailTypes);
-            Route::match([ 'get', 'post' ], 'events/{event}/emails/{type}/preview', 'Admin\EventEmailController@preview')->where('type', $eventEmailTypes);
+            \App\Http\Controllers\Admin\EventEmailController::routes('events/{event}/emails', 'Admin\EventEmailController');
 
             Route::get('events/{event}/guests', 'Admin\GuestRegistrationController@index');
             Route::post('events/{event}/guests', 'Admin\GuestRegistrationController@store');

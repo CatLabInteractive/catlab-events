@@ -47,7 +47,16 @@ class EmailTypeWidget extends SelectWidget implements ProvidesOptions
     public static function typeOf(FormField $field): string
     {
         $resource = $field->getResource();
-        $type = $resource ? ($resource->toArray()['type'] ?? null) : request()->query('type');
+
+        // A resource is about its own mail, whichever that is.
+        if ($resource) {
+            $type = $resource->toArray()['type'] ?? null;
+            if (is_string($type) && app(EmailTemplates::class)->exists($type)) {
+                return $type;
+            }
+        }
+
+        $type = request()->query('type');
 
         return is_string($type) && in_array($type, EmailTemplates::EVENT_TYPES, true)
             ? $type
