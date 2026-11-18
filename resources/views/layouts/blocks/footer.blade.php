@@ -4,13 +4,16 @@
             <div class="kv-footer-grid">
                 <div>
                     <span class="kv-footer-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                    <p class="kv-footer-claim">Quizzen met plezier.</p>
+                    <p class="kv-footer-claim">De perfecte quiz op ieders maat.</p>
                 </div>
 
                 <div>
                     <h4>Tickets</h4>
                     <ul>
                         <li><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
+                        @if(organisation()->competitions()->count() > 0)
+                            <li><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
+                        @endif
                         <li><a href="{{ action('OrderController@index') }}">Mijn tickets</a></li>
                         <li><a href="{{ action('CatLabAccountController@redirect', [ 'myaccount' ]) }}" target="_blank" rel="noopener">Mijn account</a></li>
                     </ul>

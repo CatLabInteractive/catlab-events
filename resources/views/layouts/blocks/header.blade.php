@@ -39,10 +39,6 @@
 
                     <li class="kv-nav-item"><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
 
-                    @if($navOrganisation->competitions()->count() > 0)
-                        <li class="kv-nav-item"><a href="{{ action('CompetitionController@index') }}">Competities</a></li>
-                    @endif
-
                     @if(!Auth::guest())
                         <li class="kv-nav-item kv-nav-group">
                             <button type="button" class="kv-nav-toggle" aria-expanded="false">
