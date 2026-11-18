@@ -1,7 +1,7 @@
 @extends('layouts/front')
 
 @section('title')
-    Quiz kalender
+    {{ $pageTitle ?? 'Quiz kalender' }}
 @endsection
 
 @section('bodyClass')kv-page @endsection

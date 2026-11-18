@@ -1,0 +1,23 @@
+/* Kleurveld tokens, shared by _kv-base, app.scss and _kleurveld. */
+
+$kv-bg: #f3f1e9;
+$kv-paper: #fbfaf5;
+$kv-ink: #1f3326;
+$kv-ink-hover: #2f4a37;
+$kv-muted: #5d6b60;
+$kv-line: #d9d8cc;
+
+// From the logo and quizfabriek.be. Each has its own hue, so series stay apart.
+$kv-green: #61cc6f;  // site green (hero bands, active menu), close to the logo shield
+$kv-gold: #fcc765;   // logo banner, site cards
+$kv-violet: #5e2fff; // site call-to-action button
+$kv-rose: #bf8076;   // site "missie" blocks, social buttons
+$kv-slate: #4a6a9a;  // team page names
+$kv-teal: #58998d;   // team page bars
+$kv-peach: #f8e6c6;  // site light cards
+$kv-sage: $kv-green; // kept as an alias
+$kv-mint: $kv-peach;
+$kv-butter: $kv-peach;
+$kv-alert: #c4553a;  // only for "uitverkocht" / last tickets
+
+$kv-font: 'Jost', 'Helvetica Neue', Arial, sans-serif;

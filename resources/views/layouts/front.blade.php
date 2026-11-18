@@ -1,60 +1,34 @@
-<!DOCTYPE html>
-<html lang="{{ mb_substr(app()->getLocale(), 0, 2) }}">
-<head>
-    @include('layouts.blocks.head')
-    @include('layouts.blocks.style')
-    @include('layouts.blocks.seo')
-    @include('layouts.blocks.gtag')
-</head>
-<body class="kv-site @yield('bodyClass')">
-    @include('blocks.chatwoot', [ 'organisation' => organisation() ])
+{{--
+    A page with a coloured page head (or a 'banner' section of its own) above
+    the content. Pages that build their own kv-sec sections set the body class
+    kv-page; any other content is put in one plain section that styles basic
+    HTML (headings, tables, forms, buttons) in the Kleurveld look.
+--}}
+@extends('layouts.base')
 
-    <div id="fb-root"></div>
-    <script>(function(d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s); js.id = id;
-            js.src = 'https://connect.facebook.net/nl_BE/sdk.js#xfbml=1&version=v3.1&appId=1124345767614916&autoLogAppEvents=1';
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));</script>
-
-    <div class="body-inner compact">
-
-        @include('layouts.blocks.header')
-
-
-        @hasSection('banner')
-            @yield('banner')
-        @else
-            <?php $pageHeadClass = (isset($series) && $series instanceof \App\Models\Series) ? $series->getColourClass() : 'kv-field-0'; ?>
-            <div class="kv-pagehead {{ $pageHeadClass }}">
-                <div class="kv-wrap">
-                    <h1 class="kv-pagehead-title">@yield('title')</h1>
-                </div>
+@section('page')
+    @hasSection('banner')
+        @yield('banner')
+    @else
+        <?php $pageHeadClass = (isset($series) && $series instanceof \App\Models\Series) ? $series->getColourClass() : 'kv-field-0'; ?>
+        <div class="kv-pagehead {{ $pageHeadClass }}">
+            <div class="kv-wrap">
+                <h1 class="kv-pagehead-title">@yield('title')</h1>
             </div>
-        @endif
+        </div>
+    @endif
 
-        <section>
-            <div class="container">
+    @include('layouts.blocks.flash')
 
-                @if (Session::has('message'))
-                    <div class="alert alert-info">{{ Session::get('message') }}</div>
-                @endif
-
+    @if(str_contains($__env->yieldContent('bodyClass'), 'kv-page'))
+        @yield('content')
+        @yield('second-content')
+    @else
+        <div class="kv-plain">
+            <div class="kv-wrap kv-prose">
                 @yield('content')
-            </div>
-        </section>
-
-        <section>
-            <div class="container">
                 @yield('second-content')
             </div>
-        </section>
-
-        @include('layouts/blocks.footer')
-
-
-    </div>
-
-</body>
-</html>
+        </div>
+    @endif
+@endsection

@@ -116,29 +116,10 @@
                             </select>
                         </div>
 
-                        <div class="rf-field rf-new-team" id="new-team">
+                        <div class="rf-field rf-new-team" id="new-team" @if(!$_newTeam) hidden @endif>
                             <label for="team" class="rf-label">Naam van je nieuwe team</label>
                             <input type="text" name="team" id="team" value="{{ $team }}" maxlength="100" class="rf-input @error('team') rf-input-error @enderror" autocomplete="off">
                         </div>
-
-                        <script>
-                            (function () {
-                                var select = document.getElementById('group');
-                                var field = document.getElementById('new-team');
-                                var input = document.getElementById('team');
-                                function sync() {
-                                    var isNew = select.value === 'new';
-                                    field.hidden = !isNew;
-                                    input.disabled = !isNew;
-                                    input.required = isNew;
-                                }
-                                select.addEventListener('change', function () {
-                                    sync();
-                                    if (select.value === 'new') { input.focus(); }
-                                });
-                                sync();
-                            })();
-                        </script>
                     @else
                         <div class="rf-field">
                             <label for="team" class="rf-label">Teamnaam</label>

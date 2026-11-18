@@ -6,8 +6,6 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-
     <div class="alert alert-warning">
         <p>
             Er zijn nog geen tickets beschikbaar voor <strong>{{ $event->name }}</strong>.

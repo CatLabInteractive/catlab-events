@@ -1,5 +1,7 @@
 @extends('charonfrontend::layouts.crud')
 
+@section('title'){{ $verb === 'create' ? 'Nieuw team' : 'Team bewerken' }}@endsection
+
 @section('cfcontent')
 
     @if(!$errors->isEmpty())
@@ -22,7 +24,7 @@
         @include('events/teamsizeWarning', [ 'event' => $event ])
     @endif
 
-    @if($verb === 'post')
+    @if($verb === 'create')
         <p class="alert alert-warning">
             Heeft je team al eens meegedaan aan een quiz van {{ organisation()->name }}? Maak dan geen nieuw team aan maar gebruik het bestaande team.
         </p>
@@ -33,7 +35,7 @@
     @include('charonfrontend::crud.form-fields')
 
     <div class="form-group row">
-        <input type="submit" value="{{ ucfirst($verb) }}" class="btn btn-primary">
+        <input type="submit" value="{{ $verb === 'create' ? 'Team aanmaken' : 'Opslaan' }}" class="btn btn-primary">
     </div>
 
     </form>

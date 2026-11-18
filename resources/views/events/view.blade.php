@@ -91,7 +91,7 @@
                             <a href="{{ $series->getUrl($event) }}#faq">Vaak gestelde vragen</a>
                         @endif
                         @if($series->hasVideo())
-                            <a class="popup" href="{{ $series->getVideoUrl() }}"><i class="fa fa-play" aria-hidden="true"></i>Bekijk de video</a>
+                            <a class="popup" href="{{ $series->getVideoUrl() }}">@include('blocks.icon', [ 'name' => 'play' ])Bekijk de video</a>
                         @endif
                     </p>
                 </div>
@@ -166,30 +166,6 @@
                 <span class="kv-btn-dot" aria-hidden="true">&rarr;</span>
             </a>
         </div>
-
-        <script>
-            (function () {
-                var bar = document.getElementById('kv-buybar');
-                var watched = [ document.getElementById('kv-cta'), document.getElementById('tickets') ];
-                if (!bar || !('IntersectionObserver' in window)) {
-                    return;
-                }
-                var visible = {};
-                var observer = new IntersectionObserver(function (entries) {
-                    entries.forEach(function (entry) {
-                        visible[entry.target.id] = entry.isIntersecting;
-                    });
-                    var show = !visible['kv-cta'] && !visible['tickets'];
-                    bar.classList.toggle('kv-buybar-visible', show);
-                    bar.setAttribute('aria-hidden', show ? 'false' : 'true');
-                });
-                watched.forEach(function (el) {
-                    if (el) {
-                        observer.observe(el);
-                    }
-                });
-            })();
-        </script>
     @endif
 
 @endsection
