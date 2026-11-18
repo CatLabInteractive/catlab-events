@@ -1,10 +1,21 @@
 # Kleurveld, in the logo colours
 
 The site's visual language: a calm off-white page, dark forest-green ink, and big
-flat colour fields with a circle or two. The colours come from the logo (sage
-green `#78b46c`, gold `#f0c060`) plus related tones (teal `#6aa597`, ochre
-`#dc9a45`, mint and butter tints). Each series gets one field colour, which it
-uses for its hero, its dot in the menu and its cards. Type is Jost.
+flat colour fields with a circle or two. Type is Jost.
+
+The series colours come from the logo and from quizfabriek.be, and each one has its
+own hue so series are easy to tell apart (see [palette.png](palette.png)):
+
+| Field | Colour | Circle | Text on it | Where it comes from |
+|---|---|---|---|---|
+| 0 | green `#61cc6f` | gold | ink | site bands, active menu |
+| 1 | violet `#5e2fff` | gold | white | "Aankomende quizzen" button |
+| 2 | gold `#fcc765` | violet | ink | logo banner, site cards |
+| 3 | rose `#bf8076` | peach | ink | "Missie" blocks, social buttons |
+| 4 | slate `#4a6a9a` | gold | white | team names on "Over ons" |
+| 5 | teal `#58998d` | peach | ink | team bars on "Over ons" |
+
+A series gets field `id % 6`. Peach `#f8e6c6` is used for the credit and facts bands.
 
 Posters of any ratio sit uncropped on the colour field; the field fills whatever
 space the poster leaves. Screenshots use seeded local data.

@@ -213,8 +213,8 @@ $ticket-muted: #5d6b60;
       border-radius: 50%;
       border: 0;
       line-height: 30px;
-      background: var(--kv-field, #78b46c);
-      color: $ticket-dark;
+      background: var(--kv-field, #61cc6f);
+      color: var(--kv-on-field, #{$ticket-dark});
       font-weight: 900;
     }
 

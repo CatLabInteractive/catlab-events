@@ -113,7 +113,7 @@ More: [portrait poster, desktop](2026-11-18-clean/punt/event-portrait-desktop.jp
 
 ## Built: Kleurveld in the logo colours
 
-This is the version in the real code ([PR #94](https://github.com/CatLabInteractive/catlab-events/pull/94)). It uses sage `#78b46c` and gold `#f0c060` from the logo, plus related teal, ochre, mint and butter tones, with Jost type. It covers the event, series, calendar, order and confirmation pages, and the header and footer.
+This is the version in the real code ([PR #94](https://github.com/CatLabInteractive/catlab-events/pull/94)). Its six series colours come from the logo and quizfabriek.be: green `#61cc6f`, violet `#5e2fff`, gold `#fcc765`, rose `#bf8076`, slate `#4a6a9a` and teal `#58998d`, with peach `#f8e6c6` for bands and Jost type ([palette](../screenshots/kleurveld/palette.png)). It covers the event, series, calendar, order and confirmation pages, and the header and footer.
 
 | Event page, desktop | Event page, phone | Series page, desktop |
 |---|---|---|

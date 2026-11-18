@@ -17,25 +17,37 @@ $kv-ink-hover: #2f4a37;
 $kv-muted: #5d6b60;
 $kv-line: #d9d8cc;
 
-$kv-sage: #78b46c;   // logo shield
-$kv-gold: #f0c060;   // logo banner
-$kv-teal: #6aa597;
-$kv-ochre: #dc9a45;
-$kv-mint: #cfe3c4;
-$kv-butter: #f8e3a8;
+// From the logo and quizfabriek.be. Each has its own hue, so series stay apart.
+$kv-green: #61cc6f;  // site green (hero bands, active menu), close to the logo shield
+$kv-gold: #fcc765;   // logo banner, site cards
+$kv-violet: #5e2fff; // site call-to-action button
+$kv-rose: #bf8076;   // site "missie" blocks, social buttons
+$kv-slate: #4a6a9a;  // team page names
+$kv-teal: #58998d;   // team page bars
+$kv-peach: #f8e6c6;  // site light cards
+$kv-sage: $kv-green; // kept as an alias
+$kv-mint: $kv-peach;
+$kv-butter: $kv-peach;
 $kv-alert: #c4553a;  // only for "uitverkocht" / last tickets
 
 $kv-font: 'Jost', 'Helvetica Neue', Arial, sans-serif;
 
+/*
+ * Each series gets one field: its main colour, a second colour for the circles,
+ * and the text colour that reads on the field (white on violet and slate).
+ */
 :root {
-  --kv-field: #{$kv-sage};
+  --kv-field: #{$kv-green};
   --kv-field-2: #{$kv-gold};
+  --kv-on-field: #{$kv-ink};
 }
 
-.kv-field-0 { --kv-field: #{$kv-sage};  --kv-field-2: #{$kv-gold}; }
-.kv-field-1 { --kv-field: #{$kv-gold};  --kv-field-2: #{$kv-sage}; }
-.kv-field-2 { --kv-field: #{$kv-teal};  --kv-field-2: #{$kv-butter}; }
-.kv-field-3 { --kv-field: #{$kv-ochre}; --kv-field-2: #{$kv-mint}; }
+.kv-field-0 { --kv-field: #{$kv-green};  --kv-field-2: #{$kv-gold};   --kv-on-field: #{$kv-ink}; }
+.kv-field-1 { --kv-field: #{$kv-violet}; --kv-field-2: #{$kv-gold};   --kv-on-field: #fff; }
+.kv-field-2 { --kv-field: #{$kv-gold};   --kv-field-2: #{$kv-violet}; --kv-on-field: #{$kv-ink}; }
+.kv-field-3 { --kv-field: #{$kv-rose};   --kv-field-2: #{$kv-peach};  --kv-on-field: #{$kv-ink}; }
+.kv-field-4 { --kv-field: #{$kv-slate};  --kv-field-2: #{$kv-gold};   --kv-on-field: #fff; }
+.kv-field-5 { --kv-field: #{$kv-teal};   --kv-field-2: #{$kv-peach};  --kv-on-field: #{$kv-ink}; }
 
 /* ---------- Page base (only on pages that opt in with .kv-page) ---------- */
 
@@ -343,7 +355,7 @@ body.kv-page {
     height: 28px;
     border-radius: 50%;
     background: var(--kv-field);
-    color: $kv-ink;
+    color: var(--kv-on-field);
     display: grid;
     place-items: center;
     font-size: 14px;
@@ -434,7 +446,7 @@ body.kv-page {
 }
 
 .kv-band {
-  background: $kv-mint;
+  background: $kv-peach;
 }
 
 /* ---------- Tickets ---------- */
@@ -467,9 +479,9 @@ body.kv-page {
   background: $kv-gold;
   color: $kv-ink;
 
-  &:nth-child(4n+2) { background: $kv-sage; }
-  &:nth-child(4n+3) { background: $kv-teal; }
-  &:nth-child(4n+4) { background: $kv-butter; }
+  &:nth-child(4n+2) { background: $kv-green; }
+  &:nth-child(4n+3) { background: $kv-rose; }
+  &:nth-child(4n+4) { background: $kv-teal; }
 
   &:after {
     content: "";
@@ -683,10 +695,10 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   gap: 5px;
 
   i { width: 10px; height: 10px; border-radius: 50%; }
-  i:nth-child(1) { background: $kv-sage; }
+  i:nth-child(1) { background: $kv-green; }
   i:nth-child(2) { background: $kv-gold; }
-  i:nth-child(3) { background: $kv-teal; }
-  i:nth-child(4) { background: $kv-ochre; }
+  i:nth-child(3) { background: $kv-violet; }
+  i:nth-child(4) { background: $kv-rose; }
 }
 
 .kv-footer-claim {
@@ -852,8 +864,8 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
     height: 240px;
     border-radius: 50%;
     background: var(--kv-field-2);
-    right: -70px;
-    bottom: -150px;
+    right: -120px;
+    bottom: -175px;
   }
 
   &:after {
@@ -870,9 +882,11 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
   > .kv-wrap { position: relative; z-index: 1; }
 
-  .kv-series { color: $kv-ink; }
+  color: var(--kv-on-field);
+
+  .kv-series { color: var(--kv-on-field); }
   .kv-series i { background: $kv-paper; }
-  .kv-facts { color: $kv-ink; margin: 0; }
+  .kv-facts { color: var(--kv-on-field); margin: 0; }
 }
 
 .kv-site .kv-pagehead-title {
@@ -883,10 +897,10 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -.02em;
-  color: $kv-ink;
+  color: var(--kv-on-field);
 
-  a { color: $kv-ink; }
-  a:hover, a:focus { color: $kv-ink; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+  a { color: var(--kv-on-field); }
+  a:hover, a:focus { color: var(--kv-on-field); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
 }
 
 .kv-pagehead-event .kv-pagehead-title { margin-bottom: 8px; }
@@ -900,7 +914,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 .kv-site {
   .rf-title, .rf-step-title { font-family: $kv-font; font-weight: 500; }
   .rf-title { font-size: 28px; letter-spacing: -.02em; }
-  .rf-step-title:before { background: var(--kv-field); color: $kv-ink; font-weight: 500; }
+  .rf-step-title:before { background: var(--kv-field); color: var(--kv-on-field); font-weight: 500; }
   .rf-choice-body, .rf-input, .rf-returning, .rf-signed-in, .rf-alert { border-radius: 0; }
   .rf-choice-body, .rf-input { background: $kv-paper; }
   .rf-button { border-radius: 0; min-height: 56px; font-family: $kv-font; font-weight: 500; }
@@ -908,14 +922,14 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 
   .order-ticket { border-radius: 0; box-shadow: none; }
   .order-ticket-poster small, .order-ticket-poster strong { position: relative; z-index: 1; }
-  .order-ticket-poster { background-color: var(--kv-field-2); }
+  .order-ticket-poster { background-color: var(--kv-field); color: var(--kv-on-field); }
   .order-ticket-poster:after {
     content: "";
     position: absolute;
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: var(--kv-field);
+    background: var(--kv-field-2);
     right: -30px;
     top: -50px;
   }
@@ -958,6 +972,7 @@ body.kv-site:not(.kv-page) .body-inner > section:first-of-type { padding-top: 40
 /* ---------- Series page ---------- */
 
 .kv-pagehead-series {
+  --kv-on-field: #{$kv-ink};
   background: $kv-bg;
   padding-bottom: 40px;
 
