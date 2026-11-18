@@ -37,6 +37,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // html() fields are cleaned on save. HTMLPurifier caches its
+        // definitions inside vendor/ by default, which isn't writeable in
+        // production.
+        \CatLab\Charon\CharonConfig::instance()->setHtmlPurifierFactory(function () {
+            $cachePath = storage_path('framework/cache/htmlpurifier');
+            if (!is_dir($cachePath)) {
+                @mkdir($cachePath, 0775, true);
+            }
+
+            $config = \HTMLPurifier_Config::createDefault();
+            $config->set('Cache.SerializerPath', $cachePath);
+            $config->set('Attr.AllowedFrameTargets', [ '_blank' ]);
+
+            return new \HTMLPurifier($config);
+        });
+
         if (isset($_SERVER['HTTP_HOST'])) {
 
             $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['REQUEST_SCHEME'];

@@ -87,4 +87,5 @@ class PeopleController extends BaseAdminController
                 break;
         }
     }
+
 }

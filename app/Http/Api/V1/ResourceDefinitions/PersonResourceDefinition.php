@@ -38,6 +38,10 @@ class PersonResourceDefinition extends BaseResourceDefinition
 
         $this->identifier('id');
 
+        $this->field('name')
+            ->string()
+            ->visible(true);
+
         $this->field('first_name')
             ->sortable()
             ->filterable()
@@ -53,7 +57,7 @@ class PersonResourceDefinition extends BaseResourceDefinition
             ->writeable(true, true);
 
         $this->field('description')
-            ->string()
+            ->html()
             ->visible()
             ->writeable(true, true)
         ;
