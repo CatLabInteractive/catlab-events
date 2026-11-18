@@ -16,13 +16,14 @@
     }
 ?>
 
-    {{-- Series name only, so the next quiz and its order button stay near the top. --}}
-    <div class="kv-pagehead kv-pagehead-series {{ $series->getColourClass() }}">
-        <div class="kv-wrap">
-            <p class="kv-series"><i aria-hidden="true"></i>Quizreeks</p>
-            <h1 class="kv-pagehead-title">{{ $series->name }}</h1>
+    @if(!$nextEvent)
+        {{-- Without a next quiz there is no hero to carry the series name: a slim head instead. --}}
+        <div class="kv-pagehead kv-pagehead-series {{ $series->getColourClass() }}">
+            <div class="kv-wrap">
+                <h1 class="kv-series kv-series-h1"><i aria-hidden="true"></i>{{ $series->name }}</h1>
+            </div>
         </div>
-    </div>
+    @endif
 
     @if($nextEvent)
         @include('blocks.event-hero', [ 'heroEvent' => $nextEvent, 'heroOnSeriesPage' => true ])

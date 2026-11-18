@@ -32,6 +32,17 @@ use Illuminate\Http\Request;
  */
 class SeriesController extends BaseAdminController
 {
+    public function __construct()
+    {
+        parent::__construct();
+
+        // The photos column links to the series' own photo admin.
+        $this->setChildController(
+            \App\Http\Api\V1\ResourceDefinitions\SeriesPhotoResourceDefinition::class,
+            SeriesPhotoController::class
+        );
+    }
+
     /**
      * @return ResourceController
      * @throws \CatLab\Charon\Exceptions\ResourceException
