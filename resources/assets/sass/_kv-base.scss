@@ -5,7 +5,7 @@
  * the alert/table/button classes in older views). This replaces Bootstrap 3
  * and the old Eventor theme, so only what is listed here exists.
  *
- * Long-form content without its own kv-* markup goes in .kv-prose (the
+ * Long-form content without its own kv-* markup goes in .kv-content (the
  * front layout wraps such pages in it), which styles headings, lists,
  * tables and forms for reading.
  */
@@ -107,9 +107,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline-offset: 3px;
 }
 
-/* ---------- Plain content (.kv-prose) ---------- */
+/* ---------- Plain content (.kv-content) ---------- */
 
-.kv-prose {
+.kv-content {
   > p, > ul, > ol, > .alert, > form, > h2, > h3 { max-width: 760px; }
 
   h2 { font-size: 28px; margin-top: 1.4em; }
