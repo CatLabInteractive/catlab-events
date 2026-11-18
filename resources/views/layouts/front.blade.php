@@ -25,7 +25,7 @@
         @yield('second-content')
     @else
         <div class="kv-plain">
-            <div class="kv-wrap kv-prose">
+            <div class="kv-wrap kv-content">
                 @yield('content')
                 @yield('second-content')
             </div>
