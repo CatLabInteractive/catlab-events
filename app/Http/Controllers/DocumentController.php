@@ -22,6 +22,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Tools\LegalDocuments;
+
 /**
 * Class DocumentController
 * @package App\Http\Controllers
@@ -33,7 +35,7 @@ class DocumentController
      */
     public function tos()
     {
-        return redirect('https://accounts.catlab.eu/docs/nl/events');
+        return redirect(LegalDocuments::termsUrl('nl'));
     }
 
     /**
@@ -41,6 +43,6 @@ class DocumentController
      */
     public function privacy()
     {
-        return redirect('https://accounts.catlab.eu/docs/nl/privacy');
+        return redirect(LegalDocuments::privacyUrl('nl'));
     }
 }
