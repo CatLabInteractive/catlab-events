@@ -115,7 +115,7 @@
 
         <?php
             $hasLinks = $heroOnSeriesPage
-                || $heroEvent->event_url
+                || $heroEvent->getMoreInfoUrl()
                 || ($heroEvent->getLiveStreamUrl() && !$heroEvent->hasTickets())
                 || $heroEvent->hasScores()
                 || $heroEvent->getFacebookEventUrl()
@@ -138,8 +138,8 @@
                     <a href="{{ action('EventController@scores', [ $heroEvent->id ]) }}">Eindscore</a>
                 @endif
 
-                @if($heroEvent->event_url)
-                    <a href="{{ $heroEvent->event_url }}">Meer informatie</a>
+                @if($heroEvent->getMoreInfoUrl())
+                    <a href="{{ $heroEvent->getMoreInfoUrl() }}">Meer informatie</a>
                 @endif
 
                 @if($heroEvent->getFacebookEventUrl())

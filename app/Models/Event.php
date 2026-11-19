@@ -874,12 +874,12 @@ class Event extends Model implements EuklesModel
         }
 
         // Same as
-        if ($this->event_url) {
+        if ($this->getMoreInfoUrl()) {
             if (!isset($output['sameAs'])) {
                 $output['sameAs'] = [];
             }
 
-            $output['sameAs'][] = $this->event_url;
+            $output['sameAs'][] = $this->getMoreInfoUrl();
         }
 
         if ($this->getFacebookEventUrl()) {
@@ -929,6 +929,65 @@ class Event extends Model implements EuklesModel
      * Get facebook event url if set.
      * @return null|string
      */
+    /**
+     * The "Meer informatie" link, or null when it would lead nowhere.
+     *
+     * Many events still link to their old WordPress page
+     * (www.quizfabriek.be/events/<slug>/). Since quizfabriek.be itself is served
+     * by this app, those pages are gone and the link 404s. A link back to the
+     * event's own page is equally pointless, so both are dropped.
+     *
+     * @return string|null
+     */
+    public function getMoreInfoUrl()
+    {
+        $url = trim((string) $this->event_url);
+        if ($url === '') {
+            return null;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host || !self::isOwnHost($host)) {
+            return $url;
+        }
+
+        $path = rtrim((string) parse_url($url, PHP_URL_PATH), '/');
+
+        // Old WordPress event page: /events/<slug> (our own event pages are /events/<id>/...).
+        if (preg_match('#^/events/(?!\d+(/|$))[^/]+$#', $path)) {
+            return null;
+        }
+
+        // A link to this event's own page.
+        if (preg_match('#^/(events|e)/' . preg_quote((string) $this->id, '#') . '(/|$)#', $path . '/')) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    /**
+     * Is this host one this app answers on (the current request or APP_URL), ignoring "www."?
+     */
+    private static function isOwnHost(string $host): bool
+    {
+        $normalise = function ($h) {
+            return preg_replace('/^www\./', '', strtolower((string) $h));
+        };
+
+        $own = [ parse_url((string) config('app.url'), PHP_URL_HOST) ];
+        if (app()->bound('request')) {
+            $own[] = request()->getHost();
+        }
+
+        foreach ($own as $candidate) {
+            if ($candidate && $normalise($candidate) === $normalise($host)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function getFacebookEventUrl()
     {
         if (empty($this->fb_event_id)) {
