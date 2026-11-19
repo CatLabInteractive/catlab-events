@@ -30,6 +30,8 @@ class PreviewSeeder extends Seeder
         $organisation = new Organisation();
         $organisation->name = 'De Quizfabriek';
         $organisation->logo_id = $this->asset('logo.png', 160, 180)->id;
+        $organisation->support_email = 'hallo@example.test';
+        $organisation->phone = '+32 9 123 45 67';
         $organisation->save();
 
         $user = new User();
