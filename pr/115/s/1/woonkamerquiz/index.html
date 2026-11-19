@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <!-- Basic Page Needs
+================================================== -->
+<meta charset="utf-8">
+
+    <link rel="canonical" href="../" />
+
+
+
+<!-- Mobile Specific Metas
+================================================== -->
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CSRF Token -->
+<meta name="csrf-token" content="BAngbkMIY3TDlI93EUdA4eJoh4u9XSdCtsEaVI09">
+
+            <title>Woonkamerquiz – De Quizfabriek</title>
+    
+    <link rel="sitemap" type="application/xml" title="De Quizfabriek Sitemap" href="../../../sitemap.xml" />
+    <meta property="og:title" content="De Quizfabriek" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="../../../apple-touch-icon.png">
+<link rel="icon" type="image/png" href="../../../favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="../../../favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="../../../manifest.json">
+<link rel="mask-icon" href="../../../safari-pinned-tab.svg" color="#1f3326">
+
+<meta name="theme-color" content="#f3f1e9">
+
+<meta property="fb:app_id" content="1124345767614916" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="./" />
+
+
+<link rel="preconnect" href="https://cookies.catlab.eu" />
+<link rel="preload" href="https://cookies.catlab.eu/cookie-consent.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cookies.catlab.eu/cookie-consent.css"/></noscript>
+<script src="https://cookies.catlab.eu/cookie-consent.js" defer></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof CookieConsent === 'undefined') {
+            return;
+        }
+        window.cookieConsent = new CookieConsent({
+            privacyPolicyUrl: '/docs/en/privacy',
+            buttonPrimaryClass: 'kv-cc-primary',
+            buttonSecondaryClass: 'kv-cc-secondary',
+            // The chat bubble waits until a choice is made, so it never covers the banner.
+            postSelectionCallback: function () {
+                if (window.kvLoadChat) {
+                    window.kvLoadChat();
+                }
+            }
+        });
+        window.cookieConsent.enableCrossDomain([
+            'catlab.eu',
+            'quizfabriek.be'
+        ]);
+    });
+</script>
+    <link rel="preload" href="../../../webfonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link href="../../../css/app.css" rel="stylesheet" type="text/css" />
+<script src="../../../js/kv.js" defer></script>
+    
+    <style>:root{--kv-c0:#61cc6f;--kv-c0-text:#1f3326;--kv-c1:#5e2fff;--kv-c1-text:#ffffff;--kv-c2:#fcc765;--kv-c2-text:#1f3326;--kv-c3:#bf8076;--kv-c3-text:#1f3326;--kv-c4:#4a6a9a;--kv-c4-text:#ffffff;--kv-c5:#58998d;--kv-c5-text:#1f3326;--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-0{--kv-field:#61cc6f;--kv-field-2:#fcc765;--kv-on-field:#1f3326}.kv-field-1{--kv-field:#5e2fff;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-2{--kv-field:#fcc765;--kv-field-2:#5e2fff;--kv-on-field:#1f3326}.kv-field-3{--kv-field:#bf8076;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}.kv-field-4{--kv-field:#4a6a9a;--kv-field-2:#fcc765;--kv-on-field:#ffffff}.kv-field-5{--kv-field:#58998d;--kv-field-2:#f8e6c6;--kv-on-field:#1f3326}</style>
+    <meta property="og:image" content="../../../preview-assets/header__width_1200_height_630.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="De gezelligste quiz van het land, gewoon in je eigen woonkamer.">
+    <meta property="og:description" content="De gezelligste quiz van het land, gewoon in je eigen woonkamer.">
+    <meta property="og:site_name" content="De Quizfabriek" />
+
+    <script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@type": "Organization",
+    "name": "De Quizfabriek",
+    "url": "http://127.0.0.1:8000",
+    "description": "De Quizfabriek organiseert elk jaar een aantal quizzes waarbij zowel nadruk wordt gelegd op kennis als op entertainment. Onze quizzes zijn dan ook wat minder traditioneel. Natuurlijk staat kennis centraal, maar laat je niet vangen door een ronde armworstelen, retoriek of zelfs bier-proeven.",
+    "logo": "http://127.0.0.1:8099/assets/logo.png"
+}</script>
+
+        <script type="application/ld+json">{
+    "@context": "http:\/\/schema.org",
+    "@type": "ItemList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "item": {
+                "@type": "EventSeries",
+                "name": "Woonkamerquiz",
+                "url": "http:\/\/127.0.0.1:8000\/s\/1\/woonkamerquiz",
+                "image": "http:\/\/127.0.0.1:8099\/assets\/header.jpg?width=300&height=300",
+                "organizer": {
+                    "@context": "http:\/\/schema.org",
+                    "@type": "Organization",
+                    "name": "De Quizfabriek",
+                    "url": "http:\/\/127.0.0.1:8000",
+                    "description": "De Quizfabriek organiseert elk jaar een aantal quizzes waarbij zowel nadruk wordt gelegd op kennis als op entertainment. Onze quizzes zijn dan ook wat minder traditioneel. Natuurlijk staat kennis centraal, maar laat je niet vangen door een ronde armworstelen, retoriek of zelfs bier-proeven.",
+                    "logo": "http:\/\/127.0.0.1:8099\/assets\/logo.png"
+                }
+            }
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "item": {
+                "@type": "EventSeries",
+                "name": "Quizavonden",
+                "url": "http:\/\/127.0.0.1:8000\/s\/2\/quizavonden",
+                "image": null,
+                "organizer": {
+                    "@context": "http:\/\/schema.org",
+                    "@type": "Organization",
+                    "name": "De Quizfabriek",
+                    "url": "http:\/\/127.0.0.1:8000",
+                    "description": "De Quizfabriek organiseert elk jaar een aantal quizzes waarbij zowel nadruk wordt gelegd op kennis als op entertainment. Onze quizzes zijn dan ook wat minder traditioneel. Natuurlijk staat kennis centraal, maar laat je niet vangen door een ronde armworstelen, retoriek of zelfs bier-proeven.",
+                    "logo": "http:\/\/127.0.0.1:8099\/assets\/logo.png"
+                }
+            }
+        }
+    ]
+}    </script>
+
+    <!-- Google Tag Manager -->
+
+<script>document.addEventListener('DOMContentLoaded', function () {(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-5PVSCV7');});</script>
+<!-- End Google Tag Manager -->
+</head>
+<body class="kv-site kv-page kv-field-1">
+    <a class="kv-skip" href="#main">Naar de inhoud</a>
+
+    
+    <header id="header" class="kv-header">
+    <div class="kv-header-inner">
+
+        <a class="kv-header-logo" href="../../../">
+                            <img src="../../../preview-assets/logo__width_104.png" alt="De Quizfabriek" width="52" />
+                    </a>
+
+                    <button type="button" class="kv-nav-button" aria-expanded="false" aria-controls="kv-nav">
+                <span class="kv-nav-button-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="sr-only">Menu</span>
+            </button>
+
+            <nav class="kv-nav" id="kv-nav" aria-label="Hoofdmenu">
+                <ul class="kv-nav-list">
+                    
+                                                                                                                                                            <li class="kv-nav-item kv-field-1  is-active  ">
+                                    <a href="./"  aria-current="page" >
+                                        <i class="kv-nav-dot" aria-hidden="true"></i>
+                                        Woonkamerquiz
+                                                                                    <span class="kv-nav-count">2<span class="sr-only"> komende quizzen</span></span>
+                                                                            </a>
+                                </li>
+                                                                                            <li class="kv-nav-item kv-field-2  ">
+                                    <a href="../../2/quizavonden/" >
+                                        <i class="kv-nav-dot" aria-hidden="true"></i>
+                                        Quizavonden
+                                                                                    <span class="kv-nav-count">3<span class="sr-only"> komende quizzen</span></span>
+                                                                            </a>
+                                </li>
+                                                                                                                                                                                        <li class="kv-nav-item "><a href="../../../calendar/" >Kalender</a></li>
+                                                                                                                                                                                        <li class="kv-nav-item "><a href="../../../quizzen-op-maat/" >Quizzen op maat</a></li>
+                                                                                                                                                                                        <li class="kv-nav-item "><a href="../../../over-ons/" >Over ons</a></li>
+                                                                                                                                                                                        <li class="kv-nav-item "><a href="../../../blog/" >Blog</a></li>
+                                                                        
+                                            <li class="kv-nav-item"><a href="../../../preview-info/unavailable.html">Login</a></li>
+                                    </ul>
+            </nav>
+        
+    </div>
+</header>
+
+
+    <main id="main" tabindex="-1">
+                
+
+    
+            <div class="kv-hero kv-hero-tall  kv-hero-photo  kv-field-1">
+
+            <div class="kv-hero-photos"  aria-hidden="true">
+                                                                <img class="is-shown" src="../../../preview-assets/header__width_1400.jpg" srcset="../../../preview-assets/header__width_800.jpg 800w, ../../../preview-assets/header__width_1400.jpg 1400w, ../../../preview-assets/header__width_2000.jpg 2000w" sizes="100vw" alt="" fetchpriority="high" />
+                                    </div>
+    
+            <div class="kv-hero-field">
+            <a class="kv-poster image-popup "
+   href="../../../preview-assets/portrait__width_1600.jpg"
+   style="--kv-poster-ratio: 0.7072"
+   aria-label="Poster 'Grote Kerstquiz' vergroten">
+    <img src="../../../preview-assets/portrait__width_1000.jpg"
+         srcset="../../../preview-assets/portrait__width_320.jpg 320w, ../../../preview-assets/portrait__width_480.jpg 480w, ../../../preview-assets/portrait__width_800.jpg 800w"
+         sizes="(min-width: 768px) 50vw, min(calc(100vw - 40px), 127px)"
+          width="1000" height="1414"          alt="Poster 'Grote Kerstquiz'"
+          />
+</a>
+        </div>
+    
+    <div class="kv-hero-info">
+                    <h1 class="kv-series kv-series-h1"><i aria-hidden="true"></i>Woonkamerquiz<span class="kv-series-sub">volgende quiz</span></h1>
+        
+                    <h2 class="kv-title"><a href="../../../preview-info/unavailable.html">Grote Kerstquiz</a></h2>
+        
+        <ul class="kv-hero-facts"><li>Donderdag 17 december 2026</li><li>Zaal De Kring, Gent</li><li>Max 6 spelers per team</li></ul>
+
+                    <div class="kv-buy" id="kv-cta">
+                                    <div class="kv-buy-top">
+                                                    <p class="kv-price">
+                                <span class="kv-price-label">Tickets vanaf</span>
+                                <strong>€ 30,00</strong>
+                                                                    <span class="kv-price-unit">per team</span>
+                                                            </p>
+                                                                    </div>
+                
+                                    <a href="../../../events/2/register/" class="kv-btn">
+                        Inschrijven
+                        <span class="kv-btn-dot" aria-hidden="true">&rarr;</span>
+                    </a>
+                
+                            </div>
+        
+                            <p class="kv-links">
+                                    
+                    <a href="../../../preview-info/unavailable.html#over">Praktisch &amp; tickets</a>
+                
+                
+                
+                
+                            </p>
+            </div>
+
+</div>
+
+    
+            <section class="kv-sec">
+            <div class="kv-wrap">
+                <h2 class="kv-sec-title">Wat kan je verwachten?</h2>
+                <div class="kv-text">
+                    <p>De gezelligste quiz van het land, gewoon in je eigen woonkamer.</p>
+                                    </div>
+            </div>
+        </section>
+    
+            <section class="kv-sec" id="tickets">
+            <div class="kv-wrap">
+                                    <h2 class="kv-sec-title">Alle data <small>Kies een quiz voor praktische info en tickets.</small></h2>
+                
+                <div>
+                                            <div class="kv-cards">
+                                                            <a class="kv-card kv-field-1" href="../../../preview-info/unavailable.html">
+    <span class="kv-card-image">
+                    <img src="../../../preview-assets/portrait__width_400.jpg" alt="Poster 'Grote Kerstquiz'" loading="lazy" />
+            </span>
+    <span class="kv-card-body">
+        <span class="kv-card-date">
+                            <b>Do. 17 dec.</b> &middot; 20:00
+                    </span>
+        <span class="kv-card-title">Grote Kerstquiz</span>
+                                    <span class="kv-card-meta">
+            Woonkamerquiz             &middot;             Zaal De Kring, Gent        </span>
+    </span>
+</a>
+                                                            <a class="kv-card kv-field-1" href="../../../preview-info/unavailable.html">
+    <span class="kv-card-image">
+                    <img src="../../../preview-assets/wide__width_400.jpg" alt="Poster 'Woonkamerquiz'" loading="lazy" />
+            </span>
+    <span class="kv-card-body">
+        <span class="kv-card-date">
+                            <b>Quizpakket</b>
+                    </span>
+        <span class="kv-card-title">Woonkamerquiz</span>
+                                    <span class="kv-card-meta">
+            Woonkamerquiz                                </span>
+    </span>
+</a>
+                                                    </div>
+                    
+                    <p class="kv-links"><a href="../../../calendar/">Volledige kalender</a></p>
+                </div>
+            </div>
+        </section>
+
+            
+    
+    <section class="kv-sec" id="blog">
+        <div class="kv-wrap">
+            <h2 class="kv-sec-title">Meer van De Quizfabriek <small><a class="kv-cms-link" href="../../../blog/">Blog</a></small></h2>
+
+            <div class="kv-posts">
+                                    <a class="kv-post kv-field-0" href="../../../2026/11/17/drie-nieuwe-quizpakketten/">
+    <span class="kv-post-image">
+                    <img src="../../../preview-assets/wide__width_720.jpg" alt="" loading="lazy" />
+            </span>
+    <span class="kv-card-date">
+                    <time datetime="2026-11-17T10:00:00+01:00">17 november 2026</time>
+            &middot;
+                <span class="kv-cms-post-author">De Quizfabriek</span>
+    </span>
+    <h3 class="kv-card-title">Drie nieuwe quizpakketten</h3>
+            <span class="kv-post-excerpt">Een korte inleiding van een paar regels, zodat je weet waar het bericht over gaat.</span>
+    </a>
+                                    <a class="kv-post kv-field-1" href="../../../2026/10/30/terugblik-grote-kerstquiz/">
+    <span class="kv-post-image">
+            </span>
+    <span class="kv-card-date">
+                    <time datetime="2026-10-30T10:00:00+01:00">30 oktober 2026</time>
+            &middot;
+                <span class="kv-cms-post-author">De Quizfabriek</span>
+    </span>
+    <h3 class="kv-card-title">Terugblik op de Grote Kerstquiz</h3>
+            <span class="kv-post-excerpt">Een korte inleiding van een paar regels, zodat je weet waar het bericht over gaat.</span>
+    </a>
+                                    <a class="kv-post kv-field-2" href="../../../2026/10/05/zo-maken-we-een-quizronde/">
+    <span class="kv-post-image">
+                    <img src="../../../preview-assets/square__width_720.jpg" alt="" loading="lazy" />
+            </span>
+    <span class="kv-card-date">
+                    <time datetime="2026-10-05T10:00:00+02:00">5 oktober 2026</time>
+            &middot;
+                <span class="kv-cms-post-author">De Quizfabriek</span>
+    </span>
+    <h3 class="kv-card-title">Zo maken we een quizronde</h3>
+            <span class="kv-post-excerpt">Een korte inleiding van een paar regels, zodat je weet waar het bericht over gaat.</span>
+    </a>
+                            </div>
+        </div>
+    </section>
+
+    <section class="kv-sec kv-band" id="facts">
+        <div class="kv-wrap">
+            <h2 class="kv-sec-title">Dit is De Quizfabriek</h2>
+            <dl class="kv-facts-grid">
+                                    <div>
+                        <dt>quizzen</dt>
+                        <dd>5</dd>
+                    </div>
+                                    <div>
+                        <dt>teams</dt>
+                        <dd>0</dd>
+                    </div>
+                                    <div>
+                        <dt>spelers</dt>
+                        <dd>0</dd>
+                    </div>
+                            </dl>
+        </div>
+    </section>
+
+        </main>
+
+    <footer id="footer" class="footer kv-footer">
+        <div class="kv-wrap">
+            <div class="kv-footer-grid">
+                <div>
+                    <span class="kv-footer-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <p class="kv-footer-claim">De perfecte quiz op ieders maat.</p>
+                </div>
+
+                <div>
+                    <h2 class="kv-footer-title">Tickets</h2>
+                    <ul>
+                        <li><a href="../../../calendar/">Kalender</a></li>
+                                                <li><a href="../../../preview-info/unavailable.html">Mijn tickets</a></li>
+                        <li><a href="../../../preview-info/unavailable.html" target="_blank" rel="noopener">Mijn account</a></li>
+                    </ul>
+                </div>
+
+                
+                                
+                                                    <div>
+                        <h2 class="kv-footer-title">Quizreeksen</h2>
+                        <ul>
+                                                            <li><a href="./">Woonkamerquiz</a></li>
+                                                            <li><a href="../../2/quizavonden/">Quizavonden</a></li>
+                                                    </ul>
+                    </div>
+                
+                                            </div>
+
+            <div class="kv-footer-legal">
+                <p>
+                    Copyright © 2016-26 De Quizfabriek.
+                    Website en ticketsysteem aangeboden door <a href="https://www.catlab.eu">CatLab Interactive bv</a>.
+                    <a href="http://www.quizwitz.com/">QuizWitz</a> is een geregistreerd merk van <a href="https://www.catlab.eu/">CatLab Interactive</a>.
+                    Lees ons <a href="../../../documents/nl/privacy/">Privacy beleid</a> en
+                    <a href="../../../documents/nl/tos/">Gebruiksvoorwaarden</a>.
+                    Deze website is een <a href="https://github.com/CatLabInteractive/catlab-events">open source</a> project.
+                </p>
+
+                            </div>
+        </div>
+
+    </footer>
+
+<div style="position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:4px 10px;border-radius:999px;background:rgba(20,20,20,.78);color:#fff;font:12px/1.4 system-ui,sans-serif;pointer-events:none">Preview of #115 · demo data</div></body>
+</html>
