@@ -92,6 +92,16 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        // Public phone number, shown in the footer (as a tel: link) and in
+        // the Organization JSON-LD. Empty hides it.
+        $this->field('phone')
+            ->string()
+            ->max(50)
+            ->label('Telefoonnummer')
+            ->describe('Publiek telefoonnummer, bv. +32 9 123 45 67. Wordt getoond in de footer en als klikbare tel:-link. Leeg: niet tonen.')
+            ->visible()
+            ->writeable();
+
         $this->field('blog_url')
             ->visible()
             ->writeable();

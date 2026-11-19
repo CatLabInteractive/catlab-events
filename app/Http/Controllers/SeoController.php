@@ -102,6 +102,9 @@ class SeoController extends Controller
         if ($organisation->support_email) {
             $facts[] = 'Contact: ' . $organisation->support_email;
         }
+        if ($organisation->getPhoneNumber()) {
+            $facts[] = 'Telefoon: ' . $organisation->getPhoneNumber();
+        }
         foreach ($organisation->getSocialLinks() as $label => $link) {
             $facts[] = $label . ': ' . $link;
         }

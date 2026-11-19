@@ -48,7 +48,7 @@
                     $hasSocial = organisation()->facebook_url || organisation()->twitter_url || organisation()->youtube_url
                         || organisation()->instagram_url || organisation()->linkedin_url;
                 ?>
-                @if($hasSocial || organisation()->support_email)
+                @if($hasSocial || organisation()->support_email || organisation()->getPhoneHref())
                 <div>
                     <h2 class="kv-footer-title">{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h2>
                     <div class="kv-footer-social">
@@ -68,9 +68,14 @@
                             <a href="{{organisation()->linkedin_url}}" title="{{organisation()->name}} LinkedIn">@include('blocks.icon', [ 'name' => 'linkedin' ])<span class="sr-only">LinkedIn</span></a>
                         @endif
                     </div>
-                    @if(organisation()->support_email)
+                    @if(organisation()->support_email || organisation()->getPhoneHref())
                         <ul>
-                            <li><a href="mailto:{{ organisation()->support_email }}">{{ organisation()->support_email }}</a></li>
+                            @if(organisation()->support_email)
+                                <li><a href="mailto:{{ organisation()->support_email }}">{{ organisation()->support_email }}</a></li>
+                            @endif
+                            @if(organisation()->getPhoneHref())
+                                <li><a href="{{ organisation()->getPhoneHref() }}">{{ organisation()->getPhoneNumber() }}</a></li>
+                            @endif
                         </ul>
                     @endif
                 </div>
