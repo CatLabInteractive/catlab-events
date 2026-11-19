@@ -53,6 +53,17 @@
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
+    /* The field itself is the timeline, so the circles move with it. */
+    .kv-hero-field,
+    .kv-hero-noposter,
+    .kv-pagehead,
+    .footer.kv-footer,
+    .kv-cms-hero,
+    .kv-cms-split-image,
+    .kv-cms-cta-primary {
+      view-timeline: --kv-field block;
+    }
+
     .kv-hero-field:before,
     .kv-hero-noposter:before,
     .kv-pagehead:before,
@@ -61,7 +72,7 @@
     .kv-cms-split-image:before,
     .kv-cms-cta-primary:before {
       animation: kv-drift-slow linear both;
-      animation-timeline: view();
+      animation-timeline: --kv-field;
     }
 
     .kv-hero-field:after,
@@ -69,7 +80,7 @@
     .kv-pagehead:after,
     .kv-cms-hero:after {
       animation: kv-drift-fast linear both;
-      animation-timeline: view();
+      animation-timeline: --kv-field;
     }
   }
 }
