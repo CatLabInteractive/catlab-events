@@ -47,6 +47,29 @@ class PagesApiTest extends IntegrationTestCase
         $this->assertNull($page->parent_id);
     }
 
+    public function testTitleLinkAndHomePage()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->createPage($organisation, 'over-ons');
+        $url = '/api/v1/pages/' . $page->id;
+
+        // The link itself, not "true"; the title of the default translation.
+        $response = $this->actingAs($admin)->putJson($url, [ 'link' => '@calendar', 'is_home' => true ]);
+        $response->assertStatus(200);
+        $response->assertJsonPath('link', '@calendar');
+        $response->assertJsonPath('title', 'Page over-ons (nl)');
+        $response->assertJsonPath('is_home', true);
+        $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
+
+        // Not mentioning is_home leaves the home page alone; false clears it.
+        $this->actingAs($admin)->putJson($url, [ 'link' => null ])->assertStatus(200)->assertJsonPath('link', null);
+        $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
+
+        $this->actingAs($admin)->putJson($url, [ 'is_home' => false ])->assertStatus(200)->assertJsonPath('is_home', false);
+        $this->assertNull($organisation->fresh()->home_page_id);
+    }
+
     public function testIndexListsOnlyTheOrganisationsPagesWithTheirTranslations()
     {
         $organisation = $this->createOrganisation();

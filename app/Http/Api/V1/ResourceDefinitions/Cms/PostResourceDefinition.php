@@ -42,15 +42,23 @@ class PostResourceDefinition extends BaseResourceDefinition
 
         $this->identifier('id');
 
+        // The title in the default language (else the first translation's). Read only.
+        $this->field('title')
+            ->string()
+            ->label('Titel')
+            ->visible(true, true);
+
         $this->field('published_at')
             ->datetime(AppTimezoneDateTransformer::class)
-            ->describe('Publication date (RFC 822 or ISO 8601). The post is visible from then on, in every locale whose translation is published; null keeps it hidden.')
+            ->label('Publicatiedatum')
+            ->describe('Publicatiedatum (RFC 822 of ISO 8601). Bepaalt het adres (/jjjj/mm/dd/…) en de volgorde. Een datum in de toekomst plant het bericht in; zonder datum is het nergens zichtbaar.')
             ->sortable()
             ->visible(true, true)
             ->writeable(true, true);
 
         $this->field('featured_image_id')
             ->number()
+            ->label('Uitgelichte afbeelding')
             ->describe('Asset id of the featured image; an asset of the same organisation.')
             ->visible(true, true)
             ->writeable(true, true);
@@ -58,6 +66,7 @@ class PostResourceDefinition extends BaseResourceDefinition
         // Always expanded, in the translation's index context (locale, slug,
         // url, title, published; not the body), like the admin index.
         $this->relationship('translations', PostTranslationResourceDefinition::class)
+            ->label('Talen')
             ->many()
             ->visible(true, true)
             ->expanded();

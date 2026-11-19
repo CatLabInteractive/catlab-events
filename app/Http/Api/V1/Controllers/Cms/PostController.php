@@ -48,6 +48,7 @@ class PostController extends ResourceController
 
     use \CatLab\Charon\Laravel\Controllers\ChildCrudController {
         beforeSaveEntity as traitBeforeSaveEntity;
+        getIndexQuery as traitGetIndexQuery;
         store as traitStore;
         edit as traitEdit;
         patch as traitPatch;
@@ -91,6 +92,23 @@ class PostController extends ResourceController
     {
         $parentId = $request->route(self::PARENT_RESOURCE_ID);
         return Organisation::findOrFail($parentId);
+    }
+
+    /**
+     * Without a sort of its own the list starts with the posts without a
+     * date (the drafts), then the newest.
+     * @param Request $request
+     * @return mixed
+     */
+    protected function getIndexQuery(Request $request)
+    {
+        $query = $this->traitGetIndexQuery($request);
+
+        if (!$request->query->has('sort')) {
+            $query->orderByRaw('published_at IS NULL DESC')->orderBy('published_at', 'desc');
+        }
+
+        return $query;
     }
 
     /**

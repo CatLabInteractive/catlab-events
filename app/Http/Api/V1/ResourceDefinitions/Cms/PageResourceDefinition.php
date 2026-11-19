@@ -40,38 +40,62 @@ class PageResourceDefinition extends BaseResourceDefinition
 
         $this->identifier('id');
 
+        // The title in the default language (else the first translation's). Read only.
+        $this->field('title')
+            ->string()
+            ->label('Titel')
+            ->visible(true, true);
+
         $this->field('parent_id')
             ->number()
-            ->describe('Id of the parent page (same organisation), or null for a top-level page.')
+            ->label('Bovenliggende pagina')
+            ->describe('De pagina (id, zelfde organisatie) waaronder deze pagina hangt; leeg voor het hoofdniveau.')
             ->filterable()
             ->visible(true, true)
             ->writeable(true, true);
 
         $this->field('sort_order')
             ->number()
+            ->label('Volgorde')
+            ->describe('Lager staat eerst, in het menu en in de lijst.')
             ->sortable()
-            ->visible(true, true)
-            ->writeable(true, true);
-
-        $this->field('show_in_menu')
-            ->bool()
-            ->visible(true, true)
-            ->writeable(true, true);
-
-        $this->field('show_in_footer')
-            ->bool()
             ->visible(true, true)
             ->writeable(true, true);
 
         // A menu link instead of content: @series, @calendar, @blog or a URL.
         $this->field('link')
             ->string()
+            ->label('Soort')
+            ->describe('Een menulink heeft geen eigen inhoud: in het menu en de footer leidt hij naar zijn doel (@series, @calendar, @blog of een adres).')
+            ->visible(true, true)
+            ->writeable(true, true);
+
+        $this->field('show_in_menu')
+            ->bool()
+            ->label('Toon in het menu')
+            ->describe('Een subpagina verschijnt in het uitklapmenu van haar hoofdpagina.')
+            ->visible(true, true)
+            ->writeable(true, true);
+
+        $this->field('show_in_footer')
+            ->bool()
+            ->label('Toon in de footer')
+            ->visible(true, true)
+            ->writeable(true, true);
+
+        // The organisation's home page (organisations.home_page_id). Writing
+        // true makes this page the home page, false stops using it as such.
+        $this->field('is_home')
+            ->bool()
+            ->label('Startpagina')
+            ->describe('De pagina die op / getoond wordt. Zonder startpagina toont / de kalender.')
             ->visible(true, true)
             ->writeable(true, true);
 
         // Always expanded, in the translation's index context (locale, slug,
         // path, url, title, published; not the blocks), like the admin index.
         $this->relationship('translations', PageTranslationResourceDefinition::class)
+            ->label('Talen')
             ->many()
             ->visible(true, true)
             ->expanded();

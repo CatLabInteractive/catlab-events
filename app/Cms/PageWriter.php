@@ -137,9 +137,33 @@ class PageWriter
         return $this->transaction($page->organisation, function () use ($page) {
             $this->preparePage($page);
             $page->save();
+            $this->applyHomePage($page);
 
             return $page;
         });
+    }
+
+    /**
+     * Apply an `is_home` written on the page (Page::setIsHomeAttribute()):
+     * true makes it the organisation's home page, false stops using it as
+     * such (and leaves another page's home status alone).
+     * @param Page $page
+     * @throws ValidationException
+     */
+    protected function applyHomePage(Page $page): void
+    {
+        $isHome = $page->pullPendingIsHome();
+        $organisation = $page->organisation;
+        if ($isHome === null || !$organisation) {
+            return;
+        }
+
+        $isCurrent = (int) $organisation->home_page_id === (int) $page->id;
+        if ($isHome && !$isCurrent) {
+            $this->setHomePage($organisation, $page);
+        } elseif (!$isHome && $isCurrent) {
+            $this->setHomePage($organisation, null);
+        }
     }
 
     /**
@@ -154,6 +178,7 @@ class PageWriter
         $page = $translation->page;
 
         return $this->transaction($page ? $page->organisation : null, function () use ($translation, $page) {
+            $this->fillFromCopy($translation);
             $this->prepareTranslation($translation);
             $translation->save();
 
@@ -163,6 +188,44 @@ class PageWriter
 
             return $translation;
         });
+    }
+
+    /**
+     * A new translation with `copy_from` set (PageTranslation::setCopyFromAttribute())
+     * starts from that translation of the same page: whatever was left empty
+     * is copied, the blocks with fresh ids.
+     * @param PageTranslation $translation
+     * @throws ValidationException
+     */
+    protected function fillFromCopy(PageTranslation $translation): void
+    {
+        $from = $translation->pullCopyFrom();
+        $page = $translation->page;
+        if ($from === null || $translation->exists || !$page) {
+            return;
+        }
+
+        $source = $page->translations()->where('locale', '=', $from)->first();
+        if (!$source) {
+            throw ValidationException::withMessages([
+                'copy_from' => 'Er is geen vertaling "' . $from . '" om van te kopiëren.',
+            ]);
+        }
+
+        foreach ([ 'slug', 'title', 'meta_title', 'meta_description', 'og_image_id' ] as $field) {
+            if ($translation->{$field} === null || $translation->{$field} === '') {
+                $translation->{$field} = $source->{$field};
+            }
+        }
+
+        if (empty($translation->blocks)) {
+            $translation->blocks = array_map(function ($block) {
+                if (is_array($block)) {
+                    $block['id'] = self::newBlockId();
+                }
+                return $block;
+            }, is_array($source->blocks) ? $source->blocks : []);
+        }
     }
 
     /**
@@ -192,48 +255,6 @@ class PageWriter
 
             return $translation;
         });
-    }
-
-    /**
-     * Start the $to translation from a copy of the $from translation: same
-     * slug, title, meta and blocks (with fresh block ids), unpublished.
-     * @param Page $page
-     * @param string $from
-     * @param string $to
-     * @return PageTranslation
-     * @throws ValidationException
-     */
-    public function copyTranslation(Page $page, string $from, string $to): PageTranslation
-    {
-        $source = $page->translations()->where('locale', '=', $from)->first();
-        if (!$source) {
-            throw ValidationException::withMessages([
-                'locale' => 'Er is geen vertaling "' . $from . '" om van te kopiëren.',
-            ]);
-        }
-
-        if ($page->translations()->where('locale', '=', $to)->exists()) {
-            throw ValidationException::withMessages([
-                'locale' => 'Deze pagina heeft al een vertaling "' . $to . '".',
-            ]);
-        }
-
-        $blocks = array_map(function ($block) {
-            if (is_array($block)) {
-                $block['id'] = self::newBlockId();
-            }
-            return $block;
-        }, is_array($source->blocks) ? $source->blocks : []);
-
-        return $this->saveTranslation($page, $to, [
-            'slug' => $source->slug,
-            'title' => $source->title,
-            'meta_title' => $source->meta_title,
-            'meta_description' => $source->meta_description,
-            'og_image_id' => $source->og_image_id,
-            'is_published' => false,
-            'blocks' => $blocks,
-        ]);
     }
 
     /**
@@ -308,6 +329,57 @@ class PageWriter
             throw ValidationException::withMessages([
                 'page' => 'Deze pagina heeft nog onderliggende pagina\'s. Verwijder of verplaats die eerst.',
             ]);
+        }
+    }
+
+    /**
+     * Add the fixed parts of the menu (quiz series, calendar, blog) that no
+     * menu link manages yet as menu links, at their current position and
+     * published in every language, so they can be moved, renamed or hidden.
+     * @param Organisation $organisation
+     * @throws ValidationException
+     */
+    public function addFixedLinks(Organisation $organisation): void
+    {
+        $existing = Page::forOrganisation($organisation)->whereIn('link', Page::FIXED_LINKS)->pluck('link')->all();
+        $slugs = [ Page::LINK_SERIES => 'menu-quizreeksen', Page::LINK_CALENDAR => 'menu-kalender', Page::LINK_BLOG => 'menu-blog' ];
+        $defaultLocale = config('cms.default_locale');
+
+        foreach (Page::FIXED_LINK_POSITIONS as $link => $position) {
+            if (in_array($link, $existing, true)) {
+                continue;
+            }
+
+            $slug = $slugs[$link];
+            $taken = PageTranslation::forOrganisation($organisation)->pluck('path')->all();
+            for ($i = 2; in_array($slug, $taken, true); $i++) {
+                $slug = $slugs[$link] . '-' . $i;
+            }
+
+            $translation = $this->createPage($organisation, [
+                'parent_id' => null,
+                'sort_order' => $position,
+                'show_in_menu' => true,
+                'show_in_footer' => false,
+                'link' => $link,
+            ], $defaultLocale, [
+                'slug' => $slug,
+                'title' => Page::FIXED_LINK_TITLES[$link][$defaultLocale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
+                'is_published' => true,
+                'blocks' => [],
+            ]);
+
+            // In every language, so the menu stays the same everywhere.
+            foreach (config('cms.locales') as $locale) {
+                if ($locale !== $defaultLocale) {
+                    $this->saveTranslation($translation->page, $locale, [
+                        'slug' => $slug,
+                        'title' => Page::FIXED_LINK_TITLES[$link][$locale] ?? Page::FIXED_LINK_TITLES[$link]['nl'],
+                        'is_published' => true,
+                        'blocks' => [],
+                    ]);
+                }
+            }
         }
     }
 

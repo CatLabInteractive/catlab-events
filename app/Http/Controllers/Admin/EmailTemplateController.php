@@ -1,97 +1,234 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
+ * Copyright (C) 2017 Thijs Van der Schaeghe
+ * CatLab Interactive bvba, Gent, Belgium
+ * http://www.catlab.eu/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\AdministersEmails;
-use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
+use App\Services\Admin\Widgets\EmailContentWidget;
+use App\Services\Admin\Widgets\EmailSubjectWidget;
 use App\Services\EmailTemplates;
+use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Interfaces\ResourceDefinition;
+use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Models\Table\ResourceAction;
+use CatLab\CharonFrontend\Widgets\FormField;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 /**
- * Class EmailTemplateController
- *
- * Lets organisation admins preview the transactional mails (registration,
- * cancellation, waiting list, team invitation) with made-up data, and
- * rewrite them. A rewritten mail replaces the default for every event of
- * the active organisation until it is reset.
+ * The automatic mails ("Standaardmails") as the organisation sends them: a
+ * Charon admin resource on top of the StandardMail api controller. There is
+ * always one of each mail, so nothing is created; editing writes the
+ * organisation's own version and deleting goes back to the standard text.
  *
  * @package App\Http\Controllers\Admin
  */
-class EmailTemplateController extends Controller
+class EmailTemplateController extends BaseAdminController
 {
     use AdministersEmails;
 
-    /**
-     * @var EmailTemplates
-     */
-    private $templates;
-
-    /**
-     * @param EmailTemplates $templates
-     */
-    public function __construct(EmailTemplates $templates)
+    public function __construct()
     {
-        $this->templates = $templates;
+        parent::__construct();
+
+        $this->widgets()
+            ->forField('subject', new EmailSubjectWidget([ 'required' => 'required' ]))
+            ->forField('content', new EmailContentWidget(function (FormField $field, string $type) {
+                return action('Admin\EmailTemplateController@preview', [ 'type' => $type ]);
+            }));
     }
 
     /**
-     * Every mail, and whether the organisation rewrote it.
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $path
+     * @param $controller
      */
-    public function index()
+    public static function routes($path, $controller)
     {
-        $organisation = $this->getAdministeredOrganisation();
+        $types = EmailTemplates::routePattern();
 
-        $overrides = $organisation->emailTemplates()->organisationVersion()->get()->keyBy('type');
+        \Route::get($path, $controller . '@index');
+        \Route::get($path . '/{type}', $controller . '@show')->where('type', $types);
+        \Route::put($path . '/{type}', $controller . '@update')->where('type', $types);
+        \Route::delete($path . '/{type}', $controller . '@destroy')->where('type', $types);
+        \Route::get($path . '/{type}/edit', $controller . '@edit')->where('type', $types);
+        \Route::get($path . '/{type}/delete', $controller . '@confirmDelete')->where('type', $types);
 
-        $types = [];
-        foreach ($this->templates->getTypes() as $type => $definition) {
-            $types[$type] = $definition + [
-                'customised' => $overrides->has($type),
-                'updated_at' => $overrides->has($type) ? $overrides->get($type)->updated_at : null
-            ];
-        }
-
-        return view('admin.emails.index', [
-            'types' => $types
-        ]);
+        // The form posts to the preview with its own method field (put).
+        \Route::match([ 'get', 'post', 'put' ], $path . '/{type}/preview', $controller . '@preview')->where('type', $types);
     }
 
     /**
-     * The mail as it would go out now, with made-up data.
-     *
-     * @param string $type
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @return \App\Http\Api\V1\Controllers\StandardMailController
      */
-    public function show($type)
+    public function createApiController()
     {
-        $organisation = $this->getAdministeredOrganisation();
-        $this->assertType($type);
+        return new \App\Http\Api\V1\Controllers\StandardMailController();
+    }
 
-        $mail = $this->templates->render(
-            $organisation,
-            $type,
-            $this->templates->getSampleAttributes($organisation, $type)
-        );
+    public static function getRouteIdParameterName(): string
+    {
+        return 'type';
+    }
 
-        return view('admin.emails.show', [
-            'type' => $type,
-            'label' => $this->templates->getLabel($type),
-            'description' => $this->templates->getTypes()[$type]['description'],
-            'subject' => $mail['subject'],
-            'customised' => $this->templates->getOverride($organisation, $type) !== null
-        ]);
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\StandardMailController::RESOURCE_ID;
     }
 
     /**
-     * Just the mail body, for the preview frame. With a POST, the unsaved
-     * version from the edit form is rendered instead of the stored one.
-     *
+     * The mails of the active organisation.
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getApiControllerParameters(Request $request, $method)
+    {
+        return [
+            'organisation' => $this->getAdministeredOrganisation()->id
+        ];
+    }
+
+    /**
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getAuthorizeParameters(Request $request, $method)
+    {
+        return $method === Action::INDEX ? [ $this->getAdministeredOrganisation() ] : null;
+    }
+
+    /**
+     * There is one of each mail; none are added.
+     * @param Request $request
+     * @param ResourceDefinition $resourceDefinition
+     * @return bool
+     */
+    protected function canCreateModel(Request $request, ResourceDefinition $resourceDefinition)
+    {
+        return false;
+    }
+
+    /**
+     * A mail opens in its editor, which shows the preview as well.
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function show(Request $request)
+    {
+        $this->getAdministeredOrganisation();
+
+        return redirect($this->action('edit'));
+    }
+
+    /**
+     * @param Request $request
+     * @param $model
+     * @return bool
+     */
+    protected function canViewModel(Request $request, $model)
+    {
+        return false;
+    }
+
+    /**
+     * Deleting a mail goes back to the standard text.
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getDestroyConfirmText(Request $request, RESTResource $resource): string
+    {
+        return 'De aangepaste versie wordt verwijderd en de standaardversie wordt weer verstuurd. Doorgaan?';
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
+     */
+    protected function getDestroyConfirmLabel(Request $request, RESTResource $resource): string
+    {
+        return 'Terug naar standaard';
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function afterDestroy(Request $request, RESTResource $resource)
+    {
+        Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" is terug de standaardversie.');
+
+        return redirect(action('Admin\EmailTemplateController@index'));
+    }
+
+    /**
+     * The list says what its buttons do, and leaves out the code of the mail.
+     * @param string $action
+     * @param ResourceAction $rowAction
+     * @return ResourceAction
+     */
+    protected function configureRowAction(string $action, ResourceAction $rowAction): ResourceAction
+    {
+        return $this->labelledMailAction($action, $rowAction);
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexColumns(Request $request): array
+    {
+        return [ 'type' ];
+    }
+
+    /**
+     * @param Request $request
+     * @return string[]
+     */
+    protected function getHiddenIndexFilters(Request $request): array
+    {
+        return [ 'type' ];
+    }
+
+    /**
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function afterUpdate(Request $request, RESTResource $resource)
+    {
+        Session::flash('message', 'De mail "' . $this->getResourceTitle($request, $resource) . '" is aangepast.');
+
+        return redirect(action('Admin\EmailTemplateController@index'));
+    }
+
+    /**
+     * Just the mail body, for the preview frame, with made-up data: the
+     * version that goes out now (GET) or what is in the form, without
+     * saving it.
      * @param Request $request
      * @param string $type
      * @return \Illuminate\Http\Response
@@ -99,21 +236,21 @@ class EmailTemplateController extends Controller
     public function preview(Request $request, $type)
     {
         $organisation = $this->getAdministeredOrganisation();
-        $this->assertType($type);
+        $templates = app(EmailTemplates::class);
 
         $draft = null;
-        if ($request->isMethod('post')) {
+        if (!$request->isMethod('get')) {
             $draft = new EmailTemplate([
                 'type' => $type,
-                'subject' => (string) $request->input('subject', ''),
-                'content' => (string) $request->input('content', '')
+                'subject' => $this->draftField($request, 'subject'),
+                'content' => $this->draftField($request, 'content'),
             ]);
         }
 
-        $mail = $this->templates->render(
+        $mail = $templates->render(
             $organisation,
             $type,
-            $this->templates->getSampleAttributes($organisation, $type),
+            $templates->getSampleAttributes($organisation, $type),
             $draft
         );
 
@@ -121,77 +258,57 @@ class EmailTemplateController extends Controller
     }
 
     /**
-     * @param string $type
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $action
+     * @return string
      */
-    public function edit($type)
+    protected function getView($action)
     {
-        $organisation = $this->getAdministeredOrganisation();
-        $this->assertType($type);
+        switch ($action) {
+            case 'index':
+                return 'admin.emails.standard.index';
 
-        $template = $this->templates->getOverride($organisation, $type);
+            case 'form':
+                return 'admin.emails.standard.form';
+        }
 
-        return view('admin.emails.edit', [
-            'type' => $type,
-            'label' => $this->templates->getLabel($type),
-            'subject' => $template ? $template->subject : $this->templates->getDefaultSubject($type),
-            'content' => $template ? $template->content : $this->templates->getDefaultContent($type),
-            'placeholders' => $this->templates->getPlaceholders($type),
-            'customised' => $template !== null
-        ]);
+        return parent::getView($action);
     }
 
     /**
      * @param Request $request
-     * @param string $type
-     * @return \Illuminate\Http\RedirectResponse
+     * @param RESTResource $resource
+     * @return string
      */
-    public function update(Request $request, $type)
+    protected function getResourceTitle(Request $request, RESTResource $resource): string
     {
-        $organisation = $this->getAdministeredOrganisation();
-        $this->assertType($type);
+        return (string) ($resource->toArray()['label'] ?? '');
+    }
 
-        $this->validate($request, [
-            'subject' => 'required|string|max:255',
-            'content' => 'required|string'
-        ]);
+    protected function getEntityLabel(): string
+    {
+        return 'mail';
+    }
 
-        $organisation->emailTemplates()->updateOrCreate(
-            [ 'type' => $type, 'name' => '' ],
-            [
-                'subject' => $request->input('subject'),
-                'content' => $request->input('content')
-            ]
-        );
-
-        return redirect(action('Admin\EmailTemplateController@show', [ $type ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" is aangepast.');
+    protected function getIndexTitle(): string
+    {
+        return 'E-mails';
     }
 
     /**
-     * Throw the organisation's version away: the default goes out again.
-     *
-     * @param string $type
-     * @return \Illuminate\Http\RedirectResponse
+     * @param ResourceDefinition $resourceDefinition
+     * @return string
      */
-    public function reset($type)
+    protected function getEditActionLabel(ResourceDefinition $resourceDefinition)
     {
-        $organisation = $this->getAdministeredOrganisation();
-        $this->assertType($type);
-
-        $organisation->emailTemplates()->organisationVersion()->where('type', '=', $type)->delete();
-
-        return redirect(action('Admin\EmailTemplateController@show', [ $type ]))
-            ->with('message', 'De mail "' . $this->templates->getLabel($type) . '" is terug de standaardversie.');
+        return 'Aanpassen';
     }
 
     /**
-     * @param string $type
+     * @param ResourceDefinition $resourceDefinition
+     * @return string
      */
-    private function assertType($type)
+    protected function getDestroyActionLabel(ResourceDefinition $resourceDefinition)
     {
-        if (!$this->templates->exists($type)) {
-            abort(404);
-        }
+        return 'Terug naar standaard';
     }
 }

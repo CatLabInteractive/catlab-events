@@ -22,304 +22,154 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Cms\PostWriter;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\PostTranslationRequest;
-use App\Models\Organisation;
-use App\Models\Post;
-use App\Models\PostTranslation;
-use Carbon\Carbon;
+use App\Http\Api\V1\ResourceDefinitions\Cms\PostTranslationResourceDefinition;
+use App\Cms\Widgets\PublicationDateWidget;
+use CatLab\Charon\Enums\Action;
+use CatLab\Charon\Models\RESTResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 /**
- * Admin editor for blog posts: the list, and one form per translation (the
- * post's date and featured image are shared by every translation). All
- * writes go through App\Cms\PostWriter, like the API.
+ * Blog posts: the post itself (publication date, featured image) is a
+ * Charon admin resource; its text lives in its translations
+ * (PostTranslationController), one per language, on the Talen tab.
  *
- * Every post is resolved within the acting admin's active organisation, and
- * a post of another organisation is a 404 (as in GuestRegistrationController).
- *
- * Class PostController
  * @package App\Http\Controllers\Admin
  */
-class PostController extends Controller
+class PostController extends CmsAdminController
 {
-    /**
-     * @var PostWriter
-     */
-    private $writer;
-
-    /**
-     * @param PostWriter $writer
-     */
-    public function __construct(PostWriter $writer)
+    public function __construct()
     {
-        $this->writer = $writer;
+        parent::__construct();
+
+        // The translations: a tab on the show page, links in the list.
+        $this->setChildController(PostTranslationResourceDefinition::class, PostTranslationController::class);
+
+        $this->widgets()->forField('published_at', new PublicationDateWidget());
     }
 
     /**
-     * Register the admin routes (inside the auth + admin group).
+     * @return \App\Http\Api\V1\Controllers\Cms\PostController
      */
-    public static function routes()
+    public function createApiController()
     {
-        $locales = implode('|', array_map('preg_quote', config('cms.locales')));
+        return new \App\Http\Api\V1\Controllers\Cms\PostController();
+    }
 
-        \Route::get('posts', 'Admin\PostController@index');
-        \Route::get('posts/create', 'Admin\PostController@create');
-        \Route::post('posts', 'Admin\PostController@store');
+    public static function getRouteIdParameterName(): string
+    {
+        return 'post';
+    }
 
-        \Route::get('posts/{post}/edit/{locale}', 'Admin\PostController@edit')
-            ->where([ 'post' => '[0-9]+', 'locale' => $locales ]);
-        \Route::put('posts/{post}/edit/{locale}', 'Admin\PostController@update')
-            ->where([ 'post' => '[0-9]+', 'locale' => $locales ]);
-
-        \Route::get('posts/{post}/translations/{locale}/create', 'Admin\PostController@createTranslation')
-            ->where([ 'post' => '[0-9]+', 'locale' => $locales ]);
-        \Route::delete('posts/{post}/translations/{locale}', 'Admin\PostController@destroyTranslation')
-            ->where([ 'post' => '[0-9]+', 'locale' => $locales ]);
-
-        \Route::delete('posts/{post}', 'Admin\PostController@destroy')->where('post', '[0-9]+');
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\Cms\PostController::RESOURCE_ID;
     }
 
     /**
-     * The organisation's posts, newest first (undated drafts on top).
-     * @return \Illuminate\Contracts\View\View
+     * Listed and created within the active organisation.
+     * @param Request $request
+     * @param $method
+     * @return array|null
      */
-    public function index()
+    protected function getApiControllerParameters(Request $request, $method)
     {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('index', [ Post::class, $organisation ]);
-
-        $posts = Post::forOrganisation($organisation)
-            ->with('translations')
-            ->orderByRaw('posts.published_at IS NULL DESC')
-            ->orderBy('published_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
-
-        return view('admin.cms.posts.index', [
-            'organisation' => $organisation,
-            'posts' => $posts,
-            'locales' => config('cms.locales'),
-            'defaultLocale' => config('cms.default_locale'),
-        ]);
-    }
-
-    /**
-     * Form for a new post, starting with its default-locale translation.
-     * @return \Illuminate\Contracts\View\View
-     */
-    public function create()
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('create', [ Post::class, $organisation ]);
-
-        $post = new Post();
-        $post->organisation()->associate($organisation);
-        $post->published_at = Carbon::now()->second(0);
-        $post->setRelation('translations', new Collection());
-
-        $translation = new PostTranslation();
-        $translation->locale = config('cms.default_locale');
-
-        return $this->form($organisation, $post, $translation);
-    }
-
-    /**
-     * @param PostTranslationRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(PostTranslationRequest $request)
-    {
-        $organisation = $this->getActiveOrganisation();
-        $this->authorize('create', [ Post::class, $organisation ]);
-
-        $translation = $this->writer->createPost(
-            $organisation,
-            $request->postAttributes(),
-            config('cms.default_locale'),
-            $request->translationAttributes()
-        );
-
-        return $this->afterSave($request, $translation, 'Het bericht is aangemaakt.');
-    }
-
-    /**
-     * @param int $postId
-     * @param string $locale
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function edit($postId, $locale)
-    {
-        $post = $this->getPostInOrganisation($postId);
-        $this->authorize('edit', $post);
-
-        $translation = $post->translation($locale);
-        if (!$translation) {
-            return redirect(action('Admin\PostController@createTranslation', [ $post->id, $locale ]));
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    'organisation' => $this->getActiveOrganisation($request)->id
+                ];
         }
 
-        return $this->form($post->organisation, $post, $translation);
-    }
-
-    /**
-     * Save the post fields and the translation in $locale (creating it when
-     * it does not exist yet).
-     * @param PostTranslationRequest $request
-     * @param int $postId
-     * @param string $locale
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(PostTranslationRequest $request, $postId, $locale)
-    {
-        $post = $this->getPostInOrganisation($postId);
-        $this->authorize('edit', $post);
-
-        $isNew = !$post->translation($locale);
-
-        $translation = \DB::transaction(function () use ($request, $post, $locale) {
-            $this->writer->updatePost($post, $request->postAttributes());
-            return $this->writer->saveTranslation($post, $locale, $request->translationAttributes());
-        });
-
-        return $this->afterSave(
-            $request,
-            $translation,
-            $isNew ? 'De vertaling is aangemaakt.' : 'Het bericht is opgeslagen.'
-        );
-    }
-
-    /**
-     * Form for a translation that does not exist yet.
-     * @param int $postId
-     * @param string $locale
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function createTranslation($postId, $locale)
-    {
-        $post = $this->getPostInOrganisation($postId);
-        $this->authorize('edit', $post);
-
-        if ($post->translation($locale)) {
-            return redirect(action('Admin\PostController@edit', [ $post->id, $locale ]));
-        }
-
-        $translation = new PostTranslation();
-        $translation->locale = $locale;
-
-        return $this->form($post->organisation, $post, $translation);
-    }
-
-    /**
-     * @param int $postId
-     * @param string $locale
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroyTranslation($postId, $locale)
-    {
-        $post = $this->getPostInOrganisation($postId);
-        $this->authorize('edit', $post);
-
-        $translation = $post->translation($locale);
-        if (!$translation) {
-            abort(404);
-        }
-
-        $this->writer->deleteTranslation($translation);
-
-        return redirect(action('Admin\PostController@index'))
-            ->with('message', 'De vertaling "' . $locale . '" is verwijderd.');
-    }
-
-    /**
-     * @param int $postId
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy($postId)
-    {
-        $post = $this->getPostInOrganisation($postId);
-        $this->authorize('destroy', $post);
-
-        $this->writer->deletePost($post);
-
-        return redirect(action('Admin\PostController@index'))
-            ->with('message', 'Het bericht is verwijderd.');
+        return null;
     }
 
     /**
      * @param Request $request
-     * @param PostTranslation $translation
-     * @param string $message
-     * @return \Illuminate\Http\RedirectResponse
+     * @param $method
+     * @return array|null
      */
-    protected function afterSave(Request $request, PostTranslation $translation, string $message)
+    protected function getAuthorizeParameters(Request $request, $method)
     {
-        if ($request->input('preview')) {
-            return redirect($translation->getUrl() . '?preview=1');
+        switch ($method) {
+            case Action::INDEX:
+            case Action::CREATE:
+                return [
+                    $this->getActiveOrganisation($request)
+                ];
         }
 
-        return redirect(action('Admin\PostController@edit', [ $translation->post_id, $translation->locale ]))
-            ->with('message', $message);
+        return null;
+    }
+
+    protected function getEntityLabel(): string
+    {
+        return 'blogbericht';
+    }
+
+    protected function getIndexTitle(): string
+    {
+        return 'Blogberichten';
     }
 
     /**
-     * @param Organisation $organisation
-     * @param Post $post
-     * @param PostTranslation $translation
-     * @return \Illuminate\Contracts\View\View
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return string
      */
-    protected function form(Organisation $organisation, Post $post, PostTranslation $translation)
+    protected function getResourceTitle(Request $request, RESTResource $resource): string
     {
-        $translations = $post->exists ? $post->translations()->get()->keyBy('locale') : collect();
+        $title = $resource->toArray()['title'] ?? null;
 
-        return view('admin.cms.posts.edit', [
-            'organisation' => $organisation,
-            'post' => $post,
-            'translation' => $translation,
-            'translations' => $translations,
-            'locale' => $translation->locale,
-            'locales' => config('cms.locales'),
-            'defaultLocale' => config('cms.default_locale'),
-            'publishedAtValue' => $post->published_at
-                ? $post->published_at->copy()->setTimezone(config('app.timezone'))->format(PostTranslationRequest::DATE_FORMAT)
-                : '',
-        ]);
+        return is_string($title) && $title !== ''
+            ? $title
+            : ucfirst($this->getEntityLabel()) . ' #' . $this->idOf($resource) . ' (zonder vertaling)';
     }
 
     /**
-     * @return Organisation
+     * A translation in the list links straight to its editor.
+     * @param Request $request
+     * @param RESTResource $related
+     * @return string|null
      */
-    protected function getActiveOrganisation()
+    protected function getRelatedResourceUrl(Request $request, RESTResource $related)
     {
-        $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$organisation) {
-            abort(404);
+        if (!($related->getResourceDefinition() instanceof PostTranslationResourceDefinition)) {
+            return parent::getRelatedResourceUrl($request, $related);
         }
 
-        return $organisation;
+        $parentId = $related->toArray()['post_id'] ?? null;
+        if (!$parentId || !$request->user() || !$request->user()->can(Action::EDIT, $related->getSource())) {
+            return null;
+        }
+
+        return action('Admin\PostTranslationController@edit', [ 'post' => $parentId, 'id' => $this->idOf($related) ]);
     }
 
     /**
-     * The post, or 404. Scoped to the acting admin's active organisation and
-     * an admin role within it, like GuestRegistrationController.
-     * @param int $postId
-     * @return Post
+     * @param Request $request
+     * @param RESTResource $related
+     * @return string|null
      */
-    protected function getPostInOrganisation($postId)
+    protected function getRelatedResourceLabel(Request $request, RESTResource $related): ?string
     {
-        /** @var Post $post */
-        $post = Post::findOrFail($postId);
-
-        $organisation = \Auth::user()->getActiveOrganisation();
-        if (!$organisation
-            || (int) $post->organisation_id !== (int) $organisation->id
-            || !$organisation->isAdmin(\Auth::user())) {
-            abort(404);
+        if ($related->getResourceDefinition() instanceof PostTranslationResourceDefinition) {
+            return $this->translationLabel($related);
         }
 
-        $post->setRelation('organisation', $organisation);
+        return parent::getRelatedResourceLabel($request, $related);
+    }
 
-        return $post;
+    /**
+     * A new blogbericht has no content yet: on to its first translation.
+     * @param Request $request
+     * @param RESTResource $newResource
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function afterStore(Request $request, RESTResource $newResource)
+    {
+        \Session::flash('message', 'Blogbericht toegevoegd. Schrijf nu de tekst.');
+
+        return redirect(action('Admin\PostTranslationController@create', [ 'post' => $this->idOf($newResource) ]));
     }
 }

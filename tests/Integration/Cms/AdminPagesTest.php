@@ -12,8 +12,9 @@ use Tests\Integration\Concerns\CreatesEventFixtures;
 use Tests\Integration\IntegrationTestCase;
 
 /**
- * The pages index of the admin: organisation scoping, locale badges and the
- * organisation's home page ("Startpagina").
+ * The pages admin: Charon admin controllers (Admin\PageController for the
+ * page, Admin\PageTranslationController for its content per language) on top
+ * of the CMS api controllers. Forms post every field as fields[name].
  */
 class AdminPagesTest extends IntegrationTestCase
 {
@@ -40,100 +41,130 @@ class AdminPagesTest extends IntegrationTestCase
         $other = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
 
+        // Created child first, sorted last: the tree decides, not the id.
         $about = $this->createPage($organisation, 'over-ons');
+        $contact = $this->createPage($organisation, 'contact');
         $this->createPage($organisation, 'over-ons/in-de-pers');
         $this->createPage($other, 'geheim-van-de-buren');
+
+        $about->sort_order = 5;
+        $about->save();
 
         $response = $this->actingAs($admin)->get('/admin/pages');
 
         $response->assertStatus(200);
         $response->assertSee('Page over-ons (nl)');
-        $response->assertSee('Page in-de-pers (nl)');
-        $response->assertSee('/over-ons/in-de-pers');
+        $response->assertSee('— Page in-de-pers (nl)');
         $response->assertDontSee('geheim-van-de-buren');
-        $response->assertSee('/admin/pages/' . $about->id . '/edit/nl', false);
+        $response->assertSee('/admin/pages/' . $about->id . '/edit', false);
+        $response->assertSee('Pagina toevoegen');
 
-        // The child comes after its parent.
+        // contact (0), over-ons (5), and its child right after it.
         $content = $response->getContent();
-        $this->assertLessThan(
-            strpos($content, 'Page in-de-pers (nl)'),
-            strpos($content, 'Page over-ons (nl)')
-        );
+        $this->assertLessThan(strpos($content, 'Page over-ons (nl)'), strpos($content, 'Page contact (nl)'));
+        $this->assertLessThan(strpos($content, 'Page in-de-pers (nl)'), strpos($content, 'Page over-ons (nl)'));
     }
 
-    public function testIndexShowsLocaleBadges()
+    public function testIndexLinksEveryTranslationToItsEditor()
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
 
         $page = $this->createPage($organisation, 'over-ons');
-        $this->createPageTranslation($page, 'en', 'about-us', [], false);
+        $en = $this->createPageTranslation($page, 'en', 'about-us', [], false);
 
         $response = $this->actingAs($admin)->get('/admin/pages');
         $response->assertStatus(200);
 
-        // nl published, en draft, fr missing (links to "add translation").
-        $response->assertSee('data-locale-badge="nl" data-state="published"', false);
-        $response->assertSee('data-locale-badge="en" data-state="draft"', false);
-        $response->assertSee('data-locale-badge="fr" data-state="missing"', false);
-        $response->assertSee('/admin/pages/' . $page->id . '/translations/fr/create', false);
+        // nl published, en a draft.
+        $response->assertSee('Nederlands');
+        $response->assertSee('Engels (concept)');
+        $response->assertSee('/admin/pages/' . $page->id . '/translations/' . $en->id . '/edit', false);
     }
 
-    public function testSetHomePageMarksItAsStartpagina()
+    public function testShowPageListsTheTranslationsOnATab()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->createPage($organisation, 'over-ons');
+        $nl = $page->translation('nl');
+
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id)
+            ->assertStatus(200)
+            ->assertSee('Page over-ons (nl)')
+            ->assertSee('Talen');
+
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '?tab=translations')
+            ->assertStatus(200)
+            ->assertSee('/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit', false)
+            ->assertSee('Vertaling toevoegen');
+
+        // A translation has no show page of its own.
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/' . $nl->id)
+            ->assertRedirect('/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit');
+    }
+
+    public function testStartpaginaCheckboxSetsAndClearsTheHomePage()
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
         $page = $this->createPage($organisation, 'welkom');
+        $other = $this->createPage($organisation, 'over-ons');
 
         $this->actingAs($admin)
-            ->post('/admin/pages/' . $page->id . '/home')
-            ->assertRedirect('/admin/pages');
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'is_home' => '1' ]) ])
+            ->assertRedirect('/admin/pages/' . $page->id);
 
         $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
 
-        $this->actingAs($admin)->get('/admin/pages')
-            ->assertStatus(200)
-            ->assertSee('Startpagina')
-            ->assertSee('data-home-page="' . $page->id . '"', false);
+        // Saving another page (box unchecked) leaves the home page alone.
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $other->id, [ 'fields' => $this->pageFields() ])
+            ->assertRedirect('/admin/pages/' . $other->id);
+
+        $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
+
+        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit')->assertStatus(200)->getContent();
+        $this->assertMatchesRegularExpression('/name="fields\[is_home\]"[^>]*checked/', $form);
 
         // And clear it again.
         $this->actingAs($admin)
-            ->post('/admin/pages/' . $page->id . '/home', [ 'clear' => 1 ])
-            ->assertRedirect('/admin/pages');
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields() ])
+            ->assertRedirect('/admin/pages/' . $page->id);
 
         $this->assertNull($organisation->fresh()->home_page_id);
     }
 
-    public function testAnotherOrganisationsPageIsA404()
+    public function testAnotherOrganisationsPageIsForbidden()
     {
         $organisation = $this->createOrganisation();
         $other = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
         $foreign = $this->createPage($other, 'van-de-buren');
+        $translation = $foreign->translation('nl');
+
+        $this->actingAs($admin)->get('/admin/pages/' . $foreign->id)->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/pages/' . $foreign->id . '/edit')->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/pages/' . $foreign->id . '/translations/' . $translation->id . '/edit')->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/pages/' . $foreign->id . '/translations/create')->assertStatus(403);
 
         $this->actingAs($admin)
-            ->post('/admin/pages/' . $foreign->id . '/home')
-            ->assertStatus(404);
+            ->put('/admin/pages/' . $foreign->id, [ 'fields' => $this->pageFields([ 'is_home' => '1' ]) ])
+            ->assertStatus(403);
 
         $this->assertNull($organisation->fresh()->home_page_id);
         $this->assertNull($other->fresh()->home_page_id);
 
         $this->actingAs($admin)
+            ->put('/admin/pages/' . $foreign->id . '/translations/' . $translation->id, [ 'fields' => $this->translationFields([ 'title' => 'Gekaapt' ]) ])
+            ->assertStatus(403);
+        $this->assertNotSame('Gekaapt', $translation->fresh()->title);
+
+        $this->actingAs($admin)
             ->delete('/admin/pages/' . $foreign->id)
-            ->assertStatus(404);
+            ->assertStatus(403);
 
         $this->assertNotNull(Page::find($foreign->id));
-    }
-
-    public function testAdminOfAnotherOrganisationOnlyIsA404()
-    {
-        // Site admin with an organisation of their own, but not of $organisation.
-        $organisation = $this->createOrganisation();
-        $mine = $this->createOrganisation();
-        $admin = $this->createOrganisationAdmin($mine);
-        $page = $this->createPage($organisation, 'over-ons');
-
-        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit/nl')->assertStatus(404);
     }
 
     public function testTheSelectedHomePageCannotBeDeleted()
@@ -145,11 +176,11 @@ class AdminPagesTest extends IntegrationTestCase
         $organisation->home_page_id = $page->id;
         $organisation->save();
 
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->delete('/admin/pages/' . $page->id)
-            ->assertRedirect()
-            ->assertSessionHasErrors();
+            ->assertRedirect();
 
+        $this->assertStringContainsString('startpagina', (string) session('message'));
         $this->assertNotNull(Page::find($page->id));
         $this->assertSame($page->id, (int) $organisation->fresh()->home_page_id);
     }
@@ -163,8 +194,9 @@ class AdminPagesTest extends IntegrationTestCase
 
         $this->actingAs($admin)
             ->delete('/admin/pages/' . $parent->id)
-            ->assertSessionHasErrors();
+            ->assertRedirect();
 
+        $this->assertStringContainsString('onderliggende pagina', (string) session('message'));
         $this->assertNotNull(Page::find($parent->id));
     }
 
@@ -174,9 +206,12 @@ class AdminPagesTest extends IntegrationTestCase
         $admin = $this->createOrganisationAdmin($organisation);
         $page = $this->createPage($organisation, 'weg');
 
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/delete')->assertStatus(200);
+
         $this->actingAs($admin)
             ->delete('/admin/pages/' . $page->id)
-            ->assertRedirect('/admin/pages');
+            ->assertRedirect('/admin/pages')
+            ->assertSessionHas('message', 'Verwijderd.');
 
         $this->assertNull(Page::find($page->id));
         $this->assertSame(0, \App\Models\PageTranslation::where('page_id', $page->id)->count());
@@ -236,10 +271,28 @@ class AdminPagesTest extends IntegrationTestCase
     }
 
     // ------------------------------------------------------------------
-    // The page + translation form
+    // The page form and the translation form
     // ------------------------------------------------------------------
 
-    private function formInput(array $overrides = []): array
+    /**
+     * What the page form posts (fields[...]).
+     */
+    private function pageFields(array $overrides = []): array
+    {
+        return array_merge([
+            'parent_id' => '',
+            'sort_order' => '0',
+            'link' => [ 'kind' => '', 'url' => '' ],
+            'show_in_menu' => '0',
+            'show_in_footer' => '0',
+            'is_home' => '0',
+        ], $overrides);
+    }
+
+    /**
+     * What the translation form posts (fields[...]).
+     */
+    private function translationFields(array $overrides = []): array
     {
         return array_merge([
             'slug' => 'over-ons',
@@ -247,8 +300,6 @@ class AdminPagesTest extends IntegrationTestCase
             'meta_title' => '',
             'meta_description' => 'Wie zijn we?',
             'is_published' => '1',
-            'parent_id' => '',
-            'sort_order' => '0',
             'blocks' => [
                 [ 'id' => 'a1b2c3', 'type' => 'hero', 'data' => [
                     'title' => 'Welkom', 'subtitle' => '', 'image_id' => '', 'align' => 'center',
@@ -261,18 +312,67 @@ class AdminPagesTest extends IntegrationTestCase
         ], $overrides);
     }
 
-    public function testCreatePageWithDutchTranslationAndTwoBlocks()
+    /**
+     * Post the translation form of a page for a new translation.
+     */
+    private function postTranslation($admin, Page $page, array $fields)
+    {
+        return $this->actingAs($admin)
+            ->from('/admin/pages/' . $page->id . '/translations/create')
+            ->post('/admin/pages/' . $page->id . '/translations', [ 'fields' => $fields ]);
+    }
+
+    /**
+     * Post the edit form of the translation of a page in a locale.
+     */
+    private function putTranslation($admin, Page $page, string $locale, array $fields)
+    {
+        $translation = $page->fresh()->translation($locale);
+
+        return $this->actingAs($admin)
+            ->from('/admin/pages/' . $page->id . '/translations/' . $translation->id . '/edit')
+            ->put('/admin/pages/' . $page->id . '/translations/' . $translation->id, [ 'fields' => $fields ]);
+    }
+
+    private function emptyPage($organisation, ?Page $parent = null): Page
+    {
+        $page = new Page();
+        $page->organisation()->associate($organisation);
+        if ($parent) {
+            $page->parent()->associate($parent);
+        }
+        $page->save();
+
+        return $page;
+    }
+
+    public function testCreatePageThenItsDutchTranslationWithTwoBlocks()
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
 
-        $this->actingAs($admin)->get('/admin/pages/create')->assertStatus(200);
+        $this->actingAs($admin)->get('/admin/pages/create')
+            ->assertStatus(200)
+            ->assertSee('Bovenliggende pagina')
+            ->assertSee('Menulink: de kalender');
 
-        $response = $this->actingAs($admin)->post('/admin/pages', $this->formInput());
-        $response->assertSessionHasNoErrors();
+        // The page itself, then on to its first translation.
+        $response = $this->actingAs($admin)->post('/admin/pages', [ 'fields' => $this->pageFields([ 'show_in_menu' => '1' ]) ]);
+        $page = Page::forOrganisation($organisation)->firstOrFail();
+        $response->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
+        $this->assertTrue($page->show_in_menu);
+
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create')
+            ->assertStatus(200)
+            ->assertSee('Nederlands')
+            ->assertSee('Sectie toevoegen')
+            ->assertDontSee('Kopieer uit');
+
+        $response = $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]));
 
         $translation = PageTranslation::where('organisation_id', $organisation->id)->where('path', 'over-ons')->firstOrFail();
-        $response->assertRedirect('/admin/pages/' . $translation->page_id . '/edit/nl');
+        $response->assertRedirect('/admin/pages/' . $page->id . '/translations/' . $translation->id . '/edit');
+        $response->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $this->assertSame('nl', $translation->locale);
         $this->assertTrue($translation->is_published);
@@ -289,11 +389,12 @@ class AdminPagesTest extends IntegrationTestCase
 
         $this->get('/over-ons')->assertStatus(200)->assertSee('Welkom');
 
-        // The edit form renders the stored blocks.
-        $this->actingAs($admin)->get('/admin/pages/' . $translation->page_id . '/edit/nl')
+        // The edit form renders the stored blocks, and links to the page on the site.
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/' . $translation->id . '/edit')
             ->assertStatus(200)
             ->assertSee('value="Welkom"', false)
-            ->assertSee('name="blocks[1][data][html]"', false);
+            ->assertSee('name="fields[blocks][1][data][html]"', false)
+            ->assertSee(url('/over-ons') . '?preview=1', false);
     }
 
     public function testAddEnglishTranslation()
@@ -302,20 +403,25 @@ class AdminPagesTest extends IntegrationTestCase
         $admin = $this->createOrganisationAdmin($organisation);
         $page = $this->createPage($organisation, 'over-ons');
 
-        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit/en')
-            ->assertRedirect('/admin/pages/' . $page->id . '/translations/en/create');
-        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/en/create')
+        // Only the missing languages are offered; copying from the existing one is.
+        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create')
             ->assertStatus(200)
-            ->assertSee('Kopieer uit');
+            ->assertSee('Kopieer uit')
+            ->getContent();
+        $this->assertStringContainsString('<option value="en"', $form);
+        $this->assertStringNotContainsString('<option value="nl">Nederlands</option>', explode('field-copy_from', $form)[0]);
 
-        $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/en', $this->formInput([ 'slug' => 'about-us', 'title' => 'About us' ]))
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/admin/pages/' . $page->id . '/edit/en');
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'en', 'slug' => 'about-us', 'title' => 'About us' ]))
+            ->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $en = $page->fresh()->translation('en');
         $this->assertSame('about-us', $en->path);
         $this->get('/en/about-us')->assertStatus(200)->assertSee('About us');
+        $this->assertSame(2, $page->translations()->count());
+
+        // A second English translation is refused.
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'en', 'slug' => 'about-us-2', 'title' => 'Again' ]))
+            ->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
         $this->assertSame(2, $page->translations()->count());
     }
 
@@ -323,20 +429,26 @@ class AdminPagesTest extends IntegrationTestCase
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
 
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'slug' => 'events' ]))
-            ->assertSessionHasErrors('slug');
+        foreach ([ 'events', '', 'Over ons!' ] as $slug) {
+            $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'slug' => $slug ]))
+                ->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
+        }
 
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'slug' => '' ]))
-            ->assertSessionHasErrors('slug');
+        $this->assertSame(0, PageTranslation::count());
+    }
 
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'slug' => 'Over ons!' ]))
-            ->assertSessionHasErrors('slug');
+    public function testSlugIsNormalised()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
 
-        $this->assertSame(0, Page::count());
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'slug' => ' /Over-Ons/ ' ]));
+
+        $this->assertSame('over-ons', $page->fresh()->translation('nl')->slug);
     }
 
     public function testChildSlugsMayUseReservedWords()
@@ -345,9 +457,11 @@ class AdminPagesTest extends IntegrationTestCase
         $admin = $this->createOrganisationAdmin($organisation);
         $parent = $this->createPage($organisation, 'over-ons');
 
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'slug' => 'events', 'parent_id' => (string) $parent->id ]))
-            ->assertSessionHasNoErrors();
+        $this->actingAs($admin)->post('/admin/pages', [ 'fields' => $this->pageFields([ 'parent_id' => (string) $parent->id ]) ]);
+        $child = Page::where('parent_id', $parent->id)->firstOrFail();
+
+        $this->postTranslation($admin, $child, $this->translationFields([ 'locale' => 'nl', 'slug' => 'events' ]))
+            ->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $this->get('/over-ons/events')->assertStatus(200);
     }
@@ -357,44 +471,42 @@ class AdminPagesTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
         $this->createPage($organisation, 'over-ons');
+        $page = $this->emptyPage($organisation);
 
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput())
-            ->assertSessionHasErrors('slug');
-
-        $this->assertSame(1, Page::count());
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]));
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
+        $this->assertSame(1, PageTranslation::count());
 
         // Same path in another organisation is fine.
         $other = $this->createOrganisation();
         $otherAdmin = $this->createOrganisationAdmin($other);
-        $this->actingAs($otherAdmin)
-            ->post('/admin/pages', $this->formInput())
-            ->assertSessionHasNoErrors();
+        $otherPage = $this->emptyPage($other);
+        $this->postTranslation($otherAdmin, $otherPage, $this->translationFields([ 'locale' => 'nl' ]))
+            ->assertSessionHas('message', 'Vertaling toegevoegd.');
     }
 
-    public function testInvalidBlockDataReRendersTheFormWithErrorsAndInput()
+    public function testInvalidBlockDataReRendersTheFormWithTheErrorsAndTheInput()
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
 
-        $input = $this->formInput();
+        $input = $this->translationFields([ 'locale' => 'nl' ]);
         $input['blocks'][0]['data']['title'] = '';
         $input['blocks'][0]['data']['buttons'][0]['url'] = 'javascript:alert(1)';
         $input['blocks'][1]['data']['html'] = '<p>Deze tekst mag niet verloren gaan</p>';
 
-        $this->actingAs($admin)
-            ->from('/admin/pages/create')
-            ->post('/admin/pages', $input)
-            ->assertRedirect('/admin/pages/create')
-            ->assertSessionHasErrors([ 'blocks.0.data.title', 'blocks.0.data.buttons.0.url' ]);
+        $this->postTranslation($admin, $page, $input)
+            ->assertRedirect('/admin/pages/' . $page->id . '/translations/create');
 
-        $this->assertSame(0, Page::count());
+        $this->assertSame(0, PageTranslation::count());
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
 
-        $this->actingAs($admin)->get('/admin/pages/create')
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create')
             ->assertStatus(200)
-            ->assertSee('alert-danger', false)
-            ->assertSee('is-invalid', false)
-            ->assertSee('Deze tekst mag niet verloren gaan');
+            ->assertSee('alert alert-warning', false)
+            ->assertSee('Deze tekst mag niet verloren gaan')
+            ->assertSee('value="Over ons"', false);
     }
 
     public function testImageOfAnotherOrganisationIsRejected()
@@ -402,24 +514,27 @@ class AdminPagesTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $other = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
 
         $foreign = $this->createOrganisationAsset($other);
         $legacy = $this->createOrganisationAsset(null);
         $mine = $this->createOrganisationAsset($organisation);
 
         foreach ([ $foreign, $legacy ] as $asset) {
-            $input = $this->formInput();
+            $input = $this->translationFields([ 'locale' => 'nl' ]);
             $input['blocks'][0]['data']['image_id'] = (string) $asset->id;
-            $this->actingAs($admin)->post('/admin/pages', $input)->assertSessionHasErrors('blocks.0.data.image_id');
+            $this->postTranslation($admin, $page, $input);
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
 
-            $this->actingAs($admin)
-                ->post('/admin/pages', $this->formInput([ 'og_image_id' => (string) $asset->id ]))
-                ->assertSessionHasErrors('og_image_id');
+            $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'og_image_id' => (string) $asset->id ]));
+            $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
         }
 
-        $input = $this->formInput([ 'og_image_id' => (string) $mine->id ]);
+        $this->assertSame(0, PageTranslation::count());
+
+        $input = $this->translationFields([ 'locale' => 'nl', 'og_image_id' => (string) $mine->id ]);
         $input['blocks'][0]['data']['image_id'] = (string) $mine->id;
-        $this->actingAs($admin)->post('/admin/pages', $input)->assertSessionHasNoErrors();
+        $this->postTranslation($admin, $page, $input)->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $translation = PageTranslation::firstOrFail();
         $this->assertSame($mine->id, $translation->blocks[0]['data']['image_id']);
@@ -434,9 +549,8 @@ class AdminPagesTest extends IntegrationTestCase
         $child = $this->createPage($organisation, 'over-ons/in-de-pers');
         $this->createPage($organisation, 'over-ons/in-de-pers/archief');
 
-        $this->actingAs($admin)
-            ->put('/admin/pages/' . $parent->id . '/edit/nl', $this->formInput([ 'slug' => 'wie-zijn-we' ]))
-            ->assertSessionHasNoErrors();
+        $this->putTranslation($admin, $parent, 'nl', $this->translationFields([ 'slug' => 'wie-zijn-we' ]))
+            ->assertSessionHas('message', 'Opgeslagen.');
 
         $this->assertSame('wie-zijn-we/in-de-pers', $child->fresh()->translation('nl')->path);
         $this->assertTrue(PageTranslation::where('path', 'wie-zijn-we/in-de-pers/archief')->exists());
@@ -450,22 +564,29 @@ class AdminPagesTest extends IntegrationTestCase
         $parent = $this->createPage($organisation, 'over-ons');
         $page = $this->createPage($organisation, 'team');
 
+        // The parent select offers the other pages, not the page itself.
+        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit')->assertStatus(200)->getContent();
+        $this->assertStringContainsString('<option value="' . $parent->id . '"', $form);
+        $this->assertStringNotContainsString('<option value="' . $page->id . '"', $form);
+
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'slug' => 'team', 'parent_id' => (string) $parent->id ]))
-            ->assertSessionHasNoErrors();
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'parent_id' => (string) $parent->id ]) ])
+            ->assertSessionHas('message', 'Opgeslagen.');
 
         $this->assertSame('over-ons/team', $page->fresh()->translation('nl')->path);
 
         // A page cannot hang under itself or its own descendants.
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $parent->id . '/edit/nl', $this->formInput([ 'parent_id' => (string) $page->id ]))
-            ->assertSessionHasErrors('parent_id');
+            ->put('/admin/pages/' . $parent->id, [ 'fields' => $this->pageFields([ 'parent_id' => (string) $page->id ]) ]);
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
+        $this->assertNull($parent->fresh()->parent_id);
 
         // Nor under another organisation's page.
         $foreign = $this->createPage($this->createOrganisation(), 'elders');
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'slug' => 'team', 'parent_id' => (string) $foreign->id ]))
-            ->assertSessionHasErrors('parent_id');
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'parent_id' => (string) $foreign->id ]) ]);
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
+        $this->assertSame($parent->id, (int) $page->fresh()->parent_id);
     }
 
     public function testCopyFromDutchClonesBlocksWithFreshIds()
@@ -477,16 +598,16 @@ class AdminPagesTest extends IntegrationTestCase
             [ 'id' => 'bbbbbb', 'type' => 'cta', 'data' => [ 'title' => 'Bel ons', 'background' => 'dark', 'buttons' => [] ] ],
         ]);
 
-        $this->actingAs($admin)
-            ->post('/admin/pages/' . $page->id . '/translations/fr/copy', [ 'from' => 'nl' ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/admin/pages/' . $page->id . '/edit/fr');
+        // Nothing filled in but the language and what to copy from.
+        $this->postTranslation($admin, $page, [ 'locale' => 'fr', 'copy_from' => 'nl', 'title' => '', 'slug' => '', 'is_published' => '0', 'blocks' => '' ])
+            ->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $nl = $page->fresh()->translation('nl');
         $fr = $page->fresh()->translation('fr');
 
         $this->assertFalse($fr->is_published);
         $this->assertSame('over-ons', $fr->path);
+        $this->assertSame($nl->title, $fr->title);
         $this->assertCount(2, $fr->blocks);
         $this->assertSame($nl->blocks[0]['data'], $fr->blocks[0]['data']);
         $this->assertSame('Bel ons', $fr->blocks[1]['data']['title']);
@@ -495,6 +616,13 @@ class AdminPagesTest extends IntegrationTestCase
             $this->assertMatchesRegularExpression('/^[0-9a-f]{6}$/', $block['id']);
             $this->assertNotSame($nl->blocks[$index]['id'], $block['id']);
         }
+
+        // What is filled in wins over the copy.
+        $this->postTranslation($admin, $page, [ 'locale' => 'en', 'copy_from' => 'nl', 'title' => 'About us', 'slug' => 'about-us', 'is_published' => '0', 'blocks' => '' ]);
+        $en = $page->fresh()->translation('en');
+        $this->assertSame('About us', $en->title);
+        $this->assertSame('about-us', $en->path);
+        $this->assertCount(2, $en->blocks);
     }
 
     public function testDeleteTranslation()
@@ -502,11 +630,11 @@ class AdminPagesTest extends IntegrationTestCase
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
         $page = $this->createPage($organisation, 'over-ons');
-        $this->createPageTranslation($page, 'en', 'about-us');
+        $en = $this->createPageTranslation($page, 'en', 'about-us');
 
         $this->actingAs($admin)
-            ->delete('/admin/pages/' . $page->id . '/translations/en')
-            ->assertRedirect('/admin/pages');
+            ->delete('/admin/pages/' . $page->id . '/translations/' . $en->id)
+            ->assertRedirect('/admin/pages/' . $page->id . '?tab=translations');
 
         $this->assertNull($page->fresh()->translation('en'));
         $this->assertNotNull($page->fresh()->translation('nl'));
@@ -516,23 +644,15 @@ class AdminPagesTest extends IntegrationTestCase
     {
         $organisation = $this->createOrganisation();
         $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
         $key = SitemapController::cacheKey($organisation);
 
         Cache::put($key, [ 'stale' ], 3600);
 
-        $this->actingAs($admin)->post('/admin/pages', $this->formInput())->assertSessionHasNoErrors();
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]))
+            ->assertSessionHas('message', 'Vertaling toegevoegd.');
 
         $this->assertFalse(Cache::has($key));
-    }
-
-    public function testSaveAndPreviewRedirectsToThePreview()
-    {
-        $organisation = $this->createOrganisation();
-        $admin = $this->createOrganisationAdmin($organisation);
-
-        $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'is_published' => '0', 'preview' => '1' ]))
-            ->assertRedirect(url('/over-ons') . '?preview=1');
     }
 
     public function testEditFormRendersEveryBlockType()
@@ -541,7 +661,7 @@ class AdminPagesTest extends IntegrationTestCase
         $admin = $this->createOrganisationAdmin($organisation);
         $page = $this->createPage($organisation, 'alles');
 
-        $response = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit/nl');
+        $response = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/' . $page->translation('nl')->id . '/edit');
         $response->assertStatus(200);
 
         foreach (array_keys(config('cms.blocks')) as $type) {
@@ -555,27 +675,28 @@ class AdminPagesTest extends IntegrationTestCase
         $admin = $this->createOrganisationAdmin($organisation);
 
         $this->actingAs($admin)
-            ->post('/admin/pages', $this->formInput([ 'link_kind' => '@calendar', 'link_url' => 'ignored' ]))
-            ->assertSessionHasNoErrors();
-        $page = PageTranslation::where('organisation_id', $organisation->id)->where('path', 'over-ons')->firstOrFail()->page;
+            ->post('/admin/pages', [ 'fields' => $this->pageFields([ 'link' => [ 'kind' => '@calendar', 'url' => 'ignored' ] ]) ]);
+        $page = Page::forOrganisation($organisation)->firstOrFail();
         $this->assertSame(Page::LINK_CALENDAR, $page->link);
 
-        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit/nl')->assertStatus(200)->getContent();
+        $form = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/edit')->assertStatus(200)->getContent();
         $this->assertMatchesRegularExpression('/<option value="@calendar"\s+selected/', $form);
 
         // Another address must be a safe one.
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => 'url', 'link_url' => 'javascript:alert(1)' ]))
-            ->assertSessionHasErrors('link');
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'link' => [ 'kind' => 'url', 'url' => 'javascript:alert(1)' ] ]) ]);
+        $this->assertTrue((session('errors') && session('errors')->any()) || session()->has('message'), 'The form says what is wrong.');
+        $this->assertSame(Page::LINK_CALENDAR, $page->fresh()->link);
+
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => 'url', 'link_url' => 'https://shop.example' ]))
-            ->assertSessionHasNoErrors();
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields([ 'link' => [ 'kind' => 'url', 'url' => 'https://shop.example' ] ]) ])
+            ->assertSessionHas('message', 'Opgeslagen.');
         $this->assertSame('https://shop.example', $page->fresh()->link);
 
         // Back to a page with content.
         $this->actingAs($admin)
-            ->put('/admin/pages/' . $page->id . '/edit/nl', $this->formInput([ 'link_kind' => '' ]))
-            ->assertSessionHasNoErrors();
+            ->put('/admin/pages/' . $page->id, [ 'fields' => $this->pageFields() ])
+            ->assertSessionHas('message', 'Opgeslagen.');
         $this->assertNull($page->fresh()->link);
     }
 
@@ -607,6 +728,16 @@ class AdminPagesTest extends IntegrationTestCase
         $this->assertSame(3, Page::forOrganisation($organisation)->whereNotNull('link')->count());
         $this->actingAs($admin)->get('/admin/pages')
             ->assertDontSee('Vaste onderdelen als menulinks toevoegen')
-            ->assertSee('menulink: kalender');
+            ->assertSee('@calendar');
+    }
+
+    public function testFixedPartsNeedAnAdminOfTheOrganisation()
+    {
+        $organisation = $this->createOrganisation();
+        $this->createUser(); // the first user ever created becomes admin (User::boot)
+        $user = $this->createUser();
+
+        $this->actingAs($user)->post('/admin/pages/fixed-links')->assertRedirect('/');
+        $this->assertSame(0, Page::forOrganisation($organisation)->count());
     }
 }

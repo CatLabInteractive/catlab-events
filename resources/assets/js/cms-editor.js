@@ -1,11 +1,14 @@
 /**
- * CMS page editor: section blocks and repeater rows (add, remove, move up
- * and down) and TinyMCE on rich text fields. The form itself is a plain
- * server-rendered form: nothing is posted from here, the only job is to
- * keep the `name` attributes (blocks[3][data][items][1][title]) in order.
+ * CMS editor widgets of the admin forms: section blocks and repeater rows
+ * (add, remove, move up and down), image fields and TinyMCE on rich text
+ * fields. The forms themselves are plain server-rendered forms (the Charon
+ * admin forms; see App\Http\Controllers\Admin\Widgets): nothing is posted
+ * from here, the only job is to keep the `name` attributes
+ * (fields[blocks][3][data][items][1][title]) in order.
  *
  * Markup contract (resources/views/admin/cms):
- *   form[data-cms-editor]                 the editor
+ *   [data-cms-editor]                      one widget (blocks, an image, rich text)
+ *   [data-cms-editor][data-cms-name]       name prefix of the blocks ("fields[blocks]")
  *   [data-cms-blocks] > .cms-block          one block each
  *   template[data-block-template="hero"]   a fresh block, with __INDEX__ / __ID__
  *   .cms-repeater[data-repeater][data-max]  a list of rows inside a block
@@ -16,8 +19,8 @@
  *   .cms-image-field                       an image (assets.id): [data-cms-image-input],
  *                                          [data-cms-image-preview], [data-cms-image-empty]
  *   [data-cms-image-picker]                the picker modal (list, search, upload)
- *   form[data-cms-upload-url]              POST admin/cms/upload -> { id, location, thumbnail }
- *   form[data-cms-assets-url]              GET admin/cms/assets?q= -> { data: [ ... ] }
+ *   [data-cms-editor][data-cms-upload-url] POST admin/cms/upload -> { id, location, thumbnail }
+ *   [data-cms-editor][data-cms-assets-url] GET admin/cms/assets?q= -> { data: [ ... ] }
  */
 (function () {
     'use strict';
@@ -55,17 +58,21 @@
     function reindex(editor) {
         var container = editor.querySelector('[data-cms-blocks]');
         if (!container) {
-            // A form without blocks (the post editor): nothing to number.
+            // A widget without blocks (an image, rich text): nothing to number.
             return;
         }
 
+        var name = editor.getAttribute('data-cms-name') || 'blocks';
+
         children(container, '.cms-block').forEach(function (block, i) {
             block.querySelectorAll('[name]').forEach(function (field) {
-                field.name = field.name.replace(/^blocks\[[^\]]*\]/, 'blocks[' + i + ']');
+                if (field.name.indexOf(name + '[') === 0) {
+                    field.name = name + field.name.slice(name.length).replace(/^\[[^\]]*\]/, '[' + i + ']');
+                }
             });
 
             block.querySelectorAll('.cms-repeater').forEach(function (repeater) {
-                var prefix = 'blocks[' + i + '][data][' + repeater.getAttribute('data-repeater') + ']';
+                var prefix = name + '[' + i + '][data][' + repeater.getAttribute('data-repeater') + ']';
                 var rows = children(repeater.querySelector('.cms-repeater-rows'), '.cms-repeater-row');
 
                 rows.forEach(function (row, j) {
@@ -475,11 +482,15 @@
             onClick(editor, event);
         });
 
-        editor.addEventListener('submit', function () {
-            if (window.tinymce) {
-                window.tinymce.triggerSave();
-            }
-        });
+        var form = editor.closest('form');
+        if (form && !form.getAttribute('data-cms-save')) {
+            form.setAttribute('data-cms-save', '1');
+            form.addEventListener('submit', function () {
+                if (window.tinymce) {
+                    window.tinymce.triggerSave();
+                }
+            });
+        }
 
         initPicker();
         reindex(editor);
@@ -487,7 +498,7 @@
     }
 
     function boot() {
-        document.querySelectorAll('form[data-cms-editor]').forEach(init);
+        document.querySelectorAll('[data-cms-editor]').forEach(init);
     }
 
     if (document.readyState === 'loading') {

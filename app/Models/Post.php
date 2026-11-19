@@ -70,6 +70,16 @@ class Post extends Model
     }
 
     /**
+     * The title in the default language, else the first translation's.
+     * @return string|null
+     */
+    public function getTitleAttribute()
+    {
+        $translation = $this->translation(config('cms.default_locale')) ?: $this->translations->first();
+        return $translation ? $translation->title : null;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function organisation()

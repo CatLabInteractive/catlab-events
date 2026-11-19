@@ -56,6 +56,11 @@ class PageTranslation extends Model
     /**
      * @var string[]
      */
+    /**
+     * @var string|null See setCopyFromAttribute().
+     */
+    protected $copyFrom;
+
     protected $casts = [
         'blocks' => 'array',
         'is_published' => 'bool',
@@ -114,6 +119,26 @@ class PageTranslation extends Model
                 $translation->rebuildChildPaths();
             }
         });
+    }
+
+    /**
+     * Not a column: the locale to copy from when this translation is created
+     * (App\Cms\PageWriter::fillFromCopy()).
+     * @param mixed $value
+     */
+    public function setCopyFromAttribute($value)
+    {
+        $this->copyFrom = is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function pullCopyFrom(): ?string
+    {
+        $value = $this->copyFrom;
+        $this->copyFrom = null;
+        return $value;
     }
 
     /**

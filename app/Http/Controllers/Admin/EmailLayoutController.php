@@ -1,166 +1,169 @@
 <?php
 /**
  * CatLab Events - Event ticketing system
+ * Copyright (C) 2017 Thijs Van der Schaeghe
+ * CatLab Interactive bvba, Gent, Belgium
+ * http://www.catlab.eu/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\AdministersEmails;
-use App\Http\Controllers\Controller;
 use App\Models\EmailLayout;
-use App\Services\EmailLayouts;
+use App\Services\Admin\Widgets\AccentColorWidget;
+use App\Services\Admin\Widgets\LayoutHtmlWidget;
 use App\Services\EmailTemplates;
+use CatLab\Charon\Models\RESTResource;
+use CatLab\CharonFrontend\Widgets\TextareaWidget;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 /**
- * Class EmailLayoutController
- *
- * Lets organisation admins set the accent color and footer text of the mail
- * layout, or replace the whole layout with their own HTML.
+ * The layout every mail of the organisation goes out in: the Charon edit
+ * form of the EmailLayout api resource. An organisation has exactly one
+ * layout, so there is no list and nothing to create or delete; the page is
+ * the form.
  *
  * @package App\Http\Controllers\Admin
  */
-class EmailLayoutController extends Controller
+class EmailLayoutController extends BaseAdminController
 {
     use AdministersEmails;
 
-    /**
-     * @var EmailLayouts
-     */
-    private $layouts;
-
-    /**
-     * @var EmailTemplates
-     */
-    private $templates;
-
-    /**
-     * @param EmailLayouts $layouts
-     * @param EmailTemplates $templates
-     */
-    public function __construct(EmailLayouts $layouts, EmailTemplates $templates)
+    public function __construct()
     {
-        $this->layouts = $layouts;
-        $this->templates = $templates;
+        parent::__construct();
+
+        $previewUrl = function () {
+            return action('Admin\EmailLayoutController@preview');
+        };
+
+        $this->widgets()
+            ->forField('accent_color', new AccentColorWidget())
+            ->forField('footer_text', new TextareaWidget(false, [ 'rows' => 3, 'maxlength' => 2000 ]))
+            ->forField('custom_html', new LayoutHtmlWidget($previewUrl));
     }
 
     /**
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $path
+     * @param $controller
      */
-    public function edit()
+    public static function routes($path, $controller)
     {
-        $organisation = $this->getAdministeredOrganisation();
-        $layout = $organisation->emailLayout;
+        \Route::get($path, $controller . '@edit');
+        \Route::put($path, $controller . '@update');
 
-        return view('admin.emails.layout', [
-            'accentColor' => $this->layouts->getAccentColor($organisation),
-            'footerText' => $layout ? (string) $layout->footer_text : '',
-            'customHtml' => $layout && trim((string) $layout->custom_html) !== ''
-                ? $layout->custom_html
-                : $this->layouts->getDefaultHtml(),
-            'hasCustomHtml' => $layout && trim((string) $layout->custom_html) !== '',
-            'placeholders' => $this->layouts->getPlaceholders()
-        ]);
+        // The form posts to the preview with its own method field (put).
+        \Route::match([ 'get', 'post', 'put' ], $path . '/preview', $controller . '@preview');
+    }
+
+    /**
+     * @return \App\Http\Api\V1\Controllers\EmailLayoutController
+     */
+    public function createApiController()
+    {
+        return new \App\Http\Api\V1\Controllers\EmailLayoutController();
+    }
+
+    public static function getRouteIdParameterName(): string
+    {
+        return 'id';
+    }
+
+    public static function getApiRouteIdParameterName(): string
+    {
+        return \App\Http\Api\V1\Controllers\EmailLayoutController::RESOURCE_ID;
+    }
+
+    /**
+     * Always the layout of the active organisation.
+     * @param Request $request
+     * @param $method
+     * @return array|null
+     */
+    protected function getApiControllerParameters(Request $request, $method)
+    {
+        return [
+            \App\Http\Api\V1\Controllers\EmailLayoutController::RESOURCE_ID => $this->getAdministeredOrganisation()->id
+        ];
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param null $id There is one layout; the url has no id.
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function update(Request $request)
+    public function update(Request $request, $id = null)
     {
-        $organisation = $this->getAdministeredOrganisation();
-
-        $this->validate($request, [
-            'accent_color' => [ 'nullable', 'regex:/^#[0-9a-fA-F]{6}$/' ],
-            'footer_text' => 'nullable|string|max:2000',
-            'custom_html' => 'nullable|string'
-        ], [
-            'accent_color.regex' => 'De accentkleur moet een kleur zijn zoals #4cb050.'
-        ]);
-
-        $customHtml = $this->getCustomHtml($request);
-        // Every occurrence gets filled, so the raw HTML must hold exactly one as well.
-        if ($customHtml !== null && (
-            preg_match_all('/\{\{\s*content\s*\}\}/', $customHtml) !== 1
-            || preg_match_all('/\{\{\s*content\s*\}\}/', $this->withoutInertBlocks($customHtml)) !== 1
-        )) {
-            return redirect()->back()->withInput()->withErrors([
-                'custom_html' => 'De layout moet precies één keer {{ content }} bevatten.'
-            ]);
-        }
-
-        $layout = $organisation->emailLayout()->first() ?: new EmailLayout();
-        $layout->accent_color = $this->blankToNull($request->input('accent_color'));
-        $layout->footer_text = $this->blankToNull($request->input('footer_text'));
-        $layout->custom_html = $customHtml;
-        $layout->organisation()->associate($organisation);
-        $layout->save();
-
-        return redirect(action('Admin\EmailLayoutController@edit'))
-            ->with('message', 'De layout is opgeslagen.');
+        return parent::update($request, $this->getAdministeredOrganisation()->id);
     }
 
     /**
-     * A copy of the HTML without the parts that never show up in the mail body:
-     * comments, style blocks and the head.
-     *
-     * @param string $html
+     * The urls of this page carry no parameters.
+     * @param $method
+     * @param array $parameters
      * @return string
      */
-    private function withoutInertBlocks($html)
+    protected function action($method, $parameters = [])
     {
-        return preg_replace([
-            '/<!--.*?-->/s',
-            '/<style\b[^>]*>.*?<\/style>/is',
-            '/<head\b[^>]*>.*?<\/head>/is'
-        ], '', $html);
+        return action($this->getRawControllerAction($method));
     }
 
     /**
-     * Go back to the default layout HTML. The accent color and footer text stay.
-     *
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function reset()
+    protected function afterUpdate(Request $request, RESTResource $resource)
     {
-        $organisation = $this->getAdministeredOrganisation();
+        // What the active organisation had loaded is the layout of before.
+        $this->getAdministeredOrganisation()->unsetRelation('emailLayout');
 
-        $layout = $organisation->emailLayout()->first();
-        if ($layout) {
-            $layout->custom_html = null;
-            $layout->save();
-        }
+        Session::flash('message', 'De layout is opgeslagen.');
 
-        return redirect(action('Admin\EmailLayoutController@edit'))
-            ->with('message', 'De standaardlayout wordt weer gebruikt.');
+        return redirect(action('Admin\EmailLayoutController@edit'));
     }
 
     /**
-     * A sample mail in the stored layout, or with a POST in the unsaved
-     * layout from the form.
-     *
+     * A sample mail in the stored layout (GET), or in the unsaved layout of
+     * the form.
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function preview(Request $request)
     {
         $organisation = $this->getAdministeredOrganisation();
+        $templates = app(EmailTemplates::class);
 
         $draft = null;
-        if ($request->isMethod('post')) {
-            $color = (string) $request->input('accent_color', '');
+        if (!$request->isMethod('get')) {
+            $api = $this->createApiController();
+
             $draft = new EmailLayout([
-                'accent_color' => $this->blankToNull($color),
-                'footer_text' => $this->blankToNull($request->input('footer_text')),
-                'custom_html' => $this->getCustomHtml($request)
+                'accent_color' => $api->blankToNull($this->draftField($request, 'accent_color')),
+                'footer_text' => $api->blankToNull($this->draftField($request, 'footer_text')),
+                'custom_html' => $api->normaliseHtml($this->draftField($request, 'custom_html')),
             ]);
         }
 
-        $mail = $this->templates->render(
+        $mail = $templates->render(
             $organisation,
             EmailTemplates::CONFIRMATION,
-            $this->templates->getSampleAttributes($organisation, EmailTemplates::CONFIRMATION),
+            $templates->getSampleAttributes($organisation, EmailTemplates::CONFIRMATION),
             null,
             $draft
         );
@@ -169,35 +172,40 @@ class EmailLayoutController extends Controller
     }
 
     /**
-     * The submitted layout HTML. Empty, or the same as the default, is null:
-     * the organisation then follows later changes to the default.
-     *
+     * A settings page: no list to go back to.
      * @param Request $request
-     * @return string|null
+     * @param string $action
+     * @param RESTResource|null $resource
+     * @return array
      */
-    private function getCustomHtml(Request $request)
+    protected function getPageChrome(Request $request, string $action, ?RESTResource $resource = null): array
     {
-        $html = (string) $request->input('custom_html', '');
-        if (trim($html) === '') {
-            return null;
-        }
-
-        // Browsers post line breaks as CRLF.
-        $normalised = str_replace("\r\n", "\n", $html);
-        if (trim($normalised) === trim($this->layouts->getDefaultHtml())) {
-            return null;
-        }
-
-        return $normalised;
+        return [
+            'title' => 'Layout van de mails',
+            'breadcrumbs' => [
+                [ 'label' => 'E-mails', 'url' => action('Admin\EmailTemplateController@index') ],
+                [ 'label' => 'Layout', 'url' => null ],
+            ],
+            'actions' => [],
+        ];
     }
 
     /**
-     * @param mixed $value
+     * @param Request $request
+     * @param RESTResource|null $resource
      * @return string|null
      */
-    private function blankToNull($value)
+    protected function getCancelUrl(Request $request, ?RESTResource $resource = null): ?string
     {
-        $value = trim((string) $value);
-        return $value === '' ? null : $value;
+        return null;
+    }
+
+    /**
+     * @param $action
+     * @return string
+     */
+    protected function getView($action)
+    {
+        return $action === 'form' ? 'admin.emails.layout.form' : parent::getView($action);
     }
 }
