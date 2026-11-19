@@ -397,6 +397,89 @@ class AdminPagesTest extends IntegrationTestCase
             ->assertSee(url('/over-ons') . '?preview=1', false);
     }
 
+    /**
+     * One editor screen, like the old hand-built one: a tab per language,
+     * the page's own settings beside the content, saved together.
+     */
+    public function testTheEditorHasLanguageTabsAndThePageSettings()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]));
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'en', 'slug' => 'about-us', 'is_published' => '0' ]));
+        $nl = $page->fresh()->translation('nl');
+        $en = $page->fresh()->translation('en');
+
+        $html = $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit')
+            ->assertStatus(200)
+            ->getContent();
+
+        // Tabs: the two languages with their state, and French to add.
+        $this->assertStringContainsString('href="' . url('/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit') . '" aria-current="page"', $html);
+        $this->assertStringContainsString('gepubliceerd</span>', $html);
+        $this->assertStringContainsString('href="' . url('/admin/pages/' . $page->id . '/translations/' . $en->id . '/edit') . '"', $html);
+        $this->assertStringContainsString('concept</span>', $html);
+        $this->assertStringContainsString('href="' . url('/admin/pages/' . $page->id . '/translations/create') . '?locale=fr"', $html);
+        $this->assertStringContainsString('+ Frans', $html);
+
+        // The page's settings in the side column, the address in front of the slug.
+        $aside = substr($html, strpos($html, '<div class="col-lg-4 charon-form-aside">'));
+        $this->assertStringContainsString('Geldt voor alle talen.', $aside);
+        $this->assertStringContainsString('name="parent[show_in_menu]"', $aside);
+        $this->assertStringContainsString('name="fields[is_published]"', $aside);
+        $this->assertStringContainsString('cms-slug-prefix', $html);
+        $this->assertStringContainsString('Opslaan en bekijken', $html);
+
+        // Saving changes both.
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $page->id . '/translations/' . $nl->id, [
+                'fields' => $this->translationFields([ 'title' => 'Wie zijn we' ]),
+                'parent' => $this->pageFields([ 'show_in_menu' => '1', 'sort_order' => '4' ]),
+            ])
+            ->assertRedirect('/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit');
+
+        $this->assertSame('Wie zijn we', $nl->fresh()->title);
+        $this->assertTrue($page->fresh()->show_in_menu);
+        $this->assertSame(4, (int) $page->fresh()->sort_order);
+
+        // "Opslaan en bekijken" opens the page on the site.
+        $this->actingAs($admin)
+            ->put('/admin/pages/' . $page->id . '/translations/' . $nl->id, [
+                'fields' => $this->translationFields(),
+                'parent' => $this->pageFields(),
+                'charon_save' => 'view',
+            ])
+            ->assertRedirect(url('/over-ons') . '?preview=1');
+
+        // A new language opened from its tab starts on that language.
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/create?locale=fr')
+            ->assertStatus(200)
+            ->assertSee('<option value="fr" selected>', false);
+    }
+
+    public function testRefusedPageSettingsSaveNothing()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl' ]));
+        $nl = $page->fresh()->translation('nl');
+        $edit = '/admin/pages/' . $page->id . '/translations/' . $nl->id . '/edit';
+
+        // A page can't hang under itself.
+        $this->actingAs($admin)->from($edit)
+            ->put('/admin/pages/' . $page->id . '/translations/' . $nl->id, [
+                'fields' => $this->translationFields([ 'title' => 'Wie zijn we' ]),
+                'parent' => $this->pageFields([ 'parent_id' => (string) $page->id ]),
+            ])
+            ->assertRedirect($edit)
+            ->assertSessionHasErrors('parent.parent_id');
+
+        $this->assertSame('Over ons', $nl->fresh()->title);
+        $this->assertNull($page->fresh()->parent_id);
+    }
+
     public function testAddEnglishTranslation()
     {
         $organisation = $this->createOrganisation();

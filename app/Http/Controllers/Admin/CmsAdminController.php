@@ -109,4 +109,68 @@ abstract class CmsAdminController extends BaseAdminController
 
         return LocaleWidget::name($locale) . (empty($values['is_published']) ? ' (concept)' : '');
     }
+
+    /**
+     * The language tabs above a translation's form: every CMS language,
+     * with "gepubliceerd" or "concept" for the ones that exist and
+     * "+ Frans" (a new translation in that language) for the others.
+     * @param Request $request
+     * @param \Illuminate\Database\Eloquent\Model|null $parent The page or post (with translations()).
+     * @param string $controller e.g. 'Admin\PageTranslationController'
+     * @param string $parentParameter The route parameter of the page or post.
+     * @param string $action
+     * @param RESTResource|null $resource The translation being edited.
+     * @return array
+     */
+    protected function translationTabs(Request $request, $parent, string $controller, string $parentParameter, string $action, ?RESTResource $resource = null): array
+    {
+        if (!$parent) {
+            return [];
+        }
+
+        $current = $resource
+            ? (string) ($resource->toArray()['locale'] ?? '')
+            : (string) $request->query('locale', '');
+
+        $translations = $parent->translations()->get()->keyBy('locale');
+
+        $tabs = [];
+        foreach (config('cms.locales') as $locale) {
+            $translation = $translations->get($locale);
+            if ($translation) {
+                $tabs[] = [
+                    'label' => LocaleWidget::name($locale),
+                    'url' => action($controller . '@edit', [ $parentParameter => $parent->id, 'id' => $translation->id ]),
+                    'active' => $resource !== null && $locale === $current,
+                    'badge' => $translation->is_published ? 'gepubliceerd' : 'concept',
+                    'badgeStyle' => $translation->is_published ? 'success' : 'secondary',
+                ];
+            } else {
+                $tabs[] = [
+                    'label' => '+ ' . LocaleWidget::name($locale),
+                    'url' => action($controller . '@create', [ $parentParameter => $parent->id ]) . '?locale=' . urlencode($locale),
+                    'active' => $action === Action::CREATE && $locale === $current,
+                    'muted' => true,
+                ];
+            }
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * After "Opslaan en bekijken": the public page, drafts too (as a preview).
+     * @param Request $request
+     * @param RESTResource $resource
+     * @return \Illuminate\Http\RedirectResponse|null Null for the other save buttons.
+     */
+    protected function redirectToPreview(Request $request, RESTResource $resource)
+    {
+        if ($this->getPressedSaveButton($request) !== 'view') {
+            return null;
+        }
+
+        $url = $resource->toArray()['url'] ?? null;
+        return is_string($url) && $url !== '' ? redirect($url . '?preview=1') : null;
+    }
 }

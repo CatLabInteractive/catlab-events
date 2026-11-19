@@ -53,7 +53,12 @@ class PageTranslationController extends CmsAdminController
             return array_values(array_intersect(config('cms.locales'), $this->getExistingLocales($request)));
         }, '(niet kopiëren)'));
 
-        $this->addFieldGroup('Zoekmachines en delen', [ 'meta_title', 'meta_description', 'og_image_id' ]);
+        // One screen: the content of this language, with publishing and the
+        // settings of the pagina itself (all languages) in the side column.
+        $this->addFieldGroup('Publicatie', [ 'is_published' ], [ 'aside' => true ]);
+        $this->editParentOnForm('Pagina', [ 'aside' => true, 'description' => 'Geldt voor alle talen.' ]);
+        $this->addFieldGroup('Zoekmachines en delen', [ 'meta_title', 'meta_description', 'og_image_id' ], [ 'collapsed' => true ]);
+        $this->addSaveButton('Opslaan en bekijken', 'view');
     }
 
     /**
@@ -162,6 +167,11 @@ class PageTranslationController extends CmsAdminController
      */
     protected function redirectAfterSave(Request $request, RESTResource $resource)
     {
+        $preview = $this->redirectToPreview($request, $resource);
+        if ($preview) {
+            return $preview;
+        }
+
         return redirect($this->resourceUrl($request, Action::EDIT, $resource, $this->getEditRouteParameters($request)));
     }
 
@@ -225,6 +235,25 @@ class PageTranslationController extends CmsAdminController
         }
 
         return $actions;
+    }
+
+    /**
+     * A tab per language above the form.
+     * @param Request $request
+     * @param string $action
+     * @param RESTResource|null $resource
+     * @return array
+     */
+    protected function getFormTabs(Request $request, string $action, ?RESTResource $resource = null): array
+    {
+        return $this->translationTabs(
+            $request,
+            Page::find($request->route('page')),
+            'Admin\\PageTranslationController',
+            'page',
+            $action,
+            $resource
+        );
     }
 
     protected function getEntityLabel(): string

@@ -48,5 +48,6 @@ mix
     .copyDirectory('node_modules/tinymce/plugins/table', 'public/js/tinymce/plugins/table')
     .copyDirectory('node_modules/tinymce/plugins/media', 'public/js/tinymce/plugins/media')
     .copyDirectory('node_modules/tinymce/plugins/code', 'public/js/tinymce/plugins/code')
+    .copyDirectory('node_modules/tinymce/plugins/autoresize', 'public/js/tinymce/plugins/autoresize')
     .version()
 ;

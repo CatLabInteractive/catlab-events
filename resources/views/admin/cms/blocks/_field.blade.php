@@ -23,7 +23,7 @@
         <label class="mb-1">{{ $field['label'] }}@if(!empty($field['required'])) <span class="text-danger">*</span>@endif</label>
 
         @if($input === 'textarea')
-            <textarea class="{{ $class }}" name="{{ $field['name'] }}" rows="{{ $field['rows'] ?? 3 }}" @if(isset($field['max'])) maxlength="{{ $field['max'] }}" @endif>{{ is_scalar($value) ? $value : '' }}</textarea>
+            <textarea class="{{ $class }}" name="{{ $field['name'] }}" rows="{{ $field['rows'] ?? 3 }}" data-charon-autogrow @if(isset($field['max'])) maxlength="{{ $field['max'] }}" @endif>{{ is_scalar($value) ? $value : '' }}</textarea>
         @elseif($input === 'html')
             <textarea class="{{ $class }} cms-html" name="{{ $field['name'] }}" rows="{{ $field['rows'] ?? 8 }}">{{ is_scalar($value) ? $value : '' }}</textarea>
         @elseif($input === 'select')

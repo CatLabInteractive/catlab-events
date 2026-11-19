@@ -87,6 +87,24 @@ class LocaleWidget extends SelectWidget implements ProvidesOptions
     }
 
     /**
+     * A new translation opened from a language tab (?locale=fr) starts on
+     * that language.
+     * @param FormField $field
+     * @return array
+     */
+    protected function getViewData(FormField $field): array
+    {
+        $data = parent::getViewData($field);
+
+        $asked = request()->query('locale');
+        if ($data['selected'] === '' && is_string($asked) && isset($field->getOptions()[$asked])) {
+            $data['selected'] = $asked;
+        }
+
+        return $data;
+    }
+
+    /**
      * @param FormField $field
      * @return string
      */

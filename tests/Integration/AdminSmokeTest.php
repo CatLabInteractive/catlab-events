@@ -118,7 +118,7 @@ class AdminSmokeTest extends IntegrationTestCase
             ->assertStatus(200)
             ->assertSee('Tickets en inschrijving</legend>', false)
             ->assertSee('Mensen</legend>', false)
-            ->assertSee('value="Opslaan"', false)
+            ->assertSee('btn btn-primary">Opslaan</button>', false)
             ->assertSee('>Annuleren</a>', false)
             ->getContent();
 

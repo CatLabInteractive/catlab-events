@@ -174,7 +174,11 @@ class AdminPostsTest extends IntegrationTestCase
         $this->actingAs($admin)->get('/admin/posts/' . $post->id . '/translations/' . $translation->id . '/edit')
             ->assertStatus(200)
             ->assertSee('value="quiz-van-het-jaar"', false)
-            ->assertSee('value="Jan Quizmaster"', false);
+            ->assertSee('value="Jan Quizmaster"', false)
+            // The post's own settings beside the content, a tab per language.
+            ->assertSee('name="parent[published_at]', false)
+            ->assertSee('+ Engels')
+            ->assertSee('Opslaan en bekijken');
         $this->actingAs($admin)->get('/admin/posts/' . $post->id . '/edit')
             ->assertStatus(200)
             ->assertSee('value="2019-03-14"', false)
