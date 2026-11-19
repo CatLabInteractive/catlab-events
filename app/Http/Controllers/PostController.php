@@ -116,7 +116,7 @@ class PostController extends Controller
             'ogType' => 'article',
             'description' => $translation->meta_description ?: ($translation->excerpt ?: null),
             'ogImageUrl' => $image ? $image->getUrl([ 'width' => 1200, 'height' => 630 ]) : null,
-            'imageUrl' => $image ? $image->getUrl([ 'width' => 1280 ]) : null,
+            'image' => $image,
             'preview' => $preview,
         ]);
     }

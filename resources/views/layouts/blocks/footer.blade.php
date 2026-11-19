@@ -8,7 +8,7 @@
                 </div>
 
                 <div>
-                    <h4>Tickets</h4>
+                    <h2 class="kv-footer-title">Tickets</h2>
                     <ul>
                         <li><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
                         @if(organisation()->competitions()->count() > 0)
@@ -23,7 +23,7 @@
                 @php($footerPages = app(\App\Cms\Menu::class)->footerItems(organisation(), $cmsLocale ?? null, app(\App\Cms\Blog::class)->navigationUrl(organisation(), $cmsLocale ?? null)))
                 @if(count($footerPages) > 0)
                     <div>
-                        <h4>{{ organisation()->name }}</h4>
+                        <h2 class="kv-footer-title">{{ organisation()->name }}</h2>
                         <ul>
                             @foreach($footerPages as $footerPage)
                                 <li><a href="{{ $footerPage['url'] }}">{{ $footerPage['title'] }}</a></li>
@@ -35,7 +35,7 @@
                 <?php $footerSeries = organisation()->series()->active()->with('organisation')->get(); ?>
                 @if($footerSeries->count() > 0)
                     <div>
-                        <h4>Quizreeksen</h4>
+                        <h2 class="kv-footer-title">Quizreeksen</h2>
                         <ul>
                             @foreach($footerSeries as $navSeries)
                                 <li><a href="{{ $navSeries->getUrl() }}">{{ $navSeries->name }}</a></li>
@@ -50,7 +50,7 @@
                 ?>
                 @if($hasSocial || organisation()->support_email)
                 <div>
-                    <h4>{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h4>
+                    <h2 class="kv-footer-title">{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h2>
                     <div class="kv-footer-social">
                         @if(organisation()->facebook_url)
                             <a href="{{organisation()->facebook_url}}" title="{{organisation()->name}} Facebook">@include('blocks.icon', [ 'name' => 'facebook' ])<span class="sr-only">Facebook</span></a>
@@ -82,8 +82,8 @@
                     Copyright © 2016-{{ date('y') }} @if(organisation()->website_url)<a target="_blank" href="{{organisation()->website_url}}">{{organisation()->getLegalName()}}</a>@else{{organisation()->getLegalName()}}@endif.
                     Website en ticketsysteem aangeboden door <a href="{{ config('app.owner.url') }}">{{ config('app.owner.name') }}</a>.
                     <a href="http://www.quizwitz.com/">QuizWitz</a> is een geregistreerd merk van <a href="https://www.catlab.eu/">CatLab Interactive</a>.
-                    Lees ons <a href="{{ action('DocumentController@privacy') }}">Privacy beleid</a> en
-                    <a href="{{ action('DocumentController@tos') }}">Gebruiksvoorwaarden</a>.
+                    Lees ons <a href="{{ \App\Tools\LegalDocuments::privacyUrl() }}">Privacy beleid</a> en
+                    <a href="{{ \App\Tools\LegalDocuments::termsUrl() }}">Gebruiksvoorwaarden</a>.
                     Deze website is een <a href="https://github.com/CatLabInteractive/catlab-events">open source</a> project.
                 </p>
 

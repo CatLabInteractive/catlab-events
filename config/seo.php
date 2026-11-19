@@ -31,8 +31,10 @@ return [
 
     /**
      * Paths that never redirect to the canonical domain: health checks, the
-     * API, and login round trips that may already be in flight on the old
-     * host (their state lives in a session cookie on that host).
+     * API, login round trips that may already be in flight on the old
+     * host (their state lives in a session cookie on that host), and the
+     * admin, so a canonical domain that doesn't work yet can be corrected
+     * from any other domain.
      */
     'canonical_redirect_except' => [
         'status',
@@ -40,6 +42,8 @@ return [
         'login',
         'login/*',
         'logout',
+        'admin',
+        'admin/*',
     ],
 
 ];

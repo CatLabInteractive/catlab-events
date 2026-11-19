@@ -46,23 +46,37 @@
 <meta property="og:type" content="{{ $ogType ?? 'website' }}" />
 <meta property="og:url" content="{{ \Request::url() }}" />
 
-<link rel="stylesheet" href="https://cookies.catlab.eu/cookie-consent.css"/>
-<script src="https://cookies.catlab.eu/cookie-consent.js"></script>
+{{--
+    The cookie banner does not block the first paint: its stylesheet is
+    preloaded and its script deferred. The banner is set up on
+    DOMContentLoaded, which runs after deferred scripts; Google Tag Manager
+    (layouts/blocks/gtag) starts from the same handler, after the banner, so
+    the order between the two is what it was.
+--}}
+<link rel="preconnect" href="https://cookies.catlab.eu" />
+<link rel="preload" href="https://cookies.catlab.eu/cookie-consent.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+<noscript><link rel="stylesheet" href="https://cookies.catlab.eu/cookie-consent.css"/></noscript>
+<script src="https://cookies.catlab.eu/cookie-consent.js" defer></script>
 
 <script>
-    var cookieConsent = new CookieConsent({
-        privacyPolicyUrl: '/docs/en/privacy',
-        buttonPrimaryClass: 'kv-cc-primary',
-        buttonSecondaryClass: 'kv-cc-secondary',
-        // The chat bubble waits until a choice is made, so it never covers the banner.
-        postSelectionCallback: function () {
-            if (window.kvLoadChat) {
-                window.kvLoadChat();
-            }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof CookieConsent === 'undefined') {
+            return;
         }
+        window.cookieConsent = new CookieConsent({
+            privacyPolicyUrl: @json(\App\Tools\LegalDocuments::privacyUrl()),
+            buttonPrimaryClass: 'kv-cc-primary',
+            buttonSecondaryClass: 'kv-cc-secondary',
+            // The chat bubble waits until a choice is made, so it never covers the banner.
+            postSelectionCallback: function () {
+                if (window.kvLoadChat) {
+                    window.kvLoadChat();
+                }
+            }
+        });
+        window.cookieConsent.enableCrossDomain([
+            'catlab.eu',
+            'quizfabriek.be'
+        ]);
     });
-    cookieConsent.enableCrossDomain([
-        'catlab.eu',
-        'quizfabriek.be'
-    ]);
 </script>

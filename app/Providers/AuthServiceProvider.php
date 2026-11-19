@@ -35,6 +35,7 @@ use App\Models\PageTranslation;
 use App\Models\Post;
 use App\Models\PostTranslation;
 use App\Models\Organisation;
+use App\Models\OrganisationDomain;
 use App\Models\Person;
 use App\Models\Series;
 use App\Models\TicketCategory;
@@ -47,6 +48,7 @@ use App\Policies\GroupPolicy;
 use App\Policies\LiveStreamPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\OrganisationDomainPolicy;
 use App\Policies\PagePolicy;
 use App\Policies\PageTranslationPolicy;
 use App\Policies\PostPolicy;
@@ -72,6 +74,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
 
         Organisation::class     => OrganisationPolicy::class,
+        OrganisationDomain::class => OrganisationDomainPolicy::class,
         Event::class            => EventPolicy::class,
         Group::class            => GroupPolicy::class,
         GroupMember::class      => GroupMemberPolicy::class,
