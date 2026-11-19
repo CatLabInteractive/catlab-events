@@ -21,3 +21,6 @@ $kv-butter: $kv-peach;
 $kv-alert: #c4553a;  // only for "uitverkocht" / last tickets
 
 $kv-font: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+
+// Arrow for buttons (.kv-btn-dot), used as a CSS mask so it takes the text colour.
+$kv-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M4 12h15M13 6l6 6-6 6'/%3E%3C/svg%3E");

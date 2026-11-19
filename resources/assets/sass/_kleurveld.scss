@@ -584,20 +584,37 @@ h1.kv-series-h1 {
     outline-offset: 3px;
   }
 
+  /*
+   * The arrow: a square block in the series colour at the right edge, as tall
+   * as the button. The &rarr; in the markup is hidden; the arrow is drawn
+   * with a mask so it stays crisp and takes the text colour of the field.
+   */
   .kv-btn-dot {
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: var(--kv-btn-height, 56px);
+    margin: 0;
     background: var(--kv-field);
     color: var(--kv-on-field);
-    display: grid;
-    place-items: center;
-    font-size: 14px;
-    transition: transform .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    line-height: 0;
+
+    &:after {
+      content: "";
+      width: 22px;
+      height: 22px;
+      background: currentColor;
+      -webkit-mask: $kv-arrow center / contain no-repeat;
+      mask: $kv-arrow center / contain no-repeat;
+      transition: transform .15s;
+    }
   }
 
-  &:hover .kv-btn-dot { transform: translateX(3px); }
+  &.kv-btn:has(> .kv-btn-dot) { padding-right: 0; }
+  &:hover .kv-btn-dot:after { transform: translateX(3px); }
 }
 
 .kv-links {
@@ -882,8 +899,8 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   transform: translateY(110%);
   transition: transform .2s ease;
 
-  .kv-btn { flex: 0 0 auto; min-height: 46px; padding: 0 12px 0 16px; font-size: 16px; }
-  .kv-btn-dot { flex-basis: 24px; width: 24px; height: 24px; }
+  .kv-btn { --kv-btn-height: 46px; flex: 0 0 auto; min-height: 46px; padding: 0 12px 0 16px; font-size: 16px; }
+  .kv-btn-dot:after { width: 18px; height: 18px; }
 }
 
 .kv-buybar-visible { transform: translateY(0); }
@@ -1002,7 +1019,7 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-hero-facts { font-size: 18px; margin-bottom: 32px; }
   .kv-buy { padding: 22px 24px 20px; }
   .kv-price strong { font-size: 42px; }
-  .kv-btn { min-height: 60px; font-size: 19px; padding: 0 18px 0 24px; }
+  .kv-btn { --kv-btn-height: 60px; min-height: 60px; font-size: 19px; padding: 0 18px 0 24px; }
 
   .kv-sec { padding-top: 88px; padding-bottom: 88px; }
   .kv-sec + .kv-sec { padding-top: 0; }
@@ -1076,7 +1093,7 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kv-poster img, .kv-ticket:after, .kv-btn-dot, .kv-buybar { transition: none; }
+  .kv-poster img, .kv-ticket:after, .kv-btn-dot:after, .kv-buybar { transition: none; }
 }
 
 /* ---------- Venue ---------- */
@@ -1486,8 +1503,8 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
 .kv-order-state { font-size: 14px; color: $kv-muted; }
 
-.kv-btn.kv-btn-small { display: inline-flex; min-height: 44px; padding: 0 12px 0 16px; font-size: 16px; }
-.kv-btn.kv-btn-small .kv-btn-dot { flex-basis: 24px; width: 24px; height: 24px; }
+.kv-btn.kv-btn-small { --kv-btn-height: 44px; display: inline-flex; min-height: 44px; padding: 0 12px 0 16px; font-size: 16px; }
+.kv-btn.kv-btn-small .kv-btn-dot:after { width: 18px; height: 18px; }
 
 @media (min-width: 768px) {
   .kv-order {
