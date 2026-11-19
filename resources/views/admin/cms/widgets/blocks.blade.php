@@ -9,6 +9,10 @@
      data-cms-assets-url="{{ action('Admin\CmsAssetController@index') }}">
     <label class="d-block">{{ $field->getLabel() }}</label>
 
+    @if(count($blocks) > 1)
+        <p class="mb-2"><button type="button" class="btn btn-sm btn-link p-0" data-cms-action="toggle-all">Alles open- of dichtklappen</button></p>
+    @endif
+
     {{-- Present even without blocks, so an emptied list is read as empty. --}}
     <input type="hidden" name="{{ $blocksName }}" value="" />
 
@@ -16,7 +20,11 @@
         @foreach($blocks as $i => $block)
             @php($blockType = is_string($block['type'] ?? null) ? ($blockTypes[$block['type']] ?? null) : null)
             @if($blockType)
-                @include('admin.cms.blocks._block', [ 'i' => $i, 'block' => $block, 'blockType' => $blockType ])
+                {{-- With several sections, each folds to one line; all stay open after an error. --}}
+                @include('admin.cms.blocks._block', [
+                    'i' => $i, 'block' => $block, 'blockType' => $blockType,
+                    'collapsed' => count($blocks) > 1 && !$errors->has($field->getDotName()) && !$errors->has('blocks.' . $i . '.*'),
+                ])
             @endif
         @endforeach
     </div>
@@ -41,3 +49,16 @@
         </template>
     @endforeach
 </div>
+
+@once
+    @push('scripts')
+        <style>
+            .cms-block-collapsed > .card-body { display: none; }
+            .cms-block-collapsed > .card-header { border-bottom: 0; }
+            .cms-block-caret { display: inline-block; width: 1em; transition: transform .15s; }
+            .cms-block-collapsed .cms-block-caret { transform: rotate(-90deg); }
+            .cms-block-toggle { min-width: 0; min-height: 36px; }
+            .cms-block-summary { min-width: 0; font-weight: normal; }
+        </style>
+    @endpush
+@endonce

@@ -48,7 +48,12 @@ class PostTranslationController extends CmsAdminController
             return array_values(array_diff(config('cms.locales'), $this->getExistingLocales($request)));
         }));
 
-        $this->addFieldGroup('Zoekmachines en delen', [ 'meta_title', 'meta_description' ]);
+        // One screen: the content of this language, with publishing and the
+        // settings of the bericht itself (all languages) in the side column.
+        $this->addFieldGroup('Publicatie', [ 'is_published' ], [ 'aside' => true ]);
+        $this->editParentOnForm('Bericht', [ 'aside' => true, 'description' => 'Geldt voor alle talen.' ]);
+        $this->addFieldGroup('Zoekmachines en delen', [ 'meta_title', 'meta_description' ], [ 'collapsed' => true ]);
+        $this->addSaveButton('Opslaan en bekijken', 'view');
     }
 
     /**
@@ -157,6 +162,11 @@ class PostTranslationController extends CmsAdminController
      */
     protected function redirectAfterSave(Request $request, RESTResource $resource)
     {
+        $preview = $this->redirectToPreview($request, $resource);
+        if ($preview) {
+            return $preview;
+        }
+
         return redirect($this->resourceUrl($request, Action::EDIT, $resource, $this->getEditRouteParameters($request)));
     }
 
@@ -220,6 +230,25 @@ class PostTranslationController extends CmsAdminController
         }
 
         return $actions;
+    }
+
+    /**
+     * A tab per language above the form.
+     * @param Request $request
+     * @param string $action
+     * @param RESTResource|null $resource
+     * @return array
+     */
+    protected function getFormTabs(Request $request, string $action, ?RESTResource $resource = null): array
+    {
+        return $this->translationTabs(
+            $request,
+            Post::find($request->route('post')),
+            'Admin\\PostTranslationController',
+            'post',
+            $action,
+            $resource
+        );
     }
 
     protected function getEntityLabel(): string

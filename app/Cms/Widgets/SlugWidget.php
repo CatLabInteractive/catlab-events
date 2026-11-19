@@ -34,9 +34,35 @@ use Illuminate\Http\Request;
  */
 class SlugWidget extends TextWidget
 {
+    protected $view = 'admin.cms.widgets.slug';
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes + [ 'maxlength' => 191 ]);
+    }
+
+    /**
+     * The address in front of the slug ("https://quizfabriek.be/nl/over-ons/"
+     * for a subpage), taken from the url of what is being edited.
+     * @param FormField $field
+     * @return array
+     */
+    protected function getViewData(FormField $field): array
+    {
+        $data = parent::getViewData($field);
+
+        $prefix = null;
+        $resource = $field->getResource();
+        if ($resource) {
+            $values = $resource->toArray();
+            $url = is_string($values['url'] ?? null) ? $values['url'] : '';
+            $slug = is_string($values['slug'] ?? null) ? $values['slug'] : '';
+            if ($url !== '' && $slug !== '' && substr($url, -strlen($slug)) === $slug) {
+                $prefix = preg_replace('#^https?://#', '', substr($url, 0, -strlen($slug)));
+            }
+        }
+
+        return $data + [ 'prefix' => $prefix ];
     }
 
     /**

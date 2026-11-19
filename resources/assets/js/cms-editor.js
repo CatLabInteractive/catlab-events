@@ -14,7 +14,12 @@
  *   .cms-repeater[data-repeater][data-max]  a list of rows inside a block
  *     .cms-repeater-rows > .cms-repeater-row
  *     > template[data-repeater-template]   a fresh row, with __ROW__
- *   [data-cms-action="up|down|remove|add-block|add-row|pick-image|clear-image"]
+ *   [data-cms-action="up|down|remove|add-block|add-row|pick-image|clear-image|toggle|toggle-all"]
+ *   .cms-block-collapsed                   a block folded to its header; [data-cms-block-summary]
+ *                                          shows the start of its first text
+ *
+ * Every change made here (and in TinyMCE) dispatches an "input" event, so
+ * the form knows it has unsaved changes.
  *   textarea.cms-html                      rich text (TinyMCE)
  *   .cms-image-field                       an image (assets.id): [data-cms-image-input],
  *                                          [data-cms-image-preview], [data-cms-image-empty]
@@ -38,6 +43,87 @@
     function children(element, selector) {
         return Array.prototype.filter.call(element.children, function (child) {
             return child.matches(selector);
+        });
+    }
+
+    /**
+     * Tell the form something changed (laravel-charon-frontend's save bar).
+     */
+    function changed(element) {
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function textOf(html) {
+        return (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+
+    /**
+     * The start of a block's first text, for its folded header line.
+     */
+    function blockSummary(block) {
+        var body = children(block, '.card-body')[0];
+        if (!body) {
+            return '';
+        }
+
+        var fields = body.querySelectorAll('input[type="text"], input:not([type]), input[type="url"], textarea');
+        for (var i = 0; i < fields.length; i++) {
+            var field = fields[i];
+            var value = field.value || '';
+            if (field.matches('textarea.cms-html')) {
+                var instance = window.tinymce && field.id ? window.tinymce.get(field.id) : null;
+                value = instance ? instance.getContent({ format: 'text' }) : textOf(value);
+            }
+            value = value.replace(/\s+/g, ' ').trim();
+            if (value !== '') {
+                return value.length > 90 ? value.slice(0, 90) + '…' : value;
+            }
+        }
+
+        return body.querySelector('[data-cms-image-input]') && body.querySelector('[data-cms-image-input]').value ? 'Afbeelding' : '';
+    }
+
+    function updateSummary(block) {
+        var summary = block.querySelector('[data-cms-block-summary]');
+        if (summary) {
+            summary.textContent = blockSummary(block);
+        }
+    }
+
+    function setCollapsed(block, collapsed) {
+        block.classList.toggle('cms-block-collapsed', collapsed);
+
+        var toggle = block.querySelector('[data-cms-action="toggle"]');
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+
+        if (collapsed) {
+            updateSummary(block);
+            return;
+        }
+
+        // Editors that were hidden size themselves now.
+        if (window.tinymce) {
+            block.querySelectorAll('textarea.cms-html[data-cms-tinymce]').forEach(function (textarea) {
+                var instance = window.tinymce.get(textarea.id);
+                if (instance) {
+                    instance.execCommand('mceAutoResize');
+                }
+            });
+        }
+        if (window.CharonFrontend && window.CharonFrontend.autogrow) {
+            window.CharonFrontend.autogrow(block);
+        }
+    }
+
+    function toggleAll(editor) {
+        var blocks = editor.querySelectorAll('[data-cms-blocks] > .cms-block');
+        var anyOpen = Array.prototype.some.call(blocks, function (block) {
+            return !block.classList.contains('cms-block-collapsed');
+        });
+        Array.prototype.forEach.call(blocks, function (block) {
+            setCollapsed(block, anyOpen);
         });
     }
 
@@ -156,6 +242,8 @@
         if (clear) {
             clear.classList.toggle('d-none', !asset);
         }
+
+        changed(input);
     }
 
     var picker = {
@@ -302,7 +390,7 @@
             promotion: false,
             // The editor grows with its text (like the other text fields of
             // the admin) and keeps its toolbar in view while you scroll.
-            min_height: textarea.rows > 6 ? 400 : 220,
+            min_height: textarea.rows > 6 ? 300 : 180,
             autoresize_bottom_margin: 24,
             toolbar_sticky: true,
             plugins: 'link image lists table media code autoresize',
@@ -327,6 +415,13 @@
                 });
             },
             body_class: 'cms-prose',
+            setup: function (instance) {
+                // Edits inside the editor's iframe count as changes of the form.
+                instance.on('input change undo redo', function () {
+                    instance.save();
+                    changed(textarea);
+                });
+            },
             media_alt_source: false,
             media_poster: false,
             media_url_resolver: function (data) {
@@ -400,6 +495,7 @@
         reindex(editor);
         initEditors(editor, item);
         initEditors(editor, sibling);
+        changed(item);
     }
 
     function addBlock(editor) {
@@ -414,6 +510,7 @@
 
         reindex(editor);
         initEditors(editor, block);
+        changed(block);
         block.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -431,6 +528,7 @@
 
         reindex(editor);
         initEditors(editor, row);
+        changed(row);
     }
 
     function onClick(editor, event) {
@@ -451,6 +549,16 @@
                 addRow(editor, button.closest('.cms-repeater'));
                 break;
 
+            case 'toggle':
+                if (item && item.matches('.cms-block')) {
+                    setCollapsed(item, !item.classList.contains('cms-block-collapsed'));
+                }
+                break;
+
+            case 'toggle-all':
+                toggleAll(editor);
+                break;
+
             case 'up':
             case 'down':
                 if (item) {
@@ -468,9 +576,11 @@
 
             case 'remove':
                 if (item && window.confirm(item.matches('.cms-block') ? 'Deze sectie verwijderen?' : 'Deze rij verwijderen?')) {
+                    var parent = item.parentNode;
                     removeEditors(item);
-                    item.parentNode.removeChild(item);
+                    parent.removeChild(item);
                     reindex(editor);
+                    changed(parent);
                 }
                 break;
 
@@ -496,9 +606,18 @@
             });
         }
 
+        // The folded header line follows what is typed.
+        editor.addEventListener('input', function (event) {
+            var block = event.target.closest ? event.target.closest('.cms-block') : null;
+            if (block && editor.contains(block)) {
+                updateSummary(block);
+            }
+        });
+
         initPicker();
         reindex(editor);
         initEditors(editor, editor);
+        editor.querySelectorAll('[data-cms-blocks] > .cms-block').forEach(updateSummary);
     }
 
     function boot() {
