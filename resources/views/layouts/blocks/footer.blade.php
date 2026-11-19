@@ -8,7 +8,7 @@
                 </div>
 
                 <div>
-                    <h4>Tickets</h4>
+                    <h2 class="kv-footer-title">Tickets</h2>
                     <ul>
                         <li><a href="{{ action('EventController@calendar') }}">Kalender</a></li>
                         @if(organisation()->competitions()->count() > 0)
@@ -23,7 +23,7 @@
                 @php($footerPages = app(\App\Cms\Menu::class)->footerItems(organisation(), $cmsLocale ?? null, app(\App\Cms\Blog::class)->navigationUrl(organisation(), $cmsLocale ?? null)))
                 @if(count($footerPages) > 0)
                     <div>
-                        <h4>{{ organisation()->name }}</h4>
+                        <h2 class="kv-footer-title">{{ organisation()->name }}</h2>
                         <ul>
                             @foreach($footerPages as $footerPage)
                                 <li><a href="{{ $footerPage['url'] }}">{{ $footerPage['title'] }}</a></li>
@@ -35,7 +35,7 @@
                 <?php $footerSeries = organisation()->series()->active()->with('organisation')->get(); ?>
                 @if($footerSeries->count() > 0)
                     <div>
-                        <h4>Quizreeksen</h4>
+                        <h2 class="kv-footer-title">Quizreeksen</h2>
                         <ul>
                             @foreach($footerSeries as $navSeries)
                                 <li><a href="{{ $navSeries->getUrl() }}">{{ $navSeries->name }}</a></li>
@@ -50,7 +50,7 @@
                 ?>
                 @if($hasSocial || organisation()->support_email)
                 <div>
-                    <h4>{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h4>
+                    <h2 class="kv-footer-title">{{ $hasSocial ? 'Volg ons' : 'Contact' }}</h2>
                     <div class="kv-footer-social">
                         @if(organisation()->facebook_url)
                             <a href="{{organisation()->facebook_url}}" title="{{organisation()->name}} Facebook">@include('blocks.icon', [ 'name' => 'facebook' ])<span class="sr-only">Facebook</span></a>

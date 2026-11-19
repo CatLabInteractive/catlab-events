@@ -40,9 +40,9 @@
 
         <section class="kv-sec kv-cms-post-body">
             <div class="kv-wrap kv-wrap-prose">
-                @if($imageUrl)
+                @if($image)
                     <figure class="kv-cms-post-image">
-                        <img src="{{ $imageUrl }}" alt="{{ $translation->title }}" />
+                        @include('blocks.image', [ 'image' => $image, 'sizes' => '(min-width: 768px) 720px, 100vw', 'alt' => $translation->title, 'priority' => true ])
                     </figure>
                 @endif
 

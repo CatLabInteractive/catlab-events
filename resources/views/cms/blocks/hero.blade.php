@@ -8,7 +8,7 @@
 <section id="b-{{ $block['id'] }}" class="{{ $bandClass ?? '' }} kv-cms-hero kv-cms-hero-{{ $data['align'] }} {{ $fieldClass ?? '' }} @if($heroCover) kv-cms-hero-cover @elseif($data['image']) has-image @endif">
     @if($heroCover)
         <div class="kv-cms-hero-photo" aria-hidden="true">
-            <img src="{{ $data['image']->getUrl([ 'width' => 1920 ]) }}" alt="" />
+            @include('blocks.image', [ 'image' => $data['image'], 'width' => 1920, 'priority' => ($headingLevel ?? 2) == 1 ])
         </div>
     @endif
 
@@ -25,7 +25,7 @@
 
         @if($data['image'] && !$heroCover)
             <div class="kv-cms-hero-image">
-                <img src="{{ $data['image']->getUrl([ 'width' => 1280 ]) }}" alt="" />
+                @include('blocks.image', [ 'image' => $data['image'], 'sizes' => '(min-width: 992px) 50vw, 100vw', 'priority' => ($headingLevel ?? 2) == 1 ])
             </div>
         @endif
     </div>
