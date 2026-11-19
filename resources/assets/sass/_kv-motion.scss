@@ -1,0 +1,75 @@
+/*
+ * Kleurveld motion: the scroll effects borrowed from the main site.
+ *
+ * 1. Reveal. kv.js puts .kv-reveal on content below the fold and adds
+ *    .kv-reveal-in when it scrolls into view; both classes are removed once
+ *    it has landed. Nothing is hidden without JS or with reduced motion.
+ * 2. Drift. The large decorative circles move a little slower than the page
+ *    and the small dots a little faster, which gives the fields some depth.
+ *    Pure CSS (scroll-driven animations); browsers without support simply
+ *    show still circles.
+ *
+ * Both use the individual `translate` property, so they never fight with the
+ * `transform` that hover effects use.
+ */
+
+/* ---------- Reveal ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .kv-reveal {
+    opacity: 0;
+    translate: 0 24px;
+  }
+
+  .kv-reveal.kv-reveal-in {
+    opacity: 1;
+    translate: none;
+    transition: opacity .6s ease-out, translate .6s cubic-bezier(.2, .7, .2, 1);
+  }
+
+  /* From the side only where there is room; phones always rise. */
+  @media (min-width: 768px) {
+    .kv-reveal.kv-reveal-left { translate: -40px 0; }
+    .kv-reveal.kv-reveal-right { translate: 40px 0; }
+    .kv-reveal.kv-reveal-in { translate: none; }
+  }
+}
+
+@media print {
+  .kv-reveal { opacity: 1; translate: none; }
+}
+
+/* ---------- Drift ---------- */
+
+@keyframes kv-drift-slow {
+  from { translate: 0 -48px; }
+  to { translate: 0 48px; }
+}
+
+@keyframes kv-drift-fast {
+  from { translate: 0 24px; }
+  to { translate: 0 -24px; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .kv-hero-field:before,
+    .kv-hero-noposter:before,
+    .kv-pagehead:before,
+    .footer.kv-footer:before,
+    .kv-cms-hero:before,
+    .kv-cms-split-image:before,
+    .kv-cms-cta-primary:before {
+      animation: kv-drift-slow linear both;
+      animation-timeline: view();
+    }
+
+    .kv-hero-field:after,
+    .kv-hero-noposter:after,
+    .kv-pagehead:after,
+    .kv-cms-hero:after {
+      animation: kv-drift-fast linear both;
+      animation-timeline: view();
+    }
+  }
+}
