@@ -22,9 +22,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Cms\Blog;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\PageTranslation;
 use App\Models\Series;
 use App\Models\Venue;
 use Carbon\Carbon;
@@ -42,6 +44,16 @@ class SitemapController
 {
     const CACHE_KEY = 'laravel.sitemap';
     const CACHE_TTL = 3600;
+
+    /**
+     * @var Blog
+     */
+    protected $blog;
+
+    public function __construct(Blog $blog)
+    {
+        $this->blog = $blog;
+    }
 
     /**
      * One cached sitemap per organisation (each domain gets its own), so a
@@ -75,37 +87,103 @@ class SitemapController
     }
 
     /**
+     * Every public URL of the organisation that serves this domain: events,
+     * series, venues, archive/calendar, competitions, CMS pages and blog posts.
      * @return array[]
      */
     protected function buildUrls()
     {
+        $organisation = organisation();
+        if (!$organisation) {
+            return [];
+        }
+
         $urls = [];
 
         // Events
-        foreach (Event::published()->orderByStartDateDesc()->withListRelations()->get() as $event) {
+        $events = Event::published()
+            ->where('organisation_id', '=', $organisation->id)
+            ->orderByStartDateDesc()
+            ->withListRelations()
+            ->get();
+        foreach ($events as $event) {
             $urls[] = $this->url($event->getUrl(), $event->updated_at, $this->eventPriority($event), 'weekly');
         }
 
         // Series
-        foreach (Series::all() as $series) {
+        foreach (Series::where('organisation_id', '=', $organisation->id)->get() as $series) {
             $urls[] = $this->url($series->getUrl(), $series->updated_at, $series->active ? 1 : 0.2, 'weekly');
         }
 
-        // Venues
-        foreach (Venue::all() as $venue) {
+        // Venues (shared between organisations): those that host one of our events
+        $venues = Venue::whereHas('events', function ($query) use ($organisation) {
+            $query->where('organisation_id', '=', $organisation->id)->where('is_published', '=', true);
+        })->get();
+        foreach ($venues as $venue) {
             $urls[] = $this->url($venue->getLocalUrl(), $venue->updated_at, 0.5, 'weekly');
         }
 
         // Archive & calendar
-        $lastEventUpdate = Event::max('updated_at');
+        $lastEventUpdate = Event::where('organisation_id', '=', $organisation->id)->max('updated_at');
         $lastEventUpdate = $lastEventUpdate ? Carbon::parse($lastEventUpdate) : null;
 
         $urls[] = $this->url(action('EventController@archive'), $lastEventUpdate, 1, 'daily');
         $urls[] = $this->url(action('EventController@calendar'), $lastEventUpdate, 1, 'daily');
 
         // Competitions
-        foreach (Competition::all() as $competition) {
+        foreach (Competition::where('organisation_id', '=', $organisation->id)->get() as $competition) {
             $urls[] = $this->url(action('CompetitionController@show', [ $competition->id ]), $competition->updated_at, 0.3, 'weekly');
+        }
+
+        // CMS pages
+        foreach ($this->pageUrls($organisation) as $url) {
+            $urls[] = $url;
+        }
+
+        // Blog: index per locale with posts, and every visible post
+        foreach (config('cms.locales') as $locale) {
+            $posts = $this->blog->visible($organisation, $locale)->get();
+            if ($posts->count() === 0) {
+                continue;
+            }
+
+            $urls[] = $this->url(Blog::indexUrl($locale), $posts->first()->updated_at, 0.6, 'weekly');
+            foreach ($posts as $translation) {
+                $urls[] = $this->url($translation->getUrl(), $translation->updated_at, 0.5, 'monthly');
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Published content pages. Menu-link pages have no content of their own
+     * and the home page lives at the locale root, not at its own path.
+     * @param Organisation $organisation
+     * @return array[]
+     */
+    protected function pageUrls(Organisation $organisation)
+    {
+        $translations = PageTranslation::forOrganisation($organisation)
+            ->published()
+            ->whereHas('page', function ($query) {
+                $query->where(function ($query) {
+                    $query->whereNull('link')->orWhere('link', '=', '');
+                });
+            })
+            ->get();
+
+        $urls = [];
+        foreach ($translations as $translation) {
+            $isHome = $organisation->home_page_id
+                && (int) $organisation->home_page_id === (int) $translation->page_id;
+
+            $urls[] = $this->url(
+                $isHome ? PageController::localeRootUrl($translation->locale) : $translation->getUrl(),
+                $translation->updated_at,
+                $isHome ? 1 : 0.7,
+                'monthly'
+            );
         }
 
         return $urls;

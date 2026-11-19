@@ -2,6 +2,10 @@
 
 @section('title'){{ $event->name }}@if($event->series) - {{ $event->series->name }}@endif @endsection
 
+@if(!empty($metaDescription))
+    @section('description'){{ $metaDescription }}@endsection
+@endif
+
 @section('bodyClass')kv-page {{ $event->getColourClass() }}@endsection
 
 <?php

@@ -364,8 +364,44 @@ class EventController extends Controller
             'isAdmin' => $isAdmin,
             'ticketCategories' => $ticketCategories,
             'canonicalUrl' => $event->getUrl(),
-            'eventDateAttendees' => $eventDateAttendees
+            'eventDateAttendees' => $eventDateAttendees,
+            'ogTitle' => $event->name . ($event->series ? ' – ' . $event->series->name : ''),
+            'ogImageUrl' => $event->poster ? $event->poster->getUrl([ 'width' => 1200 ]) : null,
+            'metaDescription' => $this->describeEvent($event),
         ]);
+    }
+
+    /**
+     * Meta description for an event page: date, place and the start of the
+     * description, cut at a word boundary to what search results show.
+     * @param Event $event
+     * @return string|null
+     */
+    protected function describeEvent(Event $event)
+    {
+        $parts = [];
+
+        if ($event->startDate) {
+            $parts[] = ucfirst($event->startDate->copy()->locale('nl')->isoFormat('dddd D MMMM YYYY'));
+        }
+
+        if ($event->venue && $event->venue->city) {
+            $parts[] = $event->venue->name ? $event->venue->name . ', ' . $event->venue->city : $event->venue->city;
+        }
+
+        $intro = count($parts) > 0 ? implode(' · ', $parts) . '. ' : '';
+        $text = trim(preg_replace('/\s+/u', ' ', html_entity_decode(
+            \App\Tools\StringHelper::htmlToText((string) $event->description),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        )));
+
+        $description = trim($intro . $text);
+        if ($description === '') {
+            return null;
+        }
+
+        return \Illuminate\Support\Str::limit($description, 155, '…');
     }
 
     /**
