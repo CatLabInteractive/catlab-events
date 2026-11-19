@@ -24,7 +24,7 @@
                 </figure>
             @elseif($data['image'])
                 <div class="kv-cms-split-image">
-                    <img src="{{ $data['image']->getUrl([ 'width' => 1280 ]) }}" alt="{{ $data['title'] ?? '' }}" loading="lazy">
+                    @include('blocks.image', [ 'image' => $data['image'], 'sizes' => '(min-width: 992px) 50vw, 100vw', 'alt' => $data['title'] ?? '', 'lazy' => true ])
                 </div>
             @endif
         </div>

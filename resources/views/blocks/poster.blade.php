@@ -16,9 +16,11 @@
     $posterRatio = ($poster->width && $poster->height) ? $poster->width / $poster->height : null;
     $frameRatio = $posterRatio ? max(0.7, min(1.9, $posterRatio)) : 1;
     // Let the browser pick a size that fits the screen; never offer more than the original.
-    $srcsetWidths = array_filter([ 480, 800, 1200, 1600 ], function ($w) use ($poster) {
-        return !$poster->width || $w <= max(480, $poster->width);
+    $srcsetWidths = array_filter([ 320, 480, 800, 1200, 1600 ], function ($w) use ($poster) {
+        return !$poster->width || $w <= max(320, $poster->width);
     });
+    // On phones the frame is 180px high (.kv-poster), so it is 180px x ratio wide.
+    $posterSizes = $sizes ?? '(min-width: 768px) 50vw, min(calc(100vw - 40px), ' . round(180 * $frameRatio) . 'px)';
 ?>
 <a class="kv-poster image-popup {{ $class ?? '' }}"
    href="{{ $poster->getUrl([ 'width' => 1600 ]) }}"
@@ -26,7 +28,7 @@
    aria-label="Poster '{{ $alt }}' vergroten">
     <img src="{{ $poster->getUrl([ 'width' => $posterWidth ]) }}"
          srcset="@foreach($srcsetWidths as $w){{ $loop->first ? '' : ', ' }}{{ $poster->getUrl([ 'width' => $w ]) }} {{ $w }}w @endforeach"
-         sizes="{{ $sizes ?? '(min-width: 768px) 50vw, 100vw' }}"
+         sizes="{{ $posterSizes }}"
          @if($poster->width && $poster->height) width="{{ $poster->width }}" height="{{ $poster->height }}" @endif
          alt="Poster '{{ $alt }}'"
          @if(!empty($lazy)) loading="lazy" @endif />

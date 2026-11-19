@@ -1,6 +1,5 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700&display=swap" rel="stylesheet" />
+{{-- Jost is self-hosted (@font-face in app.scss); preload it so text does not reflow late. --}}
+<link rel="preload" href="/webfonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css" />
 <script src="{{ mix('js/kv.js') }}" defer></script>
 @if(organisation())
