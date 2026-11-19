@@ -23,10 +23,11 @@ PAGES = [
     r'/events/\d+/register(/\d+)?', r'/events/\d+/waitinglist', r'/events/\d+/scores',
     r'/organisations/\d+', r'/venues/\d+', r'/author/\d+(/[^/]*)?',
     r'/documents/nl/(privacy|tos)',
+    r'/blog', r'/\d{4}/\d{2}/\d{2}/[^/]+', r'/quizzen-op-maat', r'/over-ons',
 ]
 PAGES = [re.compile('^' + p + '$') for p in PAGES]
 STATIC = re.compile(r'\.(css|js|map|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot|otf|json|xml|txt|webmanifest)$', re.I)
-START = ['/', '/events', '/calendar', '/archive']
+START = ['/', '/events', '/calendar', '/archive', '/blog', '/quizzen-op-maat', '/over-ons']
 MAX_PAGES = 300
 UNAVAILABLE = 'preview-info/unavailable.html'
 

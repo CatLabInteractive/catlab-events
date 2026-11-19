@@ -1,0 +1,57 @@
+[
+  {
+    "id": 101,
+    "date": "2019-03-14T20:00:00",
+    "date_gmt": "2019-03-14T19:00:00",
+    "slug": "quiz-van-het-jaar",
+    "status": "publish",
+    "title": {
+      "rendered": "Quiz van het jaar &#8211; verslag"
+    },
+    "excerpt": {
+      "rendered": "<p>Een avond om nooit te vergeten [&hellip;]</p>\n"
+    },
+    "content": {
+      "rendered": "<p>Het was een <strong>topavond</strong>.</p>\n<figure class=\"wp-block-gallery columns-2\"><ul class=\"blocks-gallery-grid\"><li class=\"blocks-gallery-item\"><figure><img src=\"https://www.quizfabriek.be/wp-content/uploads/2019/03/foto-1024x768.jpg\" srcset=\"https://www.quizfabriek.be/wp-content/uploads/2019/03/foto-300x225.jpg 300w, https://www.quizfabriek.be/wp-content/uploads/2019/03/foto-1024x768.jpg 1024w\" sizes=\"(max-width: 1024px) 100vw, 1024px\" alt=\"Zaal\"></figure></li><li class=\"blocks-gallery-item\"><figure><img src=\"https://blog.quizfabriek.be/wp-content/uploads/2019/03/winnaars.jpg\" alt=\"Winnaars\"></figure></li></ul></figure>\n<p><a href=\"https://quizfabriek.be/wp-content/uploads/2019/03/vragen.pdf\">De vragen</a></p>\n<script>alert(1)</script>"
+    },
+    "featured_media": 501,
+    "_embedded": {
+      "author": [
+        {
+          "id": 2,
+          "name": "Thijs &amp; co"
+        }
+      ],
+      "wp:featuredmedia": [
+        {
+          "id": 501,
+          "source_url": "https://www.quizfabriek.be/wp-content/uploads/2019/03/foto.jpg"
+        }
+      ]
+    }
+  },
+  {
+    "id": 102,
+    "date": "2019-07-01T09:30:00",
+    "slug": "zomerquiz",
+    "status": "publish",
+    "title": {
+      "rendered": "Zomerquiz"
+    },
+    "excerpt": {
+      "rendered": "<p>Kijk de aftermovie</p>"
+    },
+    "content": {
+      "rendered": "<figure class=\"wp-block-embed is-type-video wp-block-embed-youtube\"><div class=\"wp-block-embed__wrapper\"><iframe title=\"Zomerquiz\" width=\"640\" height=\"360\" data-src=\"https://www.youtube.com/embed/abc123?feature=oembed\" src=\"data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=\" class=\"lazyload\" allowfullscreen></iframe></div></figure>\n<p>Tot volgend jaar.</p>"
+    },
+    "featured_media": 0,
+    "_embedded": {
+      "author": [
+        {
+          "id": 2,
+          "name": "Quizmaster"
+        }
+      ]
+    }
+  }
+]

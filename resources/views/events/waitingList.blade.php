@@ -6,13 +6,11 @@
 
 @section('content')
 
-    <h2>{{ $event->name }}</h2>
-
     @if(!$event->isSoldOut())
         <div class="alert alert-success">
             <p>
                 Er zijn nog tickets voor <strong>{{ $event->name }}</strong>.
-                Je kan nog gewoon <a href="{{ action('EventController@selectTicketCategory', [ $event->id ] ) }}"><i class="fa fa-ticket"></i> {{ $event->getOrderLabel() }}</a>.
+                Je kan nog gewoon <a href="{{ action('EventController@selectTicketCategory', [ $event->id ] ) }}">{{ $event->getOrderLabel() }}</a>.
             </p>
         </div>
 

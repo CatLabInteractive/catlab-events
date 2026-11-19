@@ -31,3 +31,6 @@ $(function () {
         });
     });
 });
+
+// CMS page editor (section blocks, repeaters, rich text).
+require('./cms-editor');

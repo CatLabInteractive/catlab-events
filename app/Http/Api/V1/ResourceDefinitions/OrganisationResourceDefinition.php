@@ -128,6 +128,16 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->visible()
             ->writeable();
 
+        // The CMS page rendered at / (and /en, /fr); empty keeps the
+        // calendar homepage. Must be a page of this organisation
+        // (OrganisationController::beforeSaveEntity()).
+        $this->field('home_page_id')
+            ->number()
+            ->label('Startpagina')
+            ->describe('Id van de CMS-pagina die als startpagina getoond wordt (zie Pagina\'s). Leeg: de kalender.')
+            ->visible()
+            ->writeable();
+
         $this->field('footer_html')
             ->visible()
             ->writeable();
@@ -141,6 +151,12 @@ class OrganisationResourceDefinition extends BaseResourceDefinition
             ->writeable();
 
         $this->field('chatwoot_livestream_token')
+            ->visible()
+            ->writeable();
+
+        // Site design colours, e.g. "#61cc6f/#fcc765, #5e2fff". Empty uses the default palette.
+        $this->field('theme_colours')
+            ->string()
             ->visible()
             ->writeable();
 

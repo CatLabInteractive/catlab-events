@@ -57,6 +57,16 @@ class EmailTemplates
     ];
 
     /**
+     * What a refused mail text says (the app has no validation language file).
+     */
+    const VALIDATION_MESSAGES = [
+        'required' => 'Vul :attribute in.',
+        'string' => ':Attribute moet tekst zijn.',
+        'max' => ':Attribute mag niet langer zijn dan :max tekens.',
+        'in' => 'Deze :attribute bestaat niet.',
+    ];
+
+    /**
      * Every mail an organisation can rewrite.
      */
     const ALL_TYPES = [ ...self::EVENT_TYPES, self::GROUP_INVITE ];

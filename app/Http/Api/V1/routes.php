@@ -42,6 +42,7 @@ $routes->group(
         \App\Http\Api\V1\Controllers\VenueController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\CompetitionController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\SeriesController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\SeriesPhotoController::setRoutes($routes);
 
         \App\Http\Api\V1\Controllers\Events\TicketCategoryController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\Events\EventDateController::setRoutes($routes);
@@ -52,6 +53,24 @@ $routes->group(
         \App\Http\Api\V1\Controllers\PeopleController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\LiveStreamController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\OrdersController::setRoutes($routes);
+
+        // CMS (pages; writes go through App\Cms\PageWriter)
+        \App\Http\Api\V1\Controllers\Cms\PageController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\Cms\PageTranslationController::setRoutes($routes);
+
+        // Blog posts (writes go through App\Cms\PostWriter)
+        \App\Http\Api\V1\Controllers\Cms\PostController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\Cms\PostTranslationController::setRoutes($routes);
+
+        // The library of named mail templates
+        \App\Http\Api\V1\Controllers\EmailTemplateController::setRoutes($routes);
+
+        // The automatic mails: the organisation's versions and layout, and each event's choice
+        \App\Http\Api\V1\Controllers\StandardMailController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\EmailLayoutController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\EventMailController::setRoutes($routes);
+
+        \App\Http\Api\V1\Controllers\AssetController::setRoutes($routes);
 
     }
 );

@@ -86,7 +86,7 @@ class EventController extends Controller
     public function index(Request $request)
     {
         /*
-        $events = Event::upcoming()->orderByStartDate()->get();
+        $events = Event::upcoming()->orderByStartDate()->withListRelations()->get();
         $pastEvents = Event::finished()->orderByStartDateDesc()->limit(5)->get();
 
         return view('events.publisher', [
@@ -101,6 +101,15 @@ class EventController extends Controller
         $organisation = $this->getOrganisation();
         if (!$organisation) {
             return redirect('admin');
+        }
+
+        // The organisation's CMS home page (organisations.home_page_id), if
+        // one is selected and published. Only on /, not on /events.
+        if ($request->path() === '/') {
+            $home = PageController::homeFor($organisation, config('cms.default_locale'));
+            if ($home) {
+                return app(PageController::class)->render($request, $home);
+            }
         }
 
         // Do we have an event that happens in the next 48 hours?
@@ -195,8 +204,8 @@ class EventController extends Controller
     {
         $organisation = $this->getOrganisation();
 
-        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->get();
-        $pastEvents = $organisation->events()->finished()->published()->orderByStartDateDesc()->get();
+        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->withListRelations()->get();
+        $pastEvents = $organisation->events()->finished()->published()->orderByStartDateDesc()->withListRelations()->get();
 
         return view('events.archive', [
             'events' => $events,
@@ -215,7 +224,7 @@ class EventController extends Controller
     {
         $organisation = $this->getOrganisation();
 
-        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->get();
+        $events = $organisation->events()->upcoming()->published()->orderByStartDate()->withListRelations()->get();
         return view('events.registerIndex', [
             'events' => $events,
             'nextEvent' => $this->getNextEvent($events),
@@ -230,14 +239,14 @@ class EventController extends Controller
         /** @var Organisation $organisation */
         $organisation = Organisation::findOrFail($organisationId);
 
-        $events = $organisation->events()->published()->upcoming()->orderByStartDate()->get();
-        $pastEvents = $organisation->events()->published()->finished()->orderByStartDateDesc()->get();
+        $events = $organisation->events()->published()->upcoming()->orderByStartDate()->withListRelations()->get();
+        $pastEvents = $organisation->events()->published()->finished()->orderByStartDateDesc()->withListRelations()->get();
 
-        return view('events.publisher', [
+        return view('events.archive', [
+            'pageTitle' => $organisation->name,
             'events' => $events,
             'pastEvents' => $pastEvents,
             'nextEvent' => $this->getNextEvent($events),
-            'countdownEvent' => $events->first(),
             'cities' => $this->getCities($events),
             'canonicalUrl' => action('EventController@fromPublisher', [ $organisationId ])
         ]);
@@ -261,8 +270,8 @@ class EventController extends Controller
         /** @var Venue $venue */
         $venue = Venue::findOrFail($venueId);
 
-        $events = $venue->events()->published()->upcoming()->orderByStartDate()->get();
-        $previousEvents = $venue->events()->published()->finished()->orderByStartDateDesc()->get();
+        $events = $venue->events()->published()->upcoming()->orderByStartDate()->withListRelations()->get();
+        $previousEvents = $venue->events()->published()->finished()->orderByStartDateDesc()->withListRelations()->get();
 
         return view('events.venue', [
             'venue' => $venue,
@@ -355,8 +364,44 @@ class EventController extends Controller
             'isAdmin' => $isAdmin,
             'ticketCategories' => $ticketCategories,
             'canonicalUrl' => $event->getUrl(),
-            'eventDateAttendees' => $eventDateAttendees
+            'eventDateAttendees' => $eventDateAttendees,
+            'ogTitle' => $event->name . ($event->series ? ' – ' . $event->series->name : ''),
+            'ogImageUrl' => $event->poster ? $event->poster->getUrl([ 'width' => 1200 ]) : null,
+            'metaDescription' => $this->describeEvent($event),
         ]);
+    }
+
+    /**
+     * Meta description for an event page: date, place and the start of the
+     * description, cut at a word boundary to what search results show.
+     * @param Event $event
+     * @return string|null
+     */
+    protected function describeEvent(Event $event)
+    {
+        $parts = [];
+
+        if ($event->startDate) {
+            $parts[] = ucfirst($event->startDate->copy()->locale('nl')->isoFormat('dddd D MMMM YYYY'));
+        }
+
+        if ($event->venue && $event->venue->city) {
+            $parts[] = $event->venue->name ? $event->venue->name . ', ' . $event->venue->city : $event->venue->city;
+        }
+
+        $intro = count($parts) > 0 ? implode(' · ', $parts) . '. ' : '';
+        $text = trim(preg_replace('/\s+/u', ' ', html_entity_decode(
+            \App\Tools\StringHelper::htmlToText((string) $event->description),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        )));
+
+        $description = trim($intro . $text);
+        if ($description === '') {
+            return null;
+        }
+
+        return \Illuminate\Support\Str::limit($description, 155, '…');
     }
 
     /**

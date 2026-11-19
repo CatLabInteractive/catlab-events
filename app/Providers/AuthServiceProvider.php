@@ -25,10 +25,15 @@ namespace App\Providers;
 use App\Models\Competition;
 use App\Models\Event;
 use App\Models\EventDate;
+use App\Models\SeriesPhoto;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\LiveStream;
 use App\Models\Order;
+use App\Models\Page;
+use App\Models\PageTranslation;
+use App\Models\Post;
+use App\Models\PostTranslation;
 use App\Models\Organisation;
 use App\Models\Person;
 use App\Models\Series;
@@ -42,8 +47,13 @@ use App\Policies\GroupPolicy;
 use App\Policies\LiveStreamPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\PagePolicy;
+use App\Policies\PageTranslationPolicy;
+use App\Policies\PostPolicy;
+use App\Policies\PostTranslationPolicy;
 use App\Policies\PersonPolicy;
 use App\Policies\SeriesPolicy;
+use App\Policies\SeriesPhotoPolicy;
 use App\Policies\TicketCategoriesPolicy;
 use App\Policies\VenuePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -72,7 +82,16 @@ class AuthServiceProvider extends ServiceProvider
         Person::class           => PersonPolicy::class,
         LiveStream::class       => LiveStreamPolicy::class,
         EventDate::class        => EventDatePolicy::class,
+        SeriesPhoto::class      => SeriesPhotoPolicy::class,
         Order::class            => OrderPolicy::class,
+        Page::class             => PagePolicy::class,
+        \App\Models\EmailTemplate::class => \App\Policies\EmailTemplatePolicy::class,
+        \App\Models\StandardMail::class => \App\Policies\StandardMailPolicy::class,
+        \App\Models\EmailLayout::class => \App\Policies\EmailLayoutPolicy::class,
+        \App\Models\EventMail::class => \App\Policies\EventMailPolicy::class,
+        PageTranslation::class  => PageTranslationPolicy::class,
+        Post::class             => PostPolicy::class,
+        PostTranslation::class  => PostTranslationPolicy::class,
 
     ];
 

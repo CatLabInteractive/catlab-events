@@ -1,13 +1,12 @@
 @extends('layouts/front')
 
 @section('title')
-    {{ $group->name }} Samenvoegen
+    {{ $group->name }} samenvoegen
 @endsection
 
 @section('content')
 
-    <h2>{{ $group->name }} samenvoegen</h2>
-    <p>
+    <p class="kv-lead">
         Door twee teams samen te voegen worden de scores van beide groepen gedeeld. Dat kan nodig zijn als je
         bijvoorbeeld per ongeluk twee groepen hebt aangemaakt. Om van deze functie gebruik te maken moet
         je administrator van beide teams zijn. Ben je dat niet? Vraag dan aan een administrator van de andere

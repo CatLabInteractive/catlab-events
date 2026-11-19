@@ -73,9 +73,6 @@ return [
 
     ],
 
-    'valid_domains' => env('VALID_DOMAINS') && trim(env('VALID_DOMAINS')) !== '' ?
-        array_map('trim', explode(',', env('VALID_DOMAINS'))) : null,
-
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -164,6 +161,7 @@ return [
         App\Providers\ErrbitServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\CmsServiceProvider::class,
         \CatLab\CharonFrontend\CharonFrontendServiceProvider::class,
         \CatLab\Accounts\Client\CatLabAccountsServiceProvider::class,
         \CatLab\Laravel\Table\TableServiceProvider::class,

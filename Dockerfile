@@ -3,6 +3,15 @@ ARG PHP_EXTENSIONS="mysqli pdo_mysql bcmath zip intl gd"
 
 FROM thecodingmachine/php:8.5-v5-slim-apache
 ENV APACHE_DOCUMENT_ROOT=public/
+# Cache-Control headers for static files (public/.htaccess) need mod_headers.
+ENV APACHE_EXTENSION_HEADERS=1
+
+# Cache config, routes and compiled views when the container starts (the
+# environment is only known then). Saves reading every config file and
+# registering every route on each request.
+ENV STARTUP_COMMAND_1="php artisan config:cache" \
+    STARTUP_COMMAND_2="php artisan route:cache" \
+    STARTUP_COMMAND_3="php artisan view:cache"
 
 # Configure locales
 USER root

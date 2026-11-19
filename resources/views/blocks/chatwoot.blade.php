@@ -1,6 +1,12 @@
 @if($organisation && $organisation->chatwoot_url)
     <script>
-        (function(d,t) {
+        {{-- Loaded once the visitor has answered the cookie banner (see layouts/blocks/head). --}}
+        window.kvLoadChat = function () {
+            if (window.kvChatLoaded) {
+                return;
+            }
+            window.kvChatLoaded = true;
+            (function(d,t) {
             var BASE_URL = "{{$organisation->chatwoot_url}}";
             var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
             g.src= BASE_URL + "/packs/js/sdk.js";
@@ -23,6 +29,11 @@
                     baseUrl: BASE_URL
                 })
             }
-        })(document,"script");
+            })(document,"script");
+        };
+
+        if (document.cookie.indexOf('cookie-consent-tracking-allowed=') !== -1) {
+            window.kvLoadChat();
+        }
     </script>
 @endif

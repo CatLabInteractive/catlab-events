@@ -1,0 +1,2 @@
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Vraag', 'name' => $rowName . '[question]', 'value' => $row['question'] ?? '', 'error' => $rowError . '.question', 'max' => 300, 'required' => true ] ])
+@include('admin.cms.blocks._field', [ 'field' => [ 'input' => 'html', 'label' => 'Antwoord', 'name' => $rowName . '[answer]', 'value' => $row['answer'] ?? '', 'error' => $rowError . '.answer', 'rows' => 4 ] ])

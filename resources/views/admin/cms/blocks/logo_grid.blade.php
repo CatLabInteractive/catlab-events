@@ -1,0 +1,2 @@
+@include('admin.cms.blocks._field', [ 'field' => [ 'label' => 'Titel', 'name' => $name . '[title]', 'value' => $data['title'] ?? '', 'error' => $error . '.title', 'max' => 120 ] ])
+@include('admin.cms.blocks._repeater', [ 'repeater' => [ 'key' => 'items', 'label' => 'Logo\'s', 'name' => $name, 'error' => $error, 'rows' => $data['items'] ?? [], 'max' => 40, 'row' => 'admin.cms.blocks._logo_row', 'add' => 'Logo toevoegen' ] ])

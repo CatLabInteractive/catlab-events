@@ -73,9 +73,10 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->string();
 
         // Name
+        // Not filterable: Charon's OpenAPI builder has no swagger type for
+        // html filter parameters, so /api/v1/description.json would 500.
         $this->field('description')
             ->visible()
-            ->filterable()
             ->writeable(true, true)
             ->required()
             ->html()

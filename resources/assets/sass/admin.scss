@@ -329,3 +329,102 @@ $sidebar-active-bg: $admin-accent;
     text-align: left;
   }
 }
+
+// CMS page editor: image fields and the image picker (cms-editor.js).
+.cms-image-preview {
+  max-width: 160px;
+  max-height: 90px;
+  object-fit: cover;
+  border: 1px solid $gray-300;
+}
+
+.cms-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-gap: 0.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  button {
+    padding: 0;
+    border: 2px solid transparent;
+    background: $gray-100;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      border-color: theme-color('primary');
+      outline: none;
+    }
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+  }
+
+  span {
+    display: block;
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // Several mode (a gallery): ticked images.
+  button {
+    position: relative;
+  }
+
+  button.is-selected {
+    border-color: theme-color('primary');
+    background: lighten(theme-color('primary'), 45%);
+
+    &:after {
+      content: "\2713";
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: theme-color('primary');
+      color: #fff;
+      font-size: 13px;
+      line-height: 22px;
+      text-align: center;
+    }
+  }
+}
+
+// Gallery: the photos as a grid of small tiles (photo, buttons, caption).
+.cms-block[data-block-type="gallery"] .cms-repeater-rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .cms-repeater-row { margin-bottom: 0 !important; }
+}
+
+.cms-gallery-row {
+  .form-group { margin-bottom: 0.5rem; }
+  .form-group:last-child { margin-bottom: 0; }
+  label { font-size: 0.8rem; }
+  .cms-image-field > label { display: none !important; }
+  .cms-image-field .d-flex { flex-wrap: wrap; }
+
+  .cms-image-preview {
+    width: 100%;
+    max-width: none;
+    height: 110px;
+    max-height: none;
+    margin: 0 0 0.35rem !important;
+  }
+
+  .cms-image-field .btn { padding: 0.1rem 0.4rem; font-size: 0.75rem; }
+}

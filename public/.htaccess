@@ -23,16 +23,19 @@
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 </IfModule>
 
-<IfModule mod_header.c>
+# The module is mod_headers (this block said mod_header.c, so it never ran
+# and nothing got a Cache-Control header). The Dockerfile enables it.
+<IfModule mod_headers.c>
 
-    # One year for image files
-    <filesMatch ".(jpg|jpeg|png|gif|ico)$">
+    # One year for images and fonts
+    <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp|woff|woff2|ttf|eot)$">
         Header set Cache-Control "max-age=31536000, public"
-    </filesMatch>
+    </FilesMatch>
 
-    # One month for css and js
-    <filesMatch ".(css|js)$">
-        Header set Cache-Control "max-age=2628000, public"
-    </filesMatch>
+    # css and js: laravel-mix adds ?id=<hash> to every URL, so a new build
+    # gets a new URL and a year is safe.
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
 
 </IfModule>

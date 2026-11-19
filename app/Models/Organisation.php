@@ -22,7 +22,9 @@
 
 namespace App\Models;
 
+use App\Cms\HtmlSanitizer;
 use App\Exceptions\NoOrganisationsFoundException;
+use App\Tools\ColourPalette;
 use App\Tools\StringHelper;
 use Carbon\Carbon;
 use CatLab\CentralStorage\Client\Models\Asset;
@@ -46,17 +48,56 @@ class Organisation extends Model
     private $userRoleCache = [];
 
     /**
+     * @var ColourPalette
+     */
+    private $colourPaletteCache;
+
+    /**
+     * Memoised per process by getRepresentedOrganisation().
+     * @var Organisation|null
+     */
+    private static $representedOrganisation;
+
+    /**
+     * footer_html is printed unescaped on every page: sanitise it on every
+     * write (admin, API, tinker) with the same rules as CMS rich text.
+     */
+    protected static function booted()
+    {
+        // A new home page leaves the menu (and the old one may join it).
+        static::saved(function (Organisation $organisation) {
+            if ($organisation->wasChanged('home_page_id')) {
+                app(\App\Cms\Menu::class)->forget((int) $organisation->id);
+            }
+        });
+
+        static::saving(function (Organisation $organisation) {
+            if ($organisation->isDirty('footer_html') && $organisation->footer_html !== null) {
+                $clean = app(HtmlSanitizer::class)->sanitize($organisation->footer_html);
+                $organisation->footer_html = $clean === '' ? null : $clean;
+            }
+        });
+    }
+
+    /**
      * @return Organisation
      */
     public static function getRepresentedOrganisation()
     {
-        static $representedOrganisation;
-
-        if (!isset($representedOrganisation)) {
-            $representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST'] ?? '');
+        if (!isset(self::$representedOrganisation)) {
+            self::$representedOrganisation = self::getFromDomainOrFirst($_SERVER['HTTP_HOST'] ?? '');
         }
 
-        return $representedOrganisation;
+        return self::$representedOrganisation;
+    }
+
+    /**
+     * Forget the memoised organisation so the next call resolves it from
+     * $_SERVER['HTTP_HOST'] again. Tests only.
+     */
+    public static function resetRepresentedOrganisation()
+    {
+        self::$representedOrganisation = null;
     }
 
     /**
@@ -152,6 +193,39 @@ class Organisation extends Model
     public function emailLayout()
     {
         return $this->hasOne(EmailLayout::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function pages()
+    {
+        return $this->hasMany(Page::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function cmsRedirects()
+    {
+        return $this->hasMany(CmsRedirect::class);
+    }
+
+    /**
+     * The CMS page rendered at / (and /en, /fr) instead of the series page.
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function homePage()
+    {
+        return $this->belongsTo(Page::class, 'home_page_id');
     }
 
     /**
@@ -266,6 +340,21 @@ class Organisation extends Model
     /**
      * @return mixed
      */
+    /**
+     * The series colours used by the site design.
+     * @return ColourPalette
+     */
+    public function getColourPalette()
+    {
+        if (!isset($this->colourPaletteCache)) {
+            $this->colourPaletteCache = new ColourPalette($this->theme_colours);
+        }
+        return $this->colourPaletteCache;
+    }
+
+    /**
+     * @return string
+     */
     public function getLegalName()
     {
         if ($this->legal_name) {
@@ -284,6 +373,10 @@ class Organisation extends Model
     }
 
     /**
+     * Schema.org Organization: who we are, how to reach us and where else we
+     * live online. Search engines and AI assistants use this to tell what the
+     * organisation is, so it is the one Organization block on every page and
+     * the organizer of every event.
      * @return array
      */
     public function getJsonLd()
@@ -291,48 +384,52 @@ class Organisation extends Model
         $out = [
             "@context" => "http://schema.org",
             "@type" => "Organization",
-            "name" => $this->name ,
+            "name" => $this->name,
             "url" => request()->root(),
-            "sameAs" => [
-
-            ]
+            "description" => $this->getDescription(),
         ];
 
-        $sameAs = [
-            'website_url',
-            'facebook_url',
-            'youtube_url',
-            'instagram_url',
-            'googleplus_url',
-            'twitter_url'
-        ];
+        if ($this->legal_name && $this->legal_name !== $this->name) {
+            $out['legalName'] = $this->legal_name;
+        }
 
-        foreach ($sameAs as $v) {
-            if ($this->$v) {
-                $out['sameAs'][] = $this->$v;
-            }
+        if ($this->logo) {
+            $out['logo'] = $this->logo->getUrl();
+        }
+
+        if ($this->support_email) {
+            $out['email'] = $this->support_email;
+            $out['contactPoint'] = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $this->support_email,
+            ];
+        }
+
+        $address = trim(strip_tags((string) $this->address));
+        if ($address !== '') {
+            $out['address'] = preg_replace('/\s*\n\s*/', ', ', $address);
+        }
+
+        $sameAs = array_values($this->getSocialLinks());
+        if ($this->website_url && rtrim($this->website_url, '/') !== rtrim(request()->root(), '/')) {
+            $sameAs[] = $this->website_url;
+        }
+        if (count($sameAs) > 0) {
+            $out['sameAs'] = array_values(array_unique($sameAs));
         }
 
         return $out;
     }
 
     /**
-     * @return string[]
+     * One or two sentences on what the organisation does: the default meta
+     * description and the summary in llms.txt.
+     * @return string
      */
-    public function getOrganisationJsonLd()
+    public function getDescription(): string
     {
-        $out = [
-            "@context" => "http://schema.org",
-            "@type" => "Organization",
-            "name" => $this->name,
-            "url" => request()->root()
-        ];
-
-        if ($this->logo) {
-            $out['logo'] = $this->logo->getUrl();
-        }
-
-        return $out;
+        return (string) config('seo.default_description');
     }
 
     /**

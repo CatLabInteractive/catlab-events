@@ -63,7 +63,8 @@ class Kernel extends HttpKernel
             // VerifyCsrfToken::$except.
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\ValidDomain::class,
+            \App\Http\Middleware\CanonicalDomain::class,
+            \App\Http\Middleware\RobotsHeader::class,
             \Spatie\Referer\CaptureReferer::class,
         ],
 
@@ -88,5 +89,6 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'admin' => \App\Http\Middleware\IsAdmin::class,
+        'cms.locale' => \App\Http\Middleware\SetCmsLocale::class,
     ];
 }

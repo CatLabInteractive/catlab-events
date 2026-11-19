@@ -21,6 +21,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Pages render as on production (indexable); SeoTest covers the noindex mode. -->
+        <env name="SEO_INDEXABLE" value="true"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="QUEUE_DRIVER" value="sync"/>
