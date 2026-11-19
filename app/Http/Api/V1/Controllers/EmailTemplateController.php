@@ -28,6 +28,7 @@ use App\Http\Api\V1\ResourceDefinitions\EmailTemplateResourceDefinition;
 use App\Models\EmailTemplate;
 use App\Models\Organisation;
 use App\Services\EmailTemplates;
+use App\Services\MailHtml;
 use CatLab\Charon\Collections\RouteCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -154,6 +155,8 @@ class EmailTemplateController extends ResourceController
         if ($template->exists) {
             $unique->ignore($template->id);
         }
+
+        $template->content = MailHtml::clean($template->content);
 
         Validator::make([
             'type' => $template->type,

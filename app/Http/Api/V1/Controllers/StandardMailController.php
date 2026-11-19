@@ -28,6 +28,7 @@ use App\Http\Api\V1\ResourceDefinitions\StandardMailResourceDefinition;
 use App\Models\Organisation;
 use App\Models\StandardMail;
 use App\Services\EmailTemplates;
+use App\Services\MailHtml;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Charon\Enums\Action;
 use Illuminate\Database\Eloquent\Model;
@@ -157,6 +158,8 @@ class StandardMailController extends ResourceController
     {
         /** @var StandardMail $entity */
         return $this->throughWriter(function () use ($entity) {
+            $entity->content = MailHtml::clean($entity->content);
+
             Validator::make([
                 'subject' => $entity->subject,
                 'content' => $entity->content,

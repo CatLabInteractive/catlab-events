@@ -23,6 +23,7 @@
 namespace App\Services\Admin\Widgets;
 
 use App\Services\EmailTemplates;
+use App\Services\MailHtml;
 use CatLab\CharonFrontend\Widgets\BaseWidget;
 use CatLab\CharonFrontend\Widgets\FormField;
 use Illuminate\Http\Request;
@@ -76,7 +77,9 @@ class EmailContentWidget extends BaseWidget
         }
 
         return [
-            'content' => is_scalar($content) ? (string) $content : '',
+            // Stored before mails were cleaned on save, or typed in a refused
+            // form: never put it in the page as it is.
+            'content' => is_scalar($content) ? (string) MailHtml::clean((string) $content) : '',
             'placeholders' => $templates->getPlaceholders($type),
             'previewAction' => call_user_func($this->previewUrl, $field, $type),
             'previewCaption' => $this->previewCaption,

@@ -28,6 +28,7 @@ use App\Http\Api\V1\ResourceDefinitions\EventMailResourceDefinition;
 use App\Models\Event;
 use App\Models\EventMail;
 use App\Services\EmailTemplates;
+use App\Services\MailHtml;
 use CatLab\Charon\Collections\RouteCollection;
 use CatLab\Charon\Enums\Action;
 use Illuminate\Database\Eloquent\Model;
@@ -176,6 +177,8 @@ class EventMailController extends ResourceController
                 $entity->subject = null;
                 $entity->content = null;
             } else {
+                $entity->content = MailHtml::clean($entity->content);
+
                 Validator::make([
                     'subject' => $entity->subject,
                     'content' => $entity->content,
