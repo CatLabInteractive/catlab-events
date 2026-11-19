@@ -23,6 +23,7 @@
 namespace App\Cms\Import;
 
 use App\Cms\HtmlSanitizer;
+use App\Cms\GalleryExtractor;
 use App\Cms\PageWriter;
 use App\Cms\PostWriter;
 use App\Models\CmsRedirect;
@@ -424,6 +425,8 @@ class WordPressImporter
 
         $flat = [ [ 'id' => PageWriter::newBlockId(), 'type' => 'rich_text', 'data' => [ 'html' => $body ] ] ];
         $blocks = $this->elementorBlocks($html, $wpId, $organisation, $dryRun) ?? $flat;
+        // Galleries and runs of photos in the text become gallery blocks.
+        $blocks = GalleryExtractor::forOrganisation($organisation)->extract($blocks);
         $summary = implode(', ', array_map(function ($block) {
             return $block['type'];
         }, $blocks));

@@ -374,4 +374,57 @@ $sidebar-active-bg: $admin-accent;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+
+  // Several mode (a gallery): ticked images.
+  button {
+    position: relative;
+  }
+
+  button.is-selected {
+    border-color: theme-color('primary');
+    background: lighten(theme-color('primary'), 45%);
+
+    &:after {
+      content: "\2713";
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: theme-color('primary');
+      color: #fff;
+      font-size: 13px;
+      line-height: 22px;
+      text-align: center;
+    }
+  }
+}
+
+// Gallery: the photos as a grid of small tiles (photo, buttons, caption).
+.cms-block[data-block-type="gallery"] .cms-repeater-rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .cms-repeater-row { margin-bottom: 0 !important; }
+}
+
+.cms-gallery-row {
+  .form-group { margin-bottom: 0.5rem; }
+  .form-group:last-child { margin-bottom: 0; }
+  label { font-size: 0.8rem; }
+  .cms-image-field > label { display: none !important; }
+  .cms-image-field .d-flex { flex-wrap: wrap; }
+
+  .cms-image-preview {
+    width: 100%;
+    max-width: none;
+    height: 110px;
+    max-height: none;
+    margin: 0 0 0.35rem !important;
+  }
+
+  .cms-image-field .btn { padding: 0.1rem 0.4rem; font-size: 0.75rem; }
 }

@@ -57,6 +57,7 @@ class BlockRenderingTest extends IntegrationTestCase
                 'items' => [ [ 'title' => 'Kaart een', 'text' => 'Uitleg', 'icon' => 'trophy', 'url' => '/over-ons' ] ],
             ]),
             $this->block('logo_grid', [ 'title' => 'Partners', 'items' => [ [ 'name' => 'Partner NV', 'url' => 'https://partner.test' ] ] ]),
+            $this->block('gallery', [ 'title' => 'In beeld', 'items' => [ [ 'image_id' => $asset->id, 'caption' => 'De zaal' ] ] ]),
             $this->block('reviews', [ 'title' => 'Recensies', 'items' => [ [ 'quote' => 'Fantastische avond', 'author' => 'Jan', 'source' => 'Google' ] ] ]),
             $this->block('cta', [
                 'title' => 'Boek nu', 'text' => 'Bel ons', 'background' => 'dark',
@@ -86,6 +87,8 @@ class BlockRenderingTest extends IntegrationTestCase
         $response->assertSee('Kaart een');
         $response->assertSee('fa-trophy', false);
         $response->assertSee('Partner NV');
+        $response->assertSee('In beeld');
+        $response->assertSee('data-kv-caption="De zaal"', false);
         $response->assertSee('Fantastische avond');
         $response->assertSee('kv-cms-cta-dark', false);
         $response->assertSee('href="tel:+3291234567"', false);
@@ -100,6 +103,44 @@ class BlockRenderingTest extends IntegrationTestCase
 
         // The page title is not repeated as a second H1 when a hero leads.
         $this->assertSame(1, substr_count($response->getContent(), '<h1'));
+    }
+
+    public function testGalleryLinksEveryPhotoToTheLightboxAndFoldsLongOnes()
+    {
+        $organisation = $this->createOrganisation();
+        $asset = $this->createAsset();
+        // An image deleted since.
+        $deletedId = $asset->id + 1000;
+
+        $items = [ [ 'image_id' => $deletedId, 'caption' => 'Weg' ] ];
+        for ($i = 1; $i <= 15; $i++) {
+            $items[] = [ 'image_id' => $asset->id, 'caption' => $i === 1 ? 'Eerste <foto>' : null ];
+        }
+
+        $this->createPage($organisation, 'fotos', [
+            $this->block('gallery', [ 'title' => 'Foto\'s', 'layout' => 'featured', 'visible' => 6, 'items' => $items ], 'aaaaaa'),
+            $this->block('gallery', [ 'title' => 'Leeg', 'items' => [ [ 'image_id' => $deletedId ] ] ], 'bbbbbb'),
+            $this->block('gallery', [ 'title' => 'Kort', 'visible' => 12, 'items' => array_slice($items, 1, 13) ], 'cccccc'),
+        ]);
+
+        $html = $this->get('/fotos')->assertStatus(200)->getContent();
+
+        // 15 photos; the deleted one is left out.
+        $this->assertSame(15, substr_count($html, 'data-kv-gallery="g-aaaaaa"'));
+        $this->assertStringNotContainsString('Weg', $html);
+        $this->assertStringContainsString('kv-gallery kv-gallery-featured', $html);
+        $this->assertStringContainsString('kv-gallery-item kv-gallery-big', $html);
+        $this->assertStringContainsString('data-kv-caption="Eerste &lt;foto&gt;"', $html);
+        $this->assertStringContainsString('alt="Eerste &lt;foto&gt;"', $html);
+        $this->assertStringContainsString('aria-label="Foto 1 van 15 vergroten: Eerste &lt;foto&gt;"', $html);
+        // Featured: the big photo plus an even number.
+        $this->assertStringContainsString('data-kv-gallery-visible="7"', $html);
+        $this->assertStringContainsString('Toon alle 15 foto\'s', $html);
+
+        // A gallery without photos is skipped; 13 photos with 12 visible do not fold.
+        $this->assertStringNotContainsString('id="b-bbbbbb"', $html);
+        $this->assertStringContainsString('id="b-cccccc"', $html);
+        $this->assertSame(1, substr_count($html, 'data-kv-gallery-visible='));
     }
 
     public function testPageWithoutHeroShowsItsTitleAsH1()

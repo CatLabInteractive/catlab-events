@@ -12,7 +12,7 @@ class BlockRegistryTest extends TestCase
     public function testAllV1BlockTypesAreRegistered()
     {
         $this->assertEqualsCanonicalizing(
-            [ 'hero', 'rich_text', 'text_image', 'cards', 'logo_grid', 'reviews', 'cta', 'video', 'upcoming_events', 'latest_posts', 'faq' ],
+            [ 'hero', 'rich_text', 'text_image', 'cards', 'logo_grid', 'gallery', 'reviews', 'cta', 'video', 'upcoming_events', 'latest_posts', 'faq' ],
             array_keys(config('cms.blocks'))
         );
     }

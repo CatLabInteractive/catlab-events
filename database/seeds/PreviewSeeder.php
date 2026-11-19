@@ -118,6 +118,9 @@ class PreviewSeeder extends Seeder
         $wide = $this->asset('wide.jpg', 1600, 900, $organisation);
         $square = $this->asset('square.jpg', 1200, 1200, $organisation);
         $logo = $this->asset('logo.png', 160, 180, $organisation);
+        $portrait = $this->asset('portrait.jpg', 1000, 1414, $organisation);
+        $panorama = $this->asset('panorama.jpg', 2400, 700, $organisation);
+        $header = $this->asset('header.jpg', 1280, 768, $organisation);
         $n = 0;
         $block = function ($type, array $data) use (&$n) {
             return [ 'id' => sprintf('%06x', ++$n), 'type' => $type, 'data' => $data ];
@@ -169,6 +172,12 @@ class PreviewSeeder extends Seeder
                     'title' => 'Voorbeeld: tekst en beeld', 'image_id' => $square->id, 'image_position' => 'right',
                     'html' => '<p>Voorbeeldtekst naast een afbeelding, met een korte lijst eronder.</p><ul><li>Eerste punt</li><li>Tweede punt</li><li>Derde punt</li></ul>',
                     'button' => [ 'label' => 'Maak kennis', 'url' => '/over-ons' ],
+                ]),
+                $block('gallery', [
+                    'title' => 'Voorbeeld: fotogalerij', 'intro' => 'Klik op een foto om ze groot te bekijken.', 'layout' => 'featured', 'visible' => 6,
+                    'items' => array_map(function ($asset, $i) {
+                        return [ 'image_id' => $asset->id, 'caption' => $i % 3 === 0 ? 'Voorbeeldonderschrift ' . ($i + 1) : null ];
+                    }, $gallery = [ $wide, $portrait, $square, $panorama, $header, $wide, $square, $portrait, $wide, $square ], array_keys($gallery)),
                 ]),
                 $block('reviews', [
                     'title' => 'Voorbeeld: recensies',
