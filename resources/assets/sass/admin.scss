@@ -279,7 +279,7 @@ $sidebar-active-bg: $admin-accent;
     border-right: 0;
     border-radius: 0;
 
-    &:has(+ .table-filter-value[hidden]) {
+    &:has(~ .table-filter-value[hidden]) {
       border-right: 1px solid $admin-border-color;
       border-radius: 0 3px 3px 0;
     }
