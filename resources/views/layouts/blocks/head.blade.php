@@ -64,7 +64,7 @@
             return;
         }
         window.cookieConsent = new CookieConsent({
-            privacyPolicyUrl: '/docs/en/privacy',
+            privacyPolicyUrl: @json(\App\Tools\LegalDocuments::privacyUrl()),
             buttonPrimaryClass: 'kv-cc-primary',
             buttonSecondaryClass: 'kv-cc-secondary',
             // The chat bubble waits until a choice is made, so it never covers the banner.

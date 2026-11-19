@@ -41,7 +41,9 @@ return [
         'client_secret' => env('CATLAB_CLIENT_SECRET'),
         'redirect'=> env('APP_URL') . '/login/callback',
         'authorizePath'=> '/oauth2/authorize?reset=1&language=nl&',
-        'model' => \App\Models\User::class
+        'model' => \App\Models\User::class,
+        // Privacy policy and terms of use (see App\Tools\LegalDocuments).
+        'docs_url' => env('CATLAB_DOCS_URL', 'https://accounts.catlab.eu/docs'),
     ],
 
     'quizwitz' => [

@@ -181,8 +181,8 @@
                     De betaling verloopt via de beveiligde betaalpagina van
                     <a href="{{ config('app.owner.url') }}" target="_blank">{{ config('app.owner.name') }}</a>.
                     Onbetaalde bestellingen vervallen na {{ \App\Models\Event::ORDER_TIMEOUT_MINUTES }} minuten.
-                    Zie ook ons <a href="{{ action('DocumentController@privacy') }}">privacybeleid</a> en de
-                    <a href="{{ action('DocumentController@tos') }}">gebruiksvoorwaarden</a>.
+                    Zie ook ons <a href="{{ \App\Tools\LegalDocuments::privacyUrl() }}">privacybeleid</a> en de
+                    <a href="{{ \App\Tools\LegalDocuments::termsUrl() }}">gebruiksvoorwaarden</a>.
                 </p>
                 @if($event->venue)
                     <p>

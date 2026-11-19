@@ -82,8 +82,8 @@
                     Copyright © 2016-{{ date('y') }} @if(organisation()->website_url)<a target="_blank" href="{{organisation()->website_url}}">{{organisation()->getLegalName()}}</a>@else{{organisation()->getLegalName()}}@endif.
                     Website en ticketsysteem aangeboden door <a href="{{ config('app.owner.url') }}">{{ config('app.owner.name') }}</a>.
                     <a href="http://www.quizwitz.com/">QuizWitz</a> is een geregistreerd merk van <a href="https://www.catlab.eu/">CatLab Interactive</a>.
-                    Lees ons <a href="{{ action('DocumentController@privacy') }}">Privacy beleid</a> en
-                    <a href="{{ action('DocumentController@tos') }}">Gebruiksvoorwaarden</a>.
+                    Lees ons <a href="{{ \App\Tools\LegalDocuments::privacyUrl() }}">Privacy beleid</a> en
+                    <a href="{{ \App\Tools\LegalDocuments::termsUrl() }}">Gebruiksvoorwaarden</a>.
                     Deze website is een <a href="https://github.com/CatLabInteractive/catlab-events">open source</a> project.
                 </p>
 
