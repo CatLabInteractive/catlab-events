@@ -300,8 +300,12 @@
             menubar: false,
             branding: false,
             promotion: false,
-            height: textarea.rows > 6 ? 400 : 220,
-            plugins: 'link image lists table media code',
+            // The editor grows with its text (like the other text fields of
+            // the admin) and keeps its toolbar in view while you scroll.
+            min_height: textarea.rows > 6 ? 400 : 220,
+            autoresize_bottom_margin: 24,
+            toolbar_sticky: true,
+            plugins: 'link image lists table media code autoresize',
             toolbar: 'undo redo | blocks | bold italic underline | bullist numlist blockquote | link image media table | code',
             block_formats: 'Paragraaf=p; Kop 2=h2; Kop 3=h3; Kop 4=h4',
             // Client-side comfort only: the server sanitiser (App\Cms\HtmlSanitizer) is the authority.

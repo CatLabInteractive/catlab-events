@@ -14,7 +14,7 @@
                 De layout moet precies één keer <code>&#123;&#123; content &#125;&#125;</code> bevatten.
             </p>
             <textarea class="form-control" id="{{ $field->getId() }}" name="{{ $field->getInputName() }}" rows="16"
-                      style="font-family: monospace;" data-layout-source>{{ $html }}</textarea>
+                      style="font-family: monospace;" data-layout-source data-charon-autogrow>{{ $html }}</textarea>
             <textarea hidden data-layout-default>{{ $defaultHtml }}</textarea>
 
             @if($hasCustomHtml)
@@ -72,6 +72,9 @@
                     if (reset) {
                         reset.addEventListener('click', function () {
                             source.value = widget.querySelector('[data-layout-default]').value;
+                            if (window.CharonFrontend && window.CharonFrontend.autogrow) {
+                                window.CharonFrontend.autogrow(source);
+                            }
                             schedulePreview();
                         });
                     }

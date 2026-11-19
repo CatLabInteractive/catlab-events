@@ -12,7 +12,7 @@
     {{-- The editor holds admin-written HTML; the textarea is what gets posted. --}}
     <div contenteditable="true" data-email-rich
          style="border: 1px solid #ddd; padding: 15px; min-height: 300px; background: #fff;">{!! $content !!}</div>
-    <textarea name="{{ $field->getInputName() }}" id="{{ $field->getId() }}" class="form-control" data-email-source
+    <textarea name="{{ $field->getInputName() }}" id="{{ $field->getId() }}" class="form-control" data-email-source data-charon-autogrow
               style="display: none; min-height: 400px; font-family: monospace;">{{ $content }}</textarea>
 
     <h4 class="mt-3">Beschikbare velden</h4>
