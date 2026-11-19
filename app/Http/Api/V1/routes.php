@@ -39,6 +39,7 @@ $routes->group(
 
         \App\Http\Api\V1\Controllers\Events\EventController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\OrganisationController::setRoutes($routes);
+        \App\Http\Api\V1\Controllers\OrganisationDomainController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\VenueController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\CompetitionController::setRoutes($routes);
         \App\Http\Api\V1\Controllers\SeriesController::setRoutes($routes);

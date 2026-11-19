@@ -71,6 +71,7 @@
                     <li class="sidebar-heading">Website</li>
                     {!! $navItem('pages', action('Admin\PageController@index'), 'Pagina\'s') !!}
                     {!! $navItem('posts', action('Admin\PostController@index'), 'Blogberichten') !!}
+                    {!! $navItem('domains', action('Admin\DomainController@index'), 'Domeinen') !!}
                 </ul>
 
                 <ul class="sidebar-nav sidebar-section">

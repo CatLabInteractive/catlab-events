@@ -97,6 +97,9 @@ Route::group([
             \App\Http\Controllers\Admin\PostController::routes('posts', 'Admin\PostController');
             \App\Http\Controllers\Admin\PostTranslationController::routes('posts/{post}/translations', 'Admin\PostTranslationController');
 
+            // The domains the organisation's site answers on, and the canonical one
+            \App\Http\Controllers\Admin\DomainController::routes('domains', 'Admin\DomainController', 'id');
+
             // Image picker and uploads of the CMS widgets (json)
             \App\Http\Controllers\Admin\CmsAssetController::routes();
 

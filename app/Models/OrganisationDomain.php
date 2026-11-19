@@ -25,11 +25,23 @@ namespace App\Models;
 use CatLab\Charon\Laravel\Database\Model;
 
 /**
+ * A host name an organisation's site answers on. Which organisation a
+ * request belongs to is looked up by its host here (Organisation::
+ * getFromDomainOrFirst), and with seo.canonical_redirect on, requests on
+ * the other domains of an organisation are 301'd to the one is_canonical.
+ * Written through App\Services\OrganisationDomains.
+ *
  * Class OrganisationDomain
  * @package App\Models
  */
 class OrganisationDomain extends Model
 {
+    protected $fillable = [ 'domain', 'is_canonical' ];
+
+    protected $casts = [
+        'is_canonical' => 'boolean',
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
