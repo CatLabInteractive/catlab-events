@@ -125,6 +125,83 @@
         });
     }
 
+    /* ---------- Scroll reveal (every page) ---------- */
+
+    // Content below the fold fades in and rises a little the first time it
+    // scrolls into view, like the main site. What is on screen when the page
+    // loads is never hidden, nor is anything without JS, with reduced motion,
+    // or inside a form. Split blocks and review rows come in from the side.
+    var REVEAL = [
+        '.kv-sec-title', '.kv-cms-head', '.kv-cms-intro',
+        '.kv-card', '.kv-tile', '.kv-post', '.kv-past', '.kv-ticket', '.kv-faq-item', '.kv-logo',
+        '.kv-review-row', '.kv-review',
+        '.kv-cms-split-text', '.kv-cms-split-image', '.kv-cms-split-video',
+        '.kv-cms-cta-inner', '.kv-video', '.kv-prose', '.kv-text', '.kv-list'
+    ].join(',');
+
+    function initReveal() {
+        if (!('IntersectionObserver' in window) ||
+            (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+            return;
+        }
+
+        var fold = window.innerHeight;
+        var targets = [];
+        each(REVEAL, function (el) {
+            // Nested targets ride along with their parent.
+            if (el.closest('form, [data-kv-no-reveal]') ||
+                (el.parentElement && el.parentElement.closest(REVEAL)) ||
+                el.getBoundingClientRect().top < fold) {
+                return;
+            }
+            targets.push(el);
+        });
+
+        // Review rows alternate sides; a split block's image comes in from
+        // its own side and the text from the other.
+        each('.kv-reviews', function (list) {
+            Array.prototype.forEach.call(list.children, function (row, i) {
+                row.classList.add(i % 2 ? 'kv-reveal-right' : 'kv-reveal-left');
+            });
+        });
+        each('.kv-cms-text-image', function (block) {
+            var left = block.classList.contains('kv-cms-image-left');
+            each('.kv-cms-split-text', function (el) {
+                el.classList.add(left ? 'kv-reveal-right' : 'kv-reveal-left');
+            }, block);
+            each('.kv-cms-split-image, .kv-cms-split-video', function (el) {
+                el.classList.add(left ? 'kv-reveal-left' : 'kv-reveal-right');
+            }, block);
+        });
+
+        function done(el) {
+            el.classList.remove('kv-reveal', 'kv-reveal-in', 'kv-reveal-left', 'kv-reveal-right');
+            el.style.transitionDelay = '';
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            var step = 0;
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                var el = entry.target;
+                observer.unobserve(el);
+                // Items that arrive together follow each other closely.
+                var delay = Math.min(step++, 4) * 80;
+                el.style.transitionDelay = delay + 'ms';
+                el.classList.add('kv-reveal-in');
+                // Back to its own styles (and transitions) once it has landed.
+                setTimeout(function () { done(el); }, delay + 800);
+            });
+        }, { rootMargin: '0px 0px -8% 0px' });
+
+        targets.forEach(function (el) {
+            el.classList.add('kv-reveal');
+            observer.observe(el);
+        });
+    }
+
     /* ---------- Phone order bar (events/view) ---------- */
 
     // Shown while neither the hero button nor the ticket list is on screen.
@@ -280,6 +357,7 @@
         initPopups();
         initTeamSelect();
         initCopyButtons();
+        initReveal();
     }
 
     if (document.readyState === 'loading') {
