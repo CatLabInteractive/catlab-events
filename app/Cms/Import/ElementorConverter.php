@@ -22,6 +22,7 @@
 
 namespace App\Cms\Import;
 
+use App\Cms\Blocks\Types\Gallery;
 use App\Cms\PageWriter;
 use CatLab\CentralStorage\Client\Models\Asset;
 use DOMDocument;
@@ -39,8 +40,10 @@ use DOMXPath;
  * - one image column next to a text column → text_image, or a reviews item
  *   when the text is a quote (“…”);
  * - columns (or repeated image + heading groups) → cards;
- * - a gallery → a rich_text gallery; a buttons-only section → the buttons
- *   join the previous block, or become a cta;
+ * - a gallery, or a section of mostly loose images (MIN_GALLERY or more) →
+ *   gallery, with the heading (and short text) before it as its title and
+ *   intro; a buttons-only section → the buttons join the previous block,
+ *   or become a cta;
  * - anything else → rich_text (headings, text, lists, images, links).
  *
  * Consecutive reviews and cards blocks are merged. Icons, spacers,
@@ -53,6 +56,11 @@ use DOMXPath;
  */
 class ElementorConverter
 {
+    /**
+     * Loose image widgets in one section that make a gallery.
+     */
+    const MIN_GALLERY = 4;
+
     const SKIPPED_WIDGETS = [ 'spacer', 'divider', 'menu-anchor', 'social-icons', 'html', 'icon', 'shortcode', 'google_maps' ];
 
     /**
@@ -277,6 +285,10 @@ class ElementorConverter
                 }
                 if ($type !== 'image') {
                     $widget['type'] = 'gallery';
+                    // Elementor's masonry and justified layouts keep each photo's shape.
+                    $settings = json_decode((string) $element->getAttribute('data-settings'), true);
+                    $layout = is_array($settings) ? ($settings['gallery_layout'] ?? null) : null;
+                    $widget['layout'] = in_array($layout, [ 'masonry', 'justified' ], true) ? 'mosaic' : 'grid';
                 }
                 return $widget['images'] ? $widget : null;
 
@@ -385,6 +397,28 @@ class ElementorConverter
 
         if ($first && $headings) {
             return $this->hero($widgets, $style['image'] ?? null);
+        }
+
+        // Mostly loose photos (not a team or a row of cards): one gallery,
+        // in the place of the first photo.
+        $imageWidgets = $this->ofType($widgets, 'image');
+        if (!isset($count['gallery']) && count($imageWidgets) >= self::MIN_GALLERY && count($headings) <= 1) {
+            $merged = [];
+            $placed = false;
+            foreach ($widgets as $widget) {
+                if ($widget['type'] !== 'image') {
+                    $merged[] = $widget;
+                } elseif (!$placed) {
+                    $merged[] = array_merge($widget, [ 'type' => 'gallery', 'layout' => 'grid', 'images' => $images ]);
+                    $placed = true;
+                }
+            }
+            $widgets = $merged;
+            $count['gallery'] = 1;
+        }
+
+        if (isset($count['gallery'])) {
+            return $this->galleries($widgets);
         }
 
         // A hand-made list of events (buttons to /e/…): the live list instead,
@@ -559,6 +593,65 @@ class ElementorConverter
         }
 
         return [ $this->richText($widgets) ];
+    }
+
+    /**
+     * A section with gallery widgets: each one a gallery block, the heading
+     * (and a short text) right before it as its title (and intro), the
+     * other widgets as rich text in between.
+     * @param array[] $widgets
+     * @return array[]
+     */
+    private function galleries(array $widgets): array
+    {
+        $out = [];
+        $before = [];
+        foreach ($widgets as $widget) {
+            if ($widget['type'] !== 'gallery') {
+                $before[] = $widget;
+                continue;
+            }
+
+            $items = [];
+            foreach ($widget['images'] as $image) {
+                if ($image['asset'] && count($items) < Gallery::MAX_ITEMS) {
+                    $items[] = [ 'image_id' => $image['asset']->id, 'caption' => $this->limit($image['alt'] ?: null, 200) ];
+                }
+            }
+            if (!$items) {
+                continue;
+            }
+
+            $title = null;
+            $intro = null;
+            $n = count($before);
+            if ($n >= 2 && $before[$n - 2]['type'] === 'heading' && $before[$n - 1]['type'] === 'text-editor'
+                && mb_strlen($before[$n - 1]['text']) <= 500 && strpos($before[$n - 1]['html'], '<img') === false) {
+                $intro = $before[$n - 1]['text'];
+                $title = $before[$n - 2]['text'];
+                $before = array_slice($before, 0, $n - 2);
+            } elseif ($n >= 1 && $before[$n - 1]['type'] === 'heading') {
+                $title = $before[$n - 1]['text'];
+                $before = array_slice($before, 0, $n - 1);
+            }
+            if ($before) {
+                $out[] = $this->richText($before);
+                $before = [];
+            }
+
+            $out[] = $this->block('gallery', [
+                'title' => $this->limit($title !== null ? $this->label($title) : null, 120),
+                'intro' => $intro,
+                'layout' => $widget['layout'] ?? 'grid',
+                'visible' => 12,
+                'items' => $items,
+            ]);
+        }
+        if ($before) {
+            $out[] = $this->richText($before);
+        }
+
+        return $out;
     }
 
     /**

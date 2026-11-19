@@ -136,7 +136,7 @@
         '.kv-card', '.kv-tile', '.kv-post', '.kv-past', '.kv-ticket', '.kv-faq-item', '.kv-logo',
         '.kv-review-row', '.kv-review',
         '.kv-cms-split-text', '.kv-cms-split-image', '.kv-cms-split-video',
-        '.kv-cms-cta-inner', '.kv-video', '.kv-prose', '.kv-text', '.kv-list'
+        '.kv-cms-cta-inner', '.kv-video', '.kv-prose', '.kv-text', '.kv-list', '.kv-gallery'
     ].join(',');
 
     function initReveal() {
@@ -266,12 +266,14 @@
                 dialog.innerHTML = '<button type="button" class="kv-dialog-close" aria-label="Sluiten">&times;</button><div class="kv-dialog-body"></div>';
                 dialog.querySelector('.kv-dialog-close').addEventListener('click', function () { dialog.close(); });
                 dialog.addEventListener('click', function (e) {
-                    if (e.target === dialog) {
+                    if (e.target === dialog || e.target.classList.contains('kv-lightbox-stage')) {
                         dialog.close();
                     }
                 });
                 dialog.addEventListener('close', function () {
                     dialog.querySelector('.kv-dialog-body').innerHTML = '';
+                    dialog.classList.remove('kv-dialog-gallery');
+                    gallery = null;
                 });
                 document.body.appendChild(dialog);
             }
@@ -282,7 +284,89 @@
             dialog.showModal();
         }
 
+        /* Gallery: one photo at a time, with previous / next (buttons, arrow
+           keys, swiping) and the caption and position under it. */
+        var gallery = null;
+
+        function show(index) {
+            var links = gallery.links;
+            gallery.index = (index + links.length) % links.length;
+            var link = links[gallery.index];
+            var img = gallery.element.querySelector('.kv-lightbox-image');
+            var thumb = link.querySelector('img');
+            img.src = link.href;
+            img.alt = thumb ? thumb.alt : '';
+            var caption = link.getAttribute('data-kv-caption') || '';
+            gallery.element.querySelector('.kv-lightbox-caption').textContent = caption;
+            gallery.element.querySelector('.kv-lightbox-count').textContent =
+                links.length > 1 ? (gallery.index + 1) + ' / ' + links.length : '';
+            dialog.setAttribute('aria-label', caption || ('Foto ' + (gallery.index + 1) + ' van ' + links.length));
+            // The neighbours load while this one is looked at.
+            [ 1, -1 ].forEach(function (step) {
+                if (links.length > 1) {
+                    (new Image()).src = links[(gallery.index + step + links.length) % links.length].href;
+                }
+            });
+        }
+
+        function openGallery(link) {
+            var name = link.getAttribute('data-kv-gallery');
+            var links = Array.prototype.filter.call(document.querySelectorAll('a[data-kv-gallery]'), function (a) {
+                return a.getAttribute('data-kv-gallery') === name;
+            });
+            var element = document.createElement('figure');
+            element.className = 'kv-lightbox';
+            element.innerHTML =
+                '<div class="kv-lightbox-stage"><img class="kv-dialog-image kv-lightbox-image" alt=""></div>' +
+                '<figcaption class="kv-lightbox-bar"><span class="kv-lightbox-caption"></span><span class="kv-lightbox-count"></span></figcaption>' +
+                (links.length > 1
+                    ? '<button type="button" class="kv-lightbox-nav kv-lightbox-prev" aria-label="Vorige foto"></button>' +
+                      '<button type="button" class="kv-lightbox-nav kv-lightbox-next" aria-label="Volgende foto"></button>'
+                    : '');
+            gallery = { links: links, index: 0, element: element };
+            each('.kv-lightbox-nav', function (button) {
+                button.addEventListener('click', function () {
+                    show(gallery.index + (button.classList.contains('kv-lightbox-next') ? 1 : -1));
+                });
+            }, element);
+
+            var startX = null;
+            element.addEventListener('touchstart', function (e) {
+                startX = e.touches.length === 1 ? e.touches[0].clientX : null;
+            }, { passive: true });
+            element.addEventListener('touchend', function (e) {
+                if (startX === null || !gallery) {
+                    return;
+                }
+                var dx = e.changedTouches[0].clientX - startX;
+                startX = null;
+                if (Math.abs(dx) > 40) {
+                    show(gallery.index + (dx < 0 ? 1 : -1));
+                }
+            });
+
+            open(element, '');
+            dialog.classList.add('kv-dialog-gallery');
+            show(links.indexOf(link));
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (!gallery || !dialog || !dialog.open || gallery.links.length < 2) {
+                return;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                show(gallery.index + (e.key === 'ArrowRight' ? 1 : -1));
+            }
+        });
+
         document.addEventListener('click', function (e) {
+            var galleryLink = e.target.closest && e.target.closest('a[data-kv-gallery]');
+            if (galleryLink && !(e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1)) {
+                e.preventDefault();
+                openGallery(galleryLink);
+                return;
+            }
             var link = e.target.closest && e.target.closest('a.image-popup, a.popup');
             if (!link || e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) {
                 return;
@@ -303,6 +387,40 @@
                 content.allowFullscreen = true;
             }
             open(content, link.getAttribute('title') || link.textContent.trim());
+        });
+    }
+
+    /* ---------- Long galleries (cms/blocks/gallery) ---------- */
+
+    // The first `visible` photos show; a button shows the rest. The
+    // lightbox steps through all of them either way.
+    function initGalleries() {
+        each('[data-kv-gallery-visible]', function (list) {
+            var visible = parseInt(list.getAttribute('data-kv-gallery-visible'), 10);
+            var button = document.querySelector('[data-kv-gallery-more="' + list.id + '"]');
+            if (!visible || !button) {
+                return;
+            }
+            Array.prototype.forEach.call(list.children, function (item, i) {
+                if (i >= visible) {
+                    item.hidden = true;
+                }
+            });
+            button.hidden = false;
+            button.addEventListener('click', function () {
+                var first = null;
+                Array.prototype.forEach.call(list.children, function (item) {
+                    if (item.hidden) {
+                        item.hidden = false;
+                        first = first || item;
+                    }
+                });
+                button.hidden = true;
+                var link = first && first.querySelector('a');
+                if (link) {
+                    link.focus({ preventScroll: true });
+                }
+            });
         });
     }
 
@@ -355,6 +473,7 @@
         initBuyBar();
         initMap();
         initPopups();
+        initGalleries();
         initTeamSelect();
         initCopyButtons();
         initReveal();

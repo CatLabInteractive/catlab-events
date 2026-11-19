@@ -243,11 +243,11 @@ class WordPressImportTest extends IntegrationTestCase
 
         $blocks = Page::where('wp_post_id', 206)->firstOrFail()->translation('nl')->blocks;
         $this->assertSame(
-            [ 'hero', 'text_image', 'reviews', 'cards', 'text_image', 'upcoming_events', 'cards', 'rich_text' ],
+            [ 'hero', 'text_image', 'reviews', 'cards', 'text_image', 'upcoming_events', 'cards', 'gallery', 'rich_text' ],
             array_column($blocks, 'type')
         );
 
-        [ $hero, $textImage, $reviews, $cards, $video, $events, $panels, $text ] = array_column($blocks, 'data');
+        [ $hero, $textImage, $reviews, $cards, $video, $events, $panels, $gallery, $text ] = array_column($blocks, 'data');
 
         $winnaars = Asset::query()->where('name', 'winnaars.jpg')->firstOrFail();
 
@@ -297,6 +297,11 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertSame([ '1', '2' ], array_column($panels['items'], 'colour'));
         $this->assertSame("€ 2200\nHelemaal nieuw.", $panels['items'][0]['text']);
 
+        // An Elementor gallery: a gallery block, its heading the title.
+        $this->assertSame('In beeld', $gallery['title']);
+        $this->assertSame('grid', $gallery['layout']);
+        $this->assertSame([ $foto->id, $winnaars->id ], array_column($gallery['items'], 'image_id'));
+
         $this->assertStringContainsString('<h2>Contact</h2>', $text['html']);
         $this->assertStringContainsString('<li>Quizzen van overal</li>', $text['html']);
         $this->assertStringNotContainsString('script', $text['html']);
@@ -311,6 +316,7 @@ class WordPressImportTest extends IntegrationTestCase
             ->assertSee('kv-cms-hero-cover', false)
             ->assertSee('kv-cms-reviews-list', false)
             ->assertSee('kv-cms-cards-panels', false)
+            ->assertSee('data-kv-gallery=', false)
             ->assertSee('youtube-nocookie.com/embed/-mH8ZUo5XZc', false)
             ->assertSee('kv-cms-band kv-field-2', false);
     }

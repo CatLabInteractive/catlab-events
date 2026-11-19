@@ -624,6 +624,50 @@ class AdminPagesTest extends IntegrationTestCase
         $this->assertSame($mine->id, (int) $translation->og_image_id);
     }
 
+    public function testAGalleryIsSavedAndEdited()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->createOrganisationAdmin($organisation);
+        $page = $this->emptyPage($organisation);
+        $first = $this->createOrganisationAsset($organisation);
+        $second = $this->createOrganisationAsset($organisation);
+        $foreign = $this->createOrganisationAsset($this->createOrganisation());
+
+        $gallery = function (array $items) {
+            return [ 'id' => 'ab12cd', 'type' => 'gallery', 'data' => [
+                'title' => 'In beeld', 'intro' => '', 'layout' => 'mosaic', 'visible' => '6', 'items' => $items,
+            ] ];
+        };
+
+        // A row without a photo, or with another organisation's, is refused.
+        foreach ([ [ 'image_id' => '', 'caption' => 'Leeg' ], [ 'image_id' => (string) $foreign->id, 'caption' => '' ] ] as $bad) {
+            $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'blocks' => [ $gallery([ $bad ]) ] ]))
+                ->assertSessionHasErrors();
+        }
+        $this->assertSame(0, PageTranslation::count());
+
+        $this->postTranslation($admin, $page, $this->translationFields([ 'locale' => 'nl', 'blocks' => [ $gallery([
+            [ 'image_id' => (string) $first->id, 'caption' => 'De zaal' ],
+            [ 'image_id' => (string) $second->id, 'caption' => '' ],
+        ]) ] ]))->assertSessionHas('message', 'Vertaling toegevoegd.');
+
+        $translation = PageTranslation::firstOrFail();
+        $data = $translation->blocks[0]['data'];
+        $this->assertSame('gallery', $translation->blocks[0]['type']);
+        $this->assertSame('mosaic', $data['layout']);
+        $this->assertSame(6, $data['visible']);
+        $this->assertSame([ $first->id, $second->id ], array_column($data['items'], 'image_id'));
+        $this->assertSame([ 'De zaal', null ], array_column($data['items'], 'caption'));
+
+        $this->actingAs($admin)->get('/admin/pages/' . $page->id . '/translations/' . $translation->id . '/edit')
+            ->assertStatus(200)
+            ->assertSee('Fotogalerij')
+            ->assertSee('name="fields[blocks][0][data][items][1][image_id]"', false)
+            ->assertSee('value="De zaal"', false)
+            ->assertSee('data-cms-action="add-images"', false)
+            ->assertSee('data-cms-picker-confirm', false);
+    }
+
     public function testSlugRenameCascadesToChildPaths()
     {
         $organisation = $this->createOrganisation();

@@ -14,7 +14,8 @@
  *   .cms-repeater[data-repeater][data-max]  a list of rows inside a block
  *     .cms-repeater-rows > .cms-repeater-row
  *     > template[data-repeater-template]   a fresh row, with __ROW__
- *   [data-cms-action="up|down|remove|add-block|add-row|pick-image|clear-image|toggle|toggle-all"]
+ *   [data-cms-action="up|down|remove|add-block|add-row|add-images|pick-image|clear-image|toggle|toggle-all"]
+ *                                          add-images: pick (or upload) several images, one new row each
  *   .cms-block-collapsed                   a block folded to its header; [data-cms-block-summary]
  *                                          shows the start of its first text
  *
@@ -170,10 +171,11 @@
                 });
 
                 var max = parseInt(repeater.getAttribute('data-max'), 10);
-                var add = children(repeater, '[data-cms-action="add-row"]')[0];
-                if (add && max) {
-                    add.disabled = rows.length >= max;
-                }
+                children(repeater, '[data-cms-action="add-row"], [data-cms-action="add-images"]').forEach(function (add) {
+                    if (max) {
+                        add.disabled = rows.length >= max;
+                    }
+                });
             });
         });
     }
@@ -250,6 +252,10 @@
         modal: null,
         editor: null,
         field: null,
+        // Several mode: the repeater the picked images become rows of.
+        repeater: null,
+        selected: [],
+        room: 0,
         searchTimer: null
     };
 
@@ -268,9 +274,64 @@
     }
 
     function choose(asset) {
+        if (picker.repeater) {
+            toggleSelected(asset);
+            return;
+        }
         if (picker.field) {
             setImage(picker.field, asset);
         }
+        closePicker();
+    }
+
+    function isSelected(asset) {
+        return picker.selected.some(function (item) {
+            return item.id === asset.id;
+        });
+    }
+
+    function toggleSelected(asset) {
+        if (isSelected(asset)) {
+            picker.selected = picker.selected.filter(function (item) {
+                return item.id !== asset.id;
+            });
+        } else if (picker.selected.length < picker.room) {
+            picker.selected.push(asset);
+        }
+        updateSelection();
+    }
+
+    function updateSelection() {
+        pickerElement('grid').querySelectorAll('button[data-asset-id]').forEach(function (button) {
+            var on = picker.selected.some(function (item) {
+                return String(item.id) === button.getAttribute('data-asset-id');
+            });
+            button.classList.toggle('is-selected', on);
+            button.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+
+        var count = picker.selected.length;
+        pickerElement('count').textContent = (count === 1 ? '1 foto gekozen' : count + ' foto\'s gekozen') +
+            (count >= picker.room ? ' (maximum bereikt)' : '');
+        var confirm = pickerElement('confirm');
+        confirm.disabled = count === 0;
+        confirm.textContent = count ? count + ' toevoegen' : 'Toevoegen';
+    }
+
+    /**
+     * Several mode: one new row per picked image, in the order picked.
+     */
+    function addPicked() {
+        var editor = picker.editor;
+        var repeater = picker.repeater;
+        picker.selected.forEach(function (asset) {
+            var row = addRow(editor, repeater);
+            var field = row && row.querySelector('.cms-image-field');
+            if (field) {
+                setImage(field, asset);
+            }
+        });
+        picker.selected = [];
         closePicker();
     }
 
@@ -282,6 +343,7 @@
             var button = document.createElement('button');
             button.type = 'button';
             button.title = asset.name || '';
+            button.setAttribute('data-asset-id', asset.id);
 
             var img = document.createElement('img');
             img.src = asset.thumbnail;
@@ -301,6 +363,9 @@
         });
 
         pickerMessage(null, assets.length ? null : 'Geen afbeeldingen gevonden. Upload er een.');
+        if (picker.repeater) {
+            updateSelection();
+        }
     }
 
     function loadImages() {
@@ -314,7 +379,7 @@
         });
     }
 
-    function openPicker(editor, field) {
+    function openPicker(editor, field, repeater) {
         picker.modal = picker.modal || document.querySelector('[data-cms-image-picker]');
         if (!picker.modal) {
             return;
@@ -322,6 +387,19 @@
 
         picker.editor = editor;
         picker.field = field;
+        picker.repeater = repeater || null;
+        picker.selected = [];
+        if (repeater) {
+            var max = parseInt(repeater.getAttribute('data-max'), 10) || 100;
+            picker.room = Math.max(0, max - children(repeater.querySelector('.cms-repeater-rows'), '.cms-repeater-row').length);
+        }
+
+        var several = !!picker.repeater;
+        pickerElement('title').textContent = several ? 'Kies foto\'s' : 'Kies een afbeelding';
+        pickerElement('upload-label').textContent = several ? 'Foto\'s uploaden' : 'Nieuwe afbeelding uploaden';
+        pickerElement('upload').multiple = several;
+        pickerElement('footer').classList.toggle('d-none', !several);
+        picker.modal.classList.toggle('cms-picker-several', several);
         pickerElement('search').value = '';
         loadImages();
 
@@ -359,10 +437,41 @@
             picker.searchTimer = window.setTimeout(loadImages, 250);
         });
 
+        pickerElement('confirm').addEventListener('click', addPicked);
+
         var upload = pickerElement('upload');
         upload.addEventListener('change', function () {
             var file = upload.files && upload.files[0];
             if (!file || !picker.editor) {
+                return;
+            }
+
+            if (picker.repeater) {
+                // Several files: upload them one after the other, tick each.
+                var files = Array.prototype.slice.call(upload.files, 0, Math.max(0, picker.room - picker.selected.length));
+                var done = 0;
+                var failed = [];
+                var next = function () {
+                    if (done >= files.length) {
+                        upload.value = '';
+                        loadImages();
+                        pickerMessage(failed.length ? failed.join(' ') : null, failed.length ? null : 'Geüpload. Klik op Toevoegen.');
+                        return;
+                    }
+                    pickerMessage(null, 'Uploaden… (' + (done + 1) + ' van ' + files.length + ')');
+                    uploadImage(picker.editor, files[done]).then(function (asset) {
+                        if (!isSelected(asset)) {
+                            picker.selected.push(asset);
+                        }
+                        updateSelection();
+                    }, function (error) {
+                        failed.push(files[done].name + ': ' + error.message);
+                    }).then(function () {
+                        done++;
+                        next();
+                    });
+                };
+                next();
                 return;
             }
 
@@ -529,6 +638,8 @@
         reindex(editor);
         initEditors(editor, row);
         changed(row);
+
+        return row;
     }
 
     function onClick(editor, event) {
@@ -568,6 +679,10 @@
 
             case 'pick-image':
                 openPicker(editor, button.closest('.cms-image-field'));
+                break;
+
+            case 'add-images':
+                openPicker(editor, null, button.closest('.cms-repeater'));
                 break;
 
             case 'clear-image':

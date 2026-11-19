@@ -35,6 +35,7 @@ return [
         'text_image' => \App\Cms\Blocks\Types\TextImage::class,
         'cards' => \App\Cms\Blocks\Types\Cards::class,
         'logo_grid' => \App\Cms\Blocks\Types\LogoGrid::class,
+        'gallery' => \App\Cms\Blocks\Types\Gallery::class,
         'reviews' => \App\Cms\Blocks\Types\Reviews::class,
         'cta' => \App\Cms\Blocks\Types\Cta::class,
         'video' => \App\Cms\Blocks\Types\Video::class,
