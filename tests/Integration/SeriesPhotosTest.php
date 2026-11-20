@@ -77,6 +77,33 @@ class SeriesPhotosTest extends IntegrationTestCase
         $this->assertSame(2, (int) $photo->sort);
     }
 
+    public function testAPhotoWithoutSortGoesAfterTheOthers()
+    {
+        $organisation = $this->createOrganisation();
+        $admin = $this->adminOf($organisation);
+        $series = $this->createSeries($organisation);
+
+        $existing = new SeriesPhoto([ 'sort' => 4 ]);
+        $existing->series()->associate($series);
+        $existing->photo()->associate($this->createAsset('eerste.jpg'));
+        $existing->save();
+
+        $asset = $this->createAsset('zaal.jpg');
+        $this->actingAs($admin)
+            ->from('/admin/series/' . $series->id . '/photos/create')
+            ->post('/admin/series/' . $series->id . '/photos', [
+                'fields' => [
+                    'photo' => [ 'id' => (string) $asset->id ],
+                    'sort' => '',
+                ],
+            ])
+            ->assertRedirect();
+
+        $photo = SeriesPhoto::where('photo_asset_id', $asset->id)->first();
+        $this->assertNotNull($photo);
+        $this->assertSame(5, (int) $photo->sort);
+    }
+
     public function testAdminCanUploadANewPhoto()
     {
         $organisation = $this->createOrganisation();
