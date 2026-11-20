@@ -25,6 +25,7 @@ namespace App\Cms;
 use App\Models\Organisation;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Services\HostIndependentCache;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -56,7 +57,7 @@ class Menu
     {
         $locale = in_array($locale, config('cms.locales'), true) ? $locale : config('cms.default_locale');
 
-        return Cache::remember(self::cacheKey($organisation->id, $locale), self::CACHE_TTL, function () use ($organisation, $locale) {
+        return HostIndependentCache::remember(self::cacheKey($organisation->id, $locale), self::CACHE_TTL, function () use ($organisation, $locale) {
             $translations = PageTranslation::query()
                 ->select('page_translations.*', 'pages.parent_id as menu_parent_id', 'pages.sort_order as menu_sort_order', 'pages.link as menu_link')
                 ->join('pages', 'pages.id', '=', 'page_translations.page_id')
@@ -213,7 +214,7 @@ class Menu
     {
         $locale = in_array($locale, config('cms.locales'), true) ? $locale : config('cms.default_locale');
 
-        return Cache::remember(self::cacheKey($organisation->id, $locale) . ':footer', self::CACHE_TTL, function () use ($organisation, $locale) {
+        return HostIndependentCache::remember(self::cacheKey($organisation->id, $locale) . ':footer', self::CACHE_TTL, function () use ($organisation, $locale) {
             return PageTranslation::query()
                 ->select('page_translations.*', 'pages.link as menu_link')
                 ->join('pages', 'pages.id', '=', 'page_translations.page_id')
