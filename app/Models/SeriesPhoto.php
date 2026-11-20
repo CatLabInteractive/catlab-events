@@ -19,6 +19,19 @@ class SeriesPhoto extends Model
 
     protected $fillable = [ 'sort' ];
 
+    protected static function booted()
+    {
+        // The admin form sends an empty sort as null. Such a photo goes after the others.
+        static::saving(function (SeriesPhoto $photo) {
+            if ($photo->sort === null) {
+                $last = static::where('series_id', $photo->series_id)
+                    ->where('id', '!=', $photo->id ?? 0)
+                    ->max('sort');
+                $photo->sort = $last === null ? 0 : $last + 1;
+            }
+        });
+    }
+
     public function series()
     {
         return $this->belongsTo(Series::class);
