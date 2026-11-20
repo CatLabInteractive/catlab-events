@@ -218,6 +218,9 @@
             var show = !visible['kv-cta'] && !visible.tickets;
             bar.classList.toggle('kv-buybar-visible', show);
             bar.setAttribute('aria-hidden', show ? 'false' : 'true');
+            // Lets the chat bubble step up above the bar (see .kv-buybar-on in _kleurveld.scss).
+            document.documentElement.style.setProperty('--kv-buybar-h', bar.offsetHeight + 'px');
+            document.documentElement.classList.toggle('kv-buybar-on', show);
         });
         [ document.getElementById('kv-cta'), document.getElementById('tickets') ].forEach(function (el) {
             if (el) {

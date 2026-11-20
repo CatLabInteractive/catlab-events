@@ -912,6 +912,15 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
 
 .kv-buybar-visible { transform: translateY(0); }
 
+/* The Chatwoot chat bubble sits in the same bottom corner. While the order bar is up,
+   lift the bubble (and the unread-message preview above it) by the bar's height.
+   Chatwoot positions both with `bottom`, so a margin moves them without fighting its styles.
+   The full-screen chat window on phones is pinned with top/height and is not affected. */
+.kv-buybar-on {
+  .woot-widget-bubble,
+  .woot-widget-holder { margin-bottom: var(--kv-buybar-h, 68px); }
+}
+
 .kv-buybar-text {
   flex: 1;
   min-width: 0;
@@ -1050,6 +1059,10 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   .kv-card-title { font-size: 22px; }
 
   .kv-buybar { display: none; }
+  .kv-buybar-on {
+    .woot-widget-bubble,
+    .woot-widget-holder { margin-bottom: 0; }
+  }
 
   .footer.kv-footer { padding: 72px 0 40px; }
   .footer.kv-footer:before { width: 520px; height: 520px; right: -300px; top: -360px; }
