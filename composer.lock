@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2bac1cf88a74b975db31d61920d9e757",
+    "content-hash": "c4c774327b9a2627d631e8281001f40a",
     "packages": [
         {
             "name": "airbrake/phpbrake",
@@ -509,16 +509,16 @@
         },
         {
             "name": "catlabinteractive/charon",
-            "version": "v1.12.0",
+            "version": "v1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/charon.git",
-                "reference": "e89c811dcfdb40e1ef16849721fcb5abf56680ae"
+                "reference": "1c3087b5f9e6ea5bf737d889f641d0107fff10ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/charon/zipball/e89c811dcfdb40e1ef16849721fcb5abf56680ae",
-                "reference": "e89c811dcfdb40e1ef16849721fcb5abf56680ae",
+                "url": "https://api.github.com/repos/CatLabInteractive/charon/zipball/1c3087b5f9e6ea5bf737d889f641d0107fff10ff",
+                "reference": "1c3087b5f9e6ea5bf737d889f641d0107fff10ff",
                 "shasum": ""
             },
             "require": {
@@ -552,26 +552,26 @@
             "description": "Charon is a framework for building self documented RESTful API's.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/charon/issues",
-                "source": "https://github.com/CatLabInteractive/charon/tree/v1.12.0"
+                "source": "https://github.com/CatLabInteractive/charon/tree/v1.13.0"
             },
-            "time": "2026-08-27T09:13:39+00:00"
+            "time": "2026-11-20T09:23:04+00:00"
         },
         {
             "name": "catlabinteractive/charon-laravel",
-            "version": "v1.12.0",
+            "version": "v1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/charon-laravel.git",
-                "reference": "034b73fc2a46681b049e960f97ad75043e131b69"
+                "reference": "d03c755970e6f9bbf179f5237cdc8693aeae316e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/charon-laravel/zipball/034b73fc2a46681b049e960f97ad75043e131b69",
-                "reference": "034b73fc2a46681b049e960f97ad75043e131b69",
+                "url": "https://api.github.com/repos/CatLabInteractive/charon-laravel/zipball/d03c755970e6f9bbf179f5237cdc8693aeae316e",
+                "reference": "d03c755970e6f9bbf179f5237cdc8693aeae316e",
                 "shasum": ""
             },
             "require": {
-                "catlabinteractive/charon": "^1.12",
+                "catlabinteractive/charon": "^1.13",
                 "php": ">=8.1"
             },
             "require-dev": {
@@ -605,9 +605,9 @@
             "description": "Laravel specific libraries for Charon.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/charon-laravel/issues",
-                "source": "https://github.com/CatLabInteractive/charon-laravel/tree/v1.12.0"
+                "source": "https://github.com/CatLabInteractive/charon-laravel/tree/v1.13.0"
             },
-            "time": "2026-08-27T09:13:51+00:00"
+            "time": "2026-11-20T09:30:11+00:00"
         },
         {
             "name": "catlabinteractive/eukles-client",
@@ -698,21 +698,21 @@
         },
         {
             "name": "catlabinteractive/laravel-charon-frontend",
-            "version": "v2.0.8",
+            "version": "v2.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-charon-frontend.git",
-                "reference": "204dba27f6aab91646d75fe64a26344635346af4"
+                "reference": "56b95e848306ec5bd553f55989a8855bc7659340"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/204dba27f6aab91646d75fe64a26344635346af4",
-                "reference": "204dba27f6aab91646d75fe64a26344635346af4",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-charon-frontend/zipball/56b95e848306ec5bd553f55989a8855bc7659340",
+                "reference": "56b95e848306ec5bd553f55989a8855bc7659340",
                 "shasum": ""
             },
             "require": {
-                "catlabinteractive/charon-laravel": "^1.9",
-                "catlabinteractive/laravel-table": "^1.4",
+                "catlabinteractive/charon-laravel": "^1.13",
+                "catlabinteractive/laravel-table": "^1.5",
                 "laravel/framework": "^9.0 || ^10.0 || ^11.0 || ^12.0",
                 "php": ">=8.1"
             },
@@ -740,26 +740,26 @@
             "description": "A laravel frontend to be placed upon a laravel charon rest api to draw fancy interfaces.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-charon-frontend/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v2.0.8"
+                "source": "https://github.com/CatLabInteractive/laravel-charon-frontend/tree/v2.0.9"
             },
-            "time": "2026-11-19T10:20:29+00:00"
+            "time": "2026-11-20T09:37:00+00:00"
         },
         {
             "name": "catlabinteractive/laravel-table",
-            "version": "v1.4.0",
+            "version": "v1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CatLabInteractive/laravel-table.git",
-                "reference": "4718ec6971e871ebc665c57423c41ce1a766ac8e"
+                "reference": "01f7929a70bfaf2918f2257bcc7baed0db704c83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/4718ec6971e871ebc665c57423c41ce1a766ac8e",
-                "reference": "4718ec6971e871ebc665c57423c41ce1a766ac8e",
+                "url": "https://api.github.com/repos/CatLabInteractive/laravel-table/zipball/01f7929a70bfaf2918f2257bcc7baed0db704c83",
+                "reference": "01f7929a70bfaf2918f2257bcc7baed0db704c83",
                 "shasum": ""
             },
             "require": {
-                "catlabinteractive/charon": "^1.12",
+                "catlabinteractive/charon": "^1.13",
                 "laravel/framework": "^9.0 || ^10.0 || ^11.0 || ^12.0",
                 "php": ">=8.1"
             },
@@ -786,9 +786,9 @@
             "description": "Laravel html table builder.",
             "support": {
                 "issues": "https://github.com/CatLabInteractive/laravel-table/issues",
-                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.4.0"
+                "source": "https://github.com/CatLabInteractive/laravel-table/tree/v1.5.0"
             },
-            "time": "2026-11-18T23:34:32+00:00"
+            "time": "2026-11-20T09:35:23+00:00"
         },
         {
             "name": "catlabinteractive/requirements",

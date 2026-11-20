@@ -265,6 +265,48 @@ $sidebar-active-bg: $admin-accent;
     box-shadow: none;
   }
 
+  // The condition (is, is not, contains, is empty, ...) sits between the
+  // label and the value: narrow, and square on the right while the value
+  // follows it. With "is (not) empty" the value is hidden and the condition
+  // closes the group.
+  .table-filter-operator {
+    width: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+    color: lighten($admin-text-color, 15%);
+    background-color: $admin-body-bg;
+
+    border-right: 0;
+    border-radius: 0;
+
+    &:has(~ .table-filter-value[hidden]) {
+      border-right: 1px solid $admin-border-color;
+      border-radius: 0 3px 3px 0;
+    }
+  }
+
+  .table-filter-value[hidden] {
+    display: none !important;
+  }
+
+  // Label, condition and value stay on one line; on a phone each filter
+  // takes the full width and the value shrinks.
+  .table-filter .input-group {
+    flex-wrap: nowrap;
+  }
+
+  @include media-breakpoint-down(sm) {
+    .table-filter,
+    .table-filter .input-group {
+      width: 100%;
+    }
+
+    .table-filter-value {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
   // Bootstrap 4 has no glyphicons; the labels next to them carry the meaning.
   .glyphicon {
     display: none;
