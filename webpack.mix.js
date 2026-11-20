@@ -51,3 +51,30 @@ mix
     .copyDirectory('node_modules/tinymce/plugins/autoresize', 'public/js/tinymce/plugins/autoresize')
     .version()
 ;
+
+// `npm run hot`: laravel-mix 6 still writes webpack-dev-server 4 options.
+// package.json pins webpack-dev-server 5 (security fixes), so translate the
+// two options that version 5 removed. Builds without --hot have no devServer
+// block and are not affected.
+mix.override((config) => {
+    const devServer = config.devServer;
+    if (!devServer) {
+        return;
+    }
+
+    if ('https' in devServer) {
+        if (devServer.https) {
+            devServer.server = 'https';
+        }
+        delete devServer.https;
+    }
+
+    if (devServer.onBeforeSetupMiddleware) {
+        const before = devServer.onBeforeSetupMiddleware;
+        delete devServer.onBeforeSetupMiddleware;
+        devServer.setupMiddlewares = (middlewares, server) => {
+            before(server);
+            return middlewares;
+        };
+    }
+});
