@@ -5,12 +5,14 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Test data for a local copy (see docs/local-development.md):
+     *
+     *   php artisan migrate:fresh --seed
      *
      * @return void
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
+        $this->call(PreviewSeeder::class);
     }
 }

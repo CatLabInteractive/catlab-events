@@ -3,6 +3,10 @@ CatLab Events is a ticketing system currently aimed towards quizzes, but adaptab
 any kind of event that requires tickets to be sold. It includes integration with a centralized 
 payment gateway and UiTPAS integration (in Belgium).
 
+## Local development
+To run a local copy with test data, you need only docker. Run `bin/local-setup.sh`, then open http://localhost:8095
+and log in with `demo@example.com` / `password`. See [docs/local-development.md](docs/local-development.md).
+
 ## Setup
 The project relies on some external projects so hosting it is not a straight forward business. You'll have 
 to either implement an SSO and payment gateway, or contact us to create accounts on our systems.
