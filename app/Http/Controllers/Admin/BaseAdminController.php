@@ -38,7 +38,7 @@ use CatLab\CharonFrontend\Widgets\TextareaWidget;
  *
  * Relationships to an Asset (posters, logos, headers, ...) are edited with a
  * file widget: preview, upload to CentralStorage, pick existing, remove.
- * Descriptions, teasers and addresses get a textarea.
+ * Descriptions, teasers, addresses and credits notes get a textarea.
  *
  * @package App\Http\Controllers\Admin
  */
@@ -58,5 +58,6 @@ abstract class BaseAdminController extends Controller implements FrontCrudContro
         // Addresses span lines. Descriptions and teasers are html() fields
         // in their definitions and get the rich textarea by type.
         $this->widgets()->forField('address', new TextareaWidget());
+        $this->widgets()->forField('credits_note', new TextareaWidget());
     }
 }

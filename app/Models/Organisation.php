@@ -397,13 +397,21 @@ class Organisation extends Model
             $out['logo'] = $this->logo->getUrl();
         }
 
-        if ($this->support_email) {
-            $out['email'] = $this->support_email;
-            $out['contactPoint'] = [
+        $phone = $this->getPhoneNumber();
+        if ($this->support_email || $phone) {
+            $contactPoint = [
                 '@type' => 'ContactPoint',
                 'contactType' => 'customer support',
-                'email' => $this->support_email,
             ];
+            if ($this->support_email) {
+                $out['email'] = $this->support_email;
+                $contactPoint['email'] = $this->support_email;
+            }
+            if ($phone) {
+                $out['telephone'] = $phone;
+                $contactPoint['telephone'] = $phone;
+            }
+            $out['contactPoint'] = $contactPoint;
         }
 
         $address = trim(strip_tags((string) $this->address));
@@ -420,6 +428,42 @@ class Organisation extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * The public phone number as entered in the admin, or null.
+     * @return string|null
+     */
+    public function getPhoneNumber(): ?string
+    {
+        $phone = trim((string) $this->phone);
+        return $phone === '' ? null : $phone;
+    }
+
+    /**
+     * tel: link for the phone number: digits only, keeping a leading + (a
+     * leading 00 becomes +), e.g. "+32 (0)9 123 45 67" -> "tel:+3291234567".
+     * @return string|null
+     */
+    public function getPhoneHref(): ?string
+    {
+        $phone = $this->getPhoneNumber();
+        if ($phone === null) {
+            return null;
+        }
+
+        // The Belgian/Dutch "(0)" trunk prefix is dropped after a country code.
+        $phone = preg_replace('/\(0\)/', '', $phone);
+        $international = str_starts_with($phone, '+') || str_starts_with($phone, '00');
+        $digits = preg_replace('/\D+/', '', $phone);
+        if ($international && str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+        if ($digits === '') {
+            return null;
+        }
+
+        return 'tel:' . ($international ? '+' : '') . $digits;
     }
 
     /**
@@ -509,6 +553,10 @@ class Organisation extends Model
         $options = [];
         if ($this->support_email) {
             $options[] = '<a href="mailto:' . $this->support_email . '" target="_blank">' . $this->support_email . '</a>';
+        }
+
+        if ($this->getPhoneHref()) {
+            $options[] = '<a href="' . e($this->getPhoneHref()) . '">' . e($this->getPhoneNumber()) . '</a>';
         }
 
         if ($this->messenger_url) {
