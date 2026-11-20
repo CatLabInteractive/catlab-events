@@ -120,11 +120,12 @@ class WordPressImporter
     private $pagePaths = [];
 
     /**
-     * @param string $site e.g. https://www.quizfabriek.be
+     * @param string $site e.g. https://oud.quizfabriek.be
+     * @param string[] $aliases other hosts of the same site (see MediaUrl)
      */
-    public function __construct(string $site)
+    public function __construct(string $site, array $aliases = [])
     {
-        $this->site = new MediaUrl($site);
+        $this->site = new MediaUrl($site, $aliases);
         $this->report = new ImportReport();
         $this->posts = app(PostWriter::class);
         $this->pages = app(PageWriter::class);
@@ -291,10 +292,7 @@ class WordPressImporter
      */
     private function isOwnUrl(string $url): bool
     {
-        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
-        $own = strtolower((string) parse_url($this->site->origin(), PHP_URL_HOST));
-
-        return preg_replace('/^www\./', '', $host) === preg_replace('/^www\./', '', $own);
+        return $this->site->isSiteHost((string) parse_url($url, PHP_URL_HOST));
     }
 
     /**

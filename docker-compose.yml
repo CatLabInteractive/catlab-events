@@ -1,4 +1,5 @@
-version: '3.9'
+# Local development stack. See docs/local-development.md, or run
+# bin/local-setup.sh to set everything up with test data.
 services:
   webserver:
     container_name: catlab-events
@@ -13,6 +14,16 @@ services:
     depends_on:
       - mysql-db
     privileged: true
+    environment:
+      # The mounted checkout hides the vendor/ folder of the image, so
+      # install the PHP packages first (quick when they are up to date).
+      # The image caches config, routes and views at start-up (right for
+      # production). Locally, clear them instead, so a change to .env or a
+      # route shows without a restart.
+      STARTUP_COMMAND_1: "composer install --no-interaction --no-progress"
+      STARTUP_COMMAND_2: "php artisan config:clear"
+      STARTUP_COMMAND_3: "php artisan route:clear"
+      STARTUP_COMMAND_4: "php artisan view:clear"
 
   mysql-db:
     image: mysql:8.0
@@ -26,3 +37,15 @@ services:
     ports:
       # Override with MYSQL_HOST_PORT in .env if 3312 is taken by another project.
       - "${MYSQL_HOST_PORT:-3312}:3306"
+
+  # Stand-in for CentralStorage: serves the demo images of the test data
+  # (.github/preview/assets) at http://localhost:8099. The browser loads the
+  # images from here, so CENTRALSTORAGE_FRONT=http://localhost:8099 in .env.
+  assets:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./.github/preview:/app:ro
+    command: sh -c "pip install --quiet --root-user-action=ignore pillow && python assetserver.py 8099 0.0.0.0"
+    ports:
+      - 8099:8099

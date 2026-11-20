@@ -26,8 +26,10 @@ namespace App\Cms\Import;
  * Recognises URLs of a WordPress site's uploads (`/wp-content/uploads/…`)
  * in absolute, protocol-relative or root-relative form, on the site's
  * domain or any subdomain of it (older posts use blog.quizfabriek.be).
- * normalise() always returns the URL on the site's own origin, so nothing
- * but the site itself is ever fetched.
+ * Alias hosts count as the same site: the WordPress site moved from
+ * www.quizfabriek.be to oud.quizfabriek.be, but its content still links
+ * to the old address. normalise() always returns the URL on the site's own
+ * origin, so nothing but the site itself is ever fetched.
  *
  * Class MediaUrl
  * @package App\Cms\Import
@@ -42,22 +44,56 @@ class MediaUrl
     private $origin;
 
     /**
-     * @var string
+     * Domains (no "www.") whose hosts and subdomains belong to the site.
+     * @var string[]
      */
-    private $host;
+    private $domains;
 
     /**
-     * @param string $site e.g. https://www.quizfabriek.be
+     * @param string $site e.g. https://oud.quizfabriek.be
+     * @param string[] $aliases other hosts of the same site, e.g. www.quizfabriek.be
      */
-    public function __construct(string $site)
+    public function __construct(string $site, array $aliases = [])
     {
         $parts = parse_url(trim($site));
         if (!$parts || empty($parts['host'])) {
             throw new \InvalidArgumentException('Not a site URL: ' . $site);
         }
 
-        $this->host = strtolower($parts['host']);
-        $this->origin = ($parts['scheme'] ?? 'https') . '://' . $this->host;
+        $host = strtolower($parts['host']);
+        $this->origin = ($parts['scheme'] ?? 'https') . '://' . $host;
+
+        $this->domains = [ $this->bareHost($host) ];
+        foreach ($aliases as $alias) {
+            $alias = strtolower(trim((string) $alias));
+            if (strpos($alias, '://') !== false) {
+                $alias = (string) parse_url($alias, PHP_URL_HOST);
+            }
+            if ($alias !== '') {
+                $this->domains[] = $this->bareHost($alias);
+            }
+        }
+        $this->domains = array_values(array_unique($this->domains));
+    }
+
+    /**
+     * Whether $host is the site's host, an alias, or a subdomain of either.
+     * @param string $host
+     * @return bool
+     */
+    public function isSiteHost(string $host): bool
+    {
+        $host = strtolower($host);
+        if ($host === '') {
+            return false;
+        }
+        foreach ($this->domains as $domain) {
+            if ($host === $domain || substr($host, -strlen('.' . $domain)) === '.' . $domain) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -92,9 +128,7 @@ class MediaUrl
             return null;
         }
 
-        $host = strtolower($parts['host']);
-        $domain = $this->bareHost($this->host);
-        if ($host !== $domain && substr($host, -strlen('.' . $domain)) !== '.' . $domain) {
+        if (!$this->isSiteHost($parts['host'])) {
             return null;
         }
 

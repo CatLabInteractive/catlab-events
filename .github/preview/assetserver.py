@@ -3,7 +3,10 @@
 Serves the demo posters in ./assets by asset key, resized the way
 CentralStorage does it: ?width=W scales, ?width=W&height=H crops to fit.
 
-    python3 assetserver.py [port]
+    python3 assetserver.py [port] [bind address]
+
+The bind address defaults to 127.0.0.1. The docker compose `assets`
+service passes 0.0.0.0, so the port is reachable from outside the container.
 """
 import http.server, io, os, sys
 from urllib.parse import urlparse, parse_qs
@@ -11,6 +14,7 @@ from PIL import Image, ImageOps
 
 ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8099
+BIND = sys.argv[2] if len(sys.argv) > 2 else '127.0.0.1'
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -42,4 +46,4 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
-http.server.ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()
+http.server.ThreadingHTTPServer((BIND, PORT), Handler).serve_forever()

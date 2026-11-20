@@ -965,9 +965,7 @@ class ElementorConverter
             return null;
         }
 
-        $host = strtolower((string) parse_url($href, PHP_URL_HOST));
-        $domain = preg_replace('/^www\./', '', (string) parse_url($this->site->origin(), PHP_URL_HOST));
-        if ($host !== '' && ($host === $domain || substr($host, -strlen('.' . $domain)) === '.' . $domain)) {
+        if ($this->site->isSiteHost((string) parse_url($href, PHP_URL_HOST))) {
             if ($this->site->normalise($href) !== null) {
                 return $href;
             }

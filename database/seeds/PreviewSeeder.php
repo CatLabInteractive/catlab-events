@@ -21,12 +21,25 @@ use Illuminate\Database\Seeder;
  *
  * Dates are relative to today, so the events never drop off the calendar.
  *
+ * Also the test data of a local copy (docs/local-development.md): the
+ * DatabaseSeeder calls it, and the demo user is an admin who can log in
+ * with demo@example.com / password (only without CATLAB_CLIENT_ID, which
+ * switches the login to CatLab accounts).
+ *
  *   php artisan db:seed --class=PreviewSeeder
  */
 class PreviewSeeder extends Seeder
 {
+    const DEMO_EMAIL = 'demo@example.com';
+
+    const DEMO_PASSWORD = 'password';
+
     public function run()
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('PreviewSeeder writes demo data and a known password: not in production.');
+        }
+
         $organisation = new Organisation();
         $organisation->name = 'De Quizfabriek';
         $organisation->logo_id = $this->asset('logo.png', 160, 180)->id;
@@ -36,9 +49,11 @@ class PreviewSeeder extends Seeder
 
         $user = new User();
         $user->name = 'Demo';
-        $user->email = 'demo@example.com';
-        $user->password = bcrypt(\Illuminate\Support\Str::random(32));
+        $user->email = self::DEMO_EMAIL;
+        $user->password = bcrypt(self::DEMO_PASSWORD);
+        $user->admin = 1;
         $user->save();
+        $user->organisations()->attach($organisation->id, [ 'role' => Organisation::ROLE_ADMIN ]);
 
         $series = new Series();
         $series->organisation_id = $organisation->id;

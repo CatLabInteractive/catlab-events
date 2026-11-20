@@ -99,4 +99,33 @@ class ContentRewriterTest extends TestCase
         $this->assertNull($url->original('https://x/wp-content/uploads/foto.jpg'));
         $this->assertSame('wp-content/uploads/foto.jpg', $url->path('https://www.quizfabriek.be/wp-content/uploads/foto.jpg'));
     }
+
+    public function testAliasHostsCountAsTheSite()
+    {
+        $url = new MediaUrl('https://oud.quizfabriek.be', [ 'www.quizfabriek.be' ]);
+
+        // Uploads on the old address are fetched from the site's own origin.
+        $this->assertSame(
+            'https://oud.quizfabriek.be/wp-content/uploads/2019/11/foto.jpg',
+            $url->normalise('https://www.quizfabriek.be/wp-content/uploads/2019/11/foto.jpg')
+        );
+        $this->assertSame(
+            'https://oud.quizfabriek.be/wp-content/uploads/foto.jpg',
+            $url->normalise('https://blog.quizfabriek.be/wp-content/uploads/foto.jpg')
+        );
+        $this->assertNull($url->normalise('https://example.com/wp-content/uploads/foto.jpg'));
+        $this->assertNull($url->normalise('https://notquizfabriek.be/wp-content/uploads/foto.jpg'));
+
+        $this->assertTrue($url->isSiteHost('oud.quizfabriek.be'));
+        $this->assertTrue($url->isSiteHost('quizfabriek.be'));
+        $this->assertFalse($url->isSiteHost('example.com'));
+        $this->assertFalse($url->isSiteHost(''));
+    }
+
+    public function testWithoutAliasOnlyTheSiteDomainCounts()
+    {
+        $url = new MediaUrl('https://oud.quizfabriek.be');
+        $this->assertNull($url->normalise('https://www.quizfabriek.be/wp-content/uploads/foto.jpg'));
+        $this->assertTrue($url->isSiteHost('oud.quizfabriek.be'));
+    }
 }

@@ -43,7 +43,8 @@ class WordPressImport extends Command
      * @var string
      */
     protected $signature = 'wordpress:import
-        {--site=https://www.quizfabriek.be : The WordPress site}
+        {--site=https://oud.quizfabriek.be : The WordPress site}
+        {--alias=www.quizfabriek.be : Comma-separated older hosts of the same site (its content still links to them)}
         {--organisation= : Organisation id to import into}
         {--posts : Import blog posts}
         {--pages : Import pages (unpublished, one text block each)}
@@ -83,7 +84,8 @@ class WordPressImport extends Command
 
         $this->info(($dryRun ? '[dry run] ' : '') . 'Importing ' . $site . ' into "' . $organisation->name . '"');
 
-        $importer = new WordPressImporter($site);
+        $aliases = array_values(array_filter(array_map('trim', explode(',', (string) $this->option('alias')))));
+        $importer = new WordPressImporter($site, $aliases);
 
         try {
             if ($all || $this->option('posts')) {

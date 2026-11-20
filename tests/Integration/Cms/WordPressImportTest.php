@@ -47,7 +47,10 @@ class WordPressImportTest extends IntegrationTestCase
             parse_str($parts['query'] ?? '', $query);
             $path = $parts['path'];
 
-            if ($parts['host'] !== 'www.quizfabriek.be' && $parts['host'] !== 'quizfabriek.be') {
+            // The site lives at oud.quizfabriek.be. Its content (the
+            // fixtures) still links to www.quizfabriek.be, the --alias
+            // default, but nothing may be fetched from there.
+            if ($parts['host'] !== 'oud.quizfabriek.be') {
                 return Http::response('stray host', 500);
             }
 
@@ -130,7 +133,7 @@ class WordPressImportTest extends IntegrationTestCase
         $this->assertSame(0, Asset::query()->where('organisation_id', '!=', $organisation->id)->count());
         $foto = Asset::query()->where('name', 'foto.jpg')->firstOrFail();
         $this->assertSame($foto->id, (int) $post->featured_image_id);
-        $this->assertNotContains('https://www.quizfabriek.be/wp-content/uploads/2019/03/foto-1024x768.jpg', $this->requested);
+        $this->assertNotContains('https://oud.quizfabriek.be/wp-content/uploads/2019/03/foto-1024x768.jpg', $this->requested);
 
         $body = $translation->body;
         $this->assertStringNotContainsString('wp-content/uploads', $body);
