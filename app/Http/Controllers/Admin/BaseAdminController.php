@@ -24,10 +24,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Api\V1\ResourceDefinitions\AssetResourceDefinition;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\AssetFileWidget;
 use App\Services\Admin\CentralStorageUploadHandler;
 use CatLab\CharonFrontend\Contracts\FrontCrudControllerContract;
 use CatLab\CharonFrontend\Controllers\FrontCrudController;
-use CatLab\CharonFrontend\Widgets\FileWidget;
 use CatLab\CharonFrontend\Widgets\TextareaWidget;
 
 /**
@@ -37,7 +37,8 @@ use CatLab\CharonFrontend\Widgets\TextareaWidget;
  * extra table actions).
  *
  * Relationships to an Asset (posters, logos, headers, ...) are edited with a
- * file widget: preview, upload to CentralStorage, pick existing, remove.
+ * file widget: preview, upload to CentralStorage, pick an existing asset from
+ * a grid of thumbnails, remove.
  * Descriptions, teasers, addresses and credits notes get a textarea.
  *
  * @package App\Http\Controllers\Admin
@@ -52,7 +53,7 @@ abstract class BaseAdminController extends Controller implements FrontCrudContro
 
         $this->widgets()->forRelationship(
             AssetResourceDefinition::class,
-            new FileWidget(new CentralStorageUploadHandler(), 'image/*')
+            new AssetFileWidget(new CentralStorageUploadHandler(), 'image/*')
         );
 
         // Addresses span lines. Descriptions and teasers are html() fields
