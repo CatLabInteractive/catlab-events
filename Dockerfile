@@ -5,6 +5,10 @@ FROM thecodingmachine/php:8.5-v5-slim-apache
 ENV APACHE_DOCUMENT_ROOT=public/
 # Cache-Control headers for static files (public/.htaccess) need mod_headers.
 ENV APACHE_EXTENSION_HEADERS=1
+# Uploads (photos, CMS assets) up to 64 MB. The image default is 2 MB per file.
+# The dokku nginx proxy has its own limit: dokku nginx:set catlab-events client-max-body-size 64m
+ENV PHP_INI_UPLOAD_MAX_FILESIZE=64M \
+    PHP_INI_POST_MAX_SIZE=64M
 
 # Cache config, routes and compiled views when the container starts (the
 # environment is only known then). Saves reading every config file and
