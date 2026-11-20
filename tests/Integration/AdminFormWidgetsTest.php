@@ -93,9 +93,11 @@ class AdminFormWidgetsTest extends IntegrationTestCase
         $response->assertSee('Youtube thumbnail');
         $response->assertSee('src="' . $older->getUrl([ 'width' => 320 ]) . '"', false);
 
-        // The current file is selected, newest assets are listed first.
-        $response->assertSee('<option value="' . $older->id . '" selected>', false);
+        // The current file is checked, newest assets are listed first, each
+        // with a thumbnail.
+        $response->assertSee('name="fields[logo][id]" value="' . $older->id . '" checked', false);
         $response->assertSeeInOrder([ 'newer.png (800×1200', 'older.png (800×1200' ]);
+        $response->assertSee('<img src="' . $newer->getUrl([ 'width' => 240 ]) . '" alt="" loading="lazy">', false);
 
         // The create form gets the same fields.
         $this->actingAs($admin)->get('/admin/series/create')
@@ -194,7 +196,7 @@ class AdminFormWidgetsTest extends IntegrationTestCase
             ->assertSee('ours.png')
             ->assertDontSee('theirs.png')
             ->assertDontSee('nobodys.png')
-            ->assertSee('<option value="' . $linked->id . '" selected>', false);
+            ->assertSee('name="fields[logo][id]" value="' . $linked->id . '" checked', false);
     }
 
     public function testPickingAnExistingFileLinksIt()
