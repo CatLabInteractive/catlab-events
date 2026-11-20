@@ -24,6 +24,7 @@ namespace App\Cms;
 
 use App\Models\Organisation;
 use App\Models\PostTranslation;
+use App\Services\HostIndependentCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
@@ -85,7 +86,7 @@ class Blog
      */
     public function latest(Organisation $organisation, string $locale, int $limit = 3): array
     {
-        $posts = Cache::remember(
+        $posts = HostIndependentCache::remember(
             $this->latestCacheKey($organisation, $locale),
             self::CACHE_TTL,
             function () use ($organisation, $locale) {

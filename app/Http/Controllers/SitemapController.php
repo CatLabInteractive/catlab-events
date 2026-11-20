@@ -29,6 +29,7 @@ use App\Models\Organisation;
 use App\Models\PageTranslation;
 use App\Models\Series;
 use App\Models\Venue;
+use App\Services\HostIndependentCache;
 use Carbon\Carbon;
 
 /**
@@ -77,7 +78,7 @@ class SitemapController
             \Cache::forget($cacheKey);
         }
 
-        $urls = \Cache::remember($cacheKey, self::CACHE_TTL, function () {
+        $urls = HostIndependentCache::remember($cacheKey, self::CACHE_TTL, function () {
             return $this->buildUrls();
         });
 
