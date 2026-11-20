@@ -56,7 +56,7 @@
         </section>
     @endif
 
-    @if(count($event->people) > 0)
+    @if(count($event->people) > 0 || $event->credits_note)
         <section class="kv-sec kv-band">
             <div class="kv-wrap">
                 <h2 class="kv-sec-title">Credits</h2>
@@ -70,6 +70,9 @@
                         @endif
                     @endforeach
                 </dl>
+                @if($event->credits_note)
+                    <p class="kv-credits-note">{!! nl2br(e($event->credits_note)) !!}</p>
+                @endif
             </div>
         </section>
     @endif

@@ -83,6 +83,13 @@ class EventResourceDefinition extends BaseResourceDefinition
             ->min(3)
         ;
 
+        // Plain text under the credits on the event page (e.g. when the
+        // quiz was recorded). Edited as a textarea, see BaseAdminController.
+        $this->field('credits_note')
+            ->visible()
+            ->writeable(true, true)
+            ->string();
+
         $this->field('registration')
             ->visible(true, true)
             ->writeable(true, true)

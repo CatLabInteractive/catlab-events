@@ -108,6 +108,33 @@ class SeoTest extends IntegrationTestCase
         $this->assertSame(1, preg_match_all('/^    "@type": "Organization"/m', $html));
     }
 
+    public function testPhoneNumberShowsInFooterAndOrganizationJsonLd()
+    {
+        $organisation = $this->createOrganisation();
+        $organisation->support_email = 'info@example.com';
+        $organisation->phone = '+32 (0)9 123 45 67';
+        $organisation->save();
+        $event = $this->createEvent($organisation);
+
+        $html = $this->get($event->getUrl())->assertStatus(200)->getContent();
+
+        $this->assertStringContainsString('<a href="tel:+3291234567">+32 (0)9 123 45 67</a>', $html);
+        $this->assertStringContainsString('"telephone": "+32 (0)9 123 45 67"', $html);
+
+        $this->assertStringContainsString('Telefoon: +32 (0)9 123 45 67', $this->get('/llms.txt')->getContent());
+    }
+
+    public function testNoPhoneNumberMeansNoTelLink()
+    {
+        $organisation = $this->createOrganisation();
+        $event = $this->createEvent($organisation);
+
+        $html = $this->get($event->getUrl())->assertStatus(200)->getContent();
+
+        $this->assertStringNotContainsString('href="tel:', $html);
+        $this->assertStringNotContainsString('"telephone"', $html);
+    }
+
     public function testFaqBlocksBecomeFaqPageStructuredData()
     {
         $organisation = $this->createOrganisation();
