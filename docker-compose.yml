@@ -11,6 +11,8 @@ services:
       - ./:/var/www/html
     ports:
       - 8095:80
+      # webpack-dev-server of `npm run hot`
+      - 8080:8080
     depends_on:
       - mysql-db
     privileged: true

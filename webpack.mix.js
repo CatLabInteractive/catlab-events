@@ -53,14 +53,21 @@ mix
 ;
 
 // `npm run hot`: laravel-mix 6 still writes webpack-dev-server 4 options.
-// package.json pins webpack-dev-server 5 (security fixes), so translate the
-// two options that version 5 removed. Builds without --hot have no devServer
-// block and are not affected.
+// package.json overrides webpack-dev-server to 5 (security fixes) and
+// webpack-cli to 5 (webpack-cli 4 cannot start dev-server 5). Translate the
+// two options that dev-server 5 removed. Builds without --hot have no
+// devServer block and are not affected. `mix watch --hot --https` does not
+// work: dev-server 5 dropped the --https flag.
 mix.override((config) => {
     const devServer = config.devServer;
     if (!devServer) {
         return;
     }
+
+    // Listen on every interface, so the browser on the host reaches the
+    // server through the port that docker-compose.yml publishes. The page
+    // still loads the assets from http://localhost:8080 (public/hot).
+    devServer.host = '0.0.0.0';
 
     if ('https' in devServer) {
         if (devServer.https) {
