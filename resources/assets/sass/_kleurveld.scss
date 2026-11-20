@@ -824,6 +824,13 @@ a.kv-ticket:focus-visible { outline: 3px solid $kv-ink; outline-offset: 3px; }
   a:hover, a:focus { color: $kv-ink; text-decoration: underline; }
 }
 
+.kv-credits-note {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(31, 51, 38, .18);
+  color: $kv-muted;
+}
+
 /* ---------- Event list cards (Meer quizzen, agenda) ---------- */
 
 .kv-cards {
