@@ -30,6 +30,16 @@ class GuestCheckoutTest extends IntegrationTestCase
         ], $extra));
     }
 
+    /** The id of the ticket that the register form selects when it opens. */
+    private function selectedTicketId($event)
+    {
+        $response = $this->get("/events/{$event->id}/register");
+        $response->assertStatus(200);
+        $count = preg_match_all('/name="category"\s+value="(\d+)"[^>]*\bchecked\b/', $response->getContent(), $matches);
+        $this->assertSame(1, $count);
+        return intval($matches[1][0]);
+    }
+
     private function teamEvent()
     {
         $event = $this->createEvent($this->createOrganisation());
@@ -84,6 +94,26 @@ class GuestCheckoutTest extends IntegrationTestCase
         $response->assertStatus(200);
         $response->assertSee('Open ticket');
         $response->assertDontSee('Closed ticket');
+    }
+
+    public function testWithMoreThanTwoTicketsTheSecondMostExpensiveIsSelected()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $this->createTicketCategory($event, 20.0);
+        $this->createTicketCategory($event, 5.0);
+        $second = $this->createTicketCategory($event, 15.0);
+        $this->createTicketCategory($event, 10.0);
+
+        $this->assertSame($second->id, $this->selectedTicketId($event));
+    }
+
+    public function testWithTwoTicketsTheCheapestIsSelected()
+    {
+        $event = $this->createEvent($this->createOrganisation());
+        $this->createTicketCategory($event, 20.0);
+        $cheap = $this->createTicketCategory($event, 5.0);
+
+        $this->assertSame($cheap->id, $this->selectedTicketId($event));
     }
 
     public function testLoggedInUserSeesNoEmailField()
