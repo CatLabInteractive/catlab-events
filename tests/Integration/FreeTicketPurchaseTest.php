@@ -36,8 +36,34 @@ class FreeTicketPurchaseTest extends IntegrationTestCase
         // Order confirmation is tracked via the faked Eukles client.
         $this->assertNotEmpty($this->eukles->tracked);
 
+        // A free order has no accounts order (no catlab_order_id), so
+        // getOrderData() is null: the tracked order still carries a price
+        // of 0 and an empty reference (#56).
+        $this->assertNull($order->catlab_order_id);
+        $orderAttributes = $this->findTrackedOrderAttributes($order);
+        $this->assertNotNull($orderAttributes, 'The tracked events should include the order');
+        $this->assertSame(0, $orderAttributes['price']);
+        $this->assertNull($orderAttributes['reference']);
+        $this->assertNull($orderAttributes['receipt']);
+
         // The thanks page renders and the order STAYS accepted afterwards.
         $this->actingAs($user)->get("/orders/{$order->id}/thanks")->assertStatus(200);
         $this->assertEquals(Order::STATE_ACCEPTED, $order->fresh()->state);
+    }
+
+    /**
+     * The Eukles attributes of $order, as serialised in a tracked event.
+     */
+    private function findTrackedOrderAttributes(Order $order): ?array
+    {
+        foreach ($this->eukles->tracked as $event) {
+            foreach ($event->getData()['data']['items'] as $item) {
+                if (($item['type'] ?? null) === 'order' && $item['uid'] == $order->getEuklesId()) {
+                    return $item['attributes'];
+                }
+            }
+        }
+
+        return null;
     }
 }
