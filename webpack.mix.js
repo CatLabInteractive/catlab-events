@@ -37,7 +37,7 @@ mix
     // TinyMCE 6 (MIT) for the CMS page editor, self-hosted: no CDN, no API
     // key. Only the minified build and what cms-editor.js loads from it.
     .copy('node_modules/tinymce/tinymce.min.js', 'public/js/tinymce')
-    .copy('node_modules/tinymce/license.txt', 'public/js/tinymce')
+    .copy('node_modules/tinymce/license.md', 'public/js/tinymce')
     .copyDirectory('node_modules/tinymce/icons', 'public/js/tinymce/icons')
     .copyDirectory('node_modules/tinymce/models', 'public/js/tinymce/models')
     .copyDirectory('node_modules/tinymce/themes', 'public/js/tinymce/themes')
