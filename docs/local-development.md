@@ -113,6 +113,12 @@ To build again on each save, keep this command open in a second terminal:
 
     docker compose exec webserver npm run watch-poll
 
+To update the styles in the open page without a reload, use hot reload instead. Hot reload serves the assets on port 8080. `docker-compose.yml` publishes that port. If your containers are older than that line, run `docker compose up -d` first.
+
+    docker compose exec webserver npm run hot
+
+Stop it with Ctrl+C before you run `npm run dev` again. While hot reload runs, `public/mix-manifest.json` changes. Do not commit that change.
+
 Do not commit the built files in `public/css`, `public/js` and `public/mix-manifest.json` unless the change needs them. Production builds them again during the deploy.
 
 ## Daily use
