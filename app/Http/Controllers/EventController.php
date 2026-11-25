@@ -433,6 +433,24 @@ class EventController extends Controller
     }
 
     /**
+     * The ticket that is selected when the register form opens. With more
+     * than two tickets, this is the second most expensive one. With one or
+     * two tickets, this is the first one in the list (the cheapest).
+     *
+     * @param \Illuminate\Support\Collection $available Tickets sorted by price, cheapest first.
+     * @return TicketCategory
+     */
+    private function getDefaultTicketCategory($available)
+    {
+        $available = $available->values();
+        if ($available->count() > 2) {
+            return $available->get($available->count() - 2);
+        }
+
+        return $available->first();
+    }
+
+    /**
      * The one-page register form (guest checkout spec 2026-11-17). Public:
      * a guest fills in category, team name and email address and goes
      * straight to the pay page; a logged-in user gets the same page with
@@ -497,7 +515,7 @@ class EventController extends Controller
 
         $selectedCategoryId = old('category', $request->query('category'));
         if (!$selectedCategoryId && $available->count() > 0) {
-            $selectedCategoryId = $available->first()->id;
+            $selectedCategoryId = $this->getDefaultTicketCategory($available)->id;
         }
 
         $groups = [];
