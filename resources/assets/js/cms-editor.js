@@ -494,6 +494,8 @@
         return {
             // base_url and suffix: TinyMCE derives them from its own <script> tag.
             target: textarea,
+            // TinyMCE 7+ is GPL-2.0-or-later; this project is GPLv3 (see LICENSE).
+            license_key: 'gpl',
             menubar: false,
             branding: false,
             promotion: false,
@@ -531,6 +533,10 @@
                     changed(textarea);
                 });
             },
+            // TinyMCE 7+ sandboxes iframes in the editor unless their host is
+            // listed here, and its own list lacks youtube-nocookie.com, so the
+            // video preview breaks. The same hosts as cms.video_hosts.
+            sandbox_iframes_exclusions: ['youtube-nocookie.com', 'youtube.com'],
             media_alt_source: false,
             media_poster: false,
             media_url_resolver: function (data) {
